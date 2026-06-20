@@ -1,0 +1,45 @@
+% =====================================================================
+%  Geometric Deep Learning — master document
+%  Build:  latexmk -pdf main.tex   (or: make)
+% =====================================================================
+\documentclass[11pt,a4paper,oneside]{book}
+
+\input{preamble}
+
+\title{Geometric Deep Learning}
+\author{Jorge Muñoz}
+\date{\today}
+
+\begin{document}
+
+% ----- Front matter -------------------------------------------------
+\frontmatter
+\input{frontmatter/titlepage}
+\input{frontmatter/abstract}
+\input{frontmatter/preface}
+\tableofcontents
+
+% ----- Main matter --------------------------------------------------
+\mainmatter
+\part{Foundations}
+\input{chapters/01-introduction}
+\input{chapters/02-mathematical-foundations}
+\input{chapters/03-geometric-priors}
+
+\part{The Five Gs}
+\input{chapters/04-grids}
+\input{chapters/05-groups}
+\input{chapters/06-graphs}
+\input{chapters/07-geodesics-manifolds}
+\input{chapters/08-gauges}
+
+\part{Practice}
+\input{chapters/09-applications}
+\input{chapters/10-conclusion}
+
+% ----- Back matter --------------------------------------------------
+\backmatter
+\bibliographystyle{plainnat}
+\bibliography{bib/references}
+
+\end{document}

@@ -1,0 +1,29 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  summary?: string;
+  part?: string;
+}
+const { title, summary, part } = Astro.props;
+---
+
+<BaseLayout title={`${title} · GDL`} description={summary}>
+  <article class="prose">
+    {part && <p class="eyebrow">{part}</p>}
+    <h1>{title}</h1>
+    <slot />
+  </article>
+
+  <style>
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.8rem;
+      color: var(--accent);
+      margin-bottom: 0;
+    }
+    article { padding: 2rem 0; }
+  </style>
+</BaseLayout>

@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+
+# JetBrains IDE
+.idea/
+*.iml
+
+# Node / Astro
+node_modules/
+web/dist/
+web/.astro/
+*.log
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.idx
+*.ilg
+*.ind
+*.nav
+*.snm
+*.vrb
+book/main.pdf
+book/build/

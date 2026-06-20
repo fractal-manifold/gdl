@@ -1,0 +1,38 @@
+---
+const links = [
+  { href: '/', label: 'Home' },
+  { href: '/chapters/', label: 'Chapters' },
+];
+const path = Astro.url.pathname;
+---
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/">GDL</a>
+    <nav>
+      {links.map((l) => (
+        <a href={l.href} class={path === l.href ? 'active' : ''}>{l.label}</a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.5rem;
+  }
+  .brand { font-weight: 800; letter-spacing: 0.05em; color: var(--fg); }
+  nav a { margin-left: 1.25rem; color: var(--muted); }
+  nav a.active, nav a:hover { color: var(--accent); text-decoration: none; }
+</style>
