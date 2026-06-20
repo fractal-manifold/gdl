@@ -1,8 +1,25 @@
 % =====================================================================
 %  Geometric Deep Learning — master document
-%  Build:  latexmk -pdf main.tex   (or: make)
+%  Build:  make            (screen edition, A4)
+%          make print      (print edition, 7x10 in)
+%  Editions are selected via \bookedition; build through the wrapper
+%  files screen.tex / print.tex (do not compile main.tex directly).
 % =====================================================================
-\documentclass[11pt,a4paper,oneside]{book}
+
+% ----- Edition switch (set by screen.tex / print.tex) ----------------
+% Uses plain-TeX \ifx because etoolbox cannot be loaded before
+% \documentclass.
+\providecommand{\bookedition}{screen}
+\def\edScreen{screen}
+\ifx\bookedition\edScreen
+  \documentclass[11pt,oneside]{book}
+  \newcommand{\GeometrySetup}{\geometry{a4paper,margin=1in}}
+\else
+  \documentclass[10pt,twoside]{book}
+  \newcommand{\GeometrySetup}{%
+    \geometry{paperwidth=7in,paperheight=10in,
+      inner=0.9in,outer=0.7in,top=0.8in,bottom=0.9in}}
+\fi
 
 \input{preamble}
 

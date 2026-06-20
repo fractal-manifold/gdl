@@ -1,16 +1,25 @@
-# Build the book with latexmk
-MAIN = main
+# Build the book with latexmk.
+# Two editions share one source, selected via wrapper files:
+#   screen.tex -> A4 reading edition (default)
+#   print.tex  -> 7x10 in print-on-demand edition
+LATEXMK = latexmk -pdf -bibtex -interaction=nonstopmode
 
-.PHONY: all watch clean
+.PHONY: all screen print watch clean
 
-all: $(MAIN).pdf
+all: screen print
 
-$(MAIN).pdf: $(MAIN).tex
-	latexmk -pdf -bibtex -interaction=nonstopmode $(MAIN).tex
+screen: screen.pdf
+print: print.pdf
+
+screen.pdf: screen.tex main.tex preamble.tex
+	$(LATEXMK) screen.tex
+
+print.pdf: print.tex main.tex preamble.tex
+	$(LATEXMK) print.tex
 
 watch:
-	latexmk -pdf -bibtex -pvc -interaction=nonstopmode $(MAIN).tex
+	$(LATEXMK) -pvc screen.tex
 
 clean:
-	latexmk -C
+	latexmk -C screen.tex print.tex
 	rm -f *.bbl *.run.xml

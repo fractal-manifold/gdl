@@ -22,20 +22,31 @@
 \usepackage{float}
 
 % ----- Layout & misc -------------------------------------------------
-\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{geometry}
+\GeometrySetup % page geometry chosen by the edition switch in main.tex
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage[round]{natbib}
 \usepackage{hyperref}
-\hypersetup{
-  colorlinks=true,
-  linkcolor=blue!50!black,
-  citecolor=green!40!black,
-  urlcolor=blue!60!black,
-  pdftitle={Geometric Deep Learning},
-  pdfauthor={Jorge Mu\~noz}
-}
+% Colored links for the screen edition; black for print.
+\ifx\bookedition\edScreen
+  \hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    citecolor=green!40!black,
+    urlcolor=blue!60!black,
+    pdftitle={Geometric Deep Learning},
+    pdfauthor={Jorge Mu\~noz}
+  }
+\else
+  \hypersetup{
+    colorlinks=false,
+    pdfborder={0 0 0},
+    pdftitle={Geometric Deep Learning},
+    pdfauthor={Jorge Mu\~noz}
+  }
+\fi
 \usepackage[capitalise]{cleveref}
 
 % ----- Theorem environments -----------------------------------------

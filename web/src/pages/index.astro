@@ -13,6 +13,15 @@ const gs = [
   { g: 'Geodesics', d: 'Learning on curved manifolds.' },
   { g: 'Gauges', d: 'Local frames and gauge equivariance.' },
 ];
+
+const RELEASE = 'https://github.com/fractal-manifold/gdl/releases/download/book-latest';
+const PDF_URL = `${RELEASE}/geometric-deep-learning.pdf`;
+
+const editions = [
+  { name: 'PDF · A4', desc: 'Screen edition — read on desktop or tablet, print at home.', href: PDF_URL, status: 'Download' },
+  { name: 'Read online', desc: 'The full book on the web, with searchable chapters.', href: '/chapters/', status: 'Open' },
+  { name: 'Print · 7×10″', desc: 'Print-on-demand physical edition.', href: null, status: 'Coming soon' },
+];
 ---
 
 <BaseLayout>
@@ -24,7 +33,8 @@ const gs = [
       account of modern deep learning architectures.
     </p>
     <div class="cta">
-      <a class="btn" href="/chapters/">Read the chapters</a>
+      <a class="btn" href={PDF_URL} download rel="noopener">Download PDF</a>
+      <a class="btn ghost" href="/chapters/">Read the chapters</a>
       <a class="btn ghost" href="https://github.com/fractal-manifold/gdl">View source</a>
     </div>
   </section>
@@ -36,6 +46,27 @@ const gs = [
         <p>{x.d}</p>
       </div>
     ))}
+  </section>
+
+  <section>
+    <h2>Editions</h2>
+    <div class="editions">
+      {editions.map((e) => (
+        <div class="edition">
+          <div>
+            <h3>{e.name}</h3>
+            <p>{e.desc}</p>
+          </div>
+          {e.href ? (
+            <a class="edition-btn" href={e.href} download={e.status === 'Download' ? true : undefined}>
+              {e.status}
+            </a>
+          ) : (
+            <span class="edition-soon">{e.status}</span>
+          )}
+        </div>
+      ))}
+    </div>
   </section>
 
   <section>
@@ -101,6 +132,38 @@ const gs = [
     .card:hover { border-color: var(--color-gold); transform: translateY(-2px); }
     .card h3 { margin: 0 0 0.4rem; color: var(--color-gold); font-size: 1.05rem; }
     .card p { margin: 0; color: var(--color-text-muted); font-size: 0.92rem; }
+    .editions { display: grid; gap: 0.75rem; margin: 1.5rem 0 0; }
+    .edition {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+    .edition h3 { margin: 0 0 0.2rem; font-size: 1rem; }
+    .edition p { margin: 0; color: var(--color-text-muted); font-size: 0.9rem; }
+    .edition-btn {
+      flex: none;
+      background: var(--color-gold);
+      color: var(--color-bg);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+    }
+    .edition-btn:hover { text-decoration: none; background: var(--color-gold-light); }
+    .edition-soon {
+      flex: none;
+      color: var(--color-purple-light);
+      border: 1px solid var(--color-purple);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      padding: 0.35rem 0.85rem;
+    }
     .toc { line-height: 2.1; }
     .tag {
       margin-left: 0.5rem;
