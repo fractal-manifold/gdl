@@ -25,17 +25,22 @@ const chapters = (await getCollection('chapters')).sort(
 
   <style>
     .chapter-list { list-style: none; padding: 0; }
-    .chapter-list li { border-bottom: 1px solid var(--border); }
+    .chapter-list li { border-bottom: 1px solid var(--color-border); }
     .chapter-list a {
       display: flex;
-      gap: 1rem;
+      gap: 1.1rem;
       align-items: baseline;
-      padding: 1rem 0;
-      color: var(--fg);
+      padding: 1.1rem 0;
+      color: var(--color-text);
     }
     .chapter-list a:hover { text-decoration: none; }
-    .chapter-list a:hover strong { color: var(--accent); }
-    .num { color: var(--muted); font-variant-numeric: tabular-nums; }
-    .summary { display: block; color: var(--muted); font-size: 0.9rem; }
+    .chapter-list a:hover strong { color: var(--color-gold); }
+    .num {
+      color: var(--color-gold);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .summary { display: block; color: var(--color-text-muted); font-size: 0.9rem; }
   </style>
 </BaseLayout>

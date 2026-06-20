@@ -18,14 +18,14 @@ const gs = [
 <BaseLayout>
   <section class="hero">
     <p class="eyebrow">A book in progress</p>
-    <h1>Geometric Deep Learning</h1>
+    <h1>Geometric<br /><span class="gradient-text">Deep Learning</span></h1>
     <p class="lede">
       Grids, Groups, Graphs, Geodesics, and Gauges — a unified, symmetry-first
       account of modern deep learning architectures.
     </p>
     <div class="cta">
       <a class="btn" href="/chapters/">Read the chapters</a>
-      <a class="btn ghost" href="https://github.com/">View source</a>
+      <a class="btn ghost" href="https://github.com/fractal-manifold/gdl">View source</a>
     </div>
   </section>
 
@@ -51,48 +51,66 @@ const gs = [
   </section>
 
   <style>
-    .hero { padding: 3rem 0 2rem; }
+    .hero { padding: 4rem 0 2.5rem; }
     .eyebrow {
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: 0.8rem;
-      color: var(--accent);
+      letter-spacing: 0.18em;
+      font-size: 0.75rem;
+      color: var(--color-gold);
+      font-family: var(--font-display);
     }
-    .hero h1 { font-size: clamp(2rem, 6vw, 3.25rem); margin: 0.25rem 0; }
-    .lede { color: var(--muted); font-size: 1.15rem; max-width: 38rem; }
-    .cta { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .hero h1 {
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      margin: 0.5rem 0;
+      letter-spacing: 0.02em;
+    }
+    .lede {
+      color: var(--color-text-secondary);
+      font-size: 1.2rem;
+      max-width: 38rem;
+    }
+    .cta { display: flex; gap: 0.85rem; margin-top: 2rem; flex-wrap: wrap; }
     .btn {
-      background: var(--accent-strong);
-      color: #06283d;
+      background: var(--color-gold);
+      color: var(--color-bg);
       font-weight: 600;
-      padding: 0.6rem 1.1rem;
+      padding: 0.7rem 1.25rem;
       border-radius: 8px;
+      transition: background 0.15s ease;
     }
-    .btn:hover { text-decoration: none; background: var(--accent); }
-    .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+    .btn:hover { text-decoration: none; background: var(--color-gold-light); }
+    .btn.ghost {
+      background: transparent;
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .btn.ghost:hover { border-color: var(--color-gold); color: var(--color-gold); background: transparent; }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
       gap: 1rem;
-      margin: 2.5rem 0;
+      margin: 3rem 0;
     }
     .card {
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem;
+      background: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: border-color 0.15s ease, transform 0.15s ease;
     }
-    .card h3 { margin: 0 0 0.35rem; color: var(--accent); }
-    .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
-    .toc { line-height: 2; }
+    .card:hover { border-color: var(--color-gold); transform: translateY(-2px); }
+    .card h3 { margin: 0 0 0.4rem; color: var(--color-gold); font-size: 1.05rem; }
+    .card p { margin: 0; color: var(--color-text-muted); font-size: 0.92rem; }
+    .toc { line-height: 2.1; }
     .tag {
       margin-left: 0.5rem;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
-      color: var(--muted);
-      border: 1px solid var(--border);
+      letter-spacing: 0.08em;
+      color: var(--color-purple-light);
+      border: 1px solid var(--color-purple);
       border-radius: 999px;
-      padding: 0.05rem 0.5rem;
+      padding: 0.1rem 0.55rem;
     }
   </style>
 </BaseLayout>
