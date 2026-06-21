@@ -34,3 +34,6 @@ book/main.pdf
 book/screen.pdf
 book/print.pdf
 book/build/
+
+# Local design reference (not part of the site)
+Geometric Deep Learning.html

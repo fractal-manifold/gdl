@@ -7,10 +7,14 @@ import 'katex/dist/katex.min.css';
 interface Props {
   title?: string;
   description?: string;
+  /** When true the page manages its own full-width layout (the landing page).
+      Otherwise content is centered in a reading-width container. */
+  fullWidth?: boolean;
 }
 const {
   title = 'Geometric Deep Learning',
-  description = 'A book on geometric deep learning: grids, groups, graphs, geodesics, and gauges.',
+  description = 'A math-first treatment of deep learning on graphs, manifolds and groups — message passing, symmetry and equivariance from the ground up.',
+  fullWidth = false,
 } = Astro.props;
 ---
 
@@ -32,12 +36,18 @@ const {
       href="https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap"
     />
   </head>
-  <body>
-    <div class="bg-glow" aria-hidden="true"></div>
+  <body id="top">
     <Header />
-    <main class="container">
-      <slot />
-    </main>
+    {fullWidth ? (
+      <main class="site-main"><slot /></main>
+    ) : (
+      <main class="site-main"><div class="container page"><slot /></div></main>
+    )}
     <Footer />
   </body>
 </html>
+
+<style>
+  .site-main { padding-top: var(--header-h); }
+  .page { padding-top: 2.5rem; padding-bottom: 1rem; }
+</style>

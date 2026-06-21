@@ -1,56 +1,85 @@
 ---
+// Anchors are on the landing page; prefix with "/" so they also work from
+// sub-pages (e.g. /chapters/...).
 const links = [
-  { href: '/', label: 'Home' },
-  { href: '/chapters/', label: 'Chapters' },
+  { href: '/#thesis', label: 'The Thesis' },
+  { href: '/#gs', label: 'The 5 Gs' },
+  { href: '/#contents', label: 'Contents' },
 ];
-const path = Astro.url.pathname;
 ---
 
 <header class="site-header">
-  <div class="container inner">
+  <div class="shell inner">
     <a class="brand" href="/">
-      <img src="/logo.png" alt="" width="28" height="28" />
-      <span>GDL</span>
+      <img src="/logo.png" alt="Fractal Manifold" width="36" height="36" />
+      <span>Fractal Manifold</span>
     </a>
-    <nav>
-      {links.map((l) => (
-        <a href={l.href} class={path === l.href ? 'active' : ''}>{l.label}</a>
-      ))}
+    <nav aria-label="Main">
+      {links.map((l) => <a class="navlink" href={l.href}>{l.label}</a>)}
+      <a class="getbook" href="/#access">Get the book</a>
     </nav>
   </div>
 </header>
 
 <style>
   .site-header {
-    border-bottom: 1px solid var(--color-border);
-    background: rgba(10, 10, 10, 0.7);
-    backdrop-filter: blur(10px);
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 10;
+    left: 0;
+    right: 0;
+    height: var(--header-h);
+    z-index: 100;
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
   }
   .inner {
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 3.75rem;
   }
   .brand {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    letter-spacing: 0.08em;
+    gap: 0.7rem;
     color: var(--color-text);
+    transition: opacity 0.3s ease;
   }
-  .brand:hover { text-decoration: none; color: var(--color-gold-light); }
-  .brand img { display: block; }
-  nav a {
-    margin-left: 1.5rem;
-    color: var(--color-text-muted);
+  .brand:hover { opacity: 0.8; }
+  .brand img { object-fit: contain; display: block; }
+  .brand span {
+    font-family: var(--font-display);
     font-size: 0.95rem;
+    letter-spacing: 1px;
   }
-  nav a.active,
-  nav a:hover { color: var(--color-gold); text-decoration: none; }
+  nav { display: flex; align-items: center; gap: 1.8rem; }
+  .navlink {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+    padding-bottom: 3px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .navlink:hover { color: var(--color-text); border-bottom-color: var(--color-gold); }
+  .getbook {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    color: var(--color-bg);
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    background: var(--color-gold);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .getbook:hover {
+    color: var(--color-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3);
+  }
+  @media (max-width: 720px) {
+    .navlink { display: none; }
+    nav { gap: 0; }
+  }
 </style>
