@@ -339,7 +339,7 @@ about which connections matter and how their weights are shared.
     \node[box, fill=gdlblue!15] (annbox) {};
     \node[title] at (0, 2.05) {ANN (fully connected)};
     \foreach \i/\a in {1/90,2/162,3/234,4/306,5/18} \node[nd, fill=gdlblue!20] (a\i) at (\a:0.9) {};
-    \foreach \i in {1,...,5} \foreach \j in {1,...,5} \ifnum\i<\j \draw[edge, gdlblue!30] (a\i)--(a\j); \fi
+    \foreach \i in {1,...,5} \foreach \j in {1,...,5} {\ifnum\i<\j \draw[edge, gdlblue!30] (a\i)--(a\j);\fi}
     \node[info] at (0, -1.45) {complete graph $K_d$\\specific weights $W_{ij}$};
 \end{scope}
 % CNN
