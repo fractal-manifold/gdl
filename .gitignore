@@ -1,8 +1,9 @@
 # OS
 .DS_Store
 
-# JetBrains IDE
-.idea/
+# JetBrains IDE — ignore everything except shared run configurations
+.idea/*
+!.idea/runConfigurations/
 *.iml
 
 # Node / Astro

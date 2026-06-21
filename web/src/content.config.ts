@@ -9,6 +9,7 @@ const chapters = defineCollection({
     order: z.number(),
     part: z.string().optional(),
     summary: z.string().optional(),
+    tags: z.array(z.string()).default([]),
     draft: z.boolean().default(true),
   }),
 });

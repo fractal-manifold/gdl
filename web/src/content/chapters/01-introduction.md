@@ -2,7 +2,8 @@
 title: Introduction
 order: 1
 part: Foundations
-summary: Why geometric deep learning, and the symmetry principle behind it.
+summary: What geometric deep learning is, symmetry as a design principle, and a roadmap of the 5 Gs.
+tags: ['Symmetry', 'The 5 Gs', 'Roadmap']
 draft: true
 ---
 

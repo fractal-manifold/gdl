@@ -1,5 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// The table of contents is driven by the chapter collection so the homepage,
+// the /chapters index and the LaTeX book stay in sync.
+const chapters = (await getCollection('chapters')).sort(
+  (a, b) => a.data.order - b.data.order,
+);
 
 const heroMath = [
   { t: 'f(g·x) = g·f(x)', c: 'var(--color-gold)', s: 'top:16%;left:6%', d: '0s', dur: '15s', size: '1.05rem' },
@@ -9,29 +16,19 @@ const heroMath = [
   { t: '∇_M f', c: 'var(--color-gold-light)', s: 'top:46%;left:3%', d: '-7s', dur: '16s', size: '0.95rem' },
 ];
 
+// The five Gs of the book (chapters 4–8): Grids, Groups, Graphs, Geodesics, Gauges.
 const fiveGs = [
-  { name: 'Geometry', accent: 'gold', desc: 'The domains of data. Euclidean and non-Euclidean spaces, the manifold hypothesis, and graphs as discrete geometry.',
-    icon: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>' },
-  { name: 'Groups', accent: 'purple', desc: 'The symmetries of data. Lie groups, representations, and the equivariance that ties a network to its domain.',
+  { name: 'Grids', accent: 'gold', desc: 'Convolutional networks and translation symmetry — convolution as the equivariant linear map on a regular grid, with pooling and scale separation.',
+    icon: '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>' },
+  { name: 'Groups', accent: 'purple', desc: 'Group-equivariant networks. Equivariance to rotations, reflections and general symmetry groups through group convolutions and steerable filters.',
     icon: '<polygon points="12 2 21 7 21 17 12 22 3 17 3 7"></polygon><line x1="12" y1="2" x2="12" y2="22"></line><line x1="3" y1="7" x2="21" y2="17"></line><line x1="21" y1="7" x2="3" y2="17"></line>' },
-  { name: 'Graphs', accent: 'gold', desc: 'The discretization of geometry. The graph Laplacian, spectral analysis and topological deep learning.',
+  { name: 'Graphs', accent: 'gold', desc: 'Graph neural networks. Permutation-equivariant message passing, spectral and spatial methods, and the Weisfeiler–Leman hierarchy.',
     icon: '<circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>' },
-  { name: 'Geodesics', accent: 'purple', desc: 'Optimal paths and information flow. Riemannian metrics, connections, curvature and the exponential map.',
+  { name: 'Geodesics', accent: 'purple', desc: 'Learning on manifolds. Intrinsic geometry, geodesic convolution and spectral methods on curved domains.',
     icon: '<circle cx="6" cy="19" r="2"></circle><circle cx="18" cy="5" r="2"></circle><path d="M7.5 17.5C11 13 13 11 16.5 6.5"></path>' },
-  { name: 'Gauges', accent: 'gold', desc: 'Local frames and coordinate freedom. Principal bundles, parallel transport and gauge-equivariant networks — the most general setting.',
+  { name: 'Gauges', accent: 'gold', desc: 'Gauge-equivariant networks. Local reference frames, parallel transport and gauge-equivariant convolution — the most general setting.',
     icon: '<circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>' },
 ];
-
-const contents = [
-  { n: '01', accent: 'gold', title: 'Introduction', desc: 'Why Euclidean methods lose information on graphs, surfaces and groups — and the single principle that fixes it.', tags: ['Non-Euclidean data', 'The 5 Gs', 'Objectives'] },
-  { n: '02', accent: 'purple', title: 'Artificial Neural Networks', desc: 'From the artificial neuron to deep networks: signals over structured domains, layers as computational graphs, and the theory of learning and approximation.', tags: ['Activation & layers', 'Backpropagation', 'Universal approximation'] },
-  { n: '03', accent: 'gold', title: 'Geometric Deep Learning', desc: 'The unifying framework. The five Gs, equivariance and invariance, homogeneous spaces, and message passing as the common language of every architecture.', tags: ['Equivariance', 'Homogeneous spaces', 'Message passing', 'Weisfeiler–Leman'] },
-  { n: '04', accent: 'purple', title: 'Convolutional Models', desc: 'Convolutions from first principles: harmonic analysis, the CNN–GNN equivalence, group convolutions and gauge-equivariant networks on curved domains.', tags: ['Spectral convolutions', 'Group convolutions', 'SE(3)', 'Gauge CNNs'] },
-  { n: '05', accent: 'gold', title: 'Geometric Attention', desc: 'Attention as geometry: equivariant transformers, attention on hyperbolic and spherical spaces, geometric algebra and topological attention.', tags: ['Equivariant attention', 'Hyperbolic & spherical', 'GATr', 'Simplicial'] },
-  { n: '06', accent: 'purple', title: 'Conclusions', desc: 'What the framework unifies, where it breaks, and the open problems that remain.', tags: ['Synthesis', 'Open problems'] },
-];
-
-const appendix = { desc: 'Supporting results, from Gauss–Bonnet and Bishop–Günther to the isometries between models of hyperbolic space.', tags: ['Gauss–Bonnet', 'Bishop–Günther', 'Hyperbolic models', 'Spectral theorem'] };
 
 const audience = [
   { title: 'Researchers', desc: 'A unifying language for architectures you already know, and a map of the open territory beyond them.' },
@@ -95,7 +92,7 @@ const formats = [
               <div class="cover-bottom">
                 <h2 class="cover-title gradient-text">Geometric Deep Learning</h2>
                 <div class="cover-rule"></div>
-                <p class="cover-gs">Geometry · Groups · Graphs<br />Geodesics · Gauges</p>
+                <p class="cover-gs">Grids · Groups · Graphs<br />Geodesics · Gauges</p>
               </div>
             </div>
           </div>
@@ -153,26 +150,23 @@ const formats = [
         <div class="rule"></div>
       </div>
       <div class="grid grid-toc">
-        {contents.map((c) => (
-          <article class={`card ${c.accent}`}>
-            <div class="toc-head">
-              <span class={`num ${c.accent}`}>{c.n}</span>
-              <h3 class="card-title sm">{c.title}</h3>
-            </div>
-            <p class="card-desc">{c.desc}</p>
-            <div class="tags">{c.tags.map((t) => <span>{t}</span>)}</div>
-          </article>
-        ))}
-        <article class="card dashed full">
-          <div class="toc-head">
-            <span class="num amber">A</span>
-            <h3 class="card-title sm">Appendix — Complementary theorems &amp; proofs</h3>
-          </div>
-          <p class="card-desc">{appendix.desc}</p>
-          <div class="tags">{appendix.tags.map((t) => <span>{t}</span>)}</div>
-        </article>
+        {chapters.map((c, i) => {
+          const accent = i % 2 === 0 ? 'gold' : 'purple';
+          return (
+            <a class={`card ${accent}`} href={`/chapters/${c.id}/`}>
+              <div class="toc-head">
+                <span class={`num ${accent}`}>{String(c.data.order).padStart(2, '0')}</span>
+                <h3 class="card-title sm">{c.data.title}</h3>
+              </div>
+              {c.data.summary && <p class="card-desc">{c.data.summary}</p>}
+              {c.data.tags.length > 0 && (
+                <div class="tags">{c.data.tags.map((t) => <span>{t}</span>)}</div>
+              )}
+            </a>
+          );
+        })}
       </div>
-      <p class="note">Six chapters and a complementary appendix — a rigorous path from artificial neurons to gauge theory. <a href="/chapters/">Read the chapters online →</a></p>
+      <p class="note">Ten chapters across three parts — Foundations, the Five Gs, and Practice. <a href="/chapters/">Read the chapters online →</a></p>
     </div>
   </section>
 
