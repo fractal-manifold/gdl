@@ -467,11 +467,11 @@ interpolating the feature values at the resulting points
 \foreach \rr in {0.45,0.9,1.35}
   \draw[gdlblue!55, thin] (p) ellipse ({\rr} and {0.55*\rr});
 \foreach \aa in {0,45,90,135,180,225,270,315}
-  \draw[gdlblue!40, thin] (p) -- ($(p)+({1.35*cos(\aa)} and {0.55*1.35*sin(\aa)})$);
+  \draw[gdlblue!40, thin] (p) -- ($(p)+({1.35*cos(\aa)}, {0.55*1.35*sin(\aa)})$);
 \fill[gdlred!80] (p) circle (2.5pt);
 \node[above, font=\small] at (p) {$p$};
 % A neighbour
-\coordinate (q) at ($(p)+({1.35*cos(35)} and {0.55*1.35*sin(35)})$);
+\coordinate (q) at ($(p)+({1.35*cos(35)}, {0.55*1.35*sin(35)})$);
 \fill[gdlgreen!70] (q) circle (2pt);
 \node[right, font=\small, gdlgreen!60!black] at (q) {$q_j=\exp_p(r_i e_{\theta_j})$};
 % label
