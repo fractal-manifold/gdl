@@ -1,0 +1,485 @@
+\providecommand{\SO}{\mathrm{SO}}
+\providecommand{\SE}{\mathrm{SE}}
+\providecommand{\Eucl}{\mathrm{E}}
+\providecommand{\Hyp}{\mathbb{H}}
+
+\chapter{Aplicaciones}
+\label{ch:applications}
+
+Los cap\'itulos anteriores construyeron una teor\'ia: los dominios poseen
+simetr\'ias, las simetr\'ias restringen las arquitecturas y un \'unico
+principio ---el paso de mensajes equivariante--- unifica las redes
+convolucionales, las redes de grafos y los mecanismos de atenci\'on. Este
+cap\'itulo se vuelca a la pr\'actica. Su prop\'osito no es catalogar todos los
+sistemas que emplean aprendizaje profundo geom\'etrico, sino mostrar c\'omo la
+maquinaria abstracta de las ``5~Gs'' se concreta en problemas reales, y por
+qu\'e el punto de vista geom\'etrico se traduce en mejoras medibles de
+precisi\'on, eficiencia en datos y consistencia f\'isica.
+
+Organizamos el recorrido en torno a tres familias de datos. La \emph{visi\'on
+por computador} abarca desde las rejillas regulares de p\'ixeles hasta las nubes
+de puntos tridimensionales no estructuradas, ejercitando los temas de las
+rejillas, los grupos y los gauges. Las \emph{mol\'eculas y los sistemas
+f\'isicos} son el escaparate de la equivarianza $\Eucl(3)$ y $\SE(3)$, donde
+respetar las simetr\'ias de la f\'isica no es un refinamiento sino un requisito.
+Los \emph{sistemas de recomendaci\'on y las redes sociales} son relacionales por
+naturaleza y dependen de la invarianza a permutaciones y, cada vez m\'as, de la
+geometr\'ia no euclidiana. Una cuarta secci\'on, sobre la \emph{atenci\'on
+geom\'etrica}, act\'ua como puente: muestra c\'omo el \emph{transformer} ---la
+arquitectura que sustenta buena parte del aprendizaje autom\'atico moderno---
+encaja en el dise\~no geom\'etrico y reaparece, debidamente restringido, a lo
+largo de las dem\'as \'areas de aplicaci\'on.
+
+\section{Visi\'on por computador}
+\label{sec:apps:vision}
+
+La visi\'on por computador es la cuna hist\'orica de las ideas de este libro.
+Las redes neuronales convolucionales ganaron la competici\'on ImageNet en
+2012~\citep{krizhevsky2012alexnet} precisamente porque codifican una simetr\'ia
+de las im\'agenes: una traslaci\'on de la entrada produce un mapa de
+caracter\'isticas trasladado. Como se desarrolla en \Cref{ch:grids}, esta
+equivarianza a traslaciones es lo que permite reutilizar un mismo filtro
+aprendido en cada posici\'on, reduciendo dr\'asticamente el n\'umero de
+par\'ametros y aportando el sesgo inductivo que hace aprendibles las im\'agenes
+a partir de datos finitos. Todo lo que sigue en visi\'on por computador puede
+leerse como un intento de extender este \'exito m\'as all\'a de la rejilla plana
+de p\'ixeles.
+
+\paragraph{M\'as all\'a de la traslaci\'on.}
+Muchas tareas visuales son invariantes a m\'as que la traslaci\'on. Una galaxia,
+una c\'elula al microscopio o una imagen a\'erea no tienen orientaci\'on
+preferente; un clasificador no deber\'ia tener que reaprender el mismo patr\'on
+en cada copia rotada. Las redes convolucionales equivariantes a grupos
+(\Cref{ch:groups}) incorporan la simetr\'ia de rotaci\'on y reflexi\'on
+directamente en la convoluci\'on, de modo que una caracter\'istica detectada en
+una orientaci\'on se detecta autom\'aticamente en todas. La ventaja es mayor en
+conjuntos peque\~nos, donde el aumento de datos no puede cubrir el grupo de
+simetr\'ia con suficiente densidad y debe ser la arquitectura la que aporte la
+invarianza.
+
+\paragraph{Visi\'on tridimensional.}
+La ruptura m\'as n\'itida con la rejilla llega con los datos tridimensionales.
+Un barrido LiDAR o un sensor de profundidad devuelve una \emph{nube de puntos}:
+un conjunto no ordenado de puntos en $\R^3$, sin rejilla, sin orden can\'onico y
+de cardinalidad variable. La simetr\'ia relevante es doble. Primero, la salida
+debe ser \emph{invariante a permutaciones} de los puntos, pues el conjunto
+$\{p_1,\dots,p_n\}$ no depende de c\'omo enumeremos sus elementos. Segundo, para
+muchas tareas debe ser invariante o equivariante a los movimientos r\'igidos de
+la escena. El primer requisito lo captura exactamente la teor\'ia de funciones
+sobre conjuntos.
+
+\begin{theorem}[Representaci\'on universal de funciones de conjuntos]
+\label{thm:apps:deepsets}
+Toda funci\'on continua invariante a permutaciones $f$ de un conjunto
+$\{x_1,\dots,x_n\}\subset\R^d$ puede escribirse en la forma
+\[
+  f(\{x_1,\dots,x_n\}) \;=\; \rho\!\left(\sum_{i=1}^n \phi(x_i)\right),
+\]
+para funciones continuas adecuadas $\phi$ y $\rho$.
+\end{theorem}
+
+Este resultado, debido al marco DeepSets~\citep{zaheer2017deepsets}, es el
+fundamento te\'orico de arquitecturas como PointNet~\citep{qi2017pointnet}:
+codificar cada punto de forma independiente con una red compartida $\phi$,
+agregar las codificaciones con un operador invariante a permutaciones (una suma o
+un m\'aximo) y decodificar con $\rho$. La construcci\'on es la instancia m\'as
+simple posible del dise\~no de paso de mensajes de \Cref{ch:graphs} ---una
+\'unica ronda de mensajes sobre un grafo sin aristas--- y ya garantiza la
+invarianza correcta por dise\~no, no por aumento de datos.
+
+\paragraph{Dominios curvos.}
+Cuando los datos viven sobre una superficie curva en lugar de en el espacio
+libre, toman el relevo los temas del gauge y las geod\'esicas
+(\Cref{ch:geodesics,ch:gauges}). Las se\~nales esf\'ericas ---im\'agenes
+panor\'amicas, mapas cosmol\'ogicos, la superficie de la Tierra--- se procesan
+con redes convolucionales esf\'ericas~\citep{cohen2018sphericalcnns}
+equivariantes al grupo de rotaciones $\SO(3)$, de modo que rotar la esfera rota
+la respuesta de forma coherente. Sobre una malla general no hay un marco global,
+y las redes gauge equivariantes garantizan que la salida no dependa de la
+elecci\'on local y arbitraria de coordenadas. En todos los casos la lecci\'on
+recurrente es la misma: identificar la simetr\'ia del dominio y luego
+incorporarla en el operador.
+
+\section{Atenci\'on geom\'etrica y transformers}
+\label{sec:apps:attention}
+
+El \emph{transformer}~\citep{vaswani2017attentionneed} es, a primera vista, una
+criatura de otro mundo: se dise\~n\'o para secuencias de palabras, no para
+rejillas ni grafos. Sin embargo, encaja con precisi\'on en la imagen
+geom\'etrica, y comprender por qu\'e explica tanto su \'exito como la larga serie
+de variantes geom\'etricas que impulsan las aplicaciones del resto del
+cap\'itulo.
+
+\paragraph{La atenci\'on como paso de mensajes adaptativo.}
+La atenci\'on por producto punto escalado calcula, para cada elemento, una media
+ponderada de los dem\'as,
+\[
+  \mathrm{Atenci\acute{o}n}(Q,K,V)
+  = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
+  \qquad
+  y_i = \sum_{j} \alpha_{ij}\, v_j,
+\]
+donde los pesos $\alpha_{ij}\ge 0$ suman uno y forman una distribuci\'on de
+probabilidad sobre las entradas. Le\'ido geom\'etricamente, esto es paso de
+mensajes (\Cref{ch:graphs}) en el que los pesos de las aristas no los fija el
+dominio sino que se \emph{calculan a partir de los datos}: cada elemento
+consulta a los dem\'as y decide cu\'anto atender a cada uno. Mientras que una
+convoluci\'on fija los pesos del vecindario y una red de grafos los determina
+por la topolog\'ia, la atenci\'on los aprende sobre la marcha. Esto sit\'ua la
+atenci\'on en el extremo adaptativo de un espectro cuyo extremo r\'igido es la
+convoluci\'on equivariante ---una tensi\'on entre estructura incorporada y
+flexibilidad aprendida que reaparece a lo largo de todo el aprendizaje profundo
+geom\'etrico.
+
+\paragraph{Atenci\'on sobre grafos.}
+La instancia geom\'etrica m\'as directa es la red de atenci\'on sobre grafos
+(GAT)~\citep{velickovic2017graph}, que restringe la atenci\'on a los vecinos de
+cada nodo y los pondera de forma adaptativa. Para un nodo $i$ con vecindario
+$\mathcal{N}(i)$, calcula coeficientes de atenci\'on a partir de las
+caracter\'isticas de los nodos, los normaliza sobre el vecindario y agrega,
+\[
+  e_{ij} = \operatorname{LeakyReLU}\!\bigl(a^\top[Wh_i \,\|\, Wh_j]\bigr),
+  \qquad
+  \alpha_{ij} = \operatorname{softmax}_j(e_{ij}),
+  \qquad
+  h_i' = \sigma\!\Bigl(\textstyle\sum_{j\in\mathcal{N}(i)} \alpha_{ij}\,Wh_j\Bigr).
+\]
+Como los coeficientes dependen solo de las caracter\'isticas de los nodos
+involucrados y no de un orden, la capa es equivariante a permutaciones por
+construcci\'on (\Cref{fig:apps:gat}). Al igual que todas las redes de paso de
+mensajes est\'andar, su capacidad para distinguir grafos est\'a acotada por el
+test de Weisfeiler--Leman~\citep{xu2019how}, pero la ponderaci\'on aprendida y
+anis\'otropa de los vecinos la vuelve, en la pr\'actica, notablemente m\'as
+expresiva que la agregaci\'on de pesos fijos.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small]
+\tikzset{
+    targetnode/.style={circle, draw=gdlred!70, fill=gdlred!20,
+        minimum size=28pt, inner sep=0pt, font=\small\bfseries, line width=1.6pt},
+    neighnode/.style={circle, draw=gdlblue!60, fill=gdlblue!20,
+        minimum size=22pt, inner sep=0pt, font=\small},
+    nonneighnode/.style={circle, draw=gdlgray!40, fill=gdlgray!15,
+        minimum size=20pt, inner sep=0pt, font=\small, text=gdlgray!70!black}
+}
+\node[targetnode] (vi) at (0, 0) {$v_i$};
+\node[neighnode] (v1) at (-2.4, 1.8)  {$v_1$};
+\node[neighnode] (v2) at (0.0, 2.6)   {$v_2$};
+\node[neighnode] (v3) at (2.4, 1.4)   {$v_3$};
+\node[neighnode] (v4) at (-2.2, -1.4) {$v_4$};
+\node[nonneighnode] (v5) at (2.6, -1.6)  {$v_5$};
+\node[nonneighnode] (v6) at (-3.6, 0.2)  {$v_6$};
+\draw[gdlgray!40, thin] (v1) -- (v6);
+\draw[gdlgray!40, thin] (v4) -- (v6);
+\draw[gdlgray!40, thin] (v3) -- (v5);
+\draw[gdlgray!40, thin] (v1) -- (v2);
+\draw[gdlgray!40, thin] (vi) -- (v1);
+\draw[gdlgray!40, thin] (vi) -- (v2);
+\draw[gdlgray!40, thin] (vi) -- (v3);
+\draw[gdlgray!40, thin] (vi) -- (v4);
+\draw[gdlgray!40, thin] (v5) -- (v3);
+\draw[-{Stealth[length=7pt,width=5pt]}, line width=3.2pt,
+    gdlorange, opacity=0.90, shorten >=8pt, shorten <=7pt] (v2) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v2)!0.48!(vi) + (0.7, 0.1)$) {$\alpha_{2i} = 0.42$};
+\draw[-{Stealth[length=6pt,width=4.5pt]}, line width=2.2pt,
+    gdlorange, opacity=0.75, shorten >=8pt, shorten <=7pt] (v1) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v1)!0.48!(vi) + (-0.85, -0.15)$) {$\alpha_{1i} = 0.28$};
+\draw[-{Stealth[length=5.5pt,width=4pt]}, line width=1.5pt,
+    gdlorange, opacity=0.60, shorten >=8pt, shorten <=7pt] (v3) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v3)!0.48!(vi) + (0.85, -0.15)$) {$\alpha_{3i} = 0.19$};
+\draw[-{Stealth[length=5pt,width=3.5pt]}, line width=0.9pt,
+    gdlorange, opacity=0.45, shorten >=8pt, shorten <=7pt] (v4) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v4)!0.48!(vi) + (-0.85, 0.15)$) {$\alpha_{4i} = 0.11$};
+\begin{scope}[shift={(-3.6, -2.8)}]
+    \node[font=\scriptsize\bfseries, text=gdlgray!70!black, anchor=west]
+        at (0, 0) {Grosor $\propto$ peso de atenci\'on};
+    \draw[-{Stealth[length=4pt,width=3pt]}, line width=0.9pt,
+        gdlorange, opacity=0.45] (0, -0.4) -- (1.2, -0.4);
+    \node[font=\tiny, text=gdlgray!70!black, anchor=west] at (1.35, -0.4) {baja};
+    \draw[-{Stealth[length=5pt,width=4pt]}, line width=3.2pt,
+        gdlorange, opacity=0.90] (2.4, -0.4) -- (3.6, -0.4);
+    \node[font=\tiny, text=gdlgray!70!black, anchor=west] at (3.75, -0.4) {alta};
+\end{scope}
+\end{tikzpicture}
+\caption[Mecanismo de atenci\'on sobre grafos]{El mecanismo de atenci\'on sobre
+grafos. El nodo objetivo (rojo) calcula coeficientes de atenci\'on
+$\alpha_{ij}$ con cada vecino (azul); el grosor de las flechas refleja la
+magnitud del peso aprendido. La red aprende a asignar distinta importancia a
+cada vecino \'unicamente a partir de las caracter\'isticas de los nodos, por lo
+que la operaci\'on es invariante al orden en que se enumeran los vecinos.}
+\label{fig:apps:gat}
+\end{figure}
+
+\paragraph{Atenci\'on equivariante en 3D.}
+Cuando las entradas portan coordenadas geom\'etricas, la atenci\'on debe
+respetar las simetr\'ias del espacio. El principio general es n\'itido: un
+mecanismo de atenci\'on es $G$-equivariante precisamente cuando las
+puntuaciones de compatibilidad son $G$-invariantes y la transformaci\'on de los
+valores conmuta con la acci\'on del grupo.
+
+\begin{proposition}[Atenci\'on equivariante]
+\label{prop:apps:equiv-attn}
+Una capa de atenci\'on es $G$-equivariante si las puntuaciones de atenci\'on
+$\alpha_{ij}$ son invariantes bajo la acci\'on de $G$ y la transformaci\'on de
+los valores conmuta con dicha acci\'on. Entonces $f(g\cdot x) = g\cdot f(x)$
+para todo $g\in G$.
+\end{proposition}
+
+El $\SE(3)$-Transformer~\citep{fuchs2020se3transformers} realiza esto para los
+movimientos r\'igidos en tres dimensiones. Calcula las puntuaciones de
+atenci\'on a partir de cantidades invariantes bajo rotaciones y traslaciones
+---caracter\'isticas escalares, distancias interat\'omicas $\|r_i - r_j\|$ y
+productos internos de caracter\'isticas vectoriales--- y agrega
+caracter\'isticas de tipo $\ell$ de modo que los vectores rotan con la escena
+mientras los escalares permanecen fijos. El Equiformer~\citep{liao2022equiformer}
+sustituye el producto punto por una red equivariante que act\'ua sobre productos
+tensoriales de representaciones irreducibles, lo que permite interacciones m\'as
+ricas preservando la equivarianza $\SO(3)$, y el Point
+Transformer~\citep{zhao2021point} lleva la atenci\'on vectorial a las nubes de
+puntos. Estos modelos son los caballos de batalla de las aplicaciones
+moleculares y f\'isicas de la siguiente secci\'on.
+
+\paragraph{Atenci\'on no euclidiana y algebraica.}
+Dos direcciones adicionales amplian el alcance de la atenci\'on. Las redes de
+atenci\'on hiperb\'olica~\citep{gulcehre2018hyperbolic} sustituyen el producto
+interno euclidiano por operaciones en el espacio hiperb\'olico, cuyo volumen de
+crecimiento exponencial embebe datos arb\'oreos y jer\'arquicos con mucha menos
+distorsi\'on que el espacio euclidiano (desarrollado en \Cref{ch:geodesics}).
+Los Geometric Algebra Transformers (GATr)~\citep{brehmer2023geometric}
+representan puntos, l\'ineas y planos de forma uniforme como multivectores de un
+\'algebra de Clifford y construyen sobre ellos una atenci\'on
+$\Eucl(3)$-equivariante, dando una \'unica arquitectura que maneja diversas
+primitivas geom\'etricas 3D. El hilo com\'un es que el sesgo inductivo de la
+geometr\'ia ---ya sea la curvatura negativa o el \'algebra de los movimientos
+r\'igidos--- se traslada al propio operador de atenci\'on.
+
+\section{Mol\'eculas y sistemas f\'isicos}
+\label{sec:apps:molecules}
+
+Si hay un dominio que reivindica el aprendizaje profundo geom\'etrico, son las
+ciencias f\'isicas y de la vida. Las mol\'eculas \emph{son} grafos cuyos nodos
+son \'atomos y cuyas aristas son enlaces, embebidos en $\R^3$; las leyes que las
+gobiernan son manifiestamente invariantes bajo los movimientos r\'igidos del
+espacio. Un modelo que ignore estas simetr\'ias desperdicia capacidad
+reaprendiendo una f\'isica que podr\'ia simplemente darse por supuesta.
+
+\paragraph{Predicci\'on de propiedades moleculares.}
+Las redes neuronales de grafos predicen propiedades farmacol\'ogicas y
+qu\'imico-cu\'anticas directamente a partir del grafo molecular, reemplazando los
+descriptores artesanales y las codificaciones en cadena (como SMILES) de la
+quimioinform\'atica cl\'asica, que descartan la informaci\'on tridimensional que
+gobierna la actividad biol\'ogica. Cuando el objetivo depende de la
+conformaci\'on molecular ---energ\'ias, fuerzas, momentos dipolares--- el modelo
+debe ser $\Eucl(3)$- o $\SE(3)$-equivariante: rotar la mol\'ecula debe rotar los
+vectores predichos y dejar inalterados los escalares predichos. Las arquitecturas
+de atenci\'on equivariante de la secci\'on anterior, junto con las redes de
+campos tensoriales y de paso de mensajes equivariante, son precisamente las
+herramientas que imponen esto.
+
+\begin{example}[AlphaFold y la estructura de prote\'inas]
+\label{ex:apps:alphafold}
+El \'exito m\'as celebrado del campo es
+AlphaFold~\citep{jumper2021alphafold}, que resolvi\'o el problema, abierto
+durante d\'ecadas, de predecir la estructura tridimensional de una prote\'ina a
+partir de su secuencia de amino\'acidos. En su n\'ucleo hay una arquitectura
+basada en atenci\'on que razona sobre la geometr\'ia de los residuos en el
+espacio respetando la simetr\'ia $\SE(3)$ de los movimientos r\'igidos: la
+estructura predicha se transforma de forma coherente cuando se rota o traslada el
+marco de referencia. La equivarianza geom\'etrica no es aqu\'i una elecci\'on
+estil\'istica sino un requisito estructural, y es buena parte de la raz\'on por
+la que el modelo generaliza tan bien.
+\end{example}
+
+\paragraph{Simulaci\'on f\'isica.}
+Los mismos principios se extienden de las estructuras est\'aticas a la
+din\'amica. Las redes equivariantes aprenden a simular sistemas f\'isicos
+---fluidos, materiales deformables, din\'amica de muchos cuerpos--- operando
+sobre mallas irregulares o conjuntos de part\'iculas mientras respetan las
+simetr\'ias de las ecuaciones diferenciales subyacentes. Como la simetr\'ia
+est\'a incorporada, las predicciones son f\'isicamente consistentes por
+construcci\'on (una entrada rotada produce una predicci\'on correspondientemente
+rotada) y los modelos a menudo igualan o superan a los m\'etodos num\'ericos
+cl\'asicos a una fracci\'on del coste. Un \'unico modelo fundacional puede
+incluso preentrenarse a la vez sobre mol\'eculas peque\~nas y prote\'inas: la
+equivarianza es una propiedad arquitect\'onica, independiente de los datos, de
+modo que una red entrenada para ser equivariante en un dominio sigue siendo
+equivariante al transferirse a otro con la misma simetr\'ia~\citep{jiao2024ept}.
+
+\paragraph{Ciencia de materiales.}
+Los s\'olidos cristalinos a\~naden una capa adicional de simetr\'ia: las
+simetr\'ias discretas de traslaci\'on y de grupo puntual de la red cristalina.
+Codificar estas simetr\'ias en redes equivariantes permite a los modelos
+predecir propiedades mec\'anicas, t\'ermicas y electr\'onicas de compuestos
+candidatos, acelerando la b\'usqueda de nuevos materiales. Como en el caso
+molecular, el prior geom\'etrico convierte etiquetas escasas y costosas en un
+problema de aprendizaje tratable.
+
+\section{Sistemas de recomendaci\'on y redes sociales}
+\label{sec:apps:graphs}
+
+Los datos relacionales ---qui\'en interact\'ua con qui\'en, qui\'en compra
+qu\'e--- tienen forma de grafo por naturaleza, y aqu\'i la simetr\'ia rectora es
+la invarianza a permutaciones: la identidad de un usuario no depende del orden en
+que enumeremos las cuentas. Las redes neuronales de grafos (\Cref{ch:graphs})
+explotan esto directamente, propagando informaci\'on por las aristas del grafo
+de interacciones de modo que la representaci\'on de cada nodo queda moldeada por
+su vecindario.
+
+\paragraph{Recomendaci\'on y an\'alisis social.}
+Los sistemas de recomendaci\'on modelan usuarios y \'items como nodos de un grafo
+bipartito y aprenden \emph{embeddings} mediante paso de mensajes sobre las
+interacciones observadas, capturando se\~nales colaborativas que las tablas de
+caracter\'isticas planas pasan por alto. El an\'alisis de redes sociales usa la
+misma maquinaria para la clasificaci\'on de nodos (inferir atributos de
+usuario), la predicci\'on de enlaces (sugerir conexiones) y la detecci\'on de
+comunidades. En todos ellos, la topolog\'ia irregular ---nodos con n\'umeros muy
+dispares de vecinos y sin orden natural--- es exactamente lo que los modelos
+convolucionales no pueden manejar y para lo que las redes de grafos est\'an
+hechas.
+
+\paragraph{Jerarqu\'ias y geometr\'ia hiperb\'olica.}
+Muchos conjuntos de datos relacionales no solo son irregulares sino
+\emph{jer\'arquicos}: taxonom\'ias, organigramas, grafos de conocimiento y la
+estructura de seguidores de las redes sociales se ramifican como \'arboles. El
+n\'umero de nodos a distancia $r$ de una ra\'iz crece exponencialmente en $r$, y
+el espacio euclidiano sencillamente no tiene sitio para embeber ese crecimiento
+sin aplastar las distancias. El espacio hiperb\'olico s\'i: su volumen tambi\'en
+crece exponencialmente, de modo que un \'arbol se embebe con casi nula
+distorsi\'on (\Cref{fig:apps:hyperbolic}). Esta es la motivaci\'on geom\'etrica
+detr\'as de los \emph{embeddings} hiperb\'olicos y de las redes de atenci\'on
+hiperb\'olica de \Cref{sec:apps:attention}, que sit\'uan entidades de grafos de
+conocimiento y usuarios jer\'arquicos en un espacio de curvatura negativa.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    root node/.style={circle, draw=gdlpurple!80, fill=gdlpurple!70,
+        minimum size=12pt, inner sep=0pt},
+    depth1 node/.style={circle, draw=gdlblue!80, fill=gdlblue!60,
+        minimum size=10pt, inner sep=0pt},
+    depth2 node/.style={circle, draw=gdlgreen!80, fill=gdlgreen!60,
+        minimum size=10pt, inner sep=0pt},
+    leaf node/.style={circle, draw=gdlyellow!80, fill=gdlyellow!70,
+        minimum size=8pt, inner sep=0pt},
+    tree edge/.style={draw=gdlgray!50, line width=0.8pt},
+    scale=0.82, every node/.style={transform shape}
+]
+% IZQUIERDA: euclidiano
+\begin{scope}[shift={(0,0)}]
+    \coordinate (r) at (0, 1.9);
+    \coordinate (d1-0) at (-1.8, 0.4); \coordinate (d1-1) at ( 1.8, 0.4);
+    \coordinate (d2-0) at (-2.7, -1.1); \coordinate (d2-1) at (-0.9, -1.1);
+    \coordinate (d2-2) at ( 0.9, -1.1); \coordinate (d2-3) at ( 2.7, -1.1);
+    \coordinate (d3-0) at (-3.15, -2.6); \coordinate (d3-1) at (-2.25, -2.6);
+    \coordinate (d3-2) at (-1.35, -2.6); \coordinate (d3-3) at (-0.45, -2.6);
+    \coordinate (d3-4) at ( 0.45, -2.6); \coordinate (d3-5) at ( 1.35, -2.6);
+    \coordinate (d3-6) at ( 2.25, -2.6); \coordinate (d3-7) at ( 3.15, -2.6);
+    \draw[dashed, gdlgray!50, line width=0.8pt] (0,-0.35) circle (3.6);
+    \draw[tree edge] (r) -- (d1-0); \draw[tree edge] (r) -- (d1-1);
+    \draw[tree edge] (d1-0) -- (d2-0); \draw[tree edge] (d1-0) -- (d2-1);
+    \draw[tree edge] (d1-1) -- (d2-2); \draw[tree edge] (d1-1) -- (d2-3);
+    \draw[tree edge] (d2-0) -- (d3-0); \draw[tree edge] (d2-0) -- (d3-1);
+    \draw[tree edge] (d2-1) -- (d3-2); \draw[tree edge] (d2-1) -- (d3-3);
+    \draw[tree edge] (d2-2) -- (d3-4); \draw[tree edge] (d2-2) -- (d3-5);
+    \draw[tree edge] (d2-3) -- (d3-6); \draw[tree edge] (d2-3) -- (d3-7);
+    \node[root node] at (r) {};
+    \node[depth1 node] at (d1-0) {}; \node[depth1 node] at (d1-1) {};
+    \foreach \i in {0,...,3} {\node[depth2 node] at (d2-\i) {};}
+    \foreach \i in {0,...,7} {\node[leaf node] at (d3-\i) {};}
+    \node[font=\footnotesize\itshape, text=gdlgray!70!black] at (0, -4.6)
+        {Embedding euclidiano};
+\end{scope}
+% DERECHA: disco de Poincaré
+\begin{scope}[shift={(9.0, -0.35)}]
+    \pgfmathsetmacro{\R}{3.6}
+    \foreach \rad in {0.30, 0.52, 0.70, 0.83, 0.92} {
+        \draw[gdlgray!20, thin] (0,0) circle (\rad*\R);}
+    \foreach \ang in {0,30,60,90,120,150,180,210,240,270,300,330} {
+        \draw[gdlgray!20, thin] (0,0) -- ({\ang}:\R);}
+    \draw[black, line width=1.2pt] (0,0) circle (\R);
+    \pgfmathsetmacro{\rone}{0.6044*\R}
+    \pgfmathsetmacro{\rtwo}{0.8854*\R}
+    \pgfmathsetmacro{\rthree}{0.9505*\R}
+    \coordinate (pr) at (0, 0);
+    \coordinate (pd1-0) at ({90}:{\rone}); \coordinate (pd1-1) at ({270}:{\rone});
+    \coordinate (pd2-0) at ({50}:{\rtwo}); \coordinate (pd2-1) at ({130}:{\rtwo});
+    \coordinate (pd2-2) at ({230}:{\rtwo}); \coordinate (pd2-3) at ({310}:{\rtwo});
+    \coordinate (pd3-0) at ({35}:{\rthree}); \coordinate (pd3-1) at ({65}:{\rthree});
+    \coordinate (pd3-2) at ({115}:{\rthree}); \coordinate (pd3-3) at ({145}:{\rthree});
+    \coordinate (pd3-4) at ({215}:{\rthree}); \coordinate (pd3-5) at ({245}:{\rthree});
+    \coordinate (pd3-6) at ({295}:{\rthree}); \coordinate (pd3-7) at ({325}:{\rthree});
+    \draw[tree edge] (pr) -- (pd1-0); \draw[tree edge] (pr) -- (pd1-1);
+    \draw[tree edge] (pd1-0) -- (pd2-0); \draw[tree edge] (pd1-0) -- (pd2-1);
+    \draw[tree edge] (pd1-1) -- (pd2-2); \draw[tree edge] (pd1-1) -- (pd2-3);
+    \draw[tree edge] (pd2-0) -- (pd3-0); \draw[tree edge] (pd2-0) -- (pd3-1);
+    \draw[tree edge] (pd2-1) -- (pd3-2); \draw[tree edge] (pd2-1) -- (pd3-3);
+    \draw[tree edge] (pd2-2) -- (pd3-4); \draw[tree edge] (pd2-2) -- (pd3-5);
+    \draw[tree edge] (pd2-3) -- (pd3-6); \draw[tree edge] (pd2-3) -- (pd3-7);
+    \node[root node] at (pr) {};
+    \node[depth1 node] at (pd1-0) {}; \node[depth1 node] at (pd1-1) {};
+    \foreach \i in {0,...,3} {\node[depth2 node] at (pd2-\i) {};}
+    \foreach \i in {0,...,7} {\node[leaf node] at (pd3-\i) {};}
+    \node[font=\footnotesize\itshape, text=gdlgray!70!black] at (0, -4.25)
+        {Embedding en disco de Poincar\'e};
+\end{scope}
+\end{tikzpicture}
+\caption[Embedding euclidiano frente a hiperb\'olico de un \'arbol]{Embedding de
+un \'arbol equilibrado en el espacio euclidiano (izquierda) y en el disco de
+Poincar\'e (derecha). En el plano, los niveles sucesivos se amontonan y los
+sub\'arboles hermanos se solapan, distorsionando las distancias; en el espacio
+hiperb\'olico el volumen de crecimiento exponencial da espacio a cada nivel para
+desplegarse, de modo que el \'arbol se embebe con escasa distorsi\'on. Por eso
+los datos relacionales jer\'arquicos se modelan de forma natural en un espacio
+de curvatura negativa.}
+\label{fig:apps:hyperbolic}
+\end{figure}
+
+\paragraph{Grafos temporales: fraude y riesgo.}
+Las transacciones financieras forman grafos cuya topolog\'ia evoluciona en el
+tiempo. Las redes neuronales de grafos que operan sobre estos grafos temporales
+detectan tramas de fraude y riesgo sist\'emico al reconocer patrones
+estructurales ---subgrafos at\'ipicos, cambios bruscos en la conectividad--- que
+los modelos tabulares, ciegos a la estructura relacional, no pueden ver. El
+prior geom\'etrico vuelve a ser decisivo: es la \emph{forma} del patr\'on de
+interacci\'on, no las caracter\'isticas individuales, la que porta la se\~nal.
+
+\section{Un principio com\'un}
+\label{sec:apps:common}
+
+A lo largo de estos dominios reaparece un \'unico mensaje. En visi\'on por
+computador la simetr\'ia es la traslaci\'on, la rotaci\'on o la libertad gauge de
+una superficie curva; en el modelado molecular y f\'isico es el grupo euclidiano
+de los movimientos r\'igidos; en los datos relacionales es la permutaci\'on de
+nodos, y la geometr\'ia del espacio de embedding puede ser plana o de curvatura
+negativa. En todos los casos se aplica la misma receta: identificar la
+simetr\'ia que el problema respeta, incorporarla a la arquitectura y dejar que la
+red gaste su capacidad en lo que realmente var\'ia.
+
+\begin{remark}[La geometr\'ia como principio organizador]
+\label{rem:apps:unification}
+La amplitud de estas aplicaciones es, en s\'i misma, la evidencia m\'as fuerte de
+la tesis central de este libro. Las redes convolucionales para im\'agenes, los
+transformers equivariantes para prote\'inas y las redes de grafos para datos
+sociales parecen herramientas sin relaci\'on entre s\'i, pero cada una es una
+instancia del paso de mensajes equivariante, que difieren solo en el dominio y el
+grupo de simetr\'ia que respetan. La geometr\'ia no es un truco espec\'ifico de
+cada dominio, sino el principio com\'un que el aprendizaje profundo geom\'etrico
+identifica, formaliza y explota.
+\end{remark}
+
+M\'as all\'a de estas \'areas consolidadas, las mismas ideas abren l\'ineas de
+investigaci\'on all\'a donde la estructura geom\'etrica es fundamental: la
+neurociencia computacional, donde las redes de grafos modelan la conectividad
+cerebral estructural y funcional y revelan patrones de trastornos neurol\'ogicos
+invisibles para los m\'etodos tabulares; y la climatolog\'ia, donde la
+geometr\'ia esf\'erica de la Tierra invita a usar redes esf\'ericas
+$\SO(3)$-equivariantes para la predicci\'on meteorol\'ogica y clim\'atica. La
+diversidad de estos escenarios subraya que respetar la geometr\'ia de los datos
+no es un detalle de optimizaci\'on sino el principio organizador del campo, y el
+puente entre la teor\'ia de los cap\'itulos precedentes y los sistemas que est\'an
+transformando la ciencia y la tecnolog\'ia.

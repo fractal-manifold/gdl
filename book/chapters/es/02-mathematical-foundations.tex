@@ -1,0 +1,600 @@
+\providecommand{\GL}{\operatorname{GL}}
+\providecommand{\SO}{\operatorname{SO}}
+\providecommand{\Orth}{\operatorname{O}}
+\providecommand{\Sym}{\operatorname{Sym}}
+\providecommand{\Stab}{\operatorname{Stab}}
+\providecommand{\Orb}{\operatorname{Orb}}
+\providecommand{\Lie}[1]{\mathfrak{#1}}
+
+\chapter{Fundamentos Matem\'aticos}
+\label{ch:foundations}
+
+La premisa del aprendizaje profundo geom\'etrico, planteada en el
+\Cref{ch:introduction}, es que la estructura geom\'etrica de los datos debe
+dictar la estructura del modelo. Para volver operativa esta premisa necesitamos
+un lenguaje preciso para dos clases de estructura: las \emph{simetr\'ias} que
+posee un problema y los \emph{espacios} en los que viven los datos. Este
+cap\'itulo desarrolla ese lenguaje. Comenzamos con los grupos y su forma de
+actuar sobre conjuntos, que formalizan la simetr\'ia; pasamos despu\'es a las
+representaciones lineales, el mecanismo por el cual una simetr\'ia abstracta
+act\'ua sobre los espacios de caracter\'isticas de una red neuronal; describimos
+los espacios homog\'eneos y los cocientes, que unifican dominios tan distintos
+como la esfera y el plano bajo una misma construcci\'on; y cerramos con las
+variedades y los espacios tangentes, la geometr\'ia sobre la que se asientan los
+cap\'itulos posteriores. El tratamiento es deliberadamente autocontenido pero
+selectivo: enunciamos las definiciones y teoremas que se emplean en el resto del
+libro y demostramos solo aquellos resultados cuyas pruebas son ilustrativas.
+Referencias est\'andar para este material son~\citet{lee2012introduction} para
+variedades, \citet{munkres2000topology} para topolog\'ia y
+\citet{Kirillov2008,Fulton1991} para grupos de Lie y teor\'ia de
+representaciones.
+
+\section{Grupos y acciones de grupo}
+\label{sec:found:groups}
+
+Una simetr\'ia es una transformaci\'on que deja invariable una magnitud de
+inter\'es. El conjunto de todas esas transformaciones nunca es arbitrario: la
+composici\'on de dos simetr\'ias es de nuevo una simetr\'ia, toda simetr\'ia se
+puede deshacer y no hacer nada es una simetr\'ia. Estos tres hechos son
+exactamente los axiomas de un grupo.
+
+\begin{definition}[Grupo]
+\label{def:found:group}
+Un \emph{grupo} es un conjunto $\group$ dotado de una operaci\'on binaria
+$\cdot : \group \times \group \to \group$ que satisface:
+\begin{enumerate}
+  \item \textbf{Asociatividad:} $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ para
+    todo $a, b, c \in \group$.
+  \item \textbf{Identidad:} existe $e \in \group$ con
+    $e \cdot a = a \cdot e = a$ para todo $a \in \group$.
+  \item \textbf{Inversos:} para cada $a \in \group$ existe $a^{-1} \in \group$
+    con $a \cdot a^{-1} = a^{-1} \cdot a = e$.
+\end{enumerate}
+El grupo es \emph{abeliano} (o conmutativo) si $a \cdot b = b \cdot a$ para todo
+$a, b$.
+\end{definition}
+
+Las traslaciones de una imagen forman un grupo abeliano: desplazar por $(a,b)$ y
+luego por $(c,d)$ da el mismo resultado en cualquier orden. Las rotaciones en
+tres dimensiones, en cambio, no conmutan, y su grupo es no abeliano. Un
+subconjunto $H \subseteq \group$ que es a su vez un grupo con la operaci\'on
+heredada es un \emph{subgrupo}, escrito $H \le \group$. Un subgrupo $H$ es
+\emph{normal} ($H \triangleleft \group$) si $gHg^{-1} = H$ para todo
+$g \in \group$; la normalidad es precisamente la condici\'on para que las clases
+laterales de $H$ hereden una estructura de grupo, como retomamos en la
+\Cref{sec:found:homogeneous}.
+
+El puente entre dos grupos es una aplicaci\'on que preserva sus operaciones.
+
+\begin{definition}[Homomorfismo]
+\label{def:found:homomorphism}
+Una aplicaci\'on $\phi : \group \to \mathcal{H}$ entre grupos es un
+\emph{homomorfismo} si $\phi(g_1 g_2) = \phi(g_1)\phi(g_2)$ para todo
+$g_1, g_2 \in \group$. Un homomorfismo biyectivo es un \emph{isomorfismo},
+escrito $\group \cong \mathcal{H}$. El \emph{n\'ucleo}
+$\ker(\phi) = \{g : \phi(g) = e_{\mathcal{H}}\}$ es siempre un subgrupo normal, y
+la \emph{imagen} $\operatorname{Im}(\phi) = \{\phi(g) : g \in \group\}$ es un
+subgrupo de $\mathcal{H}$.
+\end{definition}
+
+Dos grupos isomorfos son algebraicamente indistinguibles: solo difieren en los
+nombres de sus elementos. Los homomorfismos son el recurso formal mediante el
+cual las simetr\'ias abstractas se vuelven transformaciones computables, y en los
+\Cref{ch:priors,ch:groups} son lo que hace implementable la equivarianza.
+
+Los grupos son abstractos; los datos son concretos. Para aplicar un grupo a
+im\'agenes, grafos o nubes de puntos debemos decir c\'omo sus elementos
+transforman los puntos de un conjunto. Esta es la noci\'on de acci\'on de grupo.
+
+\begin{definition}[Acci\'on de grupo]
+\label{def:found:action}
+Una \emph{acci\'on} de un grupo $\group$ sobre un conjunto $X$ es una aplicaci\'on
+$\group \times X \to X$, escrita $(g, x) \mapsto g \cdot x$, que satisface
+\[
+  (g_1 g_2) \cdot x = g_1 \cdot (g_2 \cdot x), \qquad e \cdot x = x
+\]
+para todo $g_1, g_2 \in \group$ y $x \in X$.
+\end{definition}
+
+Toda acci\'on equivale a un homomorfismo en el grupo sim\'etrico: la aplicaci\'on
+$\tilde\rho(g)\colon x \mapsto g\cdot x$ es una biyecci\'on de $X$ (su inversa es
+$\tilde\rho(g^{-1})$), y $\tilde\rho : \group \to \operatorname{Sym}(X)$ es un
+homomorfismo. Estudiar c\'omo act\'ua $\group$ sobre $X$ es, por tanto, lo mismo
+que estudiar homomorfismos $\group \to \operatorname{Sym}(X)$. Las acciones
+relevantes para este libro son familiares:
+
+\begin{example}[Acciones en aprendizaje profundo]
+\label{ex:found:actions}
+\leavevmode
+\begin{itemize}
+  \item Las traslaciones $\Z^2$ act\'uan sobre im\'agenes discretas desplazando
+    p\'ixeles.
+  \item Las rotaciones $\SO(3)$ act\'uan sobre nubes de puntos por
+    multiplicaci\'on matricial.
+  \item Las permutaciones $S_n$ act\'uan sobre grafos de $n$ nodos
+    reetiquet\'andolos.
+\end{itemize}
+Son, respectivamente, los grupos de simetr\'ia de las rejillas, los datos
+geom\'etricos y los grafos, y organizan los
+\Cref{ch:grids,ch:groups,ch:graphs}.
+\end{example}
+
+Muchos grupos de simetr\'ia de inter\'es se construyen a partir de otros m\'as
+simples. El grupo eucl\'ideo de los movimientos r\'igidos, por ejemplo, combina
+traslaciones con rotaciones y reflexiones, pero no como un producto simple: una
+rotaci\'on reorienta la traslaci\'on que la sigue. El \emph{producto
+semidirecto} $N \rtimes_\phi H$ captura esto. Dado un homomorfismo
+$\phi : H \to \operatorname{Aut}(N)$ que describe c\'omo act\'ua $H$ sobre $N$,
+es el conjunto $N \times H$ con el producto
+\[
+  (n_1, h_1)\cdot(n_2, h_2) = \bigl(n_1\,\phi(h_1)(n_2),\; h_1 h_2\bigr).
+\]
+El grupo eucl\'ideo es $E(n) = \R^n \rtimes \Orth(n)$, con
+$(t_1, R_1)\cdot(t_2, R_2) = (t_1 + R_1 t_2,\, R_1 R_2)$: primero se rota, luego
+se traslada. Su subgrupo que preserva la orientaci\'on
+$SE(n) = \R^n \rtimes \SO(n)$ es el grupo de simetr\'ia de los datos r\'igidos
+tridimensionales.
+
+\paragraph{Grupos de Lie.}
+Las simetr\'ias anteriores se dividen en dos clases. Las permutaciones forman un
+grupo \emph{discreto}; las rotaciones y traslaciones forman familias
+\emph{continuas}. Para hacer c\'alculo en el caso continuo ---para diferenciar y
+optimizar sobre transformaciones--- exigimos que el grupo sea tambi\'en una
+variedad diferenciable (noci\'on que se precisa en la \Cref{sec:found:manifolds}).
+
+\begin{definition}[Grupo de Lie]
+\label{def:found:liegroup}
+Un \emph{grupo de Lie} es un grupo $G$ que es a la vez una variedad diferenciable
+y para el cual la multiplicaci\'on $(g,h) \mapsto gh$ y la inversi\'on
+$g \mapsto g^{-1}$ son aplicaciones suaves.
+\end{definition}
+
+Los grupos de Lie m\'as importantes en este libro son los grupos matriciales. El
+\emph{grupo ortogonal especial}
+\[
+  \SO(n) = \{ R \in \R^{n\times n} : R^\top R = I_n,\ \det R = 1 \}
+\]
+de las rotaciones es un grupo de Lie compacto de dimensi\'on
+$\tfrac{n(n-1)}{2}$; al eliminar la condici\'on del determinante se obtiene el
+grupo ortogonal $\Orth(n)$, que adem\'as contiene reflexiones. Para $n=2$ una
+rotaci\'on es un \'unico \'angulo,
+$R_\theta = \left(\begin{smallmatrix}\cos\theta & -\sin\theta\\ \sin\theta &
+\cos\theta\end{smallmatrix}\right)$, de modo que $\SO(2)$ es el c\'irculo;
+$\SO(3)$ tiene dimensi\'on tres, los tres ejes de rotaci\'on.
+
+Un grupo de Lie es curvo, pero es lineal a primer orden. Su espacio tangente en
+la identidad, $\Lie{g} = T_e G$, lleva un corchete bilineal antisim\'etrico
+$[\cdot,\cdot]$ (el \emph{corchete de Lie}) que lo convierte en un
+\emph{\'algebra de Lie}: un espacio vectorial con un corchete bilineal,
+antisim\'etrico y que satisface la identidad de Jacobi
+$[X,[Y,Z]] + [Y,[Z,X]] + [Z,[X,Y]] = 0$. El \'algebra de Lie lineariza el grupo,
+y el paso de vuelta al grupo es el \emph{mapa exponencial}
+$\exp : \Lie{g} \to G$, que para grupos matriciales es la exponencial de
+matrices $\exp(A) = \sum_{k\ge 0} A^k/k!$. Para $\SO(2)$, con
+$J = \left(\begin{smallmatrix}0 & -1\\ 1 & 0\end{smallmatrix}\right)$ generando
+$\Lie{so}(2)$,
+\[
+  \exp(\theta J) = \begin{pmatrix}\cos\theta & -\sin\theta\\
+  \sin\theta & \cos\theta\end{pmatrix} = R_\theta,
+\]
+de modo que la exponencial convierte un \'angulo (un elemento del \'algebra) en
+una rotaci\'on (un elemento del grupo). Esta es la raz\'on por la que las
+\'algebras de Lie importan en el dise\~no de redes neuronales: la optimizaci\'on
+puede realizarse en el espacio vectorial plano $\Lie{g}$ con gradientes
+ordinarios, y la transformaci\'on resultante aplicarse en el grupo mediante
+$\exp$.
+
+\section{Representaciones}
+\label{sec:found:representations}
+
+Una acci\'on de grupo mueve los puntos de un dominio. Dentro de una red
+neuronal, sin embargo, las simetr\'ias deben actuar sobre \emph{espacios de
+caracter\'isticas} ---espacios vectoriales de activaciones---. La noci\'on que
+hace que una simetr\'ia act\'ue linealmente es la representaci\'on.
+
+\begin{definition}[Representaci\'on]
+\label{def:found:representation}
+Una \emph{representaci\'on} de un grupo $\group$ sobre un espacio vectorial $V$
+sobre un cuerpo $\mathbb{K}$ es un homomorfismo $\rho : \group \to \GL(V)$, donde
+$\GL(V)$ es el grupo de aplicaciones lineales invertibles de $V$. De forma
+equivalente, a cada $g$ se le asigna una matriz invertible $\rho(g)$ de modo que
+$\rho(g_1 g_2) = \rho(g_1)\rho(g_2)$. Para un grupo de Lie se exige adem\'as que
+$\rho$ sea suave.
+\end{definition}
+
+Las representaciones traducen simetr\'ias abstractas en operaciones lineales
+concretas sobre los canales de una red. Una representaci\'on suave de un grupo de
+Lie se diferencia a una representaci\'on de su \'algebra de Lie,
+$d\rho : \Lie{g} \to \Lie{gl}(V)$ con
+$d\rho(X) = \frac{d}{dt}\big|_{0}\,\rho(\exp(tX))$, que preserva el corchete:
+$d\rho([X,Y]) = [d\rho(X), d\rho(Y)]$. Esto es de nuevo lo que permite optimizar
+en el \'algebra lineal y actuar en el grupo.
+
+La pregunta b\'asica de la teor\'ia de representaciones es c\'omo se descompone
+una representaci\'on.
+
+\begin{definition}[Representaci\'on irreducible]
+\label{def:found:irreducible}
+Una representaci\'on $\rho : \group \to \GL(V)$ con $V \ne \{0\}$ es
+\emph{irreducible} si los \'unicos subespacios $W \subseteq V$ con
+$\rho(g)W \subseteq W$ para todo $g$ son $\{0\}$ y $V$.
+\end{definition}
+
+Las representaciones irreducibles son los bloques fundamentales con los que se
+construyen todas las dem\'as. Para $\SO(2)$ las irreducibles (complejas) son
+unidimensionales, indexadas por $n \in \Z$:
+\[
+  \rho_n : \SO(2) \to \C^*, \qquad \rho_n(R_\theta) = e^{i n\theta}.
+\]
+Cada $n$ es una \emph{frecuencia}, y estas son exactamente las funciones base de
+la serie de Fourier cl\'asica. El siguiente teorema afirma que para grupos
+compactos toda representaci\'on se descompone en irreducibles.
+
+\begin{theorem}[Reducibilidad completa]
+\label{thm:found:decomposition}
+Toda representaci\'on de dimensi\'on finita de un grupo compacto $\group$ se
+descompone como suma directa de representaciones irreducibles,
+$V = \bigoplus_i n_i V_i$, donde cada $V_i$ es irreducible y $n_i \in \mathbb{N}$
+es su multiplicidad.
+\end{theorem}
+
+La demostraci\'on descansa en un \'unico recurso: promediar sobre el grupo. Los
+grupos compactos poseen una \'unica medida de probabilidad invariante, la
+\emph{medida de Haar} $\mu$, que satisface $\mu(gA) = \mu(Ag) = \mu(A)$ y
+$\mu(\group) = 1$. Dado cualquier producto interno
+$\langle\cdot,\cdot\rangle_0$ en $V$, el promedio
+$\langle u, v\rangle = \int_\group \langle \rho(g)u, \rho(g)v\rangle_0\,d\mu(g)$
+es un producto interno $\group$-invariante. Respecto de \'el, el complemento
+ortogonal de cualquier subespacio invariante es de nuevo invariante, de modo que
+siempre se puede separar un subespacio invariante; la inducci\'on sobre
+$\dim V$ concluye el argumento. La medida de Haar es tambi\'en exactamente el
+promediado que define la convoluci\'on de grupo, y su invarianza es lo que
+garantiza la equivarianza del operador resultante ---el hecho central tras las
+redes equivariantes a grupos del \Cref{ch:groups}~\citep{cohen2016group}.
+
+Las aplicaciones entre irreducibles est\'an fuertemente restringidas, hecho
+conocido como lema de Schur.
+
+\begin{lemma}[Schur]
+\label{lem:found:schur}
+Sean $(\rho, V)$ y $(\sigma, W)$ representaciones irreducibles y sea
+$T : V \to W$ tal que $T\rho(g) = \sigma(g)T$ para todo $g$ (un entrelazador).
+Entonces $T$ es cero o un isomorfismo. Si adem\'as $V = W$ y el cuerpo es $\C$,
+entonces $T = \lambda\,\mathrm{Id}$ para alg\'un escalar $\lambda$.
+\end{lemma}
+
+\begin{proof}
+El n\'ucleo de $T$ es invariante ($v \in \ker T \Rightarrow T\rho(g)v =
+\sigma(g)Tv = 0$), luego por la irreducibilidad de $\rho$ es $\{0\}$ o $V$;
+an\'alogamente la imagen es invariante, luego por la irreducibilidad de $\sigma$
+es $\{0\}$ o $W$. Por tanto $T = 0$ o $T$ es una biyecci\'on. Para la segunda
+parte, sobre $\C$ la aplicaci\'on $T$ tiene un autovalor $\lambda$; entonces
+$T - \lambda\,\mathrm{Id}$ es un entrelazador con n\'ucleo no trivial, de donde
+se anula.
+\end{proof}
+
+El lema de Schur es la ra\'iz algebraica de la eficiencia param\'etrica de las
+redes equivariantes: una capa lineal equivariante entre representaciones se ve
+obligada a ser diagonal por bloques en la descomposici\'on irreducible, con cada
+bloque proporcional a la identidad, de modo que el n\'umero de par\'ametros
+libres lo dicta la simetr\'ia y no el tama\~no de la entrada. Esta
+descomposici\'on culmina, para grupos de Lie compactos, en el teorema de
+Peter--Weyl.
+
+\begin{theorem}[Peter--Weyl]
+\label{thm:found:peterweyl}
+Sea $\group$ un grupo de Lie compacto. El espacio $L^2(\group)$ de funciones de
+cuadrado integrable se descompone como
+\[
+  L^2(\group) = \bigoplus_{\lambda \in \widehat{\group}} d_\lambda\, V_\lambda,
+\]
+donde $\widehat{\group}$ es el conjunto de clases de equivalencia de
+representaciones irreducibles, $V_\lambda$ es el espacio de la irreducible
+$\lambda$, y $d_\lambda = \dim V_\lambda$.
+\end{theorem}
+
+El teorema de Peter--Weyl es la generalizaci\'on de la serie de Fourier a grupos
+no abelianos: las entradas matriciales de las irreducibles desempe\~nan el papel
+de las exponenciales $e^{in\theta}$ y forman una base ortonormal completa de
+$L^2(\group)$. Para $\group = \SO(2)$ se reduce exactamente al desarrollo de
+Fourier cl\'asico $f(\theta) = \sum_n \hat f_n\,e^{in\theta}$. Para el dise\~no
+de redes tiene tres consecuencias, desarrolladas en el \Cref{ch:groups}: los
+canales de una capa equivariante se indexan por irreducibles $\lambda$; el
+n\'umero de par\'ametros por canal $d_\lambda^2$ queda fijado por el grupo, con
+independencia de la resoluci\'on de entrada; y las convoluciones equivariantes
+se convierten en multiplicaciones punto a punto en este dominio de Fourier
+generalizado (espectral).
+
+\section{Espacios homog\'eneos y cocientes}
+\label{sec:found:homogeneous}
+
+Hasta ahora las simetr\'ias han actuado sobre los datos. Ahora invertimos la
+construcci\'on y usamos un grupo para \emph{construir} el propio dominio. Muchos
+de los espacios en los que viven los datos geom\'etricos ---la esfera $S^2$, los
+espacios proyectivos, las grassmannianas--- comparten una estructura oculta: son
+cocientes $G/H$ de un grupo de Lie por un subgrupo cerrado. Reconocer un dominio
+como tal cociente es el paso m\'as \'util al dise\~nar una arquitectura
+equivariante para \'el.
+
+Empezamos por la construcci\'on algebraica. Cuando $H \triangleleft \group$ es
+normal, las clases laterales izquierdas $g H = \{gh : h \in H\}$ particionan
+$\group$ y heredan una estructura de grupo.
+
+\begin{definition}[Grupo cociente]
+\label{def:found:quotient}
+Sea $H \triangleleft \group$. El \emph{grupo cociente} $\group/H$ es el conjunto
+de clases laterales izquierdas $\{gH : g \in \group\}$ con la operaci\'on
+$(g_1 H)(g_2 H) = (g_1 g_2) H$.
+\end{definition}
+
+La operaci\'on est\'a bien definida precisamente porque $H$ es normal. El v\'inculo
+entre cocientes y homomorfismos es el primer teorema de isomorf\'ia: para todo
+homomorfismo $\phi : \group \to \mathcal{H}$,
+\[
+  \group / \ker(\phi) \;\cong\; \operatorname{Im}(\phi),
+\]
+mediante $g\,\ker(\phi) \mapsto \phi(g)$. Los cocientes modelan la reducci\'on
+sistem\'atica de simetr\'ia que ocurre en arquitecturas jer\'arquicas: una red
+sobre datos tridimensionales puede comenzar con la simetr\'ia completa $SE(3)$ y
+reducirse a $\SO(3)$ en capas m\'as profundas mediante un homomorfismo cuyo
+n\'ucleo (las traslaciones) es un subgrupo normal.
+
+Para la geometr\'ia necesitamos dos nociones asociadas a una acci\'on: qu\'e
+puntos puede alcanzar un punto dado y qu\'e elementos del grupo lo fijan.
+
+\begin{definition}[\'Orbita y estabilizador]
+\label{def:found:orbit}
+Sea $\group$ actuando sobre un conjunto $X$ y sea $x \in X$. La \emph{\'orbita}
+de $x$ es $\Orb(x) = \{g \cdot x : g \in \group\}$, el conjunto de puntos
+alcanzables desde $x$. El \emph{estabilizador} de $x$ es
+$\Stab(x) = \{g \in \group : g \cdot x = x\}$, el subgrupo que fija $x$.
+\end{definition}
+
+Ambas nociones se vinculan mediante el teorema \'orbita--estabilizador, que es el
+coraz\'on geom\'etrico de esta secci\'on (\Cref{fig:found:orbit}).
+
+\begin{theorem}[\'Orbita--estabilizador]
+\label{thm:found:orbitstab}
+Sea $\group$ actuando sobre $X$ y sea $x \in X$. Entonces existe una biyecci\'on
+natural
+\[
+  \group / \Stab(x) \;\cong\; \Orb(x), \qquad g\,\Stab(x) \mapsto g \cdot x.
+\]
+\end{theorem}
+
+\begin{proof}
+La aplicaci\'on $\psi(g\,\Stab(x)) = g\cdot x$ est\'a bien definida: si
+$g\,\Stab(x) = h\,\Stab(x)$ entonces $h^{-1}g \in \Stab(x)$, de donde
+$g\cdot x = h\cdot((h^{-1}g)\cdot x) = h\cdot x$. Es inyectiva por el mismo
+c\'alculo le\'ido al rev\'es, y suprayectiva porque todo punto de $\Orb(x)$ es
+$g\cdot x$ para alg\'un $g$.
+\end{proof}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    >=Stealth,
+    pt/.style={circle, fill=#1, minimum size=7pt, inner sep=0pt}
+]
+% Grupo G con clases laterales
+\draw[thick, fill=gdlgreen!12, rounded corners] (-5.2,-1.6) rectangle (-3.4,2.1);
+\node[above, font=\small\bfseries, text=gdlgreen!60!black] at (-4.3,2.1) {Grupo $\group$};
+\foreach \y/\lab in {1.3/$g_1\Stab(x)$, 0.3/$g_2\Stab(x)$, -0.7/$\Stab(x)$} {
+    \draw[thick, fill=gdlgreen!22, rounded corners=1pt] (-5.05,\y) rectangle (-3.55,\y-0.55);
+    \node[font=\tiny] at (-4.3,\y-0.27) {\lab};
+}
+% Flecha de biyecci\'on
+\draw[->, very thick, gdlred!75!black] (-3.2,0.4) -- node[above, font=\small] {$\cong$} (-1.2,0.4);
+% Espacio X con \'orbita
+\draw[thick, fill=gdlgray!12, rounded corners] (-1,-1.6) rectangle (4.6,2.6);
+\node[above, font=\small\bfseries, text=gdlgray!50!black] at (1.8,2.6) {Espacio $X$};
+\draw[gdlblue!60, thick, fill=gdlblue!12] (1.7,0.5) ellipse (1.9cm and 0.95cm);
+\node[above, font=\tiny, text=gdlblue!70!black] at (1.7,1.5) {$\Orb(x) = \group\cdot x$};
+\node[pt=gdlred!75] (x) at (0.4,0.5) {};
+\node[below left, font=\small] at (x) {$x$};
+\node[pt=gdlorange!80] (gx1) at (2.2,1.1) {};
+\node[above, font=\small] at (gx1) {$g_1\cdot x$};
+\node[pt=gdlorange!80] (gx2) at (2.7,-0.1) {};
+\node[below, font=\small] at (gx2) {$g_2\cdot x$};
+\draw[->, thick, gdlpurple!75] (x) to[bend left=28] node[above, font=\tiny] {$g_1$} (gx1);
+\draw[->, thick, gdlpurple!75] (x) to[bend right=18] node[below, font=\tiny] {$g_2$} (gx2);
+\draw[->, thick, gdlgreen!55!black, loop above, looseness=6] (x) to node[above, font=\tiny] {$h\in\Stab(x)$} (x);
+\end{tikzpicture}
+\caption[Teorema \'orbita--estabilizador]{El teorema \'orbita--estabilizador.
+Cada clase lateral $g\,\Stab(x)$ del estabilizador corresponde a exactamente un
+punto $g\cdot x$ de la \'orbita, lo que da la biyecci\'on
+$\group/\Stab(x) \cong \Orb(x)$.}
+\label{fig:found:orbit}
+\end{figure}
+
+Cuando $\group$ es un grupo de Lie que act\'ua transitivamente y $H$ es un
+subgrupo cerrado, $G/H$ es a su vez una variedad diferenciable, llamada
+\emph{espacio homog\'eneo}, sobre la que $\group$ act\'ua transitivamente
+mediante $g'\cdot(gH) = (g'g)H$. El teorema \'orbita--estabilizador afirma que
+cualquier dominio que admita un grupo transitivo de simetr\'ias es un espacio
+homog\'eneo: se identifica el grupo de simetr\'ia $\group$, se fija un punto de
+referencia, y el estabilizador $H$ de ese punto determina el dominio como $G/H$.
+
+\begin{example}[La esfera como $\SO(3)/\SO(2)$]
+\label{ex:found:sphere}
+Sea $\SO(3)$ actuando sobre $S^2$ por rotaci\'on. La acci\'on es transitiva:
+cualquier vector unitario puede rotarse a cualquier otro. Fijemos el polo norte
+$p = (0,0,1)^\top$; una rotaci\'on fija $p$ exactamente cuando su eje es el eje
+$z$, y esas rotaciones forman un subgrupo isomorfo a $\SO(2)$. Por tanto
+$\Stab(p) \cong \SO(2)$, y el teorema \'orbita--estabilizador da
+\[
+  S^2 \;\cong\; \SO(3)/\SO(2).
+\]
+Una se\~nal $f : S^2 \to \R^C$ se eleva a una funci\'on sobre $\SO(3)$ que es
+invariante a derecha bajo $\SO(2)$, a saber $\tilde f(g) = f(g\cdot p)$. En
+consecuencia, la convoluci\'on equivariante natural sobre la esfera es una
+correlaci\'on sobre el grupo completo $\SO(3)$ en lugar de sobre una proyecci\'on
+plana, que es la construcci\'on que subyace a las redes esf\'ericas discutidas en
+los \Cref{ch:geodesics,ch:applications}.
+\end{example}
+
+Este ejemplo ilustra una receta general para arquitecturas geom\'etricas: (1)
+identificar el dominio de los datos $\Omega$; (2) determinar el grupo de
+simetr\'ia relevante $\group$; (3) calcular el estabilizador $H$ de un punto de
+referencia; (4) reconocer $\Omega \cong G/H$ por el teorema
+\'orbita--estabilizador; y (5) construir la arquitectura equivariante usando el
+an\'alisis arm\'onico de $\group$ (\Cref{thm:found:peterweyl}). Los espacios
+homog\'eneos disfrutan adem\'as de propiedades geom\'etricas convenientes: si
+$\group$ es conexo entonces $G/H$ es conexo, y $\group$ act\'ua por isometr\'ias
+de cualquier m\'etrica riemanniana $\group$-invariante sobre $G/H$. De forma
+crucial, sobre un espacio homog\'eneo un operador equivariante queda
+completamente determinado por su comportamiento en el punto base $o = eH$: como
+$\group$ act\'ua transitivamente, el valor de $\Phi f$ en cualquier punto
+$x = g\cdot o$ queda fijado por la equivarianza, y un breve c\'alculo muestra que
+los \'unicos operadores lineales equivariantes son convoluciones generalizadas.
+Esta es la raz\'on matem\'atica por la que la convoluci\'on es la operaci\'on
+can\'onica sobre dominios sim\'etricos, un hilo que seguimos a lo largo de los
+\Cref{ch:grids,ch:groups,ch:graphs}.
+
+\section{Variedades y espacios tangentes}
+\label{sec:found:manifolds}
+
+El tercer hilo de nuestro lenguaje es la geometr\'ia de los dominios curvos. Una
+superficie, un espacio de configuraciones o el conjunto de rotaciones no es un
+espacio vectorial, y sin embargo cada uno se parece al espacio eucl\'ideo plano
+cuando se mira de cerca. La noci\'on de variedad lo precisa, y el espacio
+tangente proporciona la linearizaci\'on sobre la que procede el c\'alculo ---y, en
+\'ultima instancia, el aprendizaje---.
+
+Asumimos los prerrequisitos topol\'ogicos est\'andar: un \emph{espacio
+topol\'ogico} es un conjunto con una colecci\'on distinguida de abiertos cerrada
+bajo uniones arbitrarias e intersecciones finitas; es \emph{de Hausdorff} si
+puntos distintos tienen entornos abiertos disjuntos; y un \emph{homeomorfismo} es
+una biyecci\'on continua con inversa continua, la noci\'on de que dos espacios
+son ``topol\'ogicamente iguales''.
+
+\begin{definition}[Variedad topol\'ogica]
+\label{def:found:topmanifold}
+Una \emph{variedad topol\'ogica} de dimensi\'on $m$ es un espacio topol\'ogico de
+Hausdorff y con base numerable $\mathcal{M}$ que es \emph{localmente
+euclidiano}: todo punto tiene un entorno abierto $U$ homeomorfo, mediante una
+aplicaci\'on $\phi : U \to V \subseteq \R^m$ (una \emph{carta}), a un abierto de
+$\R^m$.
+\end{definition}
+
+Intuitivamente, una variedad es un espacio que localmente se parece a $\R^m$
+aunque su forma global sea muy distinta: la superficie de la Tierra es curva
+pero parece plana a un peat\'on; una hoja de papel arrugada es localmente
+bidimensional; el espacio de configuraciones de un brazo rob\'otico es no
+eucl\'ideo pero localmente se coordina con los \'angulos de las articulaciones.
+Una colecci\'on de cartas que cubre $\mathcal{M}$ es un \emph{atlas}
+$\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}$, y las \emph{funciones de
+transici\'on} $\phi_\beta \circ \phi_\alpha^{-1}$ describen c\'omo se relacionan
+las cartas solapadas. La variedad es \emph{diferenciable} (suave) si todas las
+funciones de transici\'on son $C^\infty$; esta es exactamente la estructura
+adicional necesaria para hacer c\'alculo sobre $\mathcal{M}$.
+
+El objeto central es el espacio tangente, que captura las direcciones
+infinitesimales en un punto. Dos construcciones complementarias, ilustradas en
+la \Cref{fig:found:tangent}, lo precisan.
+
+\begin{definition}[Espacio tangente v\'ia curvas]
+\label{def:found:tangent-curves}
+Sea $\mathcal{M}$ suave y $p \in \mathcal{M}$. Dos curvas
+$\gamma_1, \gamma_2 : (-\epsilon,\epsilon) \to \mathcal{M}$ con
+$\gamma_1(0) = \gamma_2(0) = p$ son \emph{tangentes en $p$} si, para alguna (y
+por tanto toda) carta $(U,\phi)$ alrededor de $p$,
+$(\phi\circ\gamma_1)'(0) = (\phi\circ\gamma_2)'(0)$. El \emph{espacio tangente}
+$T_p\mathcal{M}$ es el conjunto de clases de equivalencia $[\gamma]$ de curvas
+tangentes en $p$.
+\end{definition}
+
+\begin{definition}[Espacio tangente v\'ia derivaciones]
+\label{def:found:tangent-deriv}
+Una \emph{derivaci\'on} en $p$ es una aplicaci\'on lineal
+$v : C^\infty(\mathcal{M}) \to \R$ que obedece la regla de Leibniz
+$v(fg) = v(f)\,g(p) + f(p)\,v(g)$. El espacio tangente $T_p\mathcal{M}$ es el
+espacio vectorial de todas las derivaciones en $p$.
+\end{definition}
+
+La primera construcci\'on lee un vector tangente como la velocidad inicial de una
+curva ---una direcci\'on de movimiento---; la segunda lo lee como un operador de
+derivada direccional ---una direcci\'on de cambio de funciones---. Ambas son
+can\'onicamente isomorfas, enviando el isomorfismo $[\gamma]$ a la derivaci\'on
+$f \mapsto \frac{d}{dt}\big|_0 (f\circ\gamma)$. En una carta con coordenadas
+$x^1,\dots,x^m$ las derivadas parciales
+$\frac{\partial}{\partial x^j}\big|_p$ forman una base, de modo que
+$T_p\mathcal{M}$ es un espacio vectorial de dimensi\'on $m = \dim\mathcal{M}$.
+Usamos curvas para la intuici\'on geom\'etrica y derivaciones para la
+manipulaci\'on algebraica.
+
+\begin{example}[Espacio tangente a la esfera]
+\label{ex:found:tangent-sphere}
+En el polo norte $p = (0,0,1)$ de $S^2$, la curva
+$\gamma(t) = (\sin t, 0, \cos t)$ tiene $\gamma'(0) = (1,0,0)$. El espacio
+tangente $T_p S^2$ es el plano horizontal $\{(x,y,0)\}$, el plano tangente a la
+esfera en el polo. Su bidimensionalidad refleja $\dim S^2 = 2$.
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+% Superficie
+\shade[ball color=gdlblue!18, opacity=0.9]
+    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
+    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
+\draw[thick, gdlblue!55]
+    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
+    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
+\node[text=gdlblue!60!black, font=\small] at (-1.7,-1.5) {$\mathcal{M}$};
+% Punto p
+\coordinate (p) at (0,0.35);
+% Plano tangente (paralelogramo)
+\begin{scope}[on background layer]
+\fill[gdlorange!18, opacity=0.85]
+    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
+    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
+\draw[gdlorange!60]
+    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
+    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
+\end{scope}
+\node[text=gdlorange!60!black, font=\small] at (1.9,1.25) {$T_p\mathcal{M}$};
+% Curvas por p
+\draw[thick, gdlpurple!75] (-1.4,-0.4) .. controls (-0.5,0.05) .. (p)
+    .. controls (0.5,0.65) .. (1.4,1.0);
+\node[gdlpurple!75, font=\tiny] at (1.55,1.05) {$\gamma_1$};
+\draw[thick, gdlgreen!60!black] (-0.5,-0.9) .. controls (-0.2,-0.25) .. (p)
+    .. controls (0.2,0.9) .. (0.45,1.4);
+\node[gdlgreen!60!black, font=\tiny] at (0.6,1.45) {$\gamma_2$};
+% Vectores tangentes
+\draw[->, very thick, gdlpurple!75] (p) -- ++(0.95,0.45)
+    node[right, font=\tiny] {$\gamma_1'(0)$};
+\draw[->, very thick, gdlgreen!60!black] (p) -- ++(0.25,0.85)
+    node[above, font=\tiny] {$\gamma_2'(0)$};
+\fill[gdlred!80] (p) circle (2.2pt);
+\node[below right=0pt and 1pt of p, font=\small] {$p$};
+\end{tikzpicture}
+\caption[Espacio tangente]{El espacio tangente $T_p\mathcal{M}$ en un punto $p$.
+Los vectores tangentes son las velocidades iniciales $\gamma'(0)$ de curvas que
+pasan por $p$; de forma equivalente, operadores de derivada direccional sobre
+funciones suaves. Forman un espacio vectorial que aproxima $\mathcal{M}$
+linealmente en $p$.}
+\label{fig:found:tangent}
+\end{figure}
+
+Una aplicaci\'on suave $F : \mathcal{M} \to \mathcal{N}$ act\'ua sobre los
+vectores tangentes mediante su \emph{diferencial} (o pushforward)
+$dF_p : T_p\mathcal{M} \to T_{F(p)}\mathcal{N}$, definida sobre derivaciones por
+$dF_p(v)(g) = v(g\circ F)$; en coordenadas locales $dF_p$ es la matriz
+jacobiana. El diferencial clasifica las aplicaciones por el comportamiento de su
+rango: $F$ es una \emph{inmersi\'on} si $dF_p$ es inyectiva en todo punto y una
+\emph{submersi\'on} si es suprayectiva en todo punto. Un \emph{embebimiento} es
+una inmersi\'on inyectiva que es un homeomorfismo sobre su imagen;
+intuitivamente, una variedad embebida se sit\'ua dentro del espacio ambiente sin
+autointersecciones ni picos. Estas nociones reaparecen en el
+\Cref{ch:geodesics}, donde una m\'etrica riemanniana sobre los espacios
+tangentes convierte una variedad en un espacio con distancias y curvatura, y en
+el \Cref{ch:gauges}, donde la ausencia de una base can\'onica para
+$T_p\mathcal{M}$ conduce a la simetr\'ia gauge.
+
+Conectando con la \Cref{sec:found:groups}: un grupo de Lie es una variedad cuyo
+espacio tangente en la identidad es su \'algebra de Lie, y el mapa exponencial es
+la curva can\'onica a trav\'es de la identidad en cada direcci\'on. Los tres
+hilos de este cap\'itulo ---grupos, representaciones y variedades--- confluyen
+as\'i en el grupo de Lie, y juntos proporcionan el vocabulario para los sesgos
+geom\'etricos del \Cref{ch:priors} y las arquitecturas que les siguen.

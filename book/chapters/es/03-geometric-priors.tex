@@ -1,0 +1,490 @@
+\providecommand{\Nb}{\mathcal{N}}
+\providecommand{\GL}{\operatorname{GL}}
+\providecommand{\Aut}{\operatorname{Aut}}
+
+\chapter{Sesgos Geom\'etricos: Invarianza y Equivarianza}
+\label{ch:priors}
+
+Los cap\'itulos anteriores introdujeron el lenguaje matem\'atico del aprendizaje
+profundo geom\'etrico (\emph{geometric deep learning}, GDL) ---grupos,
+representaciones y los dominios geom\'etricos donde residen los datos--- y
+argumentaron que el fracaso de las arquitecturas cl\'asicas sobre datos no
+euclidianos es conceptual y no meramente t\'ecnico. Este cap\'itulo convierte ese
+diagn\'ostico en un principio constructivo. La tesis central es simple de
+enunciar: un modelo debe respetar las simetr\'ias del problema que resuelve, y la
+manera de garantizarlo es incorporar la simetr\'ia en la arquitectura en lugar de
+confiar en que se aprenda de los datos. Las dos nociones que precisan esta idea
+son la \emph{invarianza} y la \emph{equivarianza}. A partir de ellas derivamos un
+esquema de dise\~no ---los \emph{sesgos geom\'etricos} del t\'itulo--- que unifica
+las arquitecturas convolucionales, de atenci\'on y de grafos bajo una sola
+construcci\'on geom\'etrica.
+
+\section{Por qu\'e las redes tradicionales necesitan un sesgo geom\'etrico}
+\label{sec:priors:motivation}
+
+Una red neuronal artificial tradicional trata su entrada como un vector sin
+estructura $x \in \R^n$. Una neurona calcula $y = \sigma(\inner{w}{x} + b)$,
+combinando las $n$ coordenadas mediante una suma ponderada global.
+Reinterpretada como un operador sobre una se\~nal definida en un dominio
+$\Omega = \{1, \dots, n\}$, ese dominio es un mero conjunto de \'indices: carece
+de noci\'on de \emph{localidad} (todas las coordenadas contribuyen por igual, sin
+concepto de cercano y lejano), de \emph{vecindad estructurada} (la conexi\'on
+$w_1 x_1$ es estructuralmente id\'entica a $w_{100} x_{100}$) y de
+\emph{invarianza geom\'etrica} (permutar los \'indices cambia en general la
+salida, aunque la permutaci\'on sea sem\'anticamente irrelevante). La red ignora
+toda geometr\'ia impl\'icita en los datos.
+
+Esta ceguera tiene un coste concreto. Sup\'ongase que la magnitud que deseamos
+predecir no cambia bajo un grupo $\group$ de transformaciones ---rotaciones de
+una imagen, reetiquetados de los nodos de un grafo---. Una red completamente
+conectada no tiene raz\'on alguna para producir la misma respuesta para $x$ y
+para una entrada transformada $g \cdot x$. El remedio habitual, el \emph{aumento
+de datos}, presenta a la red copias transformadas de cada ejemplo; pero esto
+infla el conjunto de entrenamiento por un factor $\abs{\group}$, no garantiza que
+la funci\'on aprendida sea realmente invariante y se degrada o fracasa por
+completo cuando $\group$ es grande o continuo. Un sesgo geom\'etrico sustituye
+esa esperanza por una garant\'ia: la simetr\'ia se codifica en la estructura de la
+aplicaci\'on, de modo que se cumple de forma exacta, para toda entrada, por
+construcci\'on.
+
+\section{Funciones invariantes y equivariantes}
+\label{sec:priors:inv-equi}
+
+Trabajamos con un grupo $\group$ que act\'ua sobre los espacios pertinentes.
+Recu\'erdese que una \emph{acci\'on} de $\group$ sobre un conjunto $X$ es una
+aplicaci\'on $\group \times X \to X$, escrita $(g, x) \mapsto g \cdot x$,
+compatible con la ley de grupo: $e \cdot x = x$ y
+$g \cdot (h \cdot x) = (gh) \cdot x$. Cuando $X$ es un espacio vectorial y cada
+$g$ act\'ua linealmente, la acci\'on es una \emph{representaci\'on}
+$\rho_X \colon \group \to \GL(X)$ (\Cref{ch:foundations}). Escribimos $g \cdot x$
+en lugar de $\rho_X(g)\, x$ en todo el cap\'itulo.
+
+\begin{definition}[Funci\'on equivariante]
+\label{def:priors:equivariance}
+Sea $\group$ un grupo que act\'ua sobre $X$ mediante $\rho_X$ y sobre $Y$
+mediante $\rho_Y$. Una aplicaci\'on $f \colon X \to Y$ es
+\emph{$\group$-equivariante} si
+\[
+  f(g \cdot x) = g \cdot f(x)
+  \qquad \text{para todo } g \in \group,\ x \in X,
+\]
+es decir, $f \circ \rho_X(g) = \rho_Y(g) \circ f$ para todo $g$.
+\end{definition}
+
+\begin{definition}[Funci\'on invariante]
+\label{def:priors:invariance}
+Una aplicaci\'on $f \colon X \to Y$ es \emph{$\group$-invariante} si
+$f(g \cdot x) = f(x)$ para todo $g \in \group$ y todo $x \in X$.
+\end{definition}
+
+La invarianza es el caso especial de la equivarianza en el que $\group$ act\'ua
+trivialmente sobre la salida, $\rho_Y(g) = \mathrm{id}$. La equivarianza es la
+noci\'on m\'as fundamental: afirma que transformar la entrada produce una salida
+transformada de forma correspondiente, de modo que la estructura geom\'etrica se
+\emph{preserva} en lugar de descartarse. La equivarianza es la propiedad que
+deseamos en las capas intermedias de una red, donde la estructura debe
+sobrevivir; la invarianza solo es apropiada en la lectura final, donde
+colapsamos a una etiqueta.
+
+La \Cref{fig:priors:equivariance} representa la \Cref{def:priors:equivariance}
+como un cuadrado conmutativo: la equivarianza es exactamente la afirmaci\'on de
+que los dos caminos de $X$ a $Y$ ---transformar y luego aplicar $f$, o aplicar
+$f$ y luego transformar--- coinciden.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=2.6cm and 4cm,
+    space/.style={circle, draw=gdlgray!80, fill=gdlblue!15, minimum size=1.5cm, font=\large},
+    arrow/.style={-{Stealth[length=7pt]}, thick},
+    lbl/.style={font=\small, midway}
+]
+\node[space] (X) {$X$};
+\node[space, right=of X] (Y) {$Y$};
+\node[space, below=of X] (gX) {$X$};
+\node[space, below=of Y] (gY) {$Y$};
+\draw[arrow, gdlblue!70!black] (X) -- node[lbl, above] {$f$} (Y);
+\draw[arrow, gdlblue!70!black] (gX) -- node[lbl, below] {$f$} (gY);
+\draw[arrow, gdlred!70!black] (X) -- node[left, align=center] {\small\itshape transformar\\[1pt] $\rho_X(g)$} (gX);
+\draw[arrow, gdlred!70!black] (Y) -- node[lbl, right] {$\rho_Y(g)$} (gY);
+\node[font=\Large] at ($(X)!0.5!(gY)$) {$\circlearrowleft$};
+\node[font=\normalsize, below=0.4cm of gX, anchor=north west, xshift=0.6cm] {
+    $f(\rho_X(g)\cdot x) = \rho_Y(g)\cdot f(x)$
+};
+\end{tikzpicture}
+\caption[El cuadrado conmutativo de la equivarianza]{La equivarianza como
+diagrama conmutativo. Una aplicaci\'on $f \colon X \to Y$ es
+$\group$-equivariante cuando el cuadrado conmuta: transformar la entrada mediante
+$\rho_X(g)$ y aplicar luego $f$ produce el mismo resultado que aplicar $f$ y
+transformar luego la salida mediante $\rho_Y(g)$.}
+\label{fig:priors:equivariance}
+\end{figure}
+
+\begin{example}[Tres simetr\'ias can\'onicas]
+\label{ex:priors:symmetries}
+La clasificaci\'on de im\'agenes es invariante a traslaciones: desplazar la
+imagen de un gato no cambia la etiqueta, de modo que la funci\'on de
+puntuaci\'on debe ser $\Z^2$-invariante. La segmentaci\'on sem\'antica, en
+cambio, es \emph{equivariante} a traslaciones: desplazar la imagen desplaza la
+m\'ascara de segmentaci\'on en la misma cantidad. Una funci\'on definida sobre los
+nodos de un grafo debe ser equivariante al grupo de permutaciones $S_n$:
+reetiquetar los nodos permuta las salidas de forma id\'entica, porque un grafo no
+posee un orden can\'onico de sus v\'ertices. Cada tarea fija un grupo $\group$ y
+un comportamiento requerido ---invariante o equivariante--- bajo \'el.
+\end{example}
+
+La raz\'on por la que la equivarianza es la primitiva adecuada para las
+arquitecturas profundas es que se preserva bajo composici\'on.
+
+\begin{theorem}[Composici\'on de aplicaciones equivariantes]
+\label{thm:priors:composition}
+Sea $\group$ que act\'ua sobre $X$, $Y$, $Z$ mediante $\rho_X, \rho_Y, \rho_Z$.
+Si $f \colon X \to Y$ y $h \colon Y \to Z$ son $\group$-equivariantes, entonces
+tambi\'en lo es la composici\'on $h \circ f \colon X \to Z$.
+\end{theorem}
+
+\begin{proof}
+Fijemos $g \in \group$ y $x \in X$. Usando la equivarianza de $f$ y luego la de
+$h$,
+\[
+  (h \circ f)(g \cdot x) = h\bigl(f(g \cdot x)\bigr)
+    = h\bigl(g \cdot f(x)\bigr)
+    = g \cdot h\bigl(f(x)\bigr)
+    = g \cdot (h \circ f)(x). \qedhere
+\]
+\end{proof}
+
+La \Cref{thm:priors:composition} es la piedra angular de todo el marco. Garantiza
+que una red construida apilando capas equivariantes es ella misma equivariante,
+de extremo a extremo ---la equivarianza es una propiedad que establecemos una
+vez, por capa, y heredamos gratis a cualquier profundidad---. Componer esa
+columna vertebral equivariante con una \'unica lectura invariante al final
+produce un predictor globalmente invariante. Esto convierte la simetr\'ia, de una
+propiedad que verificar \emph{a posteriori}, en una receta constructiva para
+arquitecturas completas.
+
+\section{El esquema del aprendizaje profundo geom\'etrico}
+\label{sec:priors:blueprint}
+
+El principio de composici\'on sugiere una plantilla para dise\~nar arquitecturas
+sobre cualquier dominio geom\'etrico~\citep{bronstein2021geometric}. Fijemos un
+dominio $\Omega$ (una rejilla, un grafo, una variedad), un espacio de se\~nales
+$\mathcal{X}(\Omega)$ sobre \'el y un grupo de simetr\'ia $\group$ que act\'ua
+sobre ambos. El \emph{esquema del aprendizaje profundo geom\'etrico} ensambla un
+modelo a partir de cuatro tipos de bloque constructivo.
+
+\begin{description}
+\item[Capas equivariantes.] Aplicaciones lineales o no lineales
+$\mathcal{X}(\Omega) \to \mathcal{X}(\Omega')$ que conmutan con la acci\'on de
+$\group$. Son el caballo de batalla: extraen caracter\'isticas mientras se
+transforman de forma predecible bajo la simetr\'ia. Una no linealidad puntual
+aplicada tras una capa lineal equivariante preserva la equivarianza siempre que
+act\'ue de forma id\'entica en cada posici\'on.
+\item[\emph{Pooling} local (engrosamiento).] Aplicaciones equivariantes que
+reducen la resoluci\'on del dominio, $\Omega \to \Omega'$, respetando la
+simetr\'ia. El \emph{pooling} implementa la \emph{separaci\'on de escalas}:
+permite que las capas posteriores vean vecindarios mayores a trav\'es de un
+dominio m\'as grueso, construyendo una jerarqu\'ia de caracter\'isticas.
+\item[Lectura global invariante.] Una aplicaci\'on final $\group$-invariante que
+colapsa la se\~nal a la salida deseada ---una etiqueta, una propiedad a nivel de
+grafo---, t\'ipicamente una agregaci\'on sim\'etrica (suma, media, m\'aximo)
+seguida de una red est\'andar.
+\item[Atenci\'on o funciones de mensaje respetuosas con la simetr\'ia.] Cuando la
+conectividad misma debe adaptarse al contenido, los pesos que ligan posiciones se
+calculan mediante funciones que son a su vez equivariantes. Esto generaliza los
+filtros locales fijos a filtros dependientes de los datos.
+\end{description}
+
+Dos principios estructurales subyacen a esta plantilla y reaparecen a lo largo
+del libro:
+
+\begin{description}
+\item[Simetr\'ia (equivarianza).] Toda operaci\'on interna conmuta con $\group$,
+de modo que la funci\'on global es equivariante por la
+\Cref{thm:priors:composition}, alcanz\'andose la invarianza solo en la lectura.
+\item[Separaci\'on de escalas (localidad y composicionalidad).] Las operaciones
+son \emph{locales} respecto de la geometr\'ia de $\Omega$ ---cada capa agrega
+solo sobre un vecindario--- y las representaciones complejas se construyen de
+forma \emph{composicional}, apilando capas locales intercaladas con
+engrosamiento. La localidad mantiene tratables el n\'umero de par\'ametros y el
+c\'omputo; la composicionalidad permite que una pila profunda de operaciones
+locales capture estructura global de largo alcance.
+\end{description}
+
+\begin{remark}[Un esquema, cinco dominios]
+\label{rem:priors:fivegs}
+El esquema es deliberadamente independiente del dominio. Instanciarlo sobre una
+rejilla con el grupo de traslaciones recupera las redes convolucionales
+(\Cref{ch:grids}); extender el grupo a rotaciones y reflexiones da las redes
+equivariantes a grupos (\Cref{ch:groups}); sustituir la rejilla por un grafo
+arbitrario con el grupo de permutaciones da las redes neuronales de grafos
+(\Cref{ch:graphs}); dotar al dominio de distancias intr\'insecas da el
+aprendizaje en variedades (\Cref{ch:geodesics}); y reconocer la ausencia de un
+marco local can\'onico sobre un dominio curvo da las redes equivariantes gauge
+(\Cref{ch:gauges}). Las ``cinco Ges'' son cinco realizaciones concretas de una
+misma idea geom\'etrica.
+\end{remark}
+
+\section{Universalidad y expresividad}
+\label{sec:priors:universality}
+
+Una preocupaci\'on natural es que restringir una red a ser equivariante pueda
+mutilar su poder expresivo: la restricci\'on recorta un subespacio estricto de
+todas las funciones. El siguiente resultado, que extiende el teorema cl\'asico de
+aproximaci\'on universal al caso equivariante, disipa esa preocupaci\'on. Se debe
+a \citet{yarotsky2022} y \citet{kondor2018generalizationconvolutionalneural}.
+
+\begin{theorem}[Aproximaci\'on universal equivariante]
+\label{thm:priors:universal}
+Sea $\group$ un grupo compacto que act\'ua de forma continua sobre espacios
+m\'etricos compactos $X$ e $Y$, y sea $\mathcal{F}^{\group}(X, Y)$ el espacio de
+todas las aplicaciones continuas $\group$-equivariantes $f \colon X \to Y$.
+Entonces, para toda $f \in \mathcal{F}^{\group}(X, Y)$ y todo
+$\varepsilon > 0$ existe una red neuronal $\group$-equivariante $\mathcal{N}$ tal
+que
+\[
+  \sup_{x \in X} d_Y\bigl(f(x), \mathcal{N}(x)\bigr) < \varepsilon,
+\]
+donde $d_Y$ es la m\'etrica en $Y$.
+\end{theorem}
+
+\begin{proof}[Esbozo de demostraci\'on]
+El argumento tiene dos ideas. Primero, por el teorema cl\'asico de aproximaci\'on
+universal existe una red sin restricciones $\tilde f$ con
+$\sup_x d_Y(f(x), \tilde f(x)) < \varepsilon$. Segundo, simetrizamos $\tilde f$
+mediante el \emph{operador de Reynolds}, promediando sobre el grupo respecto de
+la medida de Haar normalizada $\mu$:
+\[
+  \bar f(x) = \int_{\group} \rho_Y(g^{-1})\, \tilde f(g \cdot x)\, d\mu(g).
+\]
+Un cambio de variables junto con la invarianza de la medida de Haar muestra que
+$\bar f(h \cdot x) = \rho_Y(h)\, \bar f(x)$, de modo que $\bar f$ es
+equivariante. Por \'ultimo, como $f$ ya es equivariante y (para un grupo
+compacto) las representaciones pueden tomarse unitarias, $\rho_Y(g^{-1})$
+preserva distancias y el promediado no aumenta el error:
+$\sup_x d_Y(\bar f(x), f(x)) \le \sup_x d_Y(\tilde f(x), f(x)) < \varepsilon$.
+\end{proof}
+
+El mensaje es decisivo: \emph{la equivarianza no cuesta nada en expresividad}.
+Una red $\group$-equivariante puede aproximar cualquier funci\'on continua
+$\group$-equivariante con precisi\'on arbitraria. La restricci\'on de simetr\'ia
+no reduce el conjunto de funciones alcanzables dentro del subespacio relevante;
+act\'ua puramente como un sesgo inductivo, descartando las funciones no
+equivariantes irrelevantes y mejorando as\'i la eficiencia muestral y la
+generalizaci\'on sin sacrificar capacidad. El \'exito emp\'irico de las redes
+convolucionales ---equivariantes al grupo de traslaciones $\Z^2$--- es un
+corolario~\citep{cohen2016group}.
+
+\section{Paso de mensajes: el marco unificador}
+\label{sec:priors:message-passing}
+
+El esquema se vuelve algor\'itmicamente concreto a trav\'es de una sola primitiva
+computacional: el \emph{paso de mensajes}. Viendo los datos como un grafo
+$\mathcal{G} = (V, E)$ de nodos y aristas, una capa propaga informaci\'on
+haciendo que cada nodo agregue caracter\'isticas transformadas de sus vecinos.
+Esta \'unica construcci\'on subsume las principales arquitecturas del aprendizaje
+profundo; sus diferencias aparentes se reducen a elecciones de topolog\'ia del
+grafo, conectividad y grupo de simetr\'ia.
+
+\begin{definition}[Red neuronal de paso de mensajes]
+\label{def:priors:mpnn}
+Una \emph{red neuronal de paso de mensajes} (\emph{message-passing neural
+network}, MPNN) opera sobre un grafo $\mathcal{G} = (V, E)$ con
+caracter\'isticas de nodo $\{h_v\}_{v \in V}$ y de arista $\{e_{uv}\}$. La capa
+$\ell$ actualiza cada nodo en dos pasos:
+\[
+  m_v^{(\ell+1)} = \bigoplus_{u \in \Nb(v)}
+      M_\ell\bigl(h_v^{(\ell)}, h_u^{(\ell)}, e_{vu}\bigr),
+  \qquad
+  h_v^{(\ell+1)} = U_\ell\bigl(h_v^{(\ell)}, m_v^{(\ell+1)}\bigr),
+\]
+donde $\Nb(v)$ es el vecindario de $v$, $M_\ell$ una funci\'on de mensaje
+aprendible, $\bigoplus$ un agregador invariante a permutaciones (suma, media,
+m\'aximo) y $U_\ell$ una funci\'on de actualizaci\'on.
+\end{definition}
+
+El agregador $\bigoplus$ es invariante a permutaciones por dise\~no, lo que hace
+que cada capa sea equivariante a reetiquetados de los vecinos ---la capa de paso
+de mensajes es la capa equivariante del esquema para datos relacionales---. Las
+siguientes correspondencias (\Cref{fig:priors:mpnn}) muestran que las
+arquitecturas conocidas son casos especiales.
+
+\begin{proposition}[Arquitecturas como paso de mensajes]
+\label{prop:priors:architectures}
+Las siguientes son instancias de la \Cref{def:priors:mpnn}:
+\begin{enumerate}
+\item Una capa completamente conectada $h^{(\ell+1)} = \sigma(W h^{(\ell)} + b)$
+es una MPNN sobre el grafo completo $K_d$ cuyas caracter\'isticas son nodos, con
+un mensaje espec\'ifico para cada par $M(h_v, h_u) = W_{vu} h_u$ y agregaci\'on
+por suma. No hay compartici\'on de pesos y, por tanto, ning\'un sesgo
+geom\'etrico.
+\item Una convoluci\'on sobre una rejilla regular $\Z^d$ con soporte de
+\emph{kernel} $\mathcal{K}$ es una MPNN con vecindario
+$\Nb(v) = \{u : v - u \in \mathcal{K}\}$ y mensaje $M(h_v, h_u) = W_{v-u}\, h_u$:
+el peso depende solo de la posici\'on \emph{relativa} $v - u$, no del par
+absoluto $(v, u)$. Esta compartici\'on de pesos es exactamente la equivarianza
+traslacional, y reduce el n\'umero de par\'ametros de $O(n^2 c^2)$ a
+$O(\abs{\mathcal{K}}\, c^2)$.
+\item Una capa de autoatenci\'on sobre $n$ \emph{tokens} es una MPNN sobre el
+grafo completo $K_n$ con mensaje $M(h_i, h_j) = \alpha_{ij}\, V h_j$, donde los
+pesos de atenci\'on $\alpha_{ij} = \mathrm{softmax}_j\bigl((Q h_i)^{\!\top}
+(K h_j) / \sqrt{d_k}\bigr)$ se calculan a partir del \emph{contenido} del nodo, y
+no de su posici\'on, y la agregaci\'on es la combinaci\'on convexa
+$m_i = \sum_j \alpha_{ij} V h_j$.
+\item Una red neuronal de grafos es el caso general: una MPNN sobre un grafo
+arbitrario $\mathcal{G}$, equivariante a su grupo de automorfismos.
+\end{enumerate}
+\end{proposition}
+
+Leer transversalmente estos casos revela un \'unico eje de sofisticaci\'on
+geom\'etrica creciente: las redes completamente conectadas no imponen sesgo
+alguno (pesos uniformes y espec\'ificos por par); las convoluciones imponen un
+sesgo \emph{espacial} (pesos compartidos por posici\'on relativa, que codifican
+la equivarianza traslacional); los \emph{transformers} sustituyen los pesos
+fijos por pesos \emph{adaptativos dependientes del contenido} (conectividad
+global a coste cuadr\'atico); y las redes de grafos generalizan todo el esquema a
+topolog\'ias relacionales arbitrarias. El sesgo geom\'etrico es precisamente lo
+que cada arquitectura supone sobre qu\'e conexiones importan y c\'omo se comparten
+sus pesos.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    nd/.style={circle, draw, thick, fill=white, minimum size=4mm, inner sep=0pt},
+    edge/.style={thick, draw=gdlgray!60},
+    box/.style={rectangle, rounded corners=4pt, draw=gdlgray!70, thick, minimum width=4.6cm, minimum height=3.7cm},
+    title/.style={font=\small\bfseries, fill=white, inner sep=2pt},
+    info/.style={font=\scriptsize, text=black!70, align=center}
+]
+% ANN
+\begin{scope}[shift={(-3.3, 2.7)}]
+    \node[box, fill=gdlblue!15] (annbox) {};
+    \node[title] at (0, 2.05) {ANN (completamente conectada)};
+    \foreach \i/\a in {1/90,2/162,3/234,4/306,5/18} \node[nd, fill=gdlblue!20] (a\i) at (\a:0.9) {};
+    \foreach \i in {1,...,5} \foreach \j in {1,...,5} \ifnum\i<\j \draw[edge, gdlblue!30] (a\i)--(a\j); \fi
+    \node[info] at (0, -1.45) {grafo completo $K_d$\\pesos espec\'ificos $W_{ij}$};
+\end{scope}
+% CNN
+\begin{scope}[shift={(3.3, 2.7)}]
+    \node[box, fill=gdlgreen!15] (cnnbox) {};
+    \node[title] at (0, 2.05) {CNN (convoluci\'on)};
+    \foreach \i in {0,1,2} \foreach \j in {0,1,2} \node[nd, fill=gdlgreen!20] (c\i\j) at ({\i*0.7-0.7},{\j*0.7-0.7}) {};
+    \foreach \i in {0,1,2} \foreach \j [evaluate=\j as \jn using int(\j+1)] in {0,1} {
+        \draw[edge, gdlgreen!50] (c\i\j)--(c\i\jn); \draw[edge, gdlgreen!50] (c\j\i)--(c\jn\i);}
+    \draw[thick, gdlorange, rounded corners=2pt] (-0.3,-0.3) rectangle (0.3,0.3);
+    \node[info] at (0, -1.45) {rejilla $\Z^d$, pesos compartidos\\$\group=(\Z^d,+)$};
+\end{scope}
+% Transformer
+\begin{scope}[shift={(-3.3, -2.7)}]
+    \node[box, fill=gdlpurple!15] (transbox) {};
+    \node[title] at (0, 2.05) {Transformer (atenci\'on)};
+    \foreach \i/\a in {1/90,2/162,3/234,4/306,5/18} \node[nd, fill=gdlpurple!20] (t\i) at (\a:0.9) {};
+    \draw[edge, gdlpurple!60, line width=2pt] (t1)--(t3);
+    \draw[edge, gdlpurple!40, line width=1.4pt] (t1)--(t2);
+    \draw[edge, gdlpurple!20, line width=0.5pt] (t1)--(t4);
+    \draw[edge, gdlpurple!50, line width=1.4pt] (t2)--(t4);
+    \draw[edge, gdlpurple!60, line width=2pt] (t3)--(t5);
+    \draw[edge, gdlpurple!30, line width=0.8pt] (t4)--(t5);
+    \node[info] at (0, -1.45) {grafo completo $K_n$\\pesos adaptativos $\alpha_{ij}$};
+\end{scope}
+% GNN
+\begin{scope}[shift={(3.3, -2.7)}]
+    \node[box, fill=gdlred!15] (gnnbox) {};
+    \node[title] at (0, 2.05) {GNN (red de grafos)};
+    \node[nd, fill=gdlred!20] (g1) at (-0.7,0.6) {};
+    \node[nd, fill=gdlred!20] (g2) at (0.3,0.8) {};
+    \node[nd, fill=gdlred!20] (g3) at (0.8,0.1) {};
+    \node[nd, fill=gdlred!20] (g4) at (-0.4,-0.3) {};
+    \node[nd, fill=gdlred!20] (g5) at (0.4,-0.5) {};
+    \node[nd, fill=gdlred!20] (g6) at (-0.15,0.25) {};
+    \foreach \a/\b in {g1/g2,g1/g4,g1/g6,g2/g3,g2/g6,g3/g5,g4/g5,g4/g6,g5/g6}
+        \draw[edge, gdlred!50] (\a)--(\b);
+    \node[info] at (0, -1.45) {grafo arbitrario $\mathcal{G}$\\$\group=\Aut(\mathcal{G})$};
+\end{scope}
+% Centro
+\node[font=\bfseries, align=center, fill=gdlyellow!20, rounded corners=3pt,
+      draw=gdlyellow!70, thick, inner sep=5pt] (mpnn) at (0,0)
+      {MPNN\\[-1pt]{\scriptsize $m_v=\bigoplus_{u\in\Nb(v)} M(h_v,h_u,e_{vu})$}};
+\draw[->, thick, gdlblue!60] (annbox.south east) -- (mpnn.north west);
+\draw[->, thick, gdlgreen!50!black] (cnnbox.south west) -- (mpnn.north east);
+\draw[->, thick, gdlpurple!60] (transbox.north east) -- (mpnn.south west);
+\draw[->, thick, gdlred!60] (gnnbox.north west) -- (mpnn.south east);
+\end{tikzpicture}
+\caption[Arquitecturas como paso de mensajes]{Las principales arquitecturas del
+aprendizaje profundo como instancias del paso de mensajes. Solo difieren en la
+topolog\'ia del grafo, el esquema de compartici\'on de pesos y el grupo de
+simetr\'ia $\group$: redes completamente conectadas (grafo completo, pesos por
+par), redes convolucionales (rejilla, pesos compartidos por traslaci\'on),
+\emph{transformers} (grafo completo, pesos adaptativos al contenido) y redes de
+grafos (grafo arbitrario). La actualizaci\'on de paso de mensajes del centro es
+com\'un a todas.}
+\label{fig:priors:mpnn}
+\end{figure}
+
+\subsection{Poder expresivo y sus l\'imites}
+\label{sec:priors:expressivity-limits}
+
+El paso de mensajes es unificador, pero no omnipotente. Su poder expresivo sobre
+grafos est\'a fijado por un algoritmo combinatorio cl\'asico, y su profundidad
+est\'a limitada por dos patolog\'ias complementarias. Las esbozamos aqu\'i a alto
+nivel; el an\'alisis espectral y geom\'etrico reaparece en los
+\Cref{ch:graphs,ch:geodesics}.
+
+\paragraph{El techo de Weisfeiler--Leman.}
+El test de Weisfeiler--Leman (1-WL) es una heur\'istica de isomorfismo de grafos
+que refina iterativamente una coloraci\'on de los nodos: el nuevo color de cada
+nodo combina (mediante un \emph{hash}) su color antiguo con el multiconjunto de
+los colores de sus vecinos~\citep{weisfeiler1968reduction}. \citet{xu2019how} y
+\citet{morris2019weisfeiler} demostraron que una MPNN con funciones de
+agregaci\'on y actualizaci\'on inyectivas es \emph{exactamente} tan
+discriminativa como 1-WL: nunca puede distinguir dos grafos que 1-WL considere
+equivalentes, y una MPNN adecuada (la \emph{Graph Isomorphism Network}) alcanza
+esa cota. En consecuencia, las MPNN no pueden distinguir ciertos grafos no
+isomorfos ---por ejemplo, un ciclo de seis nodos $C_6$ de dos tri\'angulos
+disjuntos $K_3 \sqcup K_3$, que comparten la misma secuencia de grados y el mismo
+histograma local de colores---, lo que expone un techo fundamental de lo que el
+paso de mensajes local puede percibir. Operar sobre estructuras de orden superior
+(complejos simpliciales) o a\~nadir codificaciones estructurales y posicionales
+permite romper esta barrera.
+
+\paragraph{Sobre-suavizado y sobre-compresi\'on.}
+Apilar muchas capas de paso de mensajes degrada el rendimiento de dos maneras
+opuestas. El \emph{sobre-suavizado} (\emph{oversmoothing}) es la p\'erdida de
+se\~nal discriminativa: una MPNN lineal act\'ua como difusi\'on del calor
+discreta $H^{(\ell+1)} = (I - \alpha \tilde L)\, H^{(\ell)}$ gobernada por el
+laplaciano del grafo $\tilde L$, y la energ\'ia de Dirichlet de las
+caracter\'isticas de los nodos decae exponencialmente,
+$E(H^{(\ell)}) \le (1 - \alpha \lambda_2)^{2\ell}\, E(H^{(0)})$, de modo que las
+representaciones convergen a una constante y los nodos se vuelven
+indistinguibles~\citep{li2018deeper}; la tasa la controla el \emph{gap} espectral
+$\lambda_2$. La \emph{sobre-compresi\'on} (\emph{oversquashing}) es el fallo
+dual: la informaci\'on de largo alcance debe comprimirse a trav\'es de cuellos de
+botella topol\'ogicos, y la sensibilidad
+$\|\partial h_v^{(\ell)} / \partial h_u^{(0)}\|$ de un nodo respecto de otro
+lejano decae con las potencias de la matriz de transici\'on, anul\'andose por
+completo m\'as all\'a de la distancia de grafo $\ell$.
+\citet{topping2022understanding} relacionan estos cuellos de botella con la
+curvatura de Ricci discreta negativa, un caso notable de la geometr\'ia
+diferencial diagnosticando ---y prescribiendo curas para--- una limitaci\'on de
+las redes neuronales.
+
+Estos l\'imites no socavan el marco; lo afinan. Son manifestaciones del
+car\'acter fundamentalmente \emph{local} del paso de mensajes, y las herramientas
+geom\'etricas desarrolladas en el resto de este libro ---an\'alisis espectral,
+curvatura discreta, topolog\'ia de orden superior--- las explican y sugieren
+remedios.
+
+\section{Resumen}
+\label{sec:priors:summary}
+
+La invarianza y la equivarianza convierten la exigencia informal de que un modelo
+``respete las simetr\'ias de los datos'' en restricciones precisas sobre una
+funci\'on. Como las aplicaciones equivariantes se componen
+(\Cref{thm:priors:composition}), estas restricciones producen un esquema
+constructivo: apilar capas equivariantes y engrosamiento local, y terminar con
+una lectura invariante. El teorema de aproximaci\'on universal equivariante
+(\Cref{thm:priors:universal}) certifica que esta disciplina no cuesta poder
+expresivo. El paso de mensajes vuelve concreto el esquema y revela las
+arquitecturas convolucionales, de atenci\'on y de grafos como una sola
+construcci\'on bajo distintos sesgos geom\'etricos. Los cap\'itulos restantes
+instancian este esquema sobre cada uno de los cinco dominios geom\'etricos.

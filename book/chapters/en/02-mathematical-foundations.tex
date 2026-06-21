@@ -1,17 +1,561 @@
+\providecommand{\GL}{\operatorname{GL}}
+\providecommand{\SO}{\operatorname{SO}}
+\providecommand{\Orth}{\operatorname{O}}
+\providecommand{\Sym}{\operatorname{Sym}}
+\providecommand{\Stab}{\operatorname{Stab}}
+\providecommand{\Orb}{\operatorname{Orb}}
+\providecommand{\Lie}[1]{\mathfrak{#1}}
+
 \chapter{Mathematical Foundations}
 \label{ch:foundations}
 
+The premise of geometric deep learning, set out in \Cref{ch:introduction}, is
+that the geometric structure of the data should dictate the structure of the
+model. To make this premise operational we need a precise language for two
+kinds of structure: the \emph{symmetries} that a problem possesses, and the
+\emph{spaces} on which the data lives. This chapter develops that language. We
+begin with groups and the way they act on sets, which formalize symmetry; we
+then turn to linear representations, the mechanism by which an abstract symmetry
+acts on the feature spaces of a neural network; we describe homogeneous spaces
+and quotients, which unify domains as different as the sphere and the plane
+under a single construction; and we close with manifolds and tangent spaces,
+the geometry on which the later chapters build. The treatment is deliberately
+self-contained but selective: we state the definitions and theorems used in the
+rest of the book and prove only those results whose proofs are illuminating.
+Standard references for the material are~\citet{lee2012introduction} for
+manifolds, \citet{munkres2000topology} for topology, and
+\citet{Kirillov2008,Fulton1991} for Lie groups and representation theory.
+
 \section{Groups and group actions}
+\label{sec:found:groups}
+
+A symmetry is a transformation that leaves a quantity of interest unchanged. The
+collection of all such transformations is never arbitrary: the composition of
+two symmetries is again a symmetry, every symmetry can be undone, and doing
+nothing is a symmetry. These three facts are exactly the axioms of a group.
+
 \begin{definition}[Group]
-A group $(\group, \cdot)$ is a set equipped with an associative binary
-operation, an identity element, and inverses.
+\label{def:found:group}
+A \emph{group} is a set $\group$ equipped with a binary operation
+$\cdot : \group \times \group \to \group$ satisfying:
+\begin{enumerate}
+  \item \textbf{Associativity:} $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ for
+    all $a, b, c \in \group$.
+  \item \textbf{Identity:} there exists $e \in \group$ with
+    $e \cdot a = a \cdot e = a$ for all $a \in \group$.
+  \item \textbf{Inverses:} for each $a \in \group$ there exists $a^{-1} \in \group$
+    with $a \cdot a^{-1} = a^{-1} \cdot a = e$.
+\end{enumerate}
+The group is \emph{abelian} (or commutative) if $a \cdot b = b \cdot a$ for all
+$a, b$.
 \end{definition}
 
+Translations of an image form an abelian group: shifting by $(a,b)$ and then by
+$(c,d)$ gives the same result in either order. Rotations in three dimensions, by
+contrast, do not commute, and their group is non-abelian. A subset
+$H \subseteq \group$ that is itself a group under the inherited operation is a
+\emph{subgroup}, written $H \le \group$. A subgroup $H$ is \emph{normal}
+($H \triangleleft \group$) if $gHg^{-1} = H$ for every $g \in \group$; normality
+is precisely the condition that the cosets of $H$ inherit a group structure, as
+we revisit in \Cref{sec:found:homogeneous}.
+
+The bridge between two groups is a map that preserves their operations.
+
+\begin{definition}[Homomorphism]
+\label{def:found:homomorphism}
+A map $\phi : \group \to \mathcal{H}$ between groups is a \emph{homomorphism} if
+$\phi(g_1 g_2) = \phi(g_1)\phi(g_2)$ for all $g_1, g_2 \in \group$. A bijective
+homomorphism is an \emph{isomorphism}, written $\group \cong \mathcal{H}$. The
+\emph{kernel} $\ker(\phi) = \{g : \phi(g) = e_{\mathcal{H}}\}$ is always a normal
+subgroup, and the \emph{image} $\operatorname{Im}(\phi) = \{\phi(g) : g \in \group\}$
+is a subgroup of $\mathcal{H}$.
+\end{definition}
+
+Isomorphic groups are algebraically indistinguishable: they differ only in the
+names of their elements. Homomorphisms are the formal device through which
+abstract symmetries become computable transformations, and in
+\Cref{ch:priors,ch:groups} they are what makes equivariance implementable.
+
+Groups are abstract; data is concrete. To apply a group to images, graphs, or
+point clouds we must say how its elements transform the points of a set. This is
+the notion of a group action.
+
+\begin{definition}[Group action]
+\label{def:found:action}
+An \emph{action} of a group $\group$ on a set $X$ is a map
+$\group \times X \to X$, written $(g, x) \mapsto g \cdot x$, satisfying
+\[
+  (g_1 g_2) \cdot x = g_1 \cdot (g_2 \cdot x), \qquad e \cdot x = x
+\]
+for all $g_1, g_2 \in \group$ and $x \in X$.
+\end{definition}
+
+Every action is equivalent to a homomorphism into the symmetric group: the map
+$\tilde\rho(g)\colon x \mapsto g\cdot x$ is a bijection of $X$ (its inverse is
+$\tilde\rho(g^{-1})$), and $\tilde\rho : \group \to \operatorname{Sym}(X)$ is a
+homomorphism. Studying how $\group$ acts on $X$ is therefore the same as studying
+homomorphisms $\group \to \operatorname{Sym}(X)$. The actions relevant to this
+book are familiar:
+
+\begin{example}[Actions in deep learning]
+\label{ex:found:actions}
+\leavevmode
+\begin{itemize}
+  \item Translations $\Z^2$ act on discrete images by shifting pixels.
+  \item Rotations $\SO(3)$ act on point clouds by matrix multiplication.
+  \item Permutations $S_n$ act on graphs with $n$ nodes by relabelling.
+\end{itemize}
+These are the symmetry groups of grids, geometric data, and graphs
+respectively, and they organize \Cref{ch:grids,ch:groups,ch:graphs}.
+\end{example}
+
+Many symmetry groups of interest are built from simpler ones. The Euclidean
+group of rigid motions, for instance, combines translations with rotations and
+reflections, but not as a plain product: a rotation reorients the translation
+that follows it. The \emph{semidirect product} $N \rtimes_\phi H$ captures this.
+Given a homomorphism $\phi : H \to \operatorname{Aut}(N)$ describing how $H$ acts
+on $N$, it is the set $N \times H$ with the product
+\[
+  (n_1, h_1)\cdot(n_2, h_2) = \bigl(n_1\,\phi(h_1)(n_2),\; h_1 h_2\bigr).
+\]
+The Euclidean group is $E(n) = \R^n \rtimes \Orth(n)$, with
+$(t_1, R_1)\cdot(t_2, R_2) = (t_1 + R_1 t_2,\, R_1 R_2)$: first rotate, then
+translate. Its orientation-preserving subgroup $SE(n) = \R^n \rtimes \SO(n)$ is
+the symmetry group of rigid three-dimensional data.
+
+\paragraph{Lie groups.}
+The symmetries above split into two kinds. Permutations form a \emph{discrete}
+group; rotations and translations form \emph{continuous} families. To do
+calculus on the continuous case --- to differentiate and optimize over
+transformations --- we require that the group also be a smooth manifold (a
+notion made precise in \Cref{sec:found:manifolds}).
+
+\begin{definition}[Lie group]
+\label{def:found:liegroup}
+A \emph{Lie group} is a group $G$ that is also a smooth manifold and for which
+multiplication $(g,h) \mapsto gh$ and inversion $g \mapsto g^{-1}$ are smooth
+maps.
+\end{definition}
+
+The most important Lie groups in this book are the matrix groups. The
+\emph{special orthogonal group}
+\[
+  \SO(n) = \{ R \in \R^{n\times n} : R^\top R = I_n,\ \det R = 1 \}
+\]
+of rotations is a compact Lie group of dimension $\tfrac{n(n-1)}{2}$; dropping
+the determinant condition gives the orthogonal group $\Orth(n)$, which also
+contains reflections. For $n=2$ a rotation is a single angle,
+$R_\theta = \left(\begin{smallmatrix}\cos\theta & -\sin\theta\\ \sin\theta &
+\cos\theta\end{smallmatrix}\right)$, so $\SO(2)$ is the circle; $\SO(3)$ has
+dimension three, the three axes of rotation.
+
+A Lie group is curved, but it is linear to first order. Its tangent space at the
+identity, $\Lie{g} = T_e G$, carries an antisymmetric bilinear bracket
+$[\cdot,\cdot]$ (the \emph{Lie bracket}) making it a \emph{Lie algebra}: a vector
+space with a bracket that is bilinear, antisymmetric, and satisfies the Jacobi
+identity $[X,[Y,Z]] + [Y,[Z,X]] + [Z,[X,Y]] = 0$. The Lie algebra linearizes the
+group, and the passage back to the group is the \emph{exponential map}
+$\exp : \Lie{g} \to G$, which for matrix groups is the matrix exponential
+$\exp(A) = \sum_{k\ge 0} A^k/k!$. For $\SO(2)$, with
+$J = \left(\begin{smallmatrix}0 & -1\\ 1 & 0\end{smallmatrix}\right)$ spanning
+$\Lie{so}(2)$,
+\[
+  \exp(\theta J) = \begin{pmatrix}\cos\theta & -\sin\theta\\
+  \sin\theta & \cos\theta\end{pmatrix} = R_\theta,
+\]
+so the exponential turns an angle (an element of the algebra) into a rotation (an
+element of the group). This is the reason Lie algebras matter for the design of
+neural networks: optimization can be carried out in the flat vector space
+$\Lie{g}$ with ordinary gradients, and the resulting transformation applied in
+the group through $\exp$.
+
 \section{Representations}
-Linear representations of groups and their relevance to feature spaces.
+\label{sec:found:representations}
+
+A group action moves the points of a domain around. Inside a neural network,
+however, symmetries must act on \emph{feature spaces} --- vector spaces of
+activations. The notion that makes a symmetry act linearly is a representation.
+
+\begin{definition}[Representation]
+\label{def:found:representation}
+A \emph{representation} of a group $\group$ on a vector space $V$ over a field
+$\mathbb{K}$ is a homomorphism $\rho : \group \to \GL(V)$, where $\GL(V)$ is the
+group of invertible linear maps on $V$. Equivalently, each $g$ is assigned an
+invertible matrix $\rho(g)$ so that $\rho(g_1 g_2) = \rho(g_1)\rho(g_2)$. For a
+Lie group we additionally require $\rho$ to be smooth.
+\end{definition}
+
+Representations translate abstract symmetries into concrete linear operations on
+the channels of a network. A smooth representation of a Lie group differentiates
+to a representation of its Lie algebra, $d\rho : \Lie{g} \to \Lie{gl}(V)$ with
+$d\rho(X) = \frac{d}{dt}\big|_{0}\,\rho(\exp(tX))$, which preserves the bracket:
+$d\rho([X,Y]) = [d\rho(X), d\rho(Y)]$. This is again what lets us optimize in the
+linear algebra and act in the group.
+
+The basic question of representation theory is how a representation decomposes.
+
+\begin{definition}[Irreducible representation]
+\label{def:found:irreducible}
+A representation $\rho : \group \to \GL(V)$ with $V \ne \{0\}$ is
+\emph{irreducible} if the only subspaces $W \subseteq V$ with
+$\rho(g)W \subseteq W$ for all $g$ are $\{0\}$ and $V$.
+\end{definition}
+
+Irreducible representations are the building blocks from which all others are
+assembled. For $\SO(2)$ the (complex) irreducibles are one-dimensional, indexed
+by $n \in \Z$:
+\[
+  \rho_n : \SO(2) \to \C^*, \qquad \rho_n(R_\theta) = e^{i n\theta}.
+\]
+Each $n$ is a \emph{frequency}, and these are exactly the basis functions of the
+classical Fourier series. The next theorem says that for compact groups every
+representation splits into irreducibles.
+
+\begin{theorem}[Complete reducibility]
+\label{thm:found:decomposition}
+Every finite-dimensional representation of a compact group $\group$ decomposes
+as a direct sum of irreducible representations,
+$V = \bigoplus_i n_i V_i$, where each $V_i$ is irreducible and $n_i \in \mathbb{N}$
+is its multiplicity.
+\end{theorem}
+
+The proof rests on a single device: averaging over the group. Compact groups
+carry a unique invariant probability measure, the \emph{Haar measure} $\mu$,
+satisfying $\mu(gA) = \mu(Ag) = \mu(A)$ and $\mu(\group) = 1$. Given any inner
+product $\langle\cdot,\cdot\rangle_0$ on $V$, the average
+$\langle u, v\rangle = \int_\group \langle \rho(g)u, \rho(g)v\rangle_0\,d\mu(g)$
+is a $\group$-invariant inner product. With respect to it, the orthogonal
+complement of any invariant subspace is again invariant, so an invariant
+subspace can always be split off; induction on $\dim V$ finishes the argument.
+The Haar measure is also exactly the averaging that defines group convolution,
+and its invariance is what guarantees the equivariance of the resulting operator
+--- the central fact behind the group-equivariant networks of
+\Cref{ch:groups}~\citep{cohen2016group}.
+
+The maps between irreducibles are severely constrained, a fact known as Schur's
+lemma.
+
+\begin{lemma}[Schur]
+\label{lem:found:schur}
+Let $(\rho, V)$ and $(\sigma, W)$ be irreducible representations and let
+$T : V \to W$ satisfy $T\rho(g) = \sigma(g)T$ for all $g$ (an intertwiner).
+Then $T$ is either zero or an isomorphism. If moreover $V = W$ and the field is
+$\C$, then $T = \lambda\,\mathrm{Id}$ for some scalar $\lambda$.
+\end{lemma}
+
+\begin{proof}
+The kernel of $T$ is invariant ($v \in \ker T \Rightarrow T\rho(g)v =
+\sigma(g)Tv = 0$), so by irreducibility of $\rho$ it is $\{0\}$ or $V$;
+likewise the image is invariant, so by irreducibility of $\sigma$ it is $\{0\}$
+or $W$. Hence $T = 0$ or $T$ is a bijection. For the second part, over $\C$ the
+map $T$ has an eigenvalue $\lambda$; then $T - \lambda\,\mathrm{Id}$ is an
+intertwiner with nontrivial kernel, so it vanishes.
+\end{proof}
+
+Schur's lemma is the algebraic root of the parameter efficiency of equivariant
+networks: an equivariant linear layer between representations is forced to be
+block-diagonal in the irreducible decomposition, with each block proportional to
+the identity, so the number of free parameters is dictated by the symmetry
+rather than by the input size. This decomposition culminates, for compact Lie
+groups, in the Peter--Weyl theorem.
+
+\begin{theorem}[Peter--Weyl]
+\label{thm:found:peterweyl}
+Let $\group$ be a compact Lie group. The space $L^2(\group)$ of square-integrable
+functions decomposes as
+\[
+  L^2(\group) = \bigoplus_{\lambda \in \widehat{\group}} d_\lambda\, V_\lambda,
+\]
+where $\widehat{\group}$ is the set of equivalence classes of irreducible
+representations, $V_\lambda$ is the space of the irreducible $\lambda$, and
+$d_\lambda = \dim V_\lambda$.
+\end{theorem}
+
+The Peter--Weyl theorem is the generalization of the Fourier series to
+non-abelian groups: the matrix entries of the irreducibles play the role of the
+exponentials $e^{in\theta}$ and form a complete orthonormal basis of
+$L^2(\group)$. For $\group = \SO(2)$ it reduces exactly to the classical Fourier
+expansion $f(\theta) = \sum_n \hat f_n\,e^{in\theta}$. For network design it has
+three consequences, developed in \Cref{ch:groups}: the channels of an
+equivariant layer are indexed by irreducibles $\lambda$; the per-channel
+parameter count $d_\lambda^2$ is fixed by the group, independent of input
+resolution; and equivariant convolutions become pointwise multiplications in
+this generalized Fourier (spectral) domain.
 
 \section{Homogeneous spaces and quotients}
-Placeholder.
+\label{sec:found:homogeneous}
+
+So far symmetries have acted on data. We now turn the construction around and use
+a group to \emph{build} the domain itself. Many of the spaces on which geometric
+data lives --- the sphere $S^2$, projective spaces, Grassmannians --- share a
+hidden structure: they are quotients $G/H$ of a Lie group by a closed subgroup.
+Recognizing a domain as such a quotient is the single most useful step in
+designing an equivariant architecture for it.
+
+We start with the algebraic construction. When $H \triangleleft \group$ is
+normal, the left cosets $g H = \{gh : h \in H\}$ partition $\group$ and inherit a
+group structure.
+
+\begin{definition}[Quotient group]
+\label{def:found:quotient}
+Let $H \triangleleft \group$. The \emph{quotient group} $\group/H$ is the set of
+left cosets $\{gH : g \in \group\}$ with the operation
+$(g_1 H)(g_2 H) = (g_1 g_2) H$.
+\end{definition}
+
+The operation is well defined precisely because $H$ is normal. The link between
+quotients and homomorphisms is the first isomorphism theorem: for any
+homomorphism $\phi : \group \to \mathcal{H}$,
+\[
+  \group / \ker(\phi) \;\cong\; \operatorname{Im}(\phi),
+\]
+via $g\,\ker(\phi) \mapsto \phi(g)$. Quotients model the systematic reduction of
+symmetry that occurs in hierarchical architectures: a network on
+three-dimensional data may begin with full $SE(3)$ symmetry and reduce to
+$\SO(3)$ in deeper layers through a homomorphism whose kernel (the translations)
+is a normal subgroup.
+
+For geometry we need two notions attached to an action: which points a given
+point can reach, and which group elements fix it.
+
+\begin{definition}[Orbit and stabilizer]
+\label{def:found:orbit}
+Let $\group$ act on a set $X$ and let $x \in X$. The \emph{orbit} of $x$ is
+$\Orb(x) = \{g \cdot x : g \in \group\}$, the set of points reachable from $x$.
+The \emph{stabilizer} of $x$ is $\Stab(x) = \{g \in \group : g \cdot x = x\}$,
+the subgroup fixing $x$.
+\end{definition}
+
+The two notions are linked by the orbit--stabilizer theorem, which is the
+geometric heart of this section (\Cref{fig:found:orbit}).
+
+\begin{theorem}[Orbit--stabilizer]
+\label{thm:found:orbitstab}
+Let $\group$ act on $X$ and let $x \in X$. Then there is a natural bijection
+\[
+  \group / \Stab(x) \;\cong\; \Orb(x), \qquad g\,\Stab(x) \mapsto g \cdot x.
+\]
+\end{theorem}
+
+\begin{proof}
+The map $\psi(g\,\Stab(x)) = g\cdot x$ is well defined: if
+$g\,\Stab(x) = h\,\Stab(x)$ then $h^{-1}g \in \Stab(x)$, so
+$g\cdot x = h\cdot((h^{-1}g)\cdot x) = h\cdot x$. It is injective by the same
+computation read backwards, and surjective because every point of $\Orb(x)$ is
+$g\cdot x$ for some $g$.
+\end{proof}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    >=Stealth,
+    pt/.style={circle, fill=#1, minimum size=7pt, inner sep=0pt}
+]
+% Group G with cosets
+\draw[thick, fill=gdlgreen!12, rounded corners] (-5.2,-1.6) rectangle (-3.4,2.1);
+\node[above, font=\small\bfseries, text=gdlgreen!60!black] at (-4.3,2.1) {Group $\group$};
+\foreach \y/\lab in {1.3/$g_1\Stab(x)$, 0.3/$g_2\Stab(x)$, -0.7/$\Stab(x)$} {
+    \draw[thick, fill=gdlgreen!22, rounded corners=1pt] (-5.05,\y) rectangle (-3.55,\y-0.55);
+    \node[font=\tiny] at (-4.3,\y-0.27) {\lab};
+}
+% Bijection arrow
+\draw[->, very thick, gdlred!75!black] (-3.2,0.4) -- node[above, font=\small] {$\cong$} (-1.2,0.4);
+% Space X with orbit
+\draw[thick, fill=gdlgray!12, rounded corners] (-1,-1.6) rectangle (4.6,2.6);
+\node[above, font=\small\bfseries, text=gdlgray!50!black] at (1.8,2.6) {Space $X$};
+\draw[gdlblue!60, thick, fill=gdlblue!12] (1.7,0.5) ellipse (1.9cm and 0.95cm);
+\node[above, font=\tiny, text=gdlblue!70!black] at (1.7,1.5) {$\Orb(x) = \group\cdot x$};
+\node[pt=gdlred!75] (x) at (0.4,0.5) {};
+\node[below left, font=\small] at (x) {$x$};
+\node[pt=gdlorange!80] (gx1) at (2.2,1.1) {};
+\node[above, font=\small] at (gx1) {$g_1\cdot x$};
+\node[pt=gdlorange!80] (gx2) at (2.7,-0.1) {};
+\node[below, font=\small] at (gx2) {$g_2\cdot x$};
+\draw[->, thick, gdlpurple!75] (x) to[bend left=28] node[above, font=\tiny] {$g_1$} (gx1);
+\draw[->, thick, gdlpurple!75] (x) to[bend right=18] node[below, font=\tiny] {$g_2$} (gx2);
+\draw[->, thick, gdlgreen!55!black, loop above, looseness=6] (x) to node[above, font=\tiny] {$h\in\Stab(x)$} (x);
+\end{tikzpicture}
+\caption[Orbit--stabilizer theorem]{The orbit--stabilizer theorem. Each coset
+$g\,\Stab(x)$ of the stabilizer corresponds to exactly one point $g\cdot x$ of
+the orbit, giving the bijection $\group/\Stab(x) \cong \Orb(x)$.}
+\label{fig:found:orbit}
+\end{figure}
+
+When $\group$ is a Lie group acting transitively and $H$ is a closed subgroup,
+$G/H$ is itself a smooth manifold, called a \emph{homogeneous space}, on which
+$\group$ acts transitively by $g'\cdot(gH) = (g'g)H$. The orbit--stabilizer
+theorem says that any domain admitting a transitive group of symmetries is a
+homogeneous space: identify the symmetry group $\group$, fix a reference point,
+and the stabilizer $H$ of that point determines the domain as $G/H$.
+
+\begin{example}[The sphere as $\SO(3)/\SO(2)$]
+\label{ex:found:sphere}
+Let $\SO(3)$ act on $S^2$ by rotation. The action is transitive: any unit vector
+can be rotated to any other. Fix the north pole $p = (0,0,1)^\top$; a rotation
+fixes $p$ exactly when its axis is the $z$-axis, and these rotations form a
+subgroup isomorphic to $\SO(2)$. Hence $\Stab(p) \cong \SO(2)$, and the
+orbit--stabilizer theorem gives
+\[
+  S^2 \;\cong\; \SO(3)/\SO(2).
+\]
+A signal $f : S^2 \to \R^C$ lifts to a function on $\SO(3)$ that is right-invariant
+under $\SO(2)$, namely $\tilde f(g) = f(g\cdot p)$. Consequently the natural
+equivariant convolution on the sphere is a correlation over the full group
+$\SO(3)$ rather than over a flat projection, which is the construction underlying
+spherical networks discussed in \Cref{ch:geodesics,ch:applications}.
+\end{example}
+
+This example illustrates a general recipe for geometric architectures: (1)
+identify the data domain $\Omega$; (2) determine the relevant symmetry group
+$\group$; (3) compute the stabilizer $H$ of a reference point; (4) recognize
+$\Omega \cong G/H$ by the orbit--stabilizer theorem; and (5) build the
+equivariant architecture using the harmonic analysis of $\group$
+(\Cref{thm:found:peterweyl}). Homogeneous spaces also enjoy convenient geometric
+properties: if $\group$ is connected then $G/H$ is connected, and $\group$ acts
+by isometries of any $\group$-invariant Riemannian metric on $G/H$. Crucially,
+on a homogeneous space an equivariant operator is completely determined by its
+behavior at the base point $o = eH$: since $\group$ acts transitively, the value
+of $\Phi f$ at any point $x = g\cdot o$ is fixed by equivariance, and a short
+computation shows that the only equivariant linear operators are generalized
+convolutions. This is the mathematical reason convolution is the canonical
+operation on symmetric domains, a thread we follow through
+\Cref{ch:grids,ch:groups,ch:graphs}.
 
 \section{Manifolds and tangent spaces}
-Placeholder.
+\label{sec:found:manifolds}
+
+The third strand of our language is the geometry of curved domains. A surface, a
+configuration space, or the set of rotations is not a vector space, yet each
+looks like flat Euclidean space when viewed closely enough. The notion of a
+manifold makes this precise, and the tangent space provides the linearization on
+which calculus --- and ultimately learning --- proceeds.
+
+We assume the standard topological prerequisites: a \emph{topological space} is a
+set with a distinguished collection of open sets closed under arbitrary unions
+and finite intersections; it is \emph{Hausdorff} if distinct points have disjoint
+open neighborhoods; and a \emph{homeomorphism} is a continuous bijection with
+continuous inverse, the notion of two spaces being ``topologically the same.''
+
+\begin{definition}[Topological manifold]
+\label{def:found:topmanifold}
+A \emph{topological manifold} of dimension $m$ is a Hausdorff, second-countable
+topological space $\mathcal{M}$ that is \emph{locally Euclidean}: every point has
+an open neighborhood $U$ homeomorphic, via a map $\phi : U \to V \subseteq \R^m$
+(a \emph{chart}), to an open subset of $\R^m$.
+\end{definition}
+
+Intuitively a manifold is a space that locally looks like $\R^m$ even when its
+global shape is very different: the Earth's surface is curved yet looks flat to a
+pedestrian; a wrinkled sheet of paper is locally two-dimensional; a robot arm's
+configuration space is non-Euclidean but locally coordinatized by joint angles.
+A collection of charts covering $\mathcal{M}$ is an \emph{atlas}
+$\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}$, and the \emph{transition maps}
+$\phi_\beta \circ \phi_\alpha^{-1}$ describe how overlapping charts relate. The
+manifold is \emph{differentiable} (smooth) if all transition maps are
+$C^\infty$; this is exactly the extra structure needed to do calculus on
+$\mathcal{M}$.
+
+The central object is the tangent space, which captures the infinitesimal
+directions at a point. Two complementary constructions, illustrated in
+\Cref{fig:found:tangent}, make it precise.
+
+\begin{definition}[Tangent space via curves]
+\label{def:found:tangent-curves}
+Let $\mathcal{M}$ be smooth and $p \in \mathcal{M}$. Two curves
+$\gamma_1, \gamma_2 : (-\epsilon,\epsilon) \to \mathcal{M}$ with
+$\gamma_1(0) = \gamma_2(0) = p$ are \emph{tangent at $p$} if, for some (hence
+every) chart $(U,\phi)$ around $p$,
+$(\phi\circ\gamma_1)'(0) = (\phi\circ\gamma_2)'(0)$. The \emph{tangent space}
+$T_p\mathcal{M}$ is the set of equivalence classes $[\gamma]$ of curves tangent
+at $p$.
+\end{definition}
+
+\begin{definition}[Tangent space via derivations]
+\label{def:found:tangent-deriv}
+A \emph{derivation} at $p$ is a linear map $v : C^\infty(\mathcal{M}) \to \R$
+obeying the Leibniz rule $v(fg) = v(f)\,g(p) + f(p)\,v(g)$. The tangent space
+$T_p\mathcal{M}$ is the vector space of all derivations at $p$.
+\end{definition}
+
+The first construction reads a tangent vector as the initial velocity of a curve
+--- a direction of motion; the second reads it as a directional-derivative
+operator --- a direction of change of functions. The two are canonically
+isomorphic, the isomorphism sending $[\gamma]$ to the derivation
+$f \mapsto \frac{d}{dt}\big|_0 (f\circ\gamma)$. In a chart with coordinates
+$x^1,\dots,x^m$ the partial derivatives
+$\frac{\partial}{\partial x^j}\big|_p$ form a basis, so $T_p\mathcal{M}$ is a
+vector space of dimension $m = \dim\mathcal{M}$. We use curves for geometric
+intuition and derivations for algebraic manipulation.
+
+\begin{example}[Tangent space to the sphere]
+\label{ex:found:tangent-sphere}
+At the north pole $p = (0,0,1)$ of $S^2$, the curve
+$\gamma(t) = (\sin t, 0, \cos t)$ has $\gamma'(0) = (1,0,0)$. The tangent space
+$T_p S^2$ is the horizontal plane $\{(x,y,0)\}$, the plane tangent to the sphere
+at the pole. Its two-dimensionality reflects $\dim S^2 = 2$.
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+% Surface
+\shade[ball color=gdlblue!18, opacity=0.9]
+    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
+    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
+\draw[thick, gdlblue!55]
+    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
+    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
+\node[text=gdlblue!60!black, font=\small] at (-1.7,-1.5) {$\mathcal{M}$};
+% Point p
+\coordinate (p) at (0,0.35);
+% Tangent plane (parallelogram)
+\begin{scope}[on background layer]
+\fill[gdlorange!18, opacity=0.85]
+    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
+    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
+\draw[gdlorange!60]
+    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
+    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
+\end{scope}
+\node[text=gdlorange!60!black, font=\small] at (1.9,1.25) {$T_p\mathcal{M}$};
+% Curves through p
+\draw[thick, gdlpurple!75] (-1.4,-0.4) .. controls (-0.5,0.05) .. (p)
+    .. controls (0.5,0.65) .. (1.4,1.0);
+\node[gdlpurple!75, font=\tiny] at (1.55,1.05) {$\gamma_1$};
+\draw[thick, gdlgreen!60!black] (-0.5,-0.9) .. controls (-0.2,-0.25) .. (p)
+    .. controls (0.2,0.9) .. (0.45,1.4);
+\node[gdlgreen!60!black, font=\tiny] at (0.6,1.45) {$\gamma_2$};
+% Tangent vectors
+\draw[->, very thick, gdlpurple!75] (p) -- ++(0.95,0.45)
+    node[right, font=\tiny] {$\gamma_1'(0)$};
+\draw[->, very thick, gdlgreen!60!black] (p) -- ++(0.25,0.85)
+    node[above, font=\tiny] {$\gamma_2'(0)$};
+\fill[gdlred!80] (p) circle (2.2pt);
+\node[below right=0pt and 1pt of p, font=\small] {$p$};
+\end{tikzpicture}
+\caption[Tangent space]{The tangent space $T_p\mathcal{M}$ at a point $p$.
+Tangent vectors are the initial velocities $\gamma'(0)$ of curves through $p$;
+equivalently, directional-derivative operators on smooth functions. They form a
+vector space that approximates $\mathcal{M}$ linearly at $p$.}
+\label{fig:found:tangent}
+\end{figure}
+
+A smooth map $F : \mathcal{M} \to \mathcal{N}$ acts on tangent vectors through
+its \emph{differential} (or pushforward) $dF_p : T_p\mathcal{M} \to
+T_{F(p)}\mathcal{N}$, defined on derivations by $dF_p(v)(g) = v(g\circ F)$; in
+local coordinates $dF_p$ is the Jacobian matrix. The differential classifies
+maps by the behavior of its rank: $F$ is an \emph{immersion} if $dF_p$ is
+injective everywhere and a \emph{submersion} if it is surjective everywhere. An
+\emph{embedding} is an injective immersion that is a homeomorphism onto its
+image; intuitively, an embedded manifold sits inside the ambient space without
+self-intersections or kinks. These notions return in \Cref{ch:geodesics}, where
+a Riemannian metric on the tangent spaces turns a manifold into a space with
+distances and curvature, and in \Cref{ch:gauges}, where the absence of a
+canonical basis for $T_p\mathcal{M}$ leads to gauge symmetry.
+
+Connecting back to \Cref{sec:found:groups}: a Lie group is a manifold whose
+tangent space at the identity is its Lie algebra, and the exponential map is the
+canonical curve through the identity in each direction. The three threads of this
+chapter --- groups, representations, and manifolds --- thus meet in the Lie
+group, and together they furnish the vocabulary for the geometric priors of
+\Cref{ch:priors} and the architectures that follow.

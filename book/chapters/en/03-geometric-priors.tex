@@ -1,16 +1,460 @@
+\providecommand{\Nb}{\mathcal{N}}
+\providecommand{\GL}{\operatorname{GL}}
+\providecommand{\Aut}{\operatorname{Aut}}
+
 \chapter{Geometric Priors: Invariance and Equivariance}
 \label{ch:priors}
 
+The previous chapters introduced the mathematical language of geometric deep
+learning (GDL) --- groups, representations, and the geometric domains on which
+data live --- and argued that the failure of classical architectures on
+non-Euclidean data is conceptual rather than technical. This chapter turns that
+diagnosis into a constructive principle. The central thesis is simple to state:
+a model should respect the symmetries of the problem it solves, and the way to
+guarantee this is to build the symmetry into the architecture rather than to
+hope it will be learned from data. The two notions that make this precise are
+\emph{invariance} and \emph{equivariance}. From them we derive a design
+blueprint --- the \emph{geometric priors} of the title --- that unifies
+convolutional, attention-based, and graph architectures under a single
+geometric construction.
+
+\section{Why traditional networks need a geometric prior}
+\label{sec:priors:motivation}
+
+A traditional artificial neural network treats its input as an unstructured
+vector $x \in \R^n$. A single neuron computes $y = \sigma(\inner{w}{x} + b)$,
+combining all $n$ coordinates through a global weighted sum. Reinterpreted as an
+operator on a signal over a domain $\Omega = \{1, \dots, n\}$, this domain is a
+bare index set: it carries no notion of \emph{locality} (every coordinate
+contributes equally, with no concept of near and far), no \emph{structured
+neighbourhood} (the connection $w_1 x_1$ is structurally identical to
+$w_{100} x_{100}$), and no \emph{geometric invariance} (permuting the indices
+generally changes the output, even when the permutation is semantically
+irrelevant). The network ignores any geometry implicit in the data.
+
+This blindness has a concrete cost. Suppose the quantity we wish to predict is
+unchanged under a group $\group$ of transformations --- rotations of an image,
+relabellings of the nodes of a graph. A fully connected network has no built-in
+reason to produce the same answer for $x$ and for a transformed input
+$g \cdot x$. The standard remedy, \emph{data augmentation}, presents the network
+with transformed copies of every example; but this inflates the training set by
+a factor of $\abs{\group}$, offers no guarantee that the learned function is
+actually invariant, and degrades or fails entirely when $\group$ is large or
+continuous. A geometric prior replaces this hope with a guarantee: the symmetry
+is encoded in the structure of the map, so it holds exactly, for every input,
+by construction.
+
 \section{Invariant and equivariant functions}
-\begin{definition}[Equivariance]
-A map $f \colon X \to Y$ is \emph{equivariant} with respect to a group
-$\group$ acting on $X$ and $Y$ if $f(g \cdot x) = g \cdot f(x)$ for all
-$g \in \group$ and $x \in X$.
+\label{sec:priors:inv-equi}
+
+We work with a group $\group$ acting on the relevant spaces. Recall that an
+\emph{action} of $\group$ on a set $X$ is a map $\group \times X \to X$,
+written $(g, x) \mapsto g \cdot x$, that is compatible with the group law:
+$e \cdot x = x$ and $g \cdot (h \cdot x) = (gh) \cdot x$. When $X$ is a vector
+space and each $g$ acts linearly, the action is a \emph{representation}
+$\rho_X \colon \group \to \GL(X)$ (\Cref{ch:foundations}). We write $g \cdot x$
+for $\rho_X(g)\, x$ throughout.
+
+\begin{definition}[Equivariant function]
+\label{def:priors:equivariance}
+Let $\group$ be a group acting on $X$ via $\rho_X$ and on $Y$ via $\rho_Y$.
+A map $f \colon X \to Y$ is \emph{$\group$-equivariant} if
+\[
+  f(g \cdot x) = g \cdot f(x)
+  \qquad \text{for all } g \in \group,\ x \in X,
+\]
+that is, $f \circ \rho_X(g) = \rho_Y(g) \circ f$ for every $g$.
 \end{definition}
 
+\begin{definition}[Invariant function]
+\label{def:priors:invariance}
+A map $f \colon X \to Y$ is \emph{$\group$-invariant} if
+$f(g \cdot x) = f(x)$ for all $g \in \group$ and $x \in X$.
+\end{definition}
+
+Invariance is the special case of equivariance in which $\group$ acts trivially
+on the output, $\rho_Y(g) = \mathrm{id}$. Equivariance is the more fundamental
+notion: it says that transforming the input produces a correspondingly
+transformed output, so that geometric structure is \emph{preserved} rather than
+discarded. Equivariance is the property we want from the intermediate layers of
+a network, where structure must survive; invariance is appropriate only at the
+final readout, where we collapse to a label.
+
+\Cref{fig:priors:equivariance} renders \Cref{def:priors:equivariance} as a
+commutative square: equivariance is exactly the statement that the two paths
+from $X$ to $Y$ --- transform then apply $f$, or apply $f$ then transform ---
+agree.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=2.6cm and 4cm,
+    space/.style={circle, draw=gdlgray!80, fill=gdlblue!15, minimum size=1.5cm, font=\large},
+    arrow/.style={-{Stealth[length=7pt]}, thick},
+    lbl/.style={font=\small, midway}
+]
+\node[space] (X) {$X$};
+\node[space, right=of X] (Y) {$Y$};
+\node[space, below=of X] (gX) {$X$};
+\node[space, below=of Y] (gY) {$Y$};
+\draw[arrow, gdlblue!70!black] (X) -- node[lbl, above] {$f$} (Y);
+\draw[arrow, gdlblue!70!black] (gX) -- node[lbl, below] {$f$} (gY);
+\draw[arrow, gdlred!70!black] (X) -- node[left, align=center] {\small\itshape transform\\[1pt] $\rho_X(g)$} (gX);
+\draw[arrow, gdlred!70!black] (Y) -- node[lbl, right] {$\rho_Y(g)$} (gY);
+\node[font=\Large] at ($(X)!0.5!(gY)$) {$\circlearrowleft$};
+\node[font=\normalsize, below=0.4cm of gX, anchor=north west, xshift=0.6cm] {
+    $f(\rho_X(g)\cdot x) = \rho_Y(g)\cdot f(x)$
+};
+\end{tikzpicture}
+\caption[The equivariance commutative square]{Equivariance as a commutative
+diagram. A map $f \colon X \to Y$ is $\group$-equivariant when the square
+commutes: transforming the input by $\rho_X(g)$ and then applying $f$ yields the
+same result as applying $f$ and then transforming the output by $\rho_Y(g)$.}
+\label{fig:priors:equivariance}
+\end{figure}
+
+\begin{example}[Three canonical symmetries]
+\label{ex:priors:symmetries}
+Image classification is invariant to translations: shifting the picture of a cat
+does not change the label, so the score function should be
+$\Z^2$-invariant. Semantic segmentation, by contrast, is
+\emph{equivariant} to translations: shifting the image shifts the segmentation
+mask by the same amount. A function defined on the nodes of a graph should be
+equivariant to the permutation group $S_n$: relabelling the nodes permutes the
+outputs identically, because a graph carries no canonical ordering of its
+vertices. Each task fixes a group $\group$ and a required behaviour --- invariant
+or equivariant --- under it.
+\end{example}
+
+The reason equivariance is the right primitive for deep architectures is that it
+is preserved by composition.
+
+\begin{theorem}[Composition of equivariant maps]
+\label{thm:priors:composition}
+Let $\group$ act on $X$, $Y$, $Z$ via $\rho_X, \rho_Y, \rho_Z$. If
+$f \colon X \to Y$ and $h \colon Y \to Z$ are $\group$-equivariant, then so is
+the composition $h \circ f \colon X \to Z$.
+\end{theorem}
+
+\begin{proof}
+Fix $g \in \group$ and $x \in X$. Using equivariance of $f$ and then of $h$,
+\[
+  (h \circ f)(g \cdot x) = h\bigl(f(g \cdot x)\bigr)
+    = h\bigl(g \cdot f(x)\bigr)
+    = g \cdot h\bigl(f(x)\bigr)
+    = g \cdot (h \circ f)(x). \qedhere
+\]
+\end{proof}
+
+\Cref{thm:priors:composition} is the keystone of the whole framework. It
+guarantees that a network built by stacking equivariant layers is itself
+equivariant, end to end --- equivariance is a property we establish once, per
+layer, and then inherit for free at every depth. Composing such an equivariant
+backbone with a single invariant readout at the end yields a globally invariant
+predictor. This turns symmetry from a property to be checked \emph{a posteriori}
+into a constructive recipe for entire architectures.
+
 \section{The geometric deep learning blueprint}
-Symmetry, scale separation, and the building blocks (linear equivariant
-layers, nonlinearities, local pooling, invariant readout).
+\label{sec:priors:blueprint}
+
+The composition principle suggests a template for designing architectures on any
+geometric domain~\citep{bronstein2021geometric}. Fix a domain $\Omega$ (a grid,
+a graph, a manifold), a space of signals $\mathcal{X}(\Omega)$ on it, and a
+symmetry group $\group$ acting on both. The \emph{geometric deep learning
+blueprint} assembles a model from four kinds of building block.
+
+\begin{description}
+\item[Equivariant layers.] Linear or nonlinear maps
+$\mathcal{X}(\Omega) \to \mathcal{X}(\Omega')$ that commute with the action of
+$\group$. These are the workhorses: they extract features while transforming
+predictably under the symmetry. A pointwise nonlinearity applied after an
+equivariant linear map preserves equivariance as long as it acts identically on
+every position.
+\item[Local pooling (coarsening).] Equivariant maps that reduce the resolution
+of the domain, $\Omega \to \Omega'$, while respecting the symmetry. Pooling
+implements \emph{scale separation}: it lets later layers see larger
+neighbourhoods through a coarser domain, building a hierarchy of features.
+\item[Invariant global readout.] A final $\group$-invariant map that collapses
+the signal to the desired output --- a single label, a graph-level property ---
+typically a symmetric aggregation (sum, mean, max) followed by a standard
+network.
+\item[Symmetry-respecting attention or message functions.] When connectivity
+itself should adapt to content, the weights linking positions are computed by
+functions that are themselves equivariant. This generalises fixed local filters
+to data-dependent ones.
+\end{description}
+
+Two structural principles underlie this template and recur throughout the book:
+
+\begin{description}
+\item[Symmetry (equivariance).] Every internal operation commutes with
+$\group$, so the global function is equivariant by
+\Cref{thm:priors:composition}, with invariance achieved only at the readout.
+\item[Scale separation (locality and compositionality).] Operations are
+\emph{local} with respect to the geometry of $\Omega$ --- each layer aggregates
+only over a neighbourhood --- and complex representations are built
+\emph{compositionally}, by stacking local layers interleaved with coarsening.
+Locality keeps the parameter count and computation tractable; compositionality
+lets a deep stack of local operations capture long-range, global structure.
+\end{description}
+
+\begin{remark}[One blueprint, five domains]
+\label{rem:priors:fivegs}
+The blueprint is deliberately domain-agnostic. Instantiating it on a grid with
+the translation group recovers convolutional networks (\Cref{ch:grids});
+extending the group to rotations and reflections gives group-equivariant
+networks (\Cref{ch:groups}); replacing the grid by an arbitrary graph with the
+permutation group gives graph neural networks (\Cref{ch:graphs}); endowing the
+domain with intrinsic distances gives learning on manifolds
+(\Cref{ch:geodesics}); and acknowledging the absence of a canonical local frame
+on a curved domain gives gauge-equivariant networks (\Cref{ch:gauges}). The
+``five Gs'' are five concrete realisations of one geometric idea.
+\end{remark}
 
 \section{Universality and expressivity}
-Placeholder.
+\label{sec:priors:universality}
+
+A natural worry is that constraining a network to be equivariant might cripple
+its expressive power: the constraint carves out a strict subspace of all
+functions. The following result, which extends the classical universal
+approximation theorem to the equivariant setting, dispels that worry. It is due
+to \citet{yarotsky2022} and \citet{kondor2018generalizationconvolutionalneural}.
+
+\begin{theorem}[Equivariant universal approximation]
+\label{thm:priors:universal}
+Let $\group$ be a compact group acting continuously on compact metric spaces $X$
+and $Y$, and let $\mathcal{F}^{\group}(X, Y)$ be the space of all continuous
+$\group$-equivariant maps $f \colon X \to Y$. Then for every
+$f \in \mathcal{F}^{\group}(X, Y)$ and every $\varepsilon > 0$ there exists a
+$\group$-equivariant neural network $\mathcal{N}$ such that
+\[
+  \sup_{x \in X} d_Y\bigl(f(x), \mathcal{N}(x)\bigr) < \varepsilon,
+\]
+where $d_Y$ is the metric on $Y$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The argument has two ideas. First, by the classical universal approximation
+theorem there is an unconstrained network $\tilde f$ with
+$\sup_x d_Y(f(x), \tilde f(x)) < \varepsilon$. Second, we symmetrize $\tilde f$
+through the \emph{Reynolds operator}, averaging over the group with respect to
+the normalized Haar measure $\mu$:
+\[
+  \bar f(x) = \int_{\group} \rho_Y(g^{-1})\, \tilde f(g \cdot x)\, d\mu(g).
+\]
+A change of variables together with the invariance of the Haar measure shows
+$\bar f(h \cdot x) = \rho_Y(h)\, \bar f(x)$, so $\bar f$ is equivariant. Finally,
+since $f$ is already equivariant and (for a compact group) the representations
+may be taken unitary, $\rho_Y(g^{-1})$ preserves distances and the averaging
+does not increase the error:
+$\sup_x d_Y(\bar f(x), f(x)) \le \sup_x d_Y(\tilde f(x), f(x)) < \varepsilon$.
+\end{proof}
+
+The message is decisive: \emph{equivariance costs nothing in expressivity}. A
+$\group$-equivariant network can approximate any continuous $\group$-equivariant
+target to arbitrary accuracy. The symmetry constraint does not shrink the set of
+reachable functions within the relevant subspace; it acts purely as an inductive
+bias, discarding the irrelevant non-equivariant functions and so improving
+sample efficiency and generalization without sacrificing capacity. The empirical
+success of convolutional networks --- equivariant to the translation group
+$\Z^2$ --- is a corollary~\citep{cohen2016group}.
+
+\section{Message passing: the unifying framework}
+\label{sec:priors:message-passing}
+
+The blueprint becomes algorithmically concrete through a single computational
+primitive: \emph{message passing}. Viewing data as a graph
+$\mathcal{G} = (V, E)$ of nodes and edges, a layer propagates information by
+having each node aggregate transformed features from its neighbours. This one
+construction subsumes the major deep-learning architectures; their apparent
+differences reduce to choices of graph topology, connectivity, and symmetry
+group.
+
+\begin{definition}[Message-passing neural network]
+\label{def:priors:mpnn}
+A \emph{message-passing neural network} (MPNN) operates on a graph
+$\mathcal{G} = (V, E)$ with node features $\{h_v\}_{v \in V}$ and edge features
+$\{e_{uv}\}$. Layer $\ell$ updates each node in two steps:
+\[
+  m_v^{(\ell+1)} = \bigoplus_{u \in \Nb(v)}
+      M_\ell\bigl(h_v^{(\ell)}, h_u^{(\ell)}, e_{vu}\bigr),
+  \qquad
+  h_v^{(\ell+1)} = U_\ell\bigl(h_v^{(\ell)}, m_v^{(\ell+1)}\bigr),
+\]
+where $\Nb(v)$ is the neighbourhood of $v$, $M_\ell$ a learnable message
+function, $\bigoplus$ a permutation-invariant aggregator (sum, mean, max), and
+$U_\ell$ an update function.
+\end{definition}
+
+The aggregator $\bigoplus$ is permutation-invariant by design, which makes each
+layer equivariant to relabellings of the neighbours --- the message-passing
+layer is the blueprint's equivariant layer for relational data. The following
+correspondences (\Cref{fig:priors:mpnn}) show that the familiar architectures
+are special cases.
+
+\begin{proposition}[Architectures as message passing]
+\label{prop:priors:architectures}
+The following are instances of \Cref{def:priors:mpnn}:
+\begin{enumerate}
+\item A fully connected layer $h^{(\ell+1)} = \sigma(W h^{(\ell)} + b)$ is an
+MPNN on the complete graph $K_d$ whose features are nodes, with a pair-specific
+message $M(h_v, h_u) = W_{vu} h_u$ and sum aggregation. There is no weight
+sharing and hence no geometric prior.
+\item A convolution on a regular grid $\Z^d$ with kernel support $\mathcal{K}$
+is an MPNN with neighbourhood $\Nb(v) = \{u : v - u \in \mathcal{K}\}$ and
+message $M(h_v, h_u) = W_{v-u}\, h_u$: the weight depends only on the
+\emph{relative} position $v - u$, not on the absolute pair $(v, u)$. This weight
+sharing is exactly translation equivariance, and it reduces the parameter count
+from $O(n^2 c^2)$ to $O(\abs{\mathcal{K}}\, c^2)$.
+\item A self-attention layer on $n$ tokens is an MPNN on the complete graph
+$K_n$ with message $M(h_i, h_j) = \alpha_{ij}\, V h_j$, where the attention
+weights $\alpha_{ij} = \mathrm{softmax}_j\bigl((Q h_i)^{\!\top} (K h_j) /
+\sqrt{d_k}\bigr)$ are computed from the node \emph{content}, not from position,
+and aggregation is the convex combination $m_i = \sum_j \alpha_{ij} V h_j$.
+\item A graph neural network is the general case: an MPNN on an arbitrary graph
+$\mathcal{G}$, equivariant to its automorphism group.
+\end{enumerate}
+\end{proposition}
+
+Reading across these cases reveals a single axis of increasing geometric
+sophistication: fully connected networks impose no prior (uniform, pair-specific
+weights); convolutions impose a \emph{spatial} prior (weights shared by relative
+position, encoding translation equivariance); transformers replace fixed weights
+by \emph{adaptive, content-dependent} ones (global connectivity at quadratic
+cost); and graph networks generalise the whole scheme to arbitrary relational
+topologies. The geometric prior is precisely what each architecture assumes
+about which connections matter and how their weights are shared.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    nd/.style={circle, draw, thick, fill=white, minimum size=4mm, inner sep=0pt},
+    edge/.style={thick, draw=gdlgray!60},
+    box/.style={rectangle, rounded corners=4pt, draw=gdlgray!70, thick, minimum width=4.6cm, minimum height=3.7cm},
+    title/.style={font=\small\bfseries, fill=white, inner sep=2pt},
+    info/.style={font=\scriptsize, text=black!70, align=center}
+]
+% ANN
+\begin{scope}[shift={(-3.3, 2.7)}]
+    \node[box, fill=gdlblue!15] (annbox) {};
+    \node[title] at (0, 2.05) {ANN (fully connected)};
+    \foreach \i/\a in {1/90,2/162,3/234,4/306,5/18} \node[nd, fill=gdlblue!20] (a\i) at (\a:0.9) {};
+    \foreach \i in {1,...,5} \foreach \j in {1,...,5} \ifnum\i<\j \draw[edge, gdlblue!30] (a\i)--(a\j); \fi
+    \node[info] at (0, -1.45) {complete graph $K_d$\\specific weights $W_{ij}$};
+\end{scope}
+% CNN
+\begin{scope}[shift={(3.3, 2.7)}]
+    \node[box, fill=gdlgreen!15] (cnnbox) {};
+    \node[title] at (0, 2.05) {CNN (convolution)};
+    \foreach \i in {0,1,2} \foreach \j in {0,1,2} \node[nd, fill=gdlgreen!20] (c\i\j) at ({\i*0.7-0.7},{\j*0.7-0.7}) {};
+    \foreach \i in {0,1,2} \foreach \j [evaluate=\j as \jn using int(\j+1)] in {0,1} {
+        \draw[edge, gdlgreen!50] (c\i\j)--(c\i\jn); \draw[edge, gdlgreen!50] (c\j\i)--(c\jn\i);}
+    \draw[thick, gdlorange, rounded corners=2pt] (-0.3,-0.3) rectangle (0.3,0.3);
+    \node[info] at (0, -1.45) {grid $\Z^d$, shared weights\\$\group=(\Z^d,+)$};
+\end{scope}
+% Transformer
+\begin{scope}[shift={(-3.3, -2.7)}]
+    \node[box, fill=gdlpurple!15] (transbox) {};
+    \node[title] at (0, 2.05) {Transformer (attention)};
+    \foreach \i/\a in {1/90,2/162,3/234,4/306,5/18} \node[nd, fill=gdlpurple!20] (t\i) at (\a:0.9) {};
+    \draw[edge, gdlpurple!60, line width=2pt] (t1)--(t3);
+    \draw[edge, gdlpurple!40, line width=1.4pt] (t1)--(t2);
+    \draw[edge, gdlpurple!20, line width=0.5pt] (t1)--(t4);
+    \draw[edge, gdlpurple!50, line width=1.4pt] (t2)--(t4);
+    \draw[edge, gdlpurple!60, line width=2pt] (t3)--(t5);
+    \draw[edge, gdlpurple!30, line width=0.8pt] (t4)--(t5);
+    \node[info] at (0, -1.45) {complete graph $K_n$\\adaptive weights $\alpha_{ij}$};
+\end{scope}
+% GNN
+\begin{scope}[shift={(3.3, -2.7)}]
+    \node[box, fill=gdlred!15] (gnnbox) {};
+    \node[title] at (0, 2.05) {GNN (graph network)};
+    \node[nd, fill=gdlred!20] (g1) at (-0.7,0.6) {};
+    \node[nd, fill=gdlred!20] (g2) at (0.3,0.8) {};
+    \node[nd, fill=gdlred!20] (g3) at (0.8,0.1) {};
+    \node[nd, fill=gdlred!20] (g4) at (-0.4,-0.3) {};
+    \node[nd, fill=gdlred!20] (g5) at (0.4,-0.5) {};
+    \node[nd, fill=gdlred!20] (g6) at (-0.15,0.25) {};
+    \foreach \a/\b in {g1/g2,g1/g4,g1/g6,g2/g3,g2/g6,g3/g5,g4/g5,g4/g6,g5/g6}
+        \draw[edge, gdlred!50] (\a)--(\b);
+    \node[info] at (0, -1.45) {arbitrary graph $\mathcal{G}$\\$\group=\Aut(\mathcal{G})$};
+\end{scope}
+% Centre
+\node[font=\bfseries, align=center, fill=gdlyellow!20, rounded corners=3pt,
+      draw=gdlyellow!70, thick, inner sep=5pt] (mpnn) at (0,0)
+      {MPNN\\[-1pt]{\scriptsize $m_v=\bigoplus_{u\in\Nb(v)} M(h_v,h_u,e_{vu})$}};
+\draw[->, thick, gdlblue!60] (annbox.south east) -- (mpnn.north west);
+\draw[->, thick, gdlgreen!50!black] (cnnbox.south west) -- (mpnn.north east);
+\draw[->, thick, gdlpurple!60] (transbox.north east) -- (mpnn.south west);
+\draw[->, thick, gdlred!60] (gnnbox.north west) -- (mpnn.south east);
+\end{tikzpicture}
+\caption[Architectures as message passing]{The major deep-learning
+architectures as instances of message passing. They differ only in graph
+topology, weight-sharing scheme, and symmetry group $\group$: fully connected
+networks (complete graph, pair-specific weights), convolutional networks (grid,
+translation-shared weights), transformers (complete graph, content-adaptive
+weights), and graph networks (arbitrary graph). The message-passing update at
+the centre is common to all.}
+\label{fig:priors:mpnn}
+\end{figure}
+
+\subsection{Expressive power and its limits}
+\label{sec:priors:expressivity-limits}
+
+Message passing is unifying but not omnipotent. Its expressive power on graphs is
+pinned down by a classical combinatorial algorithm, and its depth is limited by
+two complementary pathologies. We sketch these here at a high level; the
+spectral and geometric analysis returns in \Cref{ch:graphs,ch:geodesics}.
+
+\paragraph{The Weisfeiler--Leman ceiling.}
+The Weisfeiler--Leman test (1-WL) is a graph-isomorphism heuristic that
+iteratively refines a colouring of the nodes: each node's new colour hashes its
+old colour together with the multiset of its neighbours'
+colours~\citep{weisfeiler1968reduction}. \citet{xu2019how} and
+\citet{morris2019weisfeiler} proved that an MPNN with injective aggregation and
+update functions is \emph{exactly} as discriminative as 1-WL: it can never
+distinguish two graphs that 1-WL deems equivalent, and a suitable MPNN (the
+Graph Isomorphism Network) attains this bound. Consequently MPNNs cannot
+distinguish certain non-isomorphic graphs --- for instance a six-cycle $C_6$
+from two disjoint triangles $K_3 \sqcup K_3$, which share the same degree
+sequence and local colour histogram --- exposing a fundamental ceiling on what
+local message passing can perceive. Operating on higher-order structures
+(simplicial complexes) or adding structural and positional encodings can break
+this barrier.
+
+\paragraph{Oversmoothing and oversquashing.}
+Stacking many message-passing layers degrades performance in two opposite ways.
+\emph{Oversmoothing} is the loss of discriminative signal: a linear MPNN acts as
+discrete heat diffusion $H^{(\ell+1)} = (I - \alpha \tilde L)\, H^{(\ell)}$
+driven by the graph Laplacian $\tilde L$, and the Dirichlet energy of the node
+features decays exponentially, $E(H^{(\ell)}) \le (1 - \alpha
+\lambda_2)^{2\ell}\, E(H^{(0)})$, so representations converge to a constant and
+nodes become indistinguishable~\citep{li2018deeper}; the rate is controlled by
+the spectral gap $\lambda_2$. \emph{Oversquashing} is the dual failure: long-range
+information must be compressed through topological bottlenecks, and the
+sensitivity $\|\partial h_v^{(\ell)} / \partial h_u^{(0)}\|$ of a node to a
+distant one decays with the powers of the transition matrix, vanishing entirely
+beyond the graph distance $\ell$. \citet{topping2022understanding} relate these
+bottlenecks to negative discrete Ricci curvature, a striking instance of
+differential geometry diagnosing --- and prescribing cures for --- a limitation
+of neural networks.
+
+These limits do not undermine the framework; they sharpen it. They are
+manifestations of the fundamentally \emph{local} character of message passing,
+and the geometric tools developed in the rest of this book --- spectral
+analysis, discrete curvature, higher-order topology --- both explain them and
+suggest remedies.
+
+\section{Summary}
+\label{sec:priors:summary}
+
+Invariance and equivariance turn the informal demand that a model ``respect the
+symmetries of the data'' into precise constraints on a function. Because
+equivariant maps compose (\Cref{thm:priors:composition}), these constraints
+yield a constructive blueprint: stack equivariant layers and local coarsening,
+finish with an invariant readout. The equivariant universal approximation
+theorem (\Cref{thm:priors:universal}) certifies that this discipline costs no
+expressive power. Message passing makes the blueprint concrete and reveals
+convolutional, attention-based, and graph architectures as one construction
+under different geometric priors. The remaining chapters instantiate this
+blueprint on each of the five geometric domains.

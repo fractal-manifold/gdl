@@ -1,15 +1,266 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
+Artificial intelligence has grown explosively in recent years, not only as
+a field of scientific research but as a technology that is rapidly entering
+everyday life. The trend is unmistakable, and we may well be living through
+one of the most significant shifts in the history of technology.
+
+The story of machine learning reaches back to the 1940s and 1950s, with the
+first attempts to build computational models inspired by the brain. The
+perceptron, proposed by Frank Rosenblatt in 1958~\citep{rosenblatt1958perceptron},
+was one of the earliest learning algorithms able to classify linearly
+separable patterns. Its theoretical limitations, made precise by Minsky and
+Papert~\citep{minsky1969perceptrons}, contributed to the first ``AI winter'':
+a prolonged period of skepticism and reduced funding. The revival came in the
+1980s with the backpropagation algorithm~\citep{rumelhart1986backprop}, which
+made it possible to train multilayer networks efficiently. Even so, vanishing
+gradients and the limited computing power of the time kept these techniques in
+the background for years.
+
+The transformation we now call \emph{deep learning} arrived in 2012, when
+AlexNet~\citep{krizhevsky2012alexnet} won the ImageNet competition and
+slashed the classification error of traditional methods. This success rested
+on the convergence of three factors: large labelled datasets, accessible
+specialized hardware (GPUs) capable of training models with millions of
+parameters, and training techniques that overcame the historical obstacles of
+deep networks. Since then, deep learning has proven remarkably effective at
+image recognition, natural language processing, content generation, and
+protein structure prediction, among many other tasks.
+
+The architectures behind these achievements --- convolutional, recurrent, and
+attention-based networks --- were conceived to operate on data laid out in
+regular Euclidean domains: grids of pixels, temporal sequences, tables of
+features. As the community began applying them to data with intrinsically
+richer structure (molecules, social networks, three-dimensional surfaces), it
+became clear that the assumption of Euclidean regularity was a fundamental
+limitation --- conceptual, not merely technical. This realization gave rise to
+a new paradigm, \emph{geometric deep learning} (GDL), which inverts the
+traditional relationship between data and architecture: instead of forcing the
+data to fit pre-existing models, the geometric properties of the data dictate
+the structure of the model.
+
 \section{What is geometric deep learning?}
-Motivate the field: the ``zoo'' of deep learning architectures and the search
-for a unifying geometric principle.
+\label{sec:what-is-gdl}
+
+Traditional architectures are designed for data with regular Euclidean
+structure. Convolutional networks exploit the regular grid of an image, where
+every pixel has a fixed number of neighbours in predetermined positions;
+recurrent and attention models process sequences endowed with a natural
+temporal order. This dependence on regular domains breaks down when the data
+does not fit such templates.
+
+Consider analysing a social network: users and their connections form an
+irregular graph in which each node may have an arbitrary number of neighbours,
+with no natural ordering or grid. Applying a convolutional network directly
+would require flattening the graph into a Euclidean representation (such as an
+adjacency matrix), discarding crucial structural information and introducing a
+flood of zeros that make the computation wasteful. The analysis of molecules
+in drug discovery is equally telling: molecules are naturally graphs whose
+nodes are atoms and whose edges are chemical bonds, and their pharmacological
+behaviour is governed by three-dimensional geometry and bond topology.
+Classical methods relied on hand-crafted descriptors or string encodings (such
+as SMILES), losing geometric information essential to biological activity. The
+same ``curse of non-Euclideanity'' appears in the analysis of 3D shapes, where
+surfaces admit no natural parametrization on a regular grid and techniques such
+as voxelization or multi-view projection introduce artefacts and erase fine
+geometric detail.
+
+\Cref{fig:data-types} illustrates the three fundamental categories of data
+according to their geometric structure: Euclidean data with a regular grid,
+graphs with irregular topology, and manifolds with continuous geometry.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.9]
+% --- Left panel: Euclidean (regular grid) ---
+\begin{scope}[shift={(-5,0)}]
+    \begin{scope}[on background layer]
+        \fill[gdlblue!15, rounded corners=2pt] (-0.3,-0.3) rectangle (3.3,3.3);
+    \end{scope}
+    \foreach \x in {0,...,3} \foreach \y in {0,...,4}
+        \draw[gdlgray!50] (\x*0.75, \y*0.75) -- (\x*0.75+0.75, \y*0.75);
+    \foreach \x in {0,...,4} \foreach \y in {0,...,3}
+        \draw[gdlgray!50] (\x*0.75, \y*0.75) -- (\x*0.75, \y*0.75+0.75);
+    \foreach \x in {0,...,4} \foreach \y in {0,...,4}
+        \fill[gdlblue!60] (\x*0.75, \y*0.75) circle (2.5pt);
+    \node[below, font=\bfseries, text=gdlblue!70!black] at (1.5, -0.7) {Euclidean};
+\end{scope}
+% --- Centre panel: Graph (irregular topology) ---
+\begin{scope}[shift={(0.5,0)}]
+    \coordinate (n1) at (0.3, 2.8); \coordinate (n2) at (1.8, 3.0);
+    \coordinate (n3) at (0.0, 1.5); \coordinate (n4) at (1.5, 1.6);
+    \coordinate (n5) at (2.8, 2.0); \coordinate (n6) at (0.5, 0.2);
+    \coordinate (n7) at (2.2, 0.3);
+    \foreach \a/\b in {n1/n2,n1/n3,n1/n4,n2/n4,n2/n5,n3/n4,n3/n6,n4/n5,n4/n6,n4/n7,n5/n7,n6/n7}
+        \draw[gdlgreen!50, thick] (\a) -- (\b);
+    \foreach \n in {n1,n2,n3,n4,n5,n6,n7} \fill[gdlgreen!70] (\n) circle (4pt);
+    \node[below, font=\bfseries, text=gdlgreen!70!black] at (1.5, -0.7) {Graph};
+\end{scope}
+% --- Right panel: Manifold (continuous geometry) ---
+\begin{scope}[shift={(5.5,0)}]
+    \shade[ball color=gdlorange!25, opacity=0.9]
+        (0.0, 1.5) .. controls (-0.5, 2.8) and (1.0, 3.5) .. (1.8, 3.0)
+        .. controls (2.6, 2.5) and (3.3, 2.8) .. (3.2, 1.8)
+        .. controls (3.1, 0.8) and (2.5, -0.2) .. (1.5, 0.0)
+        .. controls (0.5, 0.2) and (0.5, 0.3) .. (0.0, 1.5);
+    \draw[thick, gdlorange!60]
+        (0.0, 1.5) .. controls (-0.5, 2.8) and (1.0, 3.5) .. (1.8, 3.0)
+        .. controls (2.6, 2.5) and (3.3, 2.8) .. (3.2, 1.8)
+        .. controls (3.1, 0.8) and (2.5, -0.2) .. (1.5, 0.0)
+        .. controls (0.5, 0.2) and (0.5, 0.3) .. (0.0, 1.5);
+    \draw[gdlorange!30, thin] (0.5, 1.2) .. controls (1.2, 1.8) .. (2.5, 1.5);
+    \draw[gdlorange!30, thin] (0.8, 2.2) .. controls (1.5, 2.6) .. (2.6, 2.2);
+    \node[below, font=\bfseries, text=gdlorange!70!black] at (1.5, -0.7) {Manifold};
+\end{scope}
+\end{tikzpicture}
+\caption[Types of geometric data]{The three fundamental kinds of data by
+geometric structure: Euclidean data on a regular grid (left), graphs with
+irregular topology where each node may have a different number of neighbours
+(centre), and manifolds with continuous geometry requiring local
+parametrizations (right).}
+\label{fig:data-types}
+\end{figure}
+
+Geometric deep learning is a mathematically principled response to these
+limitations. Rather than adapting the data to existing architectures --- a
+process that invariably loses information --- it designs architectures that
+respect and exploit the intrinsic geometric structure of the data. The central
+observation is that many real-world domains carry natural symmetries and
+geometric structure that can be exploited to improve both computational
+efficiency and predictive performance. By building these symmetries directly
+into the network, GDL not only resolves the representational problems above but
+also guarantees desirable properties such as equivariance, robust
+generalization, and parameter efficiency.
+
+The full mathematical foundations --- group theory, the notions of invariance
+and equivariance, and the unifying ``5 Gs'' framework --- are developed in
+\Cref{ch:foundations,ch:priors}. For now it is enough to understand that GDL
+provides a theoretical framework unifying seemingly disparate architectures
+--- convolutional networks, graph networks, and attention mechanisms --- under
+a common geometric paradigm.
 
 \section{Symmetry as a design principle}
-Introduce invariance and equivariance informally.
+\label{sec:symmetry-principle}
+
+The organizing idea of geometric deep learning is \emph{symmetry}. A symmetry
+of a problem is a transformation of the data that leaves the quantity of
+interest unchanged. Rotating an image of a cat still shows a cat; relabelling
+the nodes of a molecular graph does not change the molecule. Such
+transformations form a \emph{group}, and demanding that a model behave
+consistently under that group is a powerful constraint on its architecture.
+
+Two notions make this precise. A function is \emph{invariant} when its output
+does not change as the input is transformed by the group --- appropriate, for
+example, for whole-image classification. It is \emph{equivariant} when
+transforming the input produces a correspondingly transformed output: if
+$f$ is equivariant to a group $\group$ acting on its input and output spaces,
+then
+\[
+  f(g \cdot x) = g \cdot f(x) \qquad \text{for all } g \in \group .
+\]
+Equivariance is the property we want from the intermediate layers of a network:
+each layer should transform predictably under the symmetry so that structure is
+preserved as information flows through the model, with an invariant readout only
+at the end. Because equivariant maps compose into equivariant maps, this
+principle yields a constructive recipe for entire architectures rather than a
+property to be checked after the fact. These ideas are formalized in
+\Cref{ch:priors}.
 
 \section{The 5 Gs: a roadmap}
-Overview of grids, groups, graphs, geodesics, and gauges.
+\label{sec:five-gs}
+
+Geometric deep learning organizes its domains and symmetries around five
+recurring themes --- the ``5 Gs'' that give this book its subtitle: grids,
+groups, graphs, geodesics, and gauges~\citep{bronstein2021geometric}.
+\Cref{tab:five-gs} summarizes them and points to the chapter where each is
+developed.
+
+\begin{table}[h]
+\centering
+\caption{The five Gs of geometric deep learning.}
+\label{tab:five-gs}
+\begin{tabular}{@{}lp{6.2cm}p{3.6cm}@{}}
+\toprule
+\textbf{Theme} & \textbf{Idea} & \textbf{Chapter} \\
+\midrule
+Grids & Regular Euclidean domains with translation symmetry & Convolutional networks (\Cref{ch:grids}) \\
+\addlinespace
+Groups & Global symmetries beyond translation, such as rotations and reflections & Group-equivariant networks (\Cref{ch:groups}) \\
+\addlinespace
+Graphs & Irregular relational domains with permutation symmetry & Graph neural networks (\Cref{ch:graphs}) \\
+\addlinespace
+Geodesics & Intrinsic geometry of manifolds: distances, curvature, and information flow & Learning on manifolds (\Cref{ch:geodesics}) \\
+\addlinespace
+Gauges & Local reference frames and the freedom in choosing coordinates & Gauge-equivariant networks (\Cref{ch:gauges}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These themes are not isolated. Grids are the most rigid domain and the
+historical starting point; relaxing the requirement of a global grid while
+keeping global symmetries leads to group-equivariant networks; discarding the
+ambient grid altogether and keeping only relational structure leads to graphs;
+endowing a domain with intrinsic distances and curvature leads to manifolds and
+geodesics; and acknowledging that on a curved domain there is no canonical
+choice of local frame leads to gauges. A single thread --- message passing ---
+runs through all of them and exposes convolutional networks, graph networks,
+and transformers as instances of one geometric construction.
 
 \section{How to read this book}
-Prerequisites, notation, and chapter dependencies.
+\label{sec:how-to-read}
+
+The book follows a logical progression from foundations to advanced models.
+\Cref{fig:book-structure} shows the dependencies between chapters.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.4cm,
+    box/.style={rectangle, draw, rounded corners, minimum width=2.7cm,
+        minimum height=0.8cm, align=center, font=\small},
+    found/.style={box, fill=gdlblue!15},
+    five/.style={box, fill=gdlgreen!18},
+    prac/.style={box, fill=gdlpurple!16},
+    arrow/.style={->, thick, >=stealth}
+]
+\node[found] (intro) {Ch.\ 1\\Introduction};
+\node[found, below=of intro] (found) {Ch.\ 2\\Foundations};
+\node[found, below=of found] (priors) {Ch.\ 3\\Geometric priors};
+\node[five, below left=1.1cm and 0.2cm of priors] (grids) {Ch.\ 4--5\\Grids, Groups};
+\node[five, below right=1.1cm and 0.2cm of priors] (graphs) {Ch.\ 6--8\\Graphs, Geodesics, Gauges};
+\node[prac, below=2.6cm of priors] (apps) {Ch.\ 9--10\\Applications, Conclusion};
+\draw[arrow] (intro) -- (found);
+\draw[arrow] (found) -- (priors);
+\draw[arrow] (priors) -- (grids);
+\draw[arrow] (priors) -- (graphs);
+\draw[arrow] (grids) -- (apps);
+\draw[arrow] (graphs) -- (apps);
+\node[right=1.6cm of priors, font=\footnotesize, align=left] {
+    \tikz\fill[gdlblue!15] (0,0) rectangle (0.3,0.3); ~Foundations\\[2pt]
+    \tikz\fill[gdlgreen!18] (0,0) rectangle (0.3,0.3); ~The Five Gs\\[2pt]
+    \tikz\fill[gdlpurple!16] (0,0) rectangle (0.3,0.3); ~Practice};
+\end{tikzpicture}
+\caption{Structure of the book and dependencies between chapters.}
+\label{fig:book-structure}
+\end{figure}
+
+\textbf{Part I (Foundations).} \Cref{ch:foundations} establishes the
+mathematical language --- groups, representations, homogeneous spaces, and
+manifolds. \Cref{ch:priors} introduces invariance and equivariance and the
+blueprint that turns a symmetry into an architecture.
+
+\textbf{Part II (The Five Gs).} \Cref{ch:grids,ch:groups,ch:graphs,ch:geodesics,ch:gauges}
+develop the five themes in turn, from convolutional networks on grids to
+gauge-equivariant networks on manifolds, showing how each extends the previous
+one and how message passing unifies them.
+
+\textbf{Part III (Practice).} \Cref{ch:applications} surveys applications
+across computer vision, the physical sciences, and relational data, and
+\Cref{ch:conclusion} synthesizes the unified view and outlines open problems.
+
+This is a theoretical book, with emphasis on the mathematical rigour of its
+definitions, results, and the formal connections between the frameworks it
+presents. The reader is assumed to be comfortable with linear algebra,
+multivariable calculus, and the basics of machine learning; the geometric and
+group-theoretic prerequisites are developed as needed.

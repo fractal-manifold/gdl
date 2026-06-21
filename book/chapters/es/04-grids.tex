@@ -1,0 +1,461 @@
+\chapter{Rejillas: Redes Convolucionales}
+\label{ch:grids}
+
+\providecommand{\conv}{*}
+\providecommand{\Ft}{\mathcal{F}}
+
+La primera de las cinco Ges es tambi\'en la m\'as familiar. Una \emph{rejilla}
+es el dominio euclidiano regular que subyace a las im\'agenes, las se\~nales de
+audio y el v\'ideo: un conjunto de puntos $\Z^d$ sobre el que los datos se
+muestrean en posiciones equiespaciadas. La simetr\'ia natural de un dominio as\'i
+es la \emph{traslaci\'on}: desplazar la ret\'icula de muestreo por un vector
+entero aplica la rejilla sobre s\'i misma. Las redes neuronales convolucionales
+(\emph{convolutional neural networks}, CNN), las arquitecturas que encendieron la
+revoluci\'on del aprendizaje profundo (\Cref{ch:introduction}), son precisamente
+las capas que respetan esta simetr\'ia. Este cap\'itulo toma el esquema del
+\Cref{ch:priors} ---convertir una simetr\'ia en una arquitectura--- y lo
+instancia sobre la rejilla, recuperando la convoluci\'on como la \'unica
+aplicaci\'on lineal equivariante a traslaciones y ensamblando luego toda la
+maquinaria de \emph{pooling}, submuestreo y separaci\'on de escalas que hace
+funcionar a las CNN profundas. Cerramos con una lectura espectral de la
+convoluci\'on mediante el an\'alisis de Fourier, que a la vez explica qu\'e hacen
+los filtros convolucionales y anticipa los m\'etodos espectrales sobre grafos y
+variedades de cap\'itulos posteriores.
+
+\section{Simetr\'ia de traslaci\'on}
+\label{sec:grids:translation}
+
+Las redes convolucionales tienen su origen en el reconocimiento cl\'asico de
+patrones. La idea es de una sencillez desarmante: para detectar una
+caracter\'istica en una imagen ---un borde horizontal, un borde vertical, una
+esquina--- se desliza un peque\~no \emph{kernel} sobre la imagen y, en cada
+posici\'on, se mide con qu\'e intensidad el parche local coincide con el kernel.
+El avance del trabajo temprano de LeCun~\citep{lecun1989} consisti\'o en dejar de
+dise\~nar estos kernels a mano y, en su lugar, \emph{aprenderlos} a partir de los
+datos; apilar muchas de estas capas permite a la red construir desde trazos
+simples hasta objetos abstractos, una jerarqu\'ia que culmin\'o en la victoria
+decisiva de AlexNet en ImageNet~\citep{krizhevsky2012alexnet}.
+
+\begin{example}[Los kernels de Sobel]
+\label{ex:grids:sobel}
+Un detector de bordes cl\'asico dise\~nado a mano es el par de \emph{kernels de
+Sobel}, aproximaciones discretas de las derivadas parciales de la intensidad de
+la imagen $I(x,y)$:
+\[
+K_x = \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix},
+\qquad
+K_y = \begin{pmatrix} -1 & -2 & -1 \\ 0 & 0 & 0 \\ 1 & 2 & 1 \end{pmatrix},
+\]
+que aproximan $\partial I/\partial x$ y $\partial I/\partial y$, con intensidad
+de borde $\norm{\nabla I} \approx \sqrt{(I \conv K_x)^2 + (I \conv K_y)^2}$. Los
+kernels revelan un tema recurrente: los detectores de bordes son
+\emph{antisim\'etricos} a lo largo de la direcci\'on de detecci\'on y suman cero
+(eliminando la componente constante), mientras que los kernels de suavizado son
+\emph{sim\'etricos}. Estas simetr\'ias algebraicas reflejan las transformaciones
+geom\'etricas a las que responde cada kernel.
+\end{example}
+
+La propiedad que define a una capa convolucional aprendida es la
+\emph{equivarianza a traslaciones}: si la entrada se desplaza, la salida se
+desplaza exactamente de la misma manera. Una caracter\'istica debe reconocerse
+con independencia de d\'onde aparezca en la imagen, y su respuesta debe moverse
+con ella. Formalmente, el grupo que act\'ua sobre los datos en rejilla es el
+grupo de traslaciones enteras $\Z^d$, que act\'ua sobre una se\~nal
+$f \colon \Z^d \to \R$ mediante
+\[
+  (T_b f)(x) = f(x - b), \qquad b \in \Z^d .
+\]
+Esta es la instancia no trivial m\'as simple del principio de equivarianza del
+\Cref{ch:priors}: entre todas las aplicaciones lineales concebibles de se\~nales
+en se\~nales, exigir la conmutaci\'on con todo $T_b$ reduce el espacio de
+dise\~no a una \'unica familia ---las convoluciones---.
+
+\section{La convoluci\'on como aplicaci\'on lineal equivariante}
+\label{sec:grids:convolution}
+
+Comenzamos por la operaci\'on en s\'i. En la pr\'actica del aprendizaje profundo,
+la capa aplicada a una imagen es
+\begin{equation}
+  (I \conv K)(x,y) = \sum_{u=-k}^{k}\sum_{v=-k}^{k} I(x+u,\, y+v)\, K(u,v),
+  \label{eq:grids:crosscorr}
+\end{equation}
+que, en rigor, es una \emph{correlaci\'on cruzada} y no una convoluci\'on: la
+convoluci\'on matem\'atica lleva un cambio de signo, $I(x-u,\,y-v)$. Como los
+pesos del kernel se aprenden, la distinci\'on es irrelevante ---la red
+simplemente aprende el kernel reflejado--- y seguimos la convenci\'on universal
+de llamar convoluci\'on a la \Cref{eq:grids:crosscorr}. La misma receta se
+extiende a cualquier dimensi\'on: una versi\'on unidimensional procesa audio y
+series temporales, y una tridimensional procesa vol\'umenes y v\'ideo.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    cell/.style={minimum size=0.62cm, inner sep=0pt, outer sep=0pt,
+                 draw=gdlgray!50, line width=0.3pt},
+    inputcell/.style={cell, fill=gdlblue!15},
+    kernelhighlight/.style={cell, fill=gdlorange!25, draw=gdlorange!60, line width=0.5pt},
+    kernelcell/.style={cell, fill=gdlorange!20, draw=gdlorange!60, line width=0.5pt},
+    outputcell/.style={cell, fill=gdlgreen!15, draw=gdlgray!50},
+    outputhighlight/.style={cell, fill=gdlgreen!30, draw=gdlgreen!60, line width=0.6pt},
+    lbl/.style={font=\small\bfseries},
+]
+\def\cs{0.62}
+\def\ix{0}\def\iy{0}
+\foreach \r [count=\ri from 0] in {{1,0,2,1,3},{2,1,0,3,1},{0,3,1,2,0},{1,2,3,0,1},{3,0,1,2,2}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\ix + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\iy + (4-\ri)*\cs + \cs/2}
+    \node[inputcell] at (\px,\py) {\scriptsize\color{gdlblue!70!black}\val};
+  }}
+\foreach \r [count=\ri from 0] in {{1,0,2},{2,1,0},{0,3,1}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\ix + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\iy + (4-\ri)*\cs + \cs/2}
+    \node[kernelhighlight] at (\px,\py) {\scriptsize\color{gdlblue!70!black}\val};
+  }}
+\draw[gdlorange!80, line width=1.3pt, rounded corners=1pt] (\ix,\iy+2*\cs) rectangle ++(3*\cs,3*\cs);
+\node[lbl, text=gdlblue!70!black] at (\ix+2.5*\cs,\iy-0.5*\cs) {Entrada $\mathbf{X}$};
+\pgfmathsetmacro{\starx}{\ix + 5*\cs + 0.5}
+\pgfmathsetmacro{\stary}{\iy + 2.5*\cs}
+\node[font=\large, text=gdlgray!80!black] at (\starx,\stary) {$\star$};
+\pgfmathsetmacro{\kx}{\starx + 0.5}
+\pgfmathsetmacro{\ky}{\stary - 1.5*\cs}
+\foreach \r [count=\ri from 0] in {{1,0,-1},{1,0,-1},{1,0,-1}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\kx + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\ky + (2-\ri)*\cs + \cs/2}
+    \node[kernelcell] at (\px,\py) {\scriptsize\color{gdlorange!70!black}\val};
+  }}
+\draw[gdlorange!80, line width=1.1pt, rounded corners=1pt] (\kx,\ky) rectangle ++(3*\cs,3*\cs);
+\node[lbl, text=gdlorange!70!black] at (\kx+1.5*\cs,\ky-0.5*\cs) {Kernel $\mathbf{W}$};
+\pgfmathsetmacro{\eqx}{\kx + 3*\cs + 0.5}
+\node[font=\large, text=gdlgray!80!black] at (\eqx,\stary) {$=$};
+\pgfmathsetmacro{\ox}{\eqx + 0.5}
+\pgfmathsetmacro{\oy}{\ky}
+\foreach \r [count=\ri from 0] in {{0,-2,-1},{-1,1,2},{-1,1,2}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\ox + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\oy + (2-\ri)*\cs + \cs/2}
+    \ifnum\ri=0 \ifnum\ci=0
+      \node[outputhighlight] at (\px,\py) {\scriptsize\bfseries\color{gdlgreen!70!black}\val};
+    \else
+      \node[outputcell] at (\px,\py) {\scriptsize\color{gdlgreen!70!black}\val};
+    \fi \else
+      \node[outputcell] at (\px,\py) {\scriptsize\color{gdlgreen!70!black}\val};
+    \fi
+  }}
+\draw[gdlgreen!60, line width=0.8pt, rounded corners=1pt] (\ox,\oy) rectangle ++(3*\cs,3*\cs);
+\node[lbl, text=gdlgreen!70!black] at (\ox+1.5*\cs,\oy-0.5*\cs) {Salida $(\mathbf{X} \star \mathbf{W})$};
+\pgfmathsetmacro{\arcsrcx}{\ix + 1.5*\cs}
+\pgfmathsetmacro{\arcsrcy}{\iy + 5*\cs + 0.08}
+\pgfmathsetmacro{\arctgtx}{\ox + 0.5*\cs}
+\pgfmathsetmacro{\arctgty}{\oy + 3*\cs + 0.08}
+\draw[gdlpurple!55, dashed, line width=0.7pt, -stealth, shorten >=1pt]
+  (\arcsrcx,\arcsrcy) to[out=40,in=140] (\arctgtx,\arctgty);
+\end{tikzpicture}
+\caption[La operaci\'on de convoluci\'on 2D]{La operaci\'on de convoluci\'on
+bidimensional. Un kernel $\mathbf{W}$ de $3 \times 3$ se desliza sobre la entrada
+$\mathbf{X}$, y en cada posici\'on el producto interno local
+$\sum_{u,v} X(x+u,y+v)\,W(u,v)$ produce una entrada del mapa de activaci\'on de
+salida $(\mathbf{X} \star \mathbf{W})$. La celda de salida resaltada vale
+$1{\cdot}1 + 0{\cdot}0 + 2{\cdot}({-}1) + 2{\cdot}1 + 1{\cdot}0 + 0{\cdot}({-}1)
++ 0{\cdot}1 + 3{\cdot}0 + 1{\cdot}({-}1) = 0$.}
+\label{fig:grids:conv}
+\end{figure}
+
+Para la teor\'ia resulta m\'as limpio trabajar con la convoluci\'on genuina sobre
+el dominio completo, que definimos a continuaci\'on.
+
+\begin{definition}[Convoluci\'on discreta]
+\label{def:grids:discrete-conv}
+Para funciones $f, g \colon \Z^d \to \R$, la \emph{convoluci\'on discreta} es
+\[
+  (f \conv g)(x) = \sum_{a \in \Z^d} f(a)\, g(x - a) .
+\]
+Cuando $f$ tiene soporte finito, como en una imagen digital, la suma se reduce a
+los finitos puntos en que $f(a) \neq 0$.
+\end{definition}
+
+\begin{definition}[Convoluci\'on continua]
+\label{def:grids:continuous-conv}
+Para funciones $f, g \colon \R^d \to \R$, la \emph{convoluci\'on continua} es
+\[
+  (f \conv g)(x) = \int_{\R^d} f(a)\, g(x - a)\, \mathrm{d}a,
+\]
+bien definida cuando $f, g \in L^1(\R^d)$ o bajo hip\'otesis de soporte
+compacto.
+\end{definition}
+
+La versi\'on discreta es una discretizaci\'on por sumas de Riemann de la
+continua; en el procesamiento de imagen digital usamos la forma discreta,
+mientras que las se\~nales continuas y el an\'alisis te\'orico emplean la
+integral. La convoluci\'on posee una rica estructura algebraica que sustenta todo
+lo que sigue.
+
+\begin{proposition}[Propiedades algebraicas de la convoluci\'on]
+\label{prop:grids:algebra}
+Para $f, g, h \colon \Z^d \to \R$ de soporte finito:
+\begin{enumerate}
+  \item \textbf{Conmutatividad:} $f \conv g = g \conv f$.
+  \item \textbf{Asociatividad:} $(f \conv g) \conv h = f \conv (g \conv h)$.
+  \item \textbf{Distributividad:} $f \conv (g + h) = f \conv g + f \conv h$.
+  \item \textbf{Elemento neutro:} $f \conv \delta = f$, donde $\delta$ es la
+    delta de Kronecker.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+La conmutatividad se sigue del cambio de variable $b = x - a$, que transforma
+$\sum_a f(a)g(x-a)$ en $\sum_b f(x-b)g(b)$. La asociatividad se obtiene
+desarrollando ambos miembros, intercambiando el orden de sumaci\'on (un Fubini
+discreto) y sustituyendo $c = b - a$. La distributividad es inmediata por la
+linealidad de la suma. El elemento neutro se cumple porque $\delta(x-a)$ es no
+nulo solo en $a = x$, de modo que $\sum_a f(a)\delta(x-a) = f(x)$.
+\end{proof}
+
+Estas propiedades tienen consecuencias arquitect\'onicas directas. La
+asociatividad implica que apilar dos capas convolucionales (ignorando las no
+linealidades) es a su vez una convoluci\'on, de modo que la profundidad compone
+limpiamente; la conmutatividad y el elemento neutro hacen que el \'algebra de
+filtros se comporte tan bien como la multiplicaci\'on ordinaria. El resultado
+central, sin embargo, es el v\'inculo con la simetr\'ia.
+
+\begin{theorem}[Equivarianza a traslaciones de la convoluci\'on]
+\label{thm:grids:equivariance}
+La convoluci\'on es equivariante al grupo de traslaciones $\Z^d$: para todo
+$b \in \Z^d$,
+\[
+  T_b(f \conv g) = (T_b f) \conv g = f \conv (T_b g),
+\]
+donde $(T_b f)(x) = f(x-b)$.
+\end{theorem}
+
+\begin{proof}
+Para la primera igualdad, sustituimos $a' = a - b$:
+\[
+  \big[(T_b f) \conv g\big](x) = \sum_a f(a-b)\,g(x-a)
+   = \sum_{a'} f(a')\,g\big((x-b)-a'\big) = (f \conv g)(x-b).
+\]
+Para la segunda, $(f\conv g)(x-b) = \sum_a f(a)\,g\big((x-a)-b\big)
+= \sum_a f(a)\,(T_b g)(x-a) = \big[f \conv (T_b g)\big](x)$.
+\end{proof}
+
+Una peque\~na instancia num\'erica hace tangible el teorema.
+
+\begin{example}[Equivarianza en una dimensi\'on]
+\label{ex:grids:equiv-1d}
+Tomemos el kernel detector de bordes $K = [-1, 0, 1]$ y la se\~nal
+$f = [1, 2, 1, 0, 0]$, con relleno de ceros fuera del dominio. La convoluci\'on
+da $f \conv K = [2, 0, -2, -1, 0]$. Si primero desplazamos,
+$T_1 f = [0, 1, 2, 1, 0]$, y luego convolucionamos, obtenemos
+$(T_1 f) \conv K = [1, 2, 0, -2, -1]$, que es exactamente $T_1(f \conv K)$.
+Desplazar y filtrar, o filtrar y desplazar: el resultado es el mismo.
+\end{example}
+
+El rec\'iproco es lo que convierte a la convoluci\'on en \emph{la} capa de la
+rejilla, y no simplemente en \emph{una} capa: cualquier aplicaci\'on lineal entre
+se\~nales sobre $\Z^d$ que conmute con todas las traslaciones es necesariamente
+una convoluci\'on. El razonamiento es breve. Un operador lineal equivariante a
+traslaciones $\Phi$ queda determinado por su respuesta al impulso unitario
+$\delta$; ll\'amese a esa respuesta $w = \Phi\delta$. Toda se\~nal se descompone
+como $f = \sum_a f(a)\, T_a \delta$ y, por linealidad y equivarianza,
+$\Phi f = \sum_a f(a)\, T_a w = f \conv w$. As\'i, la equivarianza a la
+traslaci\'on no solo \emph{permite} la convoluci\'on ---la \emph{obliga}---. Este
+es el esquema del \Cref{ch:priors} realizado en su forma m\'as pura, y explica la
+se\~na de identidad arquitect\'onica de las CNN.
+
+\paragraph{Compartici\'on de pesos y localidad.}
+El \Cref{thm:grids:equivariance} admite una lectura concreta: el mismo kernel
+$w$ se aplica en cada posici\'on espacial. Esta \emph{compartici\'on de pesos}
+(\emph{weight sharing}) es la cara algebraica de la equivarianza. Frente a una
+capa totalmente conectada, que aprender\'ia un peso independiente para cada par
+de posiciones de entrada y salida, una convoluci\'on comparte un \'unico kernel
+peque\~no en toda la imagen, reduciendo el n\'umero de par\'ametros de
+cuadr\'atico en el n\'umero de p\'ixeles al tama\~no constante del kernel.
+Restringir el kernel a una ventana peque\~na a\~nade \emph{localidad}: cada
+salida depende solo de un vecindario local. Apilar tales capas hace crecer
+progresivamente el \emph{campo receptivo}, de modo que las primeras capas
+capturan trazos simples y las m\'as profundas los componen en estructuras cada
+vez m\'as abstractas.
+
+\paragraph{Los l\'imites de la traslaci\'on.}
+La fortaleza del sesgo inductivo de las CNN es tambi\'en su frontera. Una red
+convolucional est\'andar es equivariante a traslaciones y a nada m\'as. Si se
+rota el d\'igito ``6'' $180^\circ$, se convierte en un ``9''; una CNN no dispone
+de un mecanismo intr\'inseco para relacionar ambos y debe aprender las variantes
+rotadas mediante aumentaci\'on de datos. En general $f(R\,x) \neq R\, f(x)$ para
+una rotaci\'on $R$. Eliminar esta restricci\'on ---ampliar el grupo de simetr\'ia
+m\'as all\'a de la traslaci\'on para incluir rotaciones y reflexiones y,
+finalmente, abandonar por completo la rejilla global--- es el hilo que recorre
+las Ges restantes: redes equivariantes a grupos (\Cref{ch:groups}), grafos
+(\Cref{ch:graphs}), variedades (\Cref{ch:geodesics}) y gauges
+(\Cref{ch:gauges}).
+
+\section{\emph{Pooling}, submuestreo y separaci\'on de escalas}
+\label{sec:grids:pooling}
+
+La convoluci\'on por s\'i sola no basta para construir un sistema de
+reconocimiento profundo. Hace falta un segundo ingrediente: una forma de
+engrosar la rejilla a medida que la informaci\'on asciende por la red, de modo
+que las caracter\'isticas locales detectadas a resoluci\'on fina se agreguen en
+caracter\'isticas globales a resoluci\'on gruesa. Este es el papel del
+\emph{pooling} y del \emph{submuestreo}.
+
+Una operaci\'on de \emph{pooling} divide la rejilla en peque\~nos bloques
+---t\'ipicamente $2 \times 2$--- y sustituye cada bloque por un \'unico valor
+resumen: el m\'aximo (\emph{max pooling}) o el promedio (\emph{average pooling})
+de sus entradas. La salida vive en una rejilla de la mitad de lado, de modo que
+la resoluci\'on espacial cae en un factor cuatro mientras que el campo receptivo
+de cada kernel posterior, medido en p\'ixeles originales, se duplica. La
+convoluci\'on con paso (\emph{strided convolution}) logra el mismo engrosamiento
+dentro de la propia convoluci\'on, evaluando la salida solo cada $s$ posiciones.
+
+El \emph{pooling} es \emph{invariante a traslaciones a la escala del bloque}:
+desplazar la entrada menos que el tama\~no del bloque deja la salida (de forma
+aproximada) inalterada. Esta es exactamente la robustez local que se desea de un
+detector de caracter\'isticas ---el p\'ixel exacto en que se sit\'ua un borde no
+deber\'ia importar, solo que haya un borde en las cercan\'ias--- y complementa la
+equivarianza global de la convoluci\'on. Apilar convoluci\'on, no linealidad y
+\emph{pooling} produce el bloque can\'onico de las CNN, y repetirlo construye la
+pir\'amide multiescala en la que las primeras capas ven detalle local fino y las
+posteriores ven estructura global gruesa.
+
+\paragraph{Separaci\'on de escalas.}
+La justificaci\'on m\'as profunda de esta arquitectura es el sesgo geom\'etrico
+de la \emph{separaci\'on de escalas}. Las se\~nales naturales son
+aproximadamente composicionales: un patr\'on complejo se construye a partir de
+patrones m\'as simples a escalas m\'as finas, y las interacciones entre escalas
+muy distintas son d\'ebiles. Las caras se componen de ojos y bocas, que se
+componen de bordes y texturas, que se componen de cambios locales de intensidad.
+Una funci\'on con esta estructura puede aproximarse componiendo operadores
+\emph{locales} (convoluciones) con operadores de \emph{engrosamiento}
+(\emph{pooling}), evitando el coste exponencial de modelar todas las
+interacciones de largo alcance a la vez. La simetr\'ia de traslaci\'on y la
+separaci\'on de escalas juntas ---compartici\'on de pesos entre posiciones,
+engrosamiento jer\'arquico entre escalas--- constituyen los dos sesgos
+geom\'etricos que hacen a las redes convolucionales a la vez estad\'isticamente
+eficientes y computacionalmente tratables. Son la especializaci\'on al dominio de
+la rejilla del esquema general, y reaparecen, debidamente generalizados, en cada
+cap\'itulo posterior.
+
+\section{Una visi\'on espectral: an\'alisis arm\'onico de la convoluci\'on}
+\label{sec:grids:spectral}
+
+Existe una segunda manera, dual, de entender la convoluci\'on, y se convertir\'a
+en el principio organizador de la convoluci\'on sobre grafos y variedades. La
+idea es pasar del dominio espacial al dominio \emph{frecuencial} mediante la
+transformada de Fourier.
+
+\begin{definition}[Transformada de Fourier]
+\label{def:grids:fourier}
+Para $f \colon \R^d \to \C$ integrable, la \emph{transformada de Fourier} es
+\[
+  \Ft[f](\omega) = \hat{f}(\omega) = \int_{\R^d} f(x)\, e^{-2\pi i\, \omega \cdot x}\, \mathrm{d}x,
+  \qquad \omega \in \R^d,
+\]
+con inversa $f(x) = \int_{\R^d} \hat{f}(\omega)\, e^{2\pi i\, \omega \cdot x}\, \mathrm{d}\omega$,
+v\'alida (por ejemplo) cuando $f, \hat{f} \in L^1(\R^d)$.
+\end{definition}
+
+Las exponenciales complejas $e^{2\pi i\,\omega\cdot x}$ son exactamente las
+\emph{autofunciones} de la traslaci\'on: desplazar el argumento multiplica la
+exponencial por una fase. Esto es lo que hace del an\'alisis de Fourier el
+lenguaje natural de la simetr\'ia de traslaci\'on ---y anticipa el papel central
+de la base de autovectores del laplaciano sobre grafos (\Cref{ch:graphs}), que
+desempe\~na la misma funci\'on en dominios irregulares---. La recompensa es el
+teorema de convoluci\'on.
+
+\begin{theorem}[Teorema de convoluci\'on]
+\label{thm:grids:conv-theorem}
+Para $f, g \colon \R^d \to \C$ adecuadas,
+\[
+  \Ft[f \conv g] = \Ft[f] \cdot \Ft[g] .
+\]
+La convoluci\'on en el dominio espacial es multiplicaci\'on puntual en el dominio
+frecuencial.
+\end{theorem}
+
+El teorema convierte la operaci\'on global y deslizante de la convoluci\'on en un
+reescalado independiente de cada componente frecuencial. Tres consecuencias
+importan aqu\'i. Primera, es la base de la convoluci\'on r\'apida: mediante la
+transformada r\'apida de Fourier (\emph{Fast Fourier Transform}, FFT), una
+convoluci\'on que cuesta $O(N^2)$ de forma directa puede calcularse en
+$O(N \log N)$ transformando, multiplicando y antitransformando. Segunda, ofrece
+una interpretaci\'on limpia de lo que \emph{hace} un filtro: un kernel act\'ua
+como una \emph{m\'ascara frecuencial}, amplificando unas frecuencias y atenuando
+otras. Tercera, revela el significado de los kernels dise\~nados a mano del
+\Cref{ex:grids:sobel}. Un kernel de suavizado (gaussiano) tiene una transformada
+de Fourier concentrada cerca de $\omega = 0$, por lo que es un filtro
+\emph{paso bajo} que suprime el detalle fino; un detector de bordes de Sobel o
+laplaciano tiene una transformada que se anula en $\omega = 0$ y crece con
+$\norm{\omega}$, por lo que es un filtro \emph{paso alto} que responde a los
+cambios r\'apidos de intensidad. Aprender un kernel es, pues, aprender una
+respuesta en frecuencia.
+
+\begin{example}[Localizaci\'on dual]
+\label{ex:grids:gaussian-pair}
+La gaussiana es su propia transformada de Fourier salvo reescalado:
+$\Ft[e^{-\alpha x^2}](\omega) = \sqrt{\pi/\alpha}\; e^{-\pi^2 \omega^2/\alpha}$.
+Una gaussiana \emph{estrecha} en el espacio (poca extensi\'on espacial,
+$\alpha$ grande) tiene una transformada \emph{ancha} en frecuencia, y viceversa.
+Este compromiso espacio--frecuencia es el principio de incertidumbre, y tiene un
+significado arquitect\'onico directo: un filtro no puede estar simult\'aneamente
+muy localizado en el espacio y ser muy selectivo en frecuencia. Las CNN resuelven
+la tensi\'on a lo largo de la profundidad, usando kernels locales peque\~nos a
+escalas finas y, mediante el \emph{pooling}, kernels efectivamente mayores y m\'as
+selectivos en frecuencia a escalas gruesas.
+\end{example}
+
+La perspectiva espectral aclara tambi\'en la relaci\'on entre las dos mitades de
+este cap\'itulo. La convoluci\'on es el operador equivariante a traslaciones en
+el dominio espacial; en el dominio espectral es el operador \emph{diagonalizado}
+por la base de Fourier. Ambas descripciones dicen lo mismo sobre la rejilla, pero
+la espectral sobrevive a la p\'erdida de la rejilla. En un grafo no hay noci\'on
+de ``deslizar un kernel'', pero s\'i hay un laplaciano cuyos autovectores
+generalizan la base de Fourier, y puede definirse la convoluci\'on como
+multiplicaci\'on en esa base. Este es el puente de las rejillas a los grafos que
+el \Cref{ch:graphs} desarrolla por completo, y muestra que la humilde capa
+convolucional es la primera instancia de una construcci\'on que se extiende a
+trav\'es de las cinco Ges.
+
+\section{Caso de estudio: CNN para im\'agenes y audio}
+\label{sec:grids:case-study}
+
+Conviene ver c\'omo se ensamblan las piezas en las arquitecturas que definieron
+el campo. AlexNet~\citep{krizhevsky2012alexnet}, la red que gan\'o la
+competici\'on ImageNet de 2012 y redujo su error top-5 del $26{,}2\%$ al
+$15{,}3\%$, es una pila de ocho capas aprendidas: cinco capas convolucionales
+intercaladas con \emph{max pooling}, seguidas de tres capas totalmente conectadas
+y un clasificador final. Las primeras capas convolucionales, que operan sobre la
+imagen a resoluci\'on completa, aprenden detectores de bordes orientados y de
+color que recuerdan llamativamente a los kernels de Sobel dise\~nados a mano del
+\Cref{ex:grids:sobel}; las sucesivas etapas de \emph{pooling} engrosan la rejilla
+de modo que las capas m\'as profundas, con campos receptivos efectivos mayores,
+responden a texturas, partes y, finalmente, objetos completos. La equivarianza a
+traslaciones de las convoluciones garantiza que un objeto se reconozca all\'i
+donde aparezca, y el \emph{pooling} aporta la robustez local frente a peque\~nos
+desplazamientos. El \'exito se apoy\'o en los tres factores destacados en el
+\Cref{ch:introduction}: grandes conjuntos de datos etiquetados, c\'omputo en GPU
+y una arquitectura ---la pila convolucional--- cuyo sesgo inductivo encaja con la
+geometr\'ia de las im\'agenes.
+
+La misma construcci\'on se transfiere al audio con un cambio de dimensi\'on. Una
+forma de onda o su espectrograma es una rejilla uni- o bidimensional con
+simetr\'ia de traslaci\'on a lo largo del eje temporal: un evento sonoro debe
+detectarse con independencia de cu\'ando ocurra. Las convoluciones
+unidimensionales sobre la forma de onda cruda, o las bidimensionales sobre el
+espectrograma tiempo--frecuencia, comparten pesos a lo largo del tiempo
+exactamente igual que las convoluciones de imagen comparten pesos en el espacio,
+con el \emph{pooling} agregando caracter\'isticas ac\'usticas locales en
+estructura de mayor alcance. La visi\'on espectral de la
+\Cref{sec:grids:spectral} es especialmente natural aqu\'i, pues el espectrograma
+es ya una representaci\'on frecuencial y los filtros convolucionales act\'uan
+sobre \'el como detectores paso banda aprendidos.
+
+Estos ejemplos hacen concreta la tesis del cap\'itulo. Las redes convolucionales
+no son un truco de ingenier\'ia ad hoc, sino la realizaci\'on can\'onica de un
+\'unico principio ---respetar la simetr\'ia de traslaci\'on de la rejilla---
+combinado con el sesgo de separaci\'on de escalas que legitima el engrosamiento
+jer\'arquico. Mantener fijo el principio y ampliar el grupo de simetr\'ia es
+precisamente el programa de los cap\'itulos que siguen, comenzando en el
+\Cref{ch:groups} con redes equivariantes a rotaciones y reflexiones.

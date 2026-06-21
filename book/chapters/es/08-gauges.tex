@@ -1,0 +1,658 @@
+\providecommand{\Ad}{\operatorname{Ad}}
+\providecommand{\Lie}{\mathfrak{g}}
+\providecommand{\Hol}{\operatorname{Hol}}
+\providecommand{\GL}{\operatorname{GL}}
+\providecommand{\SO}{\operatorname{SO}}
+\providecommand{\Ot}{\operatorname{O}}
+\providecommand{\Mani}{\mathcal{M}}
+
+\chapter{Gauges: Redes Equivariantes Gauge}
+\label{ch:gauges}
+
+El cap\'itulo anterior dot\'o a las variedades de una geometr\'ia intr\'inseca
+---una m\'etrica, geod\'esicas, una conexi\'on--- y la us\'o para transportar
+caracter\'isticas y construir convoluciones sobre dominios curvos
+(\Cref{ch:geodesics}). All\'i qued\'o impl\'icita una obstrucci\'on sutil: para
+escribir un vector, un filtro o cualquier magnitud direccional sobre una
+variedad hay que elegir primero una base del espacio tangente en cada punto, un
+\emph{marco de referencia local} o \emph{gauge}. En un dominio curvo esta
+elecci\'on es inevitable, no puede hacerse de forma consistente y global, y es
+completamente arbitraria. Dos personas que analicen la misma superficie pueden
+elegir marcos distintos en cada punto y obtener mapas de caracter\'isticas
+num\'ericamente diferentes que describen la misma geometr\'ia.
+
+La teor\'ia gauge es el lenguaje matem\'atico de esta libertad. Tomada de la
+f\'isica te\'orica, donde las simetr\'ias gauge son las transformaciones internas
+que dejan invariantes las ecuaciones de un sistema, proporciona las herramientas
+para construir redes neuronales cuyas predicciones no dependen de la elecci\'on
+arbitraria del marco local. Esta es la quinta y m\'as general de las cinco Ges:
+mientras que las rejillas explotan una simetr\'ia global de traslaci\'on y los
+grupos un grupo global de simetr\'ias, los gauges tratan con simetr\'ias que
+act\'uan de forma \emph{local}, variando de punto a punto. La recompensa es un
+principio unificador. Las redes equivariantes a grupos, las redes esf\'ericas y
+las convoluciones en variedades resultan ser casos particulares de la
+convoluci\'on equivariante gauge sobre un fibrado principal apropiado.
+
+Este cap\'itulo desarrolla el marco en tres movimientos. Primero, el andamiaje
+geom\'etrico: los fibrados principales, que registran a la vez todos los marcos
+locales posibles, y las conexiones que permiten comparar marcos en puntos
+distintos (\Cref{sec:gauge:bundles,sec:gauge:transport}). Segundo, la simetr\'ia
+en s\'i: las transformaciones gauge, los campos de caracter\'isticas
+equivariantes gauge y la curvatura como obstrucci\'on a una comparaci\'on
+independiente del camino (\Cref{sec:gauge:symmetry,sec:gauge:curvature}).
+Tercero, la construcci\'on de la convoluci\'on equivariante gauge y la red
+convolucional icosa\'edrica de
+\citet{cohen2019gaugeequivariantconvolutional} como realizaci\'on concreta y
+eficiente (\Cref{sec:gauge:conv}). En todo momento nos apoyamos en las
+conexiones y el transporte paralelo introducidos en \Cref{ch:geodesics},
+reformul\'andolos en el lenguaje m\'as general de fibrados que exige la simetr\'ia
+gauge.
+
+\section{De la simetr\'ia global a la local}
+\label{sec:gauge:local}
+
+Las redes convolucionales cl\'asicas suponen que la misma transformaci\'on ---la
+traslaci\'on--- es v\'alida en todo el dominio. Esto funciona para im\'agenes
+planas, pero falla sistem\'aticamente en cuanto los datos poseen estructura
+geom\'etrica intr\'inseca.
+
+\begin{example}[Rotaci\'on de una esfera]
+\label{ex:gauge:sphere-rotation}
+Consid\'erese una imagen de la Tierra pintada sobre una esfera y una rotaci\'on
+global de $90^\circ$ en torno al eje polar. En el ecuador la rotaci\'on preserva
+fielmente las formas locales; cerca de los polos esa misma rotaci\'on las
+distorsiona gravemente, y un continente pr\'oximo al polo norte se ve por
+completo diferente despu\'es. La transformaci\'on apropiada depende de la
+posici\'on: una \'unica simetr\'ia global es el objeto equivocado en un dominio
+curvo.
+\end{example}
+
+En un dominio curvo, aplicar una misma transformaci\'on en todas partes puede
+romper la estructura geom\'etrica natural, introducir distorsiones artificiales
+ausentes de los datos y violar los principios f\'isicos que gobiernan el
+fen\'omeno modelado. El remedio es permitir que la transformaci\'on var\'ie de
+punto a punto. La analog\'ia f\'isica es instructiva: en electromagnetismo los
+campos observables $\mathbf{E}$ y $\mathbf{B}$ no cambian al modificar el
+potencial mediante $A_\mu(x) \mapsto A_\mu(x) + \partial_\mu \Lambda(x)$, donde
+$\Lambda$ es una funci\'on arbitraria que puede variar de punto a punto. Igual
+que las leyes de la f\'isica no deben depender de nuestra elecci\'on de
+descripci\'on local, las representaciones neuronales no deber\'ian depender de
+elecciones arbitrarias de marco de referencia local.
+
+Esto sugiere una progresi\'on natural en generalidad:
+\begin{enumerate}
+  \item \emph{Redes cl\'asicas}: una sola transformaci\'on (traslaci\'on)
+    v\'alida globalmente;
+  \item \emph{Redes equivariantes a grupos}: un grupo fijo de transformaciones
+    v\'alido globalmente (\Cref{ch:groups});
+  \item \emph{Convoluciones en variedades}: transformaciones dictadas por la
+    geometr\'ia espec\'ifica de la variedad (\Cref{ch:geodesics});
+  \item \emph{Redes equivariantes gauge}: libertad completa para elegir
+    transformaciones locales, sujeta a un requisito de consistencia.
+\end{enumerate}
+
+Cabr\'ia objetar: ¿por qu\'e no aumentar simplemente los datos con muchas
+transformaciones locales? Porque el aumento de datos aspira a lograr la
+invarianza de forma \emph{estad\'istica}, sobre muchas muestras y muchas pasadas,
+mientras que la equivarianza gauge garantiza la invarianza \emph{exacta} por
+construcci\'on, en una sola pasada, e impide que la red explote orientaciones
+accidentales que no reflejan la verdadera estructura del problema.
+
+\section{Marcos de referencia locales y fibrados principales}
+\label{sec:gauge:bundles}
+
+El punto de partida es la estructura de espacio homog\'eneo $G/H$ estudiada en
+el \Cref{ch:foundations}. Espacios como la esfera $S^{n-1} \cong
+\SO(n)/\SO(n-1)$ surgen como cocientes $G/H$, e identificar el estabilizador de
+un punto $p$ con el subgrupo $H$ exige elegir un representante $g$ de la clase
+$gH$. Cualquier otro representante $g' = gh$ con $h \in H$ describe el mismo
+punto pero da una identificaci\'on distinta. Esta arbitrariedad es la
+\emph{libertad gauge}, y en general no existe una forma can\'onica de fijar la
+elecci\'on de manera consistente sobre toda la variedad.
+
+La soluci\'on matem\'atica es no elegir. En lugar de seleccionar un
+representante arbitrario en cada punto, un \emph{fibrado principal} registra
+\emph{todas} las elecciones posibles a la vez, adjuntando a cada punto de la
+variedad base el grupo completo de marcos de referencia posibles.
+
+\begin{definition}[Fibrado principal]
+\label{def:gauge:principal-bundle}
+Un \emph{fibrado principal} con grupo estructural $G$ es una cu\'adrupla
+$(P, \Mani, \pi, G)$ donde $P$ (el \emph{espacio total}) y $\Mani$ (la
+\emph{base}) son variedades diferenciables, $\pi\colon P \to \Mani$ es una
+submersi\'on suprayectiva (la \emph{proyecci\'on}) y $G$ es un grupo de Lie que
+act\'ua libremente sobre $P$ por la derecha, sujeto a:
+\begin{enumerate}
+  \item[(a)] para cada $p \in \Mani$ la fibra $\pi^{-1}(p)$ es difeomorfa a $G$,
+    de modo que $\dim P = \dim \Mani + \dim G$; el difeomorfismo no es
+    can\'onico, y fijarlo equivale a elegir un gauge en $p$;
+  \item[(b)] la acci\'on preserva fibras, $\pi(u \cdot g) = \pi(u)$; combinada
+    con la libertad, $G$ act\'ua libre y transitivamente en cada fibra,
+    haci\'endola un \emph{torsor} de $G$ ---una copia de $G$ sin identidad
+    distinguida---;
+  \item[(c)] existen \emph{trivializaciones locales}: todo $p$ tiene un entorno
+    $U$ y un difeomorfismo $\phi_U\colon \pi^{-1}(U) \to U \times G$ equivariante
+    bajo la acci\'on derecha. En los solapamientos, las \emph{funciones de
+    transici\'on} $g_{UV}\colon U \cap V \to G$ relacionan dos trivializaciones
+    y codifican la topolog\'ia global del fibrado.
+\end{enumerate}
+\end{definition}
+
+La libertad codificada en una fibra es precisamente la libertad de elegir un
+elemento dentro de una clase $gH$. El v\'inculo entre las imágenes algebraica y
+geom\'etrica es directo.
+
+\begin{proposition}[Los espacios homog\'eneos son fibrados principales]
+\label{prop:gauge:homog-bundle}
+Sea $G$ un grupo de Lie y $H \le G$ un subgrupo cerrado. Entonces
+$(G, G/H, \pi, H)$, con $\pi$ la proyecci\'on al cociente y $H$ actuando por
+multiplicaci\'on a la derecha, es un fibrado principal.
+\end{proposition}
+
+\begin{proof}[Esbozo]
+La fibra sobre $gH$ es la clase $gH$, difeomorfa a $H$ por translaci\'on
+izquierda; la acci\'on derecha de $H$ preserva fibras pues $hH = H$; y las
+trivializaciones locales corresponden a secciones locales suaves de $\pi$, que
+existen para todo subgrupo cerrado de un grupo de Lie~\citep{Kobayashi1996}.
+\end{proof}
+
+As\'i, los espacios homog\'eneos obtenidos mediante el teorema
+\'orbita--estabilizador del \Cref{ch:foundations} son autom\'aticamente bases de
+fibrados principales: el estabilizador $H$ se convierte en la \emph{fibra} (las
+simetr\'ias locales que fijan un punto del dominio), mientras que la \'orbita
+$G/H$ es la \emph{base} sobre la que viven las se\~nales. La
+\Cref{fig:gauge:bundle} ilustra la estructura.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small]
+% Espacio total P (arriba)
+\fill[gdlgreen!12, rounded corners=6pt] (-2.0, 1.0) rectangle (2.4, 4.2);
+\draw[gdlgreen!50!black, dashed, rounded corners=6pt] (-2.0, 1.0) rectangle (2.4, 4.2);
+\node[gdlgreen!50!black, anchor=south] at (0.2, 4.2) {$\pi^{-1}(U)$};
+\draw[thick, gdlblue!40!black, rounded corners=8pt, dashed] (-4.4, 0.8) rectangle (3.0, 4.7);
+\node[gdlblue!40!black, anchor=south] at (-0.7, 4.7) {$P$};
+% fibra fuera de U
+\draw[thick, gdlorange!60, fill=gdlorange!15] (-3.4, 2.6) ellipse (0.28cm and 0.75cm);
+\foreach \yy/\op in {3.1/65, 2.6/50, 2.1/35} \fill[gdlred!\op] (-3.4, \yy) circle (1.5pt);
+\draw[gdlgray!40, dashed] (-3.4, 1.85) -- (-3.4, -0.2);
+\node[gdlorange!70!black, left] at (-3.7, 2.6) {$G$};
+% fibras sobre U
+\foreach \xx in {-1.2, 0.2, 1.6} {
+  \draw[thick, gdlorange!70, fill=gdlorange!18] (\xx, 2.6) ellipse (0.28cm and 0.75cm);
+  \foreach \yy/\op in {3.1/65, 2.6/50, 2.1/35} \fill[gdlred!\op] (\xx, \yy) circle (1.5pt);
+  \draw[gdlgray!40, dashed] (\xx, 1.85) -- (\xx, -0.2);
+}
+\node[gdlorange!70!black, right] at (1.95, 3.2) {$\pi^{-1}(p)\cong G$};
+% proyecci\'on
+\draw[->, very thick, gdlpurple!70] (0, 0.7) -- node[right] {$\pi$} (0, 0.2);
+% base M
+\fill[gdlblue!15] (-4.4, -0.6) .. controls (-3, 0.0) and (-1, -0.8) .. (0.5, -0.5)
+   .. controls (2, -0.2) and (2.4, -0.7) .. (3.0, -0.55)
+   -- (3.0, -1.4) .. controls (2.4, -1.5) and (2, -1.2) .. (0.5, -1.5)
+   .. controls (-1, -1.8) and (-3, -1.0) .. (-4.4, -1.6) -- cycle;
+\fill[gdlgreen!22, rounded corners=4pt] (-2.0, -0.55) rectangle (2.4, -1.35);
+\node[gdlgreen!50!black] at (0.2, -0.95) {$U$};
+\node[gdlblue!70!black] at (-3.7, -0.3) {$\Mani$};
+\foreach \xx in {-1.2, 0.2, 1.6} \fill[gdlgreen!50!black] (\xx, -0.75) circle (1.5pt);
+\node[gdlgreen!50!black, below, font=\tiny] at (0.2, -0.85) {$p$};
+\fill[gdlblue!60] (-3.4, -0.75) circle (1.5pt);
+\end{tikzpicture}
+\caption[Fibrado principal]{Un fibrado principal. El espacio total $P$ se
+proyecta sobre la variedad base $\Mani$ mediante $\pi$; cada fibra
+$\pi^{-1}(p)$ es difeomorfa al grupo estructural $G$ y re\'une todos los marcos
+locales posibles en $p$. Sobre un entorno $U$ el fibrado se ve como el producto
+$U \times G$, pero su topolog\'ia global puede estar ``retorcida''.}
+\label{fig:gauge:bundle}
+\end{figure}
+
+\begin{example}[Fibrado de marcos ortonormales]
+\label{ex:gauge:frame-bundle}
+Sea $(\Mani, g)$ una variedad Riemanniana $n$-dimensional. Su \emph{fibrado de
+marcos ortonormales} es el fibrado principal con grupo estructural $\Ot(n)$ cuyo
+espacio total consta de todos los marcos ortonormales
+$(p, e_1, \ldots, e_n)$ con $\{e_i\}$ base ortonormal de $T_p\Mani$. La
+proyecci\'on olvida el marco y $\Ot(n)$ act\'ua rot\'andolo. Cada fibra re\'une
+toda elecci\'on posible de marco ortonormal en $p$ ---precisamente la libertad
+gauge local---. Para una superficie ($n = 2$) la libertad rotacional relevante
+es $\SO(2)$.
+\end{example}
+
+\begin{example}[Fibrado trivial]
+\label{ex:gauge:trivial-bundle}
+El fibrado m\'as simple es el producto $P = \Mani \times G$, que admite una
+secci\'on global $s(p) = (p, e)$ ---una elecci\'on de gauge globalmente
+consistente---. No todo fibrado admite una secci\'on global; que lo haga es una
+cuesti\'on topol\'ogica, retomada en la \Cref{sec:gauge:curvature}.
+\end{example}
+
+\section{Conexiones y transporte paralelo}
+\label{sec:gauge:transport}
+
+Una conexi\'on en un fibrado principal prescribe c\'omo transportar
+informaci\'on entre fibras distintas de forma compatible con la estructura del
+grupo. Descompone el espacio tangente al espacio total en una parte
+\emph{vertical} a lo largo de la fibra y una parte \emph{horizontal} transversal
+a ella.
+
+\begin{definition}[Espacio vertical y campo vectorial fundamental]
+\label{def:gauge:vertical}
+Para $u \in P$ el \emph{espacio vertical} es $V_u P = \ker(\mathrm{d}\pi_u)$, las
+direcciones tangentes a la fibra. Para $A \in \Lie$, el \'algebra de Lie de $G$,
+el \emph{campo vectorial fundamental} es
+\[
+  A^*_u = \left.\frac{\mathrm{d}}{\mathrm{d}t}\right|_{t=0} u \cdot \exp(tA),
+\]
+la velocidad de la curva de \'orbita. Como la acci\'on preserva fibras,
+$A^*_u \in V_u P$, y la aplicaci\'on $A \mapsto A^*_u$ es un isomorfismo
+can\'onico $\Lie \cong V_u P$.
+\end{definition}
+
+\begin{definition}[Conexi\'on]
+\label{def:gauge:connection}
+Una \emph{conexi\'on} en $(P, \Mani, \pi, G)$ es una $1$-forma con valores en el
+\'algebra de Lie, $\omega \in \Omega^1(P, \Lie)$, tal que
+\begin{enumerate}
+  \item \emph{normalizaci\'on}: $\omega(A^*_u) = A$ para todo $A \in \Lie$;
+  \item \emph{equivarianza}: $R_g^* \omega = \Ad_{g^{-1}} \omega$ para todo
+    $g \in G$, donde $R_g$ es la acci\'on derecha y $\Ad$ la representaci\'on
+    adjunta.
+\end{enumerate}
+De forma equivalente, una conexi\'on define una \emph{distribuci\'on horizontal}
+$H_u P = \ker(\omega_u)$ complementaria al espacio vertical, de modo que
+$T_u P = H_u P \oplus V_u P$ y $H_{u \cdot g} P = (R_g)_* H_u P$.
+\end{definition}
+
+La distribuci\'on horizontal especifica qu\'e direcciones del espacio total son
+``puramente espaciales'' (paralelas a la base) frente a ``puramente gauge'' (a
+lo largo de la fibra). Una curva en $P$ es \emph{horizontal} si su velocidad es
+siempre horizontal; tales curvas representan el transporte del marco ``sin
+rotaci\'on''. Esta es exactamente la forma, en lenguaje de fibrados, de la
+conexi\'on af\'in del \Cref{ch:geodesics}.
+
+\begin{definition}[Transporte paralelo]
+\label{def:gauge:parallel-transport}
+Dada una conexi\'on y un camino suave $\gamma\colon [0,1] \to \Mani$, el
+\emph{transporte paralelo} es la aplicaci\'on
+$\Gamma_\gamma\colon \pi^{-1}(\gamma(0)) \to \pi^{-1}(\gamma(1))$ definida as\'i:
+para $u_0 \in \pi^{-1}(\gamma(0))$ existe un \'unico \emph{levantamiento
+horizontal} $\tilde\gamma$ con $\pi \circ \tilde\gamma = \gamma$,
+$\tilde\gamma(0) = u_0$ y $\dot{\tilde\gamma}(t) \in H_{\tilde\gamma(t)} P$;
+entonces $\Gamma_\gamma(u_0) = \tilde\gamma(1)$.
+\end{definition}
+
+\begin{theorem}[Propiedades del transporte paralelo]
+\label{thm:gauge:transport-props}
+El transporte paralelo es \emph{equivariante},
+$\Gamma_\gamma(u \cdot g) = \Gamma_\gamma(u) \cdot g$;
+\emph{componible}, $\Gamma_{\gamma_2 * \gamma_1} = \Gamma_{\gamma_2} \circ
+\Gamma_{\gamma_1}$ para caminos concatenados; e \emph{invertible}, con
+$\Gamma_{\gamma^{-1}} = (\Gamma_\gamma)^{-1}$.
+\end{theorem}
+
+\begin{proof}[Esbozo]
+Para la equivarianza, sea $\tilde\gamma$ el levantamiento horizontal desde $u$ y
+defínase $\tilde\gamma_g(t) = \tilde\gamma(t) \cdot g$. Proyecta sobre $\gamma$,
+parte de $u \cdot g$ y permanece horizontal porque la distribuci\'on horizontal
+es $G$-invariante; por unicidad del levantamiento es el levantamiento desde
+$u \cdot g$, lo que da la equivarianza. La componibilidad y la invertibilidad se
+siguen concatenando e invirtiendo levantamientos horizontales e invocando la
+unicidad~\citep{Kobayashi1996}.
+\end{proof}
+
+Trabajando en una secci\'on local, el levantamiento horizontal satisface
+$\omega(\dot{\tilde\gamma}) = 0$, lo que, expresado mediante una curva
+$g(t)$ con valores en el grupo, se convierte en la ecuaci\'on diferencial
+ordinaria lineal
+\[
+  \frac{\mathrm{d}g}{\mathrm{d}t} + \omega(\dot\gamma(t))\, g(t) = 0,
+\]
+con la exponencial ordenada por camino
+$g(1) = \mathcal{P}\exp\!\big(-\!\int_0^1 \omega(\dot\gamma)\,\mathrm{d}t\big)\,g(0)$
+como soluci\'on formal. Este es el an\'alogo continuo de acumular una matriz de
+transporte arista a arista, la receta que implementar\'a una red discreta.
+
+\section{Simetr\'ia gauge, campos y equivarianza}
+\label{sec:gauge:symmetry}
+
+Ya podemos precisar la simetr\'ia central. Una elecci\'on de gauge es una
+elecci\'on de marco en cada punto; cambiarla es una transformaci\'on gauge.
+
+\begin{definition}[Transformaci\'on gauge]
+\label{def:gauge:transformation}
+Una \emph{transformaci\'on gauge} es una aplicaci\'on suave
+$g\colon \Mani \to G$ que asigna a cada punto $p$ un elemento $g(p)$ del grupo
+estructural. El conjunto de todas ellas forma el \emph{grupo gauge}
+$\mathcal{G} = C^\infty(\Mani, G)$ con la multiplicaci\'on punto a punto.
+\end{definition}
+
+Una transformaci\'on gauge rota el marco local de forma independiente en cada
+punto. La \Cref{fig:gauge:freedom} muestra dos gauges sobre la misma superficie:
+los mismos datos geom\'etricos, descritos por componentes num\'ericas distintas.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[>=Stealth]
+\def\surfacepath{(-2.4,-1.2) .. controls (-2.7,0.5) and (-1.9,2.2) .. (0,2.4)
+  .. controls (1.9,2.6) and (2.9,1.2) .. (2.7,-0.2)
+  .. controls (2.5,-1.5) and (0.7,-2.0) .. (-0.5,-1.8)
+  .. controls (-1.6,-1.6) and (-2.1,-1.7) .. (-2.4,-1.2)}
+\newcommand{\flen}{0.5}
+% Gauge 1
+\begin{scope}[shift={(-4.6,0)}]
+  \node[above, font=\bfseries, text=gdlblue!70!black] at (0,2.9) {Gauge 1};
+  \fill[gdlblue!15] \surfacepath; \draw[thick, gdlblue!40] \surfacepath;
+  \foreach \p in {(-1.2,1.0),(1.0,1.2),(-0.9,-0.6),(1.1,-0.4),(0.0,0.3)} {
+    \draw[->, thick, gdlgreen!50!black] \p -- ++(0:\flen);
+    \draw[->, thick, gdlgreen!50!black] \p -- ++(90:\flen);
+    \fill[gdlred!70] \p circle (2pt);
+  }
+\end{scope}
+% Gauge 2
+\begin{scope}[shift={(4.6,0)}]
+  \node[above, font=\bfseries, text=gdlorange!70!black] at (0,2.9) {Gauge 2};
+  \fill[gdlblue!15] \surfacepath; \draw[thick, gdlblue!40] \surfacepath;
+  \draw[->, thick, gdlorange!70] (-1.2,1.0) -- ++(35:\flen);
+  \draw[->, thick, gdlorange!70] (-1.2,1.0) -- ++(125:\flen);
+  \draw[->, thick, gdlorange!70] (1.0,1.2) -- ++(200:\flen);
+  \draw[->, thick, gdlorange!70] (1.0,1.2) -- ++(290:\flen);
+  \draw[->, thick, gdlorange!70] (-0.9,-0.6) -- ++(110:\flen);
+  \draw[->, thick, gdlorange!70] (-0.9,-0.6) -- ++(200:\flen);
+  \draw[->, thick, gdlorange!70] (1.1,-0.4) -- ++(250:\flen);
+  \draw[->, thick, gdlorange!70] (1.1,-0.4) -- ++(340:\flen);
+  \draw[->, thick, gdlorange!70] (0.0,0.3) -- ++(60:\flen);
+  \draw[->, thick, gdlorange!70] (0.0,0.3) -- ++(150:\flen);
+  \foreach \p in {(-1.2,1.0),(1.0,1.2),(-0.9,-0.6),(1.1,-0.4),(0.0,0.3)}
+    \fill[gdlred!70] \p circle (2pt);
+\end{scope}
+% flecha entre paneles
+\draw[<->, very thick, gdlpurple!70] (-1.5,0) -- node[above, font=\small] {$g(x)\in\SO(2)$} (1.5,0);
+\end{tikzpicture}
+\caption[Libertad gauge]{Libertad gauge sobre una superficie. La misma
+superficie admite distintas elecciones de marco local (Gauge 1, con
+orientaci\'on consistente, y Gauge 2, rotado de forma independiente en cada
+punto). Una convoluci\'on equivariante gauge produce el mismo resultado
+geom\'etrico para ambas, relacionadas por una transformaci\'on punto a punto
+$g(x) \in \SO(2)$.}
+\label{fig:gauge:freedom}
+\end{figure}
+
+Las caracter\'isticas sobre la variedad no son n\'umeros desnudos sino
+componentes relativas al marco elegido, de modo que deben transformarse cuando
+el marco lo hace. Esto lo recoge el tipo de un campo de caracter\'isticas,
+fijado por una representaci\'on $\rho$ del grupo estructural.
+
+\begin{definition}[Campo de caracter\'isticas equivariante gauge]
+\label{def:gauge:field}
+Sea $\rho\colon G \to \GL(V)$ una representaci\'on. Un campo $f$ de \emph{tipo}
+$\rho$ asigna a cada punto componentes en $V$ que, bajo una transformaci\'on
+gauge $g$, se transforman como
+\[
+  f(p) \longmapsto \rho\big(g(p)^{-1}\big)\, f(p).
+\]
+De forma equivalente, $f$ es una funci\'on sobre el espacio total con
+$f(u \cdot g) = \rho(g^{-1}) f(u)$.
+\end{definition}
+
+Casos especiales importantes sobre una superficie, con $G = \SO(2)$, son los
+campos \emph{escalares} ($\rho$ trivial, invariantes bajo gauge), los campos
+\emph{vectoriales} (la representaci\'on est\'andar de dimensi\'on $2$, cuyas
+componentes rotan con el marco) y los campos complejos que se transforman por
+$e^{i k\theta}$ para un ``esp\'in'' entero $k$.
+
+El objetivo de dise\~no se sigue de inmediato. Una capa de la red es
+\emph{equivariante gauge} si conmuta con la acci\'on gauge: transformar los
+marcos de entrada produce la salida correspondientemente transformada. Si la
+lectura final es una predicci\'on escalar global, la red es \emph{invariante
+gauge},
+\[
+  \Phi(g \cdot f) = \Phi(f) \qquad \text{para toda transformaci\'on gauge } g.
+\]
+Esto garantiza que las predicciones son independientes de la parametrizaci\'on o
+carta local, que las salidas vectoriales rotan coherentemente con el marco y
+---en el caso especial del gauge de permutaci\'on de nodos en grafos--- que las
+salidas son invariantes ante el reetiquetado de nodos. La conexi\'on con la
+f\'isica es exacta: las teor\'ias gauge describen las fuerzas fundamentales
+mediante conexiones en fibrados principales con grupos estructurales $U(1)$,
+$SU(2)$, $SU(3)$; en el aprendizaje profundo geom\'etrico el grupo estructural
+codifica las simetr\'ias locales relevantes para el problema de aprendizaje.
+
+\begin{example}[Por qu\'e importa la equivarianza gauge]
+\label{ex:gauge:mesh}
+En una malla triangular 3D, el plano tangente $T_v\Mani$ en cada v\'ertice $v$
+est\'a bien definido, pero no existe una base ortonormal can\'onica
+$(e_1^v, e_2^v)$ para \'el. Una red ingenua que prediga, por ejemplo, la
+direcci\'on de m\'axima curvatura a partir de las componentes $(u_1, u_2)$ de
+vectores en coordenadas locales arbitrarias falla de forma silenciosa: rotar el
+marco en un v\'ertice $45^\circ$ cambia la direcci\'on predicha por otra
+distinta, ya que las componentes entran en la red sin la rotaci\'on de salida
+correspondiente. Una red equivariante gauge garantiza, en cambio,
+$\hat{\mathbf{d}}' = R_\theta\,\hat{\mathbf{d}}$ bajo una rotaci\'on del marco
+$R_\theta$: las componentes num\'ericas cambian, pero la direcci\'on
+geom\'etrica predicha no~\citep{cohen2019gaugeequivariantconvolutional}.
+\end{example}
+
+\section{Curvatura, holonom\'ia y obstrucciones topol\'ogicas}
+\label{sec:gauge:curvature}
+
+El transporte paralelo a lo largo de un camino permite comparar marcos en los
+extremos, pero el resultado puede depender del camino elegido. La
+\emph{curvatura} de una conexi\'on mide esta dependencia del camino,
+equivalentemente el fallo de la distribuci\'on horizontal a ser integrable.
+
+\begin{definition}[Curvatura y ecuaci\'on de estructura de Cartan]
+\label{def:gauge:curvature}
+La \emph{curvatura} de una conexi\'on $\omega$ es la $2$-forma con valores en
+$\Lie$
+\[
+  \Omega = \mathrm{d}\omega + \tfrac{1}{2}[\omega \wedge \omega],
+\]
+donde $[\omega \wedge \omega](X, Y) = [\omega(X), \omega(Y)]$ usa el corchete de
+Lie. Reordenada, es la \emph{ecuaci\'on de estructura de Cartan}
+$\mathrm{d}\omega = \Omega - \tfrac{1}{2}[\omega \wedge \omega]$, y la curvatura
+satisface la \emph{identidad de Bianchi} $\mathrm{d}\Omega = [\omega \wedge
+\Omega]$.
+\end{definition}
+
+\begin{definition}[Holonom\'ia]
+\label{def:gauge:holonomy}
+Para un lazo $\gamma$ basado en $p$, la \emph{holonom\'ia} es el elemento
+$g_\gamma \in G$ con $\Gamma_\gamma(u) = u \cdot g_\gamma$ para todo
+$u \in \pi^{-1}(p)$. El \emph{grupo de holonom\'ia} $\Hol_p(\omega)$ est\'a
+generado por las holonom\'ias de todos los lazos basados en $p$.
+\end{definition}
+
+La curvatura es la holonom\'ia en el l\'imite infinitesimal: para un lazo
+peque\~no que encierra un \'area $\mathrm{d}A$, la holonom\'ia es
+aproximadamente $\exp(\Omega \cdot \mathrm{d}A)$. Cuando la curvatura se anula la
+conexi\'on es \emph{plana} y el transporte paralelo depende solo de la clase de
+homotop\'ia del camino; un vector llevado por un lazo contr\'actil regresa sin
+cambios. En un dominio curvo la curvatura es en general no nula, y esta es
+exactamente la raz\'on por la que un marco transportado por un lazo cerrado
+vuelve rotado ---la obstrucci\'on que una convoluci\'on equivariante gauge debe
+respetar---.
+
+La curvatura explica adem\'as \emph{por qu\'e} la equivarianza gauge es
+necesaria y no meramente conveniente.
+
+\begin{proposition}[Obstrucci\'on topol\'ogica a un gauge global]
+\label{prop:gauge:obstruction}
+Un fibrado principal $P \to \Mani$ admite una secci\'on global ---una elecci\'on
+de gauge consistente sobre todo $\Mani$--- si y solo si es trivial,
+$P \cong \Mani \times G$. En particular, el fibrado de marcos ortonormales de
+$S^2$ no admite secci\'on global (por el teorema de la bola peluda), mientras
+que todo fibrado principal sobre una variedad contr\'actil es trivial.
+\end{proposition}
+
+\begin{proof}[Esbozo]
+Una secci\'on global $s$ induce la trivializaci\'on $(p, g) \mapsto s(p) \cdot
+g$, un isomorfismo por la libertad y transitividad en las fibras; rec\'iprocamente
+una trivializaci\'on da la secci\'on $s(p) = (p, e)$. Una secci\'on del fibrado
+de marcos de $S^2$ proporcionar\'ia un campo vectorial tangente que no se anula,
+contradiciendo el teorema de la bola peluda ($\chi(S^2) = 2 \neq 0$). Una base
+contr\'actil es homot\'opicamente equivalente a un punto, luego todo fibrado
+sobre ella es trivial.
+\end{proof}
+
+La consecuencia para el aprendizaje es decisiva: en $S^2$ y en la mayor\'ia de
+variedades de inter\'es no existe un sistema de coordenadas globalmente
+consistente, y toda parametrizaci\'on global tiene singularidades (los polos en
+coordenadas esf\'ericas). La equivarianza gauge libera a la red de estas
+elecciones locales arbitrarias y evita artefactos en las singularidades, en
+lugar de disimularlas con una carta fija.
+
+\section{Convoluci\'on equivariante gauge}
+\label{sec:gauge:conv}
+
+Ensamblamos ahora las piezas en una convoluci\'on. La dificultad que una capa
+equivariante gauge debe superar es concreta: para combinar la caracter\'istica
+en un punto $p$ con las de sus vecinos, esas caracter\'isticas viven en fibras
+distintas, expresadas en marcos locales distintos, y no pueden sumarse
+directamente. La conexi\'on lo resuelve ---el transporte paralelo lleva el marco
+de cada vecino hasta $p$ antes de combinar las caracter\'isticas---.
+
+\begin{theorem}[Convoluci\'on equivariante gauge]
+\label{thm:gauge:conv}
+Sea $f$ un campo de caracter\'isticas sobre $\Mani$ y sea $\Gamma_{q \to p}$ el
+transporte paralelo de $q$ a $p$. La convoluci\'on
+\[
+  (f \star \psi)(p) = \int_{\mathcal{N}(p)}
+    \psi\big(q, p\big)\; \Gamma_{q \to p}\, f(q)\; \mathrm{d}q,
+\]
+que transporta la caracter\'istica de cada vecino al marco en $p$ antes de
+aplicar el n\'ucleo aprendible $\psi$, env\'ia campos equivariantes gauge en
+campos equivariantes gauge.
+\end{theorem}
+
+\begin{proof}[Esbozo]
+Bajo un cambio de gauge, la caracter\'istica en $q$ se transforma por
+$\rho(g(q))$, mientras que el operador de transporte cambia de base de $q$ a $p$
+y por tanto se transforma por $\rho(g(p))\,(\,\cdot\,)\,\rho(g(q))^{-1}$. El
+factor $\rho(g(q))$ de la caracter\'istica cancela el $\rho(g(q))^{-1}$ del
+operador de transporte, dejando un factor global $\rho(g(p))$ que sale de la
+integral. As\'i, $(f \star \psi)(p) \mapsto \rho(g(p))\,(f \star \psi)(p)$, la
+ley de transformaci\'on de un campo
+equivariante~\citep{cohen2019gaugeequivariantconvolutional}.
+\end{proof}
+
+La cancelaci\'on es el mismo mecanismo algebraico que hace invariante gauge al
+tensor de campo $F_{\mu\nu}$ en electromagnetismo aunque el potencial $A_\mu$ no
+lo sea: los factores gauge en el punto fuente cancelan los factores inversos que
+acarrea la conexi\'on. De forma crucial, la equivarianza gauge impone
+restricciones \emph{lineales} sobre el n\'ucleo $\psi$, reduciendo el espacio de
+par\'ametros a un subespacio af\'in que puede resolverse anal\'iticamente antes
+del entrenamiento ---el mismo principio de restricci\'on del n\'ucleo que hace
+pr\'acticas las convoluciones de grupo \emph{steerable} en el \Cref{ch:groups}---.
+
+\subsection{La red convolucional icosa\'edrica}
+\label{sec:gauge:icosahedral}
+
+La brecha entre la teor\'ia suave y una red finita y entrenable fue salvada por
+primera vez en la pr\'actica por
+\citet{cohen2019gaugeequivariantconvolutional}, quienes eligieron el icosaedro
+como discretizaci\'on de la esfera $S^2$. La elecci\'on dista de ser arbitraria:
+entre los poliedros regulares, el icosaedro es el que mejor aproxima la esfera,
+tiene un grupo de simetr\'ia rico con $120$ elementos, sus v\'ertices est\'an
+casi uniformemente espaciados y, con solo $12$ v\'ertices, $20$ caras y $30$
+aristas (refinables por subdivisi\'on geod\'esica), es computacionalmente ligero.
+
+Sobre esta malla el grupo estructural es $\SO(2)$ ---rotaciones planas del marco
+tangente en cada v\'ertice---. Un campo de caracter\'isticas discreto
+$f\colon V \to V_\rho$ vive en los v\'ertices, y la convoluci\'on equivariante
+gauge se convierte en una suma local sobre los vecinos,
+\[
+  (f \star \psi)(v_i) = \sum_{j \in \mathcal{N}(i)}
+    \psi_{ij}\; \Gamma_{ij}\, f(v_j),
+\]
+donde $\Gamma_{ij} \in \SO(2)$ es el transporte paralelo discreto del v\'ertice
+$v_j$ al $v_i$ a lo largo de la arista que los une ---una rotaci\'on por un
+\'angulo fijo determinado por la geometr\'ia de la malla--- y $\psi_{ij}$ son los
+pesos aprendibles del n\'ucleo, restringidos para que la capa respete la acci\'on
+gauge de $\SO(2)$. El transporte de una caracter\'istica desde un v\'ertice
+lejano se obtiene componiendo las rotaciones por arista a lo largo de un camino
+geod\'esico, exactamente el an\'alogo discreto de la exponencial ordenada por
+camino de la \Cref{sec:gauge:transport}: se inicializa el transporte a la
+identidad y se multiplica por $\exp(-\omega_e)$ por cada arista $e$ recorrida.
+
+La \Cref{fig:gauge:icosahedral} esboza el mecanismo. El beneficio pr\'actico
+decisivo es que todo este c\'omputo puede expresarse mediante operaciones de
+tipo convoluci\'on est\'andar sobre una representaci\'on aplanada del icosaedro,
+haciendo la red tan eficiente como una red convolucional ordinaria a la vez que
+es \emph{exactamente} equivariante gauge ---y, como el grupo de simetr\'ia
+icosa\'edrico act\'ua sobre la malla, equivariante tambi\'en a ese subgrupo
+discreto de rotaciones de la esfera---.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small]
+% v\'ertice central y vecinos (parche local hexagonal)
+\coordinate (c) at (0,0);
+\foreach \a/\name in {0/n0,60/n1,120/n2,180/n3,240/n4,300/n5}
+  \coordinate (\name) at (\a:1.8);
+% aristas
+\foreach \name in {n0,n1,n2,n3,n4,n5} \draw[gdlgray!55, thick] (c) -- (\name);
+\foreach \a/\b in {n0/n1,n1/n2,n2/n3,n3/n4,n4/n5,n5/n0}
+  \draw[gdlgray!35] (\a) -- (\b);
+% marcos transportados (rotados) en los vecinos
+\foreach \name/\rot in {n0/20,n1/-15,n2/40,n3/10,n4/-30,n5/25} {
+  \draw[->, thick, gdlorange!75] (\name) -- ++(\rot:0.6);
+  \draw[->, thick, gdlorange!75] (\name) -- ++({\rot+90}:0.6);
+  \fill[gdlblue!65] (\name) circle (2.5pt);
+}
+% flechas de transporte hacia el centro
+\foreach \name in {n0,n2,n4}
+  \draw[->, gdlpurple!70, thick, dashed] ($(\name)!0.30!(c)$) -- ($(\name)!0.62!(c)$);
+% marco central
+\draw[->, very thick, gdlgreen!55!black] (c) -- ++(0:0.7);
+\draw[->, very thick, gdlgreen!55!black] (c) -- ++(90:0.7);
+\fill[gdlred!75] (c) circle (3pt);
+\node[below right, font=\footnotesize, text=gdlgreen!45!black] at (c) {$v_i$};
+\node[font=\footnotesize, text=gdlpurple!70] at (1.15,0.55) {$\Gamma_{ij}$};
+\node[font=\footnotesize, text=gdlorange!70!black] at (-1.9,1.55) {$f(v_j)$};
+\end{tikzpicture}
+\caption[Convoluci\'on equivariante gauge en una malla]{Convoluci\'on
+equivariante gauge local en un v\'ertice $v_i$. Cada vecino acarrea una
+caracter\'istica en su propio marco local (naranja). Antes de combinarla, la
+conexi\'on la transporta paralelamente al marco en $v_i$ mediante la rotaci\'on
+$\Gamma_{ij} \in \SO(2)$ (p\'urpura), tras lo cual se aplica el n\'ucleo
+aprendible $\psi_{ij}$. El resultado se transforma coherentemente bajo cualquier
+cambio de marco local.}
+\label{fig:gauge:icosahedral}
+\end{figure}
+
+\subsection{El marco general y perspectivas}
+\label{sec:gauge:outlook}
+
+El caso icosa\'edrico instancia una receta general. Elegir una variedad base
+$\Mani$ para los datos y un grupo estructural $G$ para las simetr\'ias locales
+relevantes fija un fibrado principal; una conexi\'on suministra el transporte
+paralelo; y la convoluci\'on equivariante gauge del \Cref{thm:gauge:conv}
+produce una capa cuyo tipo de salida lo gobierna una representaci\'on $\rho$
+elegida. Distintos problemas requieren distintos fibrados: fibrados triviales
+cuando las simetr\'ias son globalmente consistentes, fibrados de marcos cuando
+se exige invarianza bajo cambios locales de coordenadas y grupos estructurales
+m\'as ricos para campos con simetr\'ias internas. Bajo condiciones suaves, tales
+redes son aproximadores universales de aplicaciones equivariantes gauge, con
+tasas de aproximaci\'on gobernadas por las dimensiones de la base y del grupo y
+constantes que dependen de la curvatura del fibrado.
+
+Este marco es el broche de las cinco Ges. Contiene estrictamente a los dem\'as:
+un grupo global de simetr\'ias es el caso especial de un fibrado trivial con
+conexi\'on plana, recuperando las redes equivariantes a grupos del
+\Cref{ch:groups}; una variedad con su conexi\'on de Levi-Civita recupera las
+convoluciones geod\'esicas del \Cref{ch:geodesics} como una elecci\'on de gauge
+particular; y las redes esf\'ericas que motivaron este desarrollo se alojan en
+\'el como la instancia icosa\'edrica. El anidamiento
+\[
+  \mathcal{F}_{\text{euclidiana}} \subset \mathcal{F}_{\text{grupo}}
+  \subset \mathcal{F}_{\text{geod\'esica}} \subset \mathcal{F}_{\text{gauge}}
+\]
+resume c\'omo cada una de las cuatro Ges anteriores es una versi\'on restringida
+de la convoluci\'on equivariante gauge. M\'as all\'a de mallas y esferas, el
+mismo principio gobierna los modelos equivariantes para mol\'eculas 3D, donde las
+caracter\'isticas intermedias son tensores esf\'ericos que se transforman bajo
+representaciones irreducibles de $\SO(3)$ y las predicciones de magnitudes
+tensoriales resultan f\'isicamente consistentes sin aumento de datos por
+rotaci\'on~\citep{batzner2022nequip}. El \Cref{ch:applications} retoma estas
+aplicaciones; el \Cref{ch:conclusion} sit\'ua la imagen gauge dentro de la
+visi\'on unificada de paso de mensajes de todo el libro.

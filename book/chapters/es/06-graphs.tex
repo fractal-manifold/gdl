@@ -1,0 +1,655 @@
+\providecommand{\N}{\mathbb{N}}
+\providecommand{\tr}{\operatorname{tr}}
+\providecommand{\Lap}{\mathcal{L}}
+\providecommand{\Nbr}{\mathcal{N}}
+\providecommand{\HASH}{\operatorname{HASH}}
+\providecommand{\WL}{\textsc{wl}}
+
+\chapter{Grafos: Redes Neuronales de Grafos}
+\label{ch:graphs}
+
+Las rejillas y los grupos, objeto de los \Cref{ch:grids,ch:groups}, comparten un
+lujo com\'un: un dominio r\'igido y homog\'eneo en el que todo punto se parece a
+cualquier otro y el grupo de simetr\'ias act\'ua de forma transitiva. Una rejilla
+de p\'ixeles es la misma en todas partes; una esfera tiene el mismo aspecto tras
+cualquier rotaci\'on. La mayor\'ia de los datos relacionales de inter\'es
+pr\'actico no disfrutan de tal regularidad. Una mol\'ecula, una red social, un
+grafo de citas, un mapa de carreteras o una superficie 3D triangulada son una
+colecci\'on irregular de entidades ligadas por relaciones por pares, en la que
+distintos nodos tienen distinto n\'umero de vecinos y no existe un orden
+can\'onico de esos vecinos. El dominio natural de tales datos es un \emph{grafo}.
+
+Este cap\'itulo desarrolla la tercera de las cinco Ges. Comenzamos con la
+simetr\'ia que gobierna los grafos ---la \emph{invarianza por permutaciones}--- y
+mostramos c\'omo fuerza un c\'omputo local, basado en vecindarios. Ese c\'omputo,
+el \emph{paso de mensajes}, resulta ser el mecanismo \'unico que unifica las
+arquitecturas de los cap\'itulos anteriores: una red convolucional es paso de
+mensajes en una rejilla, la autoatenci\'on es paso de mensajes en un grafo
+completo y una red neuronal de grafos es paso de mensajes en un grafo arbitrario.
+Examinamos despu\'es los dos linajes cl\'asicos de la convoluci\'on en grafos
+---los m\'etodos \emph{espectrales}, construidos sobre el laplaciano del grafo y
+una transformada de Fourier en grafos, y los m\'etodos \emph{espaciales},
+construidos directamente sobre los vecindarios--- y mostramos c\'omo la
+aproximaci\'on polinomial de los filtros espectrales los une. Por \'ultimo
+afrontamos cu\'an \emph{expresivos} son estos modelos, exponiendo los l\'imites
+fundamentales que impone la jerarqu\'ia de Weisfeiler--Leman y las patolog\'ias
+asociadas del sobre-suavizado y la sobre-compresi\'on.
+
+\section{Simetr\'ia de permutaci\'on}
+\label{sec:graphs:permutation}
+
+Un grafo $G = (V, E)$ consta de un conjunto finito de v\'ertices (nodos)
+$V = \{1, \dots, n\}$ y un conjunto de aristas $E \subseteq V \times V$.
+Asociamos a cada nodo un vector de caracter\'isticas y los reunimos en una matriz
+$X \in \R^{n \times d}$ cuya $i$-\'esima fila $x_i \in \R^d$ describe el nodo $i$.
+La conectividad se codifica mediante una matriz de adyacencia; en grafos
+ponderados los pesos registran informaci\'on m\'etrica o relacional.
+
+\begin{definition}[Grafo ponderado y matriz de adyacencia]
+\label{def:graphs:weighted}
+Un \emph{grafo ponderado} es una terna $G = (V, E, W)$ con una funci\'on de pesos
+$W \colon E \to \R$. Su \emph{matriz de adyacencia} $A \in \R^{n \times n}$ tiene
+entradas $A_{ij} = W_{ij}$ si $(i,j) \in E$ y $A_{ij} = 0$ en caso contrario; en
+grafos no ponderados $A_{ij} \in \{0,1\}$. El grafo es no dirigido cuando
+$A = A^\top$. El \emph{vecindario} de un nodo $v$ es
+$\Nbr(v) = \{u \in V : (v,u) \in E\}$, y su \emph{grado} es
+$\deg(v) = \sum_{u} A_{vu}$.
+\end{definition}
+
+El rasgo decisivo de esta representaci\'on es que arrastra un artefacto
+arbitrario: el etiquetado de los nodos. Nada intr\'inseco distingue el ``nodo 1''
+del ``nodo 7''; renumerar los \'atomos de una mol\'ecula no cambia la mol\'ecula.
+Una permutaci\'on de las etiquetas de los nodos es una simetr\'ia de los datos, y
+cualquier modelo que construyamos debe respetarla. Una permutaci\'on act\'ua
+simult\'aneamente sobre las filas de $X$ y sobre ambos ejes de $A$.
+
+\begin{definition}[Acci\'on de permutaci\'on]
+\label{def:graphs:permutation-action}
+Sea $\group_n$ el grupo sim\'etrico de permutaciones de $\{1, \dots, n\}$,
+representado por matrices de permutaci\'on $P \in \R^{n \times n}$ (un \'unico $1$
+por fila y columna, cero en el resto). Una permutaci\'on $P$ act\'ua sobre las
+caracter\'isticas de los nodos y sobre la matriz de adyacencia mediante
+\[
+  X \mapsto P X, \qquad A \mapsto P A P^\top .
+\]
+\end{definition}
+
+Queremos que un c\'omputo a nivel de nodo $F(X, A)$ conmute con el reetiquetado, y
+que un c\'omputo a nivel de grafo $f(X, A)$ ignore por completo el reetiquetado.
+Estas son las dos caras de la simetr\'ia introducidas en el \Cref{ch:priors},
+especializadas a $\group_n$.
+
+\begin{definition}[Equivarianza e invarianza por permutaciones]
+\label{def:graphs:equiv-inv}
+Una funci\'on por nodos $F \colon \R^{n \times d} \times \R^{n \times n} \to
+\R^{n \times d'}$ es \emph{equivariante por permutaciones} si
+\[
+  F(P X, P A P^\top) = P\, F(X, A)
+  \qquad \text{para todo } P \in \group_n .
+\]
+Una funci\'on por grafos $f \colon \R^{n \times d} \times \R^{n \times n} \to
+\R^{d'}$ es \emph{invariante por permutaciones} si
+$f(P X, P A P^\top) = f(X, A)$ para todo $P \in \group_n$.
+\end{definition}
+
+Estas condiciones reproducen la equivarianza y la invarianza exigidas a las capas
+convolucionales y equivariantes a grupos, pero ahora el grupo relevante es el
+grupo sim\'etrico, discreto y finito, en lugar de las traslaciones o las
+rotaciones. El esquema del \Cref{ch:priors} se aplica al pie de la letra: apilar
+capas equivariantes, que se componen en una aplicaci\'on equivariante, y a\~nadir
+una lectura invariante (un \emph{pooling} invariante por permutaciones, como la
+suma o la media sobre los nodos) solo al final, cuando se requiere una \'unica
+predicci\'on a nivel de grafo.
+
+La restricci\'on es severa. Las \'unicas aplicaciones lineales sobre
+caracter\'isticas de nodos que son equivariantes por permutaciones para
+\emph{todo} grafo est\'an generadas por dos operadores: la identidad (cada nodo se
+transforma a s\'i mismo) y la agregaci\'on por la matriz de unos (cada nodo suma
+las caracter\'isticas de todos los nodos). Para obtener una familia m\'as rica y
+consciente de la estructura, debemos dejar que la agregaci\'on respete las
+aristas: cada nodo puede combinar su propia caracter\'istica con un agregado de
+las caracter\'isticas de sus vecinos, donde el agregado es a su vez invariante al
+orden en que se enumeran los vecinos. Esta \'unica observaci\'on ---agregar sobre
+un vecindario con un operador invariante por permutaciones y luego actualizar---
+es la semilla de toda red neuronal de grafos, y a ella nos dirigimos a
+continuaci\'on.
+
+\section{Paso de mensajes}
+\label{sec:graphs:message-passing}
+
+Una red neuronal de grafos se construye repitiendo una actualizaci\'on local y
+equivariante por permutaciones en la que cada nodo refresca su estado a partir de
+los estados de sus vecinos. \citet{gilmer2017neural} cristalizaron esta idea en el
+marco del \emph{paso de mensajes}, que desde entonces se ha convertido en la
+lengua franca del aprendizaje en grafos.
+
+\begin{definition}[Red neuronal de paso de mensajes]
+\label{def:graphs:mpnn}
+Una \emph{red neuronal de paso de mensajes} (MPNN, por sus siglas en ingl\'es)
+opera sobre un grafo $G = (V, E)$ con caracter\'isticas de nodos
+$\{h_v^{(\ell)}\}$ y caracter\'isticas opcionales de aristas $\{e_{vu}\}$. La capa
+$\ell$ actualiza cada nodo en dos fases:
+\begin{align}
+  m_v^{(\ell+1)} &= \bigoplus_{u \in \Nbr(v)}
+      M_\ell\!\left(h_v^{(\ell)}, h_u^{(\ell)}, e_{vu}\right)
+      && \text{(mensaje y agregaci\'on)}, \\
+  h_v^{(\ell+1)} &= U_\ell\!\left(h_v^{(\ell)}, m_v^{(\ell+1)}\right)
+      && \text{(actualizaci\'on)},
+\end{align}
+donde $M_\ell$ es una funci\'on de mensaje aprendible, $U_\ell$ una funci\'on de
+actualizaci\'on aprendible y $\bigoplus$ un agregador invariante por
+permutaciones (suma, media o m\'aximo).
+\end{definition}
+
+El agregador es el componente que sostiene todo el edificio: como $\bigoplus$ no
+depende del orden de sus argumentos, la capa es equivariante por permutaciones en
+el sentido de la \Cref{def:graphs:equiv-inv}, sean cuales sean las funciones de
+mensaje y actualizaci\'on. Tras $\ell$ capas cada nodo ha recogido informaci\'on
+de su vecindario a $\ell$ saltos, exactamente como apilar capas convolucionales
+agranda el campo receptivo. Una predicci\'on a nivel de grafo se produce mediante
+un \emph{pooling} invariante final, $h_G = \bigoplus_{v \in V} h_v^{(L)}$,
+seguido de un predictor est\'andar.
+
+La \Cref{fig:graphs:message-passing} representa las tres fases para un solo nodo.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    centernode/.style={circle, draw=gdlred!70, fill=gdlred!20,
+        minimum size=22pt, inner sep=0pt, font=\small\bfseries, line width=1.2pt},
+    neighnode/.style={circle, draw=gdlblue!60, fill=gdlblue!20,
+        minimum size=20pt, inner sep=0pt, font=\small}]
+% Etiquetas de panel
+\node[font=\bfseries, text=gdlorange!70!black] at (1.5, 4.3) {1. Mensaje};
+\node[font=\bfseries, text=gdlpurple!70!black] at (6.6, 4.3) {2. Agregaci\'on};
+\node[font=\bfseries, text=gdlgreen!70!black] at (10.6, 4.3) {3. Actualizaci\'on};
+% --- Panel 1: mensajes ---
+\begin{scope}
+  \node[centernode] (vi) at (1.5, 2.0) {$v$};
+  \node[neighnode] (v1) at (0.0, 3.5) {$u_1$};
+  \node[neighnode] (v2) at (3.0, 3.5) {$u_2$};
+  \node[neighnode] (v3) at (3.1, 1.0) {$u_3$};
+  \node[neighnode] (v4) at (0.0, 0.5) {$u_4$};
+  \foreach \n in {v1,v2,v3,v4}
+    \draw[->, line width=1.4pt, gdlorange!70, shorten >=5pt, shorten <=5pt] (\n) -- (vi);
+  \node[font=\footnotesize, text=gdlorange!70!black, anchor=north, align=center] at (1.5, -0.2)
+    {$m_{u\to v}=M_\ell(h_v,h_u,e_{vu})$};
+\end{scope}
+\draw[->, line width=1.6pt, gdlgray!70] (4.2, 2.0) -- (5.0, 2.0);
+% --- Panel 2: agregaci\'on ---
+\begin{scope}[shift={(5.2,0)}]
+  \node[circle, draw=gdlpurple!70, fill=gdlpurple!15, minimum size=38pt,
+        inner sep=0pt, line width=1.2pt, font=\large] (agg) at (1.4, 2.0) {$\bigoplus$};
+  \node[font=\footnotesize, text=gdlpurple!70!black, anchor=north, align=center] at (1.4, 0.2)
+    {$m_v=\bigoplus_{u\in\Nbr(v)} m_{u\to v}$};
+\end{scope}
+\draw[->, line width=1.6pt, gdlgray!70] (8.2, 2.0) -- (9.0, 2.0);
+% --- Panel 3: actualizaci\'on ---
+\begin{scope}[shift={(9.2,0)}]
+  \node[centernode, minimum size=26pt] (vu) at (1.4, 2.0) {$v$};
+  \node[font=\footnotesize, text=gdlgreen!70!black, anchor=north, align=center] at (1.4, 0.6)
+    {$h_v'=U_\ell(h_v,m_v)$};
+\end{scope}
+\end{tikzpicture}
+\caption[Paso de mensajes en un grafo]{Las tres fases de una capa de paso de
+mensajes para un solo nodo $v$. Cada vecino $u$ emite un mensaje $m_{u\to v}$; los
+mensajes se combinan mediante un agregador invariante por permutaciones
+$\bigoplus$; el estado del nodo se refresca con la funci\'on de actualizaci\'on
+$U_\ell$.}
+\label{fig:graphs:message-passing}
+\end{figure}
+
+\paragraph{Variantes convolucional, atencional y general.}
+Dentro de este marco, la elecci\'on de la funci\'on de mensaje define un espectro
+de expresividad y coste~\citep{bronstein2021geometric}. En la variante
+\emph{convolucional} el mensaje es una ponderaci\'on fija del vecino, determinada
+por la estructura, $M_\ell(h_v, h_u) = c_{vu}\, \psi(h_u)$, con coeficientes
+escalares $c_{vu}$ que dependen solo del grafo (por ejemplo, de los grados); esta
+es la forma que adopta la red convolucional de grafos de \citet{kipf2017semi}. En
+la variante \emph{atencional} el coeficiente se aprende a partir de los extremos,
+$c_{vu} = a(h_v, h_u)$, como en la red de atenci\'on de grafos de
+\citet{velickovic2017graph}. En la variante plenamente \emph{general} el mensaje
+es una funci\'on aprendible arbitraria de ambos extremos, como en la
+\Cref{def:graphs:mpnn}. El coste y la flexibilidad crecen a lo largo de este
+espectro.
+
+\paragraph{Un mecanismo unificador.}
+El poder del paso de mensajes radica en que subsume las arquitecturas de los
+cap\'itulos anteriores. Lo precisamos como una sucesi\'on de identificaciones; el
+\Cref{ch:grids} trat\'o en detalle el caso convolucional.
+
+\begin{proposition}[La convoluci\'on es paso de mensajes en una rejilla]
+\label{prop:graphs:cnn-mpnn}
+Una capa convolucional sobre la rejilla $\Z^d$ con n\'ucleo $\{W_\delta\}_{\delta
+\in \mathcal{K}}$ es una MPNN cuyo grafo es la rejilla con vecindario
+$\Nbr(v) = \{u : v - u \in \mathcal{K}\}$, mensaje
+$M(h_v, h_u) = W_{v-u}\, h_u$, agregaci\'on por suma y actualizaci\'on
+$U(h_v, m_v) = \sigma(m_v + b)$.
+\end{proposition}
+
+\begin{proof}
+La convoluci\'on discreta calcula
+$h_v^{(\ell+1)} = \sigma\!\big(\sum_{\delta \in \mathcal{K}} W_\delta\,
+h_{v-\delta}^{(\ell)} + b\big)$. Sustituyendo $u = v - \delta$ se transforma la
+suma sobre desplazamientos del n\'ucleo en una suma sobre vecinos de la rejilla,
+$\sigma\!\big(\sum_{u \in \Nbr(v)} W_{v-u}\, h_u^{(\ell)} + b\big)$, que es
+exactamente la actualizaci\'on MPNN con el mensaje, la agregaci\'on y la
+actualizaci\'on indicados.
+\end{proof}
+
+La diferencia crucial entre una convoluci\'on y una capa de grafos general es la
+\emph{compartici\'on de pesos} $W_{v-u}$: el peso del mensaje depende solo de la
+posici\'on relativa $v-u$, que tiene sentido \'unicamente en un dominio con
+estructura de traslaci\'on. En una rejilla esto impone equivarianza traslacional
+y reduce el n\'umero de par\'ametros de $O(n^2)$ a $O(\abs{\mathcal{K}})$. En un
+grafo arbitrario no existe noci\'on de posici\'on relativa, de modo que el peso
+del mensaje debe ser en cambio una funci\'on de las caracter\'isticas de los
+nodos (atenci\'on) o de invariantes estructurales como el grado (convoluci\'on).
+An\'alogamente, la autoatenci\'on es paso de mensajes en el grafo completo $K_n$
+con coeficientes dependientes del contenido
+$\alpha_{ij} = \operatorname{softmax}_j\big((Q h_i)^\top (K h_j)/\sqrt{d_k}\big)$ y
+actualizaci\'on identidad ---la variante atencional anterior aplicada a una
+topolog\'ia todos-con-todos---. As\'i, una capa totalmente conectada, una
+convoluci\'on, un \emph{transformer} y una red de grafos difieren solo en la
+topolog\'ia del grafo y en c\'omo se determina el peso del mensaje; son instancias
+de una sola construcci\'on geom\'etrica.
+
+\section{M\'etodos espectrales frente a espaciales}
+\label{sec:graphs:spectral-spatial}
+
+El paso de mensajes es una receta \emph{espacial}: act\'ua directamente sobre los
+vecindarios. Existe un punto de vista \emph{espectral} complementario que define
+la convoluci\'on en un grafo a trav\'es de un an\'alogo de la transformada de
+Fourier. Ambos puntos de vista se encuentran, y comprender su relaci\'on aclara
+tanto el espacio de dise\~no como la conexi\'on con el procesamiento cl\'asico de
+se\~nales.
+
+\subsection{El laplaciano del grafo}
+\label{sec:graphs:laplacian}
+
+El operador central del procesamiento de se\~nales en grafos es el laplaciano, la
+contrapartida discreta del operador de Laplace--Beltrami en una variedad
+(\Cref{ch:geodesics}).
+
+\begin{definition}[Laplaciano del grafo]
+\label{def:graphs:laplacian}
+Para un grafo no dirigido y ponderado con matriz de adyacencia $A$ y matriz de
+grados $D = \operatorname{diag}(\deg(1), \dots, \deg(n))$, el laplaciano
+(combinatorio) es $L = D - A$, y el \emph{laplaciano normalizado} es
+\[
+  \Lap = D^{-1/2} L\, D^{-1/2} = I - D^{-1/2} A\, D^{-1/2}.
+\]
+\end{definition}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[font=\small,
+    gnode/.style={circle, draw=gdlblue!70, fill=gdlblue!20, minimum size=20pt,
+        inner sep=0pt, font=\small\bfseries}]
+\node[gnode] (1) at (0,1.6) {1};
+\node[gnode] (2) at (1.6,2.2) {2};
+\node[gnode] (3) at (2.2,0.6) {3};
+\node[gnode] (4) at (0.6,0.0) {4};
+\draw[gdlgray!60, thick] (1)--(2) (1)--(4) (2)--(3) (3)--(4) (1)--(3);
+\node[anchor=west, align=left] at (3.6,1.1)
+  {$L = D - A =\begin{bmatrix}
+     3 & -1 & -1 & -1\\
+     -1 & 2 & -1 & 0\\
+     -1 & -1 & 3 & -1\\
+     -1 & 0 & -1 & 2
+   \end{bmatrix}$};
+\end{tikzpicture}
+\caption[El laplaciano del grafo]{Un grafo peque\~no y su laplaciano $L = D - A$.
+La diagonal registra los grados, $L_{ii} = \deg(i)$, y las entradas fuera de la
+diagonal registran la adyacencia, $L_{ij} = -W_{ij}$ para $(i,j) \in E$.}
+\label{fig:graphs:laplacian}
+\end{figure}
+
+El laplaciano es un operador diferencial discreto: actuando sobre una se\~nal de
+nodos $f \colon V \to \R$,
+\[
+  (L f)(i) = \sum_{j \sim i} W_{ij}\,\big(f(i) - f(j)\big),
+\]
+la diferencia entre $f(i)$ y un promedio ponderado de sus vecinos ---el an\'alogo
+discreto de $-\Delta f = -\operatorname{div}\operatorname{grad} f$---. Sus
+propiedades algebraicas y espectrales se resumen a continuaci\'on.
+
+\begin{proposition}[Propiedades del laplaciano]
+\label{prop:graphs:laplacian-props}
+El laplaciano $L = D - A$ de un grafo no dirigido y ponderado es sim\'etrico y
+semidefinido positivo, con
+\[
+  f^\top L f = \tfrac12 \sum_{(i,j) \in E} W_{ij}\,\big(f(i) - f(j)\big)^2 \ge 0 .
+\]
+En consecuencia sus valores propios son reales y no negativos,
+$0 = \lambda_1 \le \lambda_2 \le \cdots \le \lambda_n$, el vector constante
+$\mathbf{1}$ es un vector propio para $\lambda_1 = 0$, y la multiplicidad del
+valor propio $0$ es igual al n\'umero de componentes conexas de $G$.
+\end{proposition}
+
+\begin{proof}
+La simetr\'ia es inmediata, pues $D$ es diagonal y $A = A^\top$. Para la forma
+cuadr\'atica, $f^\top L f = \sum_i \deg(i) f(i)^2 - \sum_{i,j} A_{ij} f(i) f(j) =
+\tfrac12 \sum_{i,j} A_{ij}(f(i)-f(j))^2$, manifiestamente no negativa; luego
+$L \succeq 0$ y todos los $\lambda_i \ge 0$. Como cada fila de $L$ suma cero,
+$L \mathbf{1} = 0$, de modo que $\lambda_1 = 0$. Por \'ultimo, $f^\top L f = 0$
+obliga a $f(i) = f(j)$ en cada arista, es decir, $f$ es constante en cada
+componente conexa; el espacio de tales $f$ tiene dimensi\'on igual al n\'umero de
+componentes.
+\end{proof}
+
+La forma cuadr\'atica $f^\top L f$ mide la \emph{suavidad} de $f$ sobre el grafo:
+es peque\~na cuando $f$ var\'ia poco entre aristas y grande cuando $f$ cambia
+abruptamente. Esta es la \emph{energ\'ia de Dirichlet} discreta, y reaparecer\'a
+cuando analicemos el sobre-suavizado.
+
+\subsection{La transformada de Fourier en grafos y los filtros espectrales}
+\label{sec:graphs:gft}
+
+Como $\Lap$ es sim\'etrico, admite una descomposici\'on en vectores propios
+ortonormales $\Lap = U \Lambda U^\top$ con $\Lambda = \operatorname{diag}(\lambda_1,
+\dots, \lambda_n)$ y $U = [u_1, \dots, u_n]$. Los vectores propios desempe\~nan el
+papel de las exponenciales complejas del an\'alisis de Fourier cl\'asico
+(v\'ease el \Cref{ch:grids}): el valor propio $\lambda_i$ es una noci\'on de
+\emph{frecuencia}, con valores propios peque\~nos correspondientes a vectores
+propios suaves y de variaci\'on lenta, y valores propios grandes a vectores que
+oscilan r\'apidamente, como precisan el cociente de Rayleigh
+$\lambda_i = u_i^\top \Lap\, u_i$ y la \Cref{prop:graphs:laplacian-props}.
+
+\begin{definition}[Transformada de Fourier en grafos]
+\label{def:graphs:gft}
+La \emph{transformada de Fourier en grafos} de una se\~nal $f \in \R^n$ es
+$\hat f = U^\top f$, con inversa $f = U \hat f = \sum_{i} \hat f_i\, u_i$. El
+coeficiente $\hat f_i = \inner{f}{u_i}$ es la amplitud de $f$ en la frecuencia
+$\lambda_i$.
+\end{definition}
+
+Por analog\'ia con el teorema de convoluci\'on cl\'asico ---la convoluci\'on en el
+espacio es multiplicaci\'on en frecuencia--- se define la convoluci\'on en un
+grafo como la multiplicaci\'on de los coeficientes de Fourier por un filtro.
+
+\begin{definition}[Filtro espectral en grafos]
+\label{def:graphs:spectral-filter}
+Un \emph{filtro espectral} con funci\'on de transferencia
+$g_\theta \colon \R \to \R$ act\'ua sobre una se\~nal $f$ mediante
+\[
+  g_\theta \star f
+    = U\, g_\theta(\Lambda)\, U^\top f
+    = U\, \operatorname{diag}\!\big(g_\theta(\lambda_1), \dots, g_\theta(\lambda_n)\big)\, U^\top f .
+\]
+\end{definition}
+
+Esta es la base de las redes espectrales de grafos~\citep%
+{bruna2014spectralnetworkslocallyconnected}, que aprenden directamente la funci\'on
+de transferencia $g_\theta(\lambda)$. Por atractivo que sea, el enfoque espectral
+ingenuo tiene tres inconvenientes. Primero, requiere la descomposici\'on
+espectral completa de $\Lap$, un c\'omputo $O(n^3)$. Segundo, una
+$g_\theta(\lambda)$ parametrizada libremente usa $O(n)$ par\'ametros y no est\'a
+localizada en el espacio. Tercero ---y de forma m\'as fundamental--- la base de
+vectores propios $U$ est\'a ligada a un grafo, de modo que un filtro aprendido en
+un grafo no se transfiere a otro, lo que rompe el escenario inductivo en el que
+los grafos var\'ian de un ejemplo a otro.
+
+\subsection{Filtros polinomiales: el puente hacia los m\'etodos espaciales}
+\label{sec:graphs:cheb}
+
+Los tres inconvenientes se eliminan de golpe restringiendo la funci\'on de
+transferencia a un \emph{polinomio} del laplaciano. Si $g_\theta(\lambda) =
+\sum_{k=0}^{K} \theta_k\, \lambda^k$, entonces $g_\theta \star f = \big(\sum_k
+\theta_k \Lap^k\big) f$, y los vectores propios se cancelan: no hace falta
+descomposici\'on espectral alguna. Adem\'as $\Lap^k$ conecta solo nodos a
+distancia de grafo a lo sumo $k$, de modo que un filtro polinomial de grado $K$
+est\'a exactamente $K$-localizado ---es, por construcci\'on, una operaci\'on
+espacial---. Este es el sentido preciso en que las visiones espectral y espacial
+coinciden.
+
+\citet{defferrard2017convolutionalneuralnetworksgraphs} lo hacen pr\'actico con
+\emph{ChebNet}, que expande el filtro en polinomios de Chebyshev $T_k$ sobre el
+espectro reescalado $\tilde\Lap = 2\Lap/\lambda_{\max} - I$:
+\[
+  g_\theta \star f
+    = \sum_{k=0}^{K} \theta_k\, T_k(\tilde\Lap)\, f .
+\]
+La recurrencia de Chebyshev $T_k(x) = 2x\,T_{k-1}(x) - T_{k-2}(x)$ permite
+calcular $T_k(\tilde\Lap) f$ mediante productos matriz--vector dispersos
+repetidos, con coste total $O(K \abs{E})$ y solo $K+1$ par\'ametros, ninguno de
+los cuales depende de la base de vectores propios. La red convolucional de grafos
+de \citet{kipf2017semi} es el caso de primer orden $K = 1$ con un \'unico
+par\'ametro compartido y una renormalizaci\'on de la matriz de adyacencia, lo que
+da la capa $H^{(\ell+1)} = \sigma\!\big(\hat D^{-1/2} \hat A\, \hat D^{-1/2}
+H^{(\ell)} W^{(\ell)}\big)$ con $\hat A = A + I$. Esta es claramente una capa de
+paso de mensajes (\Cref{def:graphs:mpnn}) con agregaci\'on normalizada por grado,
+lo que cierra el c\'irculo: la construcci\'on espectral, hecha local y eficiente
+en par\'ametros, \emph{es} paso de mensajes espacial.
+
+\section{Expresividad y la jerarqu\'ia de Weisfeiler--Leman}
+\label{sec:graphs:wl}
+
+Disponer de un mecanismo unificador invita a una pregunta aguda: \textquestiondown
+cu\'an potente es? \textquestiondown Puede una red de paso de mensajes distinguir
+dos grafos no isomorfos cualesquiera? La respuesta es no, y el l\'imite preciso lo
+da un algoritmo combinatorio cl\'asico de la comprobaci\'on de isomorfismo de
+grafos.
+
+\subsection{El test de Weisfeiler--Leman}
+\label{sec:graphs:wl-test}
+
+\begin{definition}[Test de Weisfeiler--Leman de orden 1]
+\label{def:graphs:wl}
+Dado un grafo $G = (V, E)$, el algoritmo \emph{Weisfeiler--Leman de orden $1$}
+($1$-\WL) asigna colores a los nodos y los refina iterativamente. Se inicializa
+$c^{(0)}(v)$ id\'enticamente para todos los nodos (o a partir de etiquetas de
+nodo, si existen). En cada paso,
+\[
+  c^{(t+1)}(v) = \HASH\!\Big(c^{(t)}(v),\,
+      \{\!\{\, c^{(t)}(u) : u \in \Nbr(v) \,\}\!\}\Big),
+\]
+donde $\{\!\{\cdot\}\!\}$ es un multiconjunto y $\HASH$ es una aplicaci\'on
+inyectiva que env\'ia cada par (color, multiconjunto de vecinos) distinto a un
+color nuevo. El refinamiento se estabiliza en a lo sumo $n$ pasos; dos grafos son
+\emph{$\WL$-equivalentes} cuando los multiconjuntos finales de colores (los
+histogramas de colores) coinciden.
+\end{definition}
+
+El parecido estructural entre el paso de refinamiento y una capa de paso de
+mensajes es inconfundible: un nodo actualiza su color a partir de su propio color
+y del multiconjunto de los colores de sus vecinos, exactamente como un nodo
+actualiza sus caracter\'isticas a partir de las propias y del agregado de los
+mensajes de sus vecinos. La \Cref{fig:graphs:wl} ilustra el refinamiento.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    wlnode/.style={circle, draw, thick, minimum size=6mm, inner sep=0pt}]
+\foreach \dx in {0,5.0,10.0}{
+  \begin{scope}[shift={(\dx,0)}]
+    \coordinate (n1) at (0,1.6);\coordinate (n2) at (1.8,1.6);
+    \coordinate (n3) at (1.8,0);\coordinate (n4) at (0,0);
+    \coordinate (n5) at (0.9,-1.1);\coordinate (n6) at (0.9,0.8);
+    \draw[thick,gdlgray!50] (n1)--(n2) (n2)--(n3) (n3)--(n4) (n4)--(n1)
+       (n3)--(n5) (n4)--(n5) (n1)--(n6) (n2)--(n6) (n3)--(n6) (n4)--(n6);
+  \end{scope}
+}
+\begin{scope}
+  \node at (0.9,2.6) {\bfseries (a) $c^{(0)}$};
+  \foreach \p/\x/\y in {1/0/1.6,2/1.8/1.6,3/1.8/0,4/0/0,5/0.9/-1.1,6/0.9/0.8}
+    \node[wlnode, fill=gdlgray!40] at (\x,\y) {};
+\end{scope}
+\draw[->, very thick, gdlgray!50] (2.7,0.6) -- node[above,font=\scriptsize]{HASH} (4.3,0.6);
+\begin{scope}[shift={(5.0,0)}]
+  \node at (0.9,2.6) {\bfseries (b) $c^{(1)}$};
+  \foreach \p/\x/\y/\c in {1/0/1.6/{gdlblue!50},2/1.8/1.6/{gdlblue!50},3/1.8/0/{gdlred!50},4/0/0/{gdlred!50},5/0.9/-1.1/{gdlgreen!50},6/0.9/0.8/{gdlred!50}}
+    \node[wlnode, fill=\c] at (\x,\y) {};
+\end{scope}
+\draw[->, very thick, gdlgray!50] (7.7,0.6) -- node[above,font=\scriptsize]{HASH} (9.3,0.6);
+\begin{scope}[shift={(10.0,0)}]
+  \node at (0.9,2.6) {\bfseries (c) $c^{(2)}$};
+  \foreach \p/\x/\y/\c in {1/0/1.6/{gdlblue!50},2/1.8/1.6/{gdlblue!50},3/1.8/0/{gdlyellow!60},4/0/0/{gdlyellow!60},5/0.9/-1.1/{gdlgreen!50},6/0.9/0.8/{gdlred!50}}
+    \node[wlnode, fill=\c] at (\x,\y) {};
+\end{scope}
+\end{tikzpicture}
+\caption[Refinamiento de colores de Weisfeiler--Leman]{El refinamiento $1$-\WL{}
+sobre un grafo de seis nodos. (a)~Coloraci\'on inicial uniforme. (b)~Tras un paso
+los nodos se distinguen por su grado. (c)~Un paso adicional separa los dos nodos
+de grado $4$ ($v_3, v_4$) de $v_6$, porque sus multiconjuntos de colores vecinos
+difieren.}
+\label{fig:graphs:wl}
+\end{figure}
+
+Este parecido se convierte en teorema gracias a \citet{xu2019how} y
+\citet{morris2019weisfeiler}.
+
+\begin{theorem}[El poder expresivo de las MPNN iguala a 1-\WL]
+\label{thm:graphs:wl-mpnn}
+Las redes neuronales de paso de mensajes est\'an acotadas superiormente por
+$1$-\WL: si dos grafos son $\WL$-equivalentes, toda MPNN les asigna
+representaciones id\'enticas. Adem\'as la cota es ajustada: existen MPNN (la Graph
+Isomorphism Network de \citet{xu2019how}) que distinguen exactamente los grafos
+que $1$-\WL{} distingue, lo que se logra usando funciones de agregaci\'on y
+actualizaci\'on inyectivas.
+\end{theorem}
+
+\begin{proof}[Esbozo de demostraci\'on]
+Para la cota superior, obs\'ervese que una capa MPNN calcula los estados de los
+nodos a partir del estado propio y del multiconjunto de estados vecinos, la misma
+informaci\'on que usa $1$-\WL; por inducci\'on sobre las capas, los grafos
+$\WL$-equivalentes se aplican a representaciones iguales. Para la ajustez, se
+construye un mensaje y una actualizaci\'on que realicen un \emph{hash} inyectivo.
+La agregaci\'on por suma sobre un espacio de caracter\'isticas numerable, seguida
+de un perceptr\'on multicapa, es inyectiva sobre multiconjuntos por el teorema de
+aproximaci\'on universal para funciones de conjuntos~\citep{zaheer2017deepsets},
+de modo que la MPNN puede reproducir exactamente cada paso de refinamiento.
+\end{proof}
+
+\begin{example}[Dos grafos que $1$-\WL{} no puede separar]
+\label{ex:graphs:wl-fail}
+Sea $G_1$ el ciclo de seis nodos $C_6$ y $G_2$ la uni\'on disjunta de dos
+tri\'angulos $K_3 \sqcup K_3$. Ambos tienen seis nodos, seis aristas y todos sus
+nodos de grado $2$. Bajo $1$-\WL{} todos los nodos empiezan con un color, ven el
+multiconjunto $\{\!\{1,1\}\!\}$ y se estabilizan en un solo color; los histogramas
+son id\'enticos, de modo que $G_1 \equiv_{\WL} G_2$. Sin embargo, los grafos no
+son isomorfos: $C_6$ es conexo mientras que $K_3 \sqcup K_3$ tiene dos
+componentes. Una MPNN est\'andar no puede, por tanto, distinguir un anillo
+hexagonal de un par de tri\'angulos, un fallo instructivo cuando la conectividad
+global importa ---por ejemplo, al distinguir ciertos is\'omeros estructurales en
+qu\'imica---.
+\end{example}
+
+\subsection{Sobre-suavizado}
+\label{sec:graphs:oversmoothing}
+
+El \Cref{thm:graphs:wl-mpnn} acota lo que una red puede distinguir, pero no dice
+nada sobre lo que sucede al apilar muchas capas. Emp\'iricamente, las MPNN
+profundas se degradan: las representaciones de los nodos convergen a un valor
+com\'un y pierden todo poder discriminativo. Este es el \emph{sobre-suavizado}
+(\emph{oversmoothing})~\citep{li2018deeper}, y admite una explicaci\'on espectral
+n\'itida a trav\'es de la energ\'ia de Dirichlet.
+
+\begin{definition}[Energ\'ia de Dirichlet]
+\label{def:graphs:dirichlet}
+Para caracter\'isticas de nodos $H \in \R^{n \times d}$, la \emph{energ\'ia de
+Dirichlet} es
+\[
+  E(H) = \tr(H^\top L\, H)
+       = \sum_{(i,j) \in E} W_{ij}\,\norm{h_i - h_j}^2 ,
+\]
+que se anula si y solo si $H$ es constante en cada componente conexa.
+\end{definition}
+
+Un paso de paso de mensajes lineal con agregaci\'on por media es un paso de
+difusi\'on en el grafo: si $h_v^{(\ell+1)} = (1-\alpha) h_v^{(\ell)} + \alpha
+\sum_{u \in \Nbr(v)} h_u^{(\ell)}/\deg(v)$, entonces en forma matricial
+$H^{(\ell+1)} = (I - \alpha \tilde L)\, H^{(\ell)}$ con el laplaciano de paseo
+aleatorio $\tilde L = D^{-1} L$. Esta es la discretizaci\'on de Euler expl\'icita
+de la ecuaci\'on del calor $\partial_t H = -\alpha \tilde L H$ en el grafo, e
+iterarla suaviza la se\~nal.
+
+\begin{theorem}[Sobre-suavizado exponencial]
+\label{thm:graphs:oversmoothing}
+Sea $G$ conexo con valores propios del laplaciano normalizado
+$0 = \lambda_1 < \lambda_2 \le \cdots \le \lambda_n$ y sea
+$0 < \alpha < 1/\lambda_n$. Entonces tras $\ell$ capas de difusi\'on lineal
+\[
+  E\big(H^{(\ell)}\big) \le (1 - \alpha \lambda_2)^{2\ell}\, E\big(H^{(0)}\big),
+\]
+de modo que $E(H^{(\ell)}) \to 0$ exponencialmente: todas las representaciones de
+los nodos colapsan a un vector com\'un.
+\end{theorem}
+
+\begin{proof}[Esbozo de demostraci\'on]
+P\'asese al laplaciano normalizado sim\'etrico $L_{\mathrm{sym}}$, que comparte
+espectro con $\tilde L$, y exp\'andanse las caracter\'isticas en su base de
+vectores propios. El operador de difusi\'on escala el coeficiente de $u_k$ por
+$(1 - \alpha\lambda_k)$, de modo que tras $\ell$ pasos la energ\'ia es
+$\sum_{k \ge 2} \lambda_k (1-\alpha\lambda_k)^{2\ell} \abs{\hat f_k}^2$ (el
+t\'ermino $k=1$ se anula porque $\lambda_1 = 0$). Como $\alpha < 1/\lambda_n$,
+cada factor cumple $\abs{1-\alpha\lambda_k} \le 1 - \alpha\lambda_2$ para
+$k \ge 2$, lo que da la cota.
+\end{proof}
+
+La tasa la gobierna el \emph{salto espectral} $\lambda_2$: los grafos bien
+conectados (con $\lambda_2$ grande, como los expansores) se homogeneizan m\'as
+deprisa. Esta es la sombra discreta de la difusi\'on del calor en una variedad
+riemanniana, donde el salto espectral del operador de Laplace--Beltrami controla
+la tasa de mezclado. Las conexiones residuales, la normalizaci\'on y la difusi\'on
+en haces~\citep{bodnar2022neural} figuran entre los remedios.
+
+\subsection{Sobre-compresi\'on y tests de orden superior}
+\label{sec:graphs:oversquashing}
+
+Si el sobre-suavizado es la p\'erdida de se\~nal de alta frecuencia al crecer la
+profundidad, el fallo complementario es la \emph{sobre-compresi\'on}
+(\emph{oversquashing}): la incapacidad de propagar informaci\'on a larga
+distancia, porque los mensajes de un vecindario a $\ell$ saltos que crece de forma
+exponencial deben comprimirse en un vector de tama\~no fijo. La sensibilidad de un
+nodo a una entrada lejana, $\norm{\partial h_v^{(\ell)} / \partial h_u^{(0)}}$,
+est\'a acotada por $(c_M c_U)^\ell\, [\hat A^\ell]_{vu}$ con $\hat A = D^{-1} A$ y
+constantes de Lipschitz $c_M, c_U$ de las funciones de mensaje y actualizaci\'on;
+a trav\'es de los cuellos de botella topol\'ogicos la entrada $[\hat A^\ell]_{vu}$
+decae de forma abrupta. \citet{topping2022understanding} ligan estos cuellos de
+botella a la curvatura de Ricci discreta negativa en las aristas y proponen el
+\emph{recableado} (\emph{rewiring}) del grafo para aliviarlos ---un ejemplo
+limpio de geometr\'ia diferencial que prescribe una cura para una patolog\'ia del
+aprendizaje, en paralelo a c\'omo la curvatura seccional negativa hace divergir
+las geod\'esicas (\Cref{ch:geodesics})---.
+
+Por \'ultimo, la barrera $1$-\WL{} puede elevarse ascendiendo por una jerarqu\'ia
+de tests m\'as potentes.
+
+\begin{definition}[Test de Weisfeiler--Leman de orden $k$]
+\label{def:graphs:k-wl}
+El test \emph{$k$-\WL} colorea $k$-tuplas de nodos en lugar de nodos individuales,
+refinando el color de cada tupla a partir de los colores de todas las tuplas
+obtenidas al reemplazar una de sus entradas por un nodo
+arbitrario~\citep{morris2019weisfeiler}.
+\end{definition}
+
+\begin{proposition}[Jerarqu\'ia estricta $k$-\WL]
+\label{prop:graphs:k-wl}
+Los tests forman una jerarqu\'ia estrictamente creciente en poder de
+distinci\'on,
+\[
+  1\text{-}\WL \subsetneq 2\text{-}\WL \subsetneq 3\text{-}\WL \subsetneq \cdots,
+\]
+distinguiendo cada nivel grafos que el anterior no puede, a un coste de $O(n^k)$
+de memoria por iteraci\'on.
+\end{proposition}
+
+El coste exponencial de $k$-\WL{} motiva v\'ias m\'as baratas para superar el techo
+de $1$-\WL: codificaciones estructurales y posicionales (por ejemplo, vectores
+propios del laplaciano de la \Cref{def:graphs:gft}) que rompen las simetr\'ias de
+los nodos, \emph{transformers} de grafos espectrales~\citep{kreuzer2021spectral} y
+el paso de mensajes en dominios topol\'ogicos de orden superior (complejos
+simpliciales y celulares), que se abordan en los
+\Cref{ch:gauges,ch:applications}.
+
+\medskip
+Las tres limitaciones ---sobre-suavizado, sobre-compresi\'on y barrera
+$\WL$--- son facetas de un mismo hecho: el paso de mensajes es fundamentalmente
+\emph{local}, y mueve informaci\'on un salto por capa. Demasiadas capas destruyen
+la se\~nal; demasiado pocas impiden la comunicaci\'on a larga distancia; y el
+c\'omputo puramente local no puede ver ciertos patrones globales. Las herramientas
+geom\'etricas desarrolladas aqu\'i ---an\'alisis espectral, curvatura discreta,
+topolog\'ia de orden superior--- no solo diagnostican estos l\'imites, sino que
+prescriben remedios concretos, ejemplificando la tesis de este libro de que la
+geometr\'ia es el principio organizador de las arquitecturas eficaces.

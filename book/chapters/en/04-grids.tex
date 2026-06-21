@@ -1,14 +1,435 @@
 \chapter{Grids: Convolutional Networks}
 \label{ch:grids}
 
+\providecommand{\conv}{*}
+\providecommand{\Ft}{\mathcal{F}}
+
+The first of the five Gs is also the most familiar. A \emph{grid} is the
+regular Euclidean domain underlying images, audio signals, and video: a set of
+points $\Z^d$ on which data is sampled at evenly spaced locations. The natural
+symmetry of such a domain is \emph{translation}: shifting the sampling lattice
+by an integer vector maps the grid onto itself. Convolutional neural networks
+(CNNs), the architectures that ignited the deep-learning revolution
+(\Cref{ch:introduction}), are precisely the layers that respect this symmetry.
+This chapter takes the blueprint of \Cref{ch:priors} --- turn a symmetry into an
+architecture --- and instantiates it on the grid, recovering convolution as the
+unique translation-equivariant linear map and then assembling the full machinery
+of pooling, downsampling, and scale separation that makes deep CNNs work. We
+close with a spectral reading of convolution through Fourier analysis, which
+both explains what convolutional filters do and foreshadows the spectral
+methods on graphs and manifolds of later chapters.
+
 \section{Translation symmetry}
-Placeholder.
+\label{sec:grids:translation}
+
+Convolutional networks originate in classical pattern recognition. The idea is
+disarmingly simple: to detect a feature in an image --- a horizontal edge, a
+vertical edge, a corner --- slide a small \emph{kernel} over the image and, at
+each position, measure how strongly the local patch matches the kernel. The
+breakthrough of LeCun's early work~\citep{lecun1989} was to stop hand-designing
+these kernels and instead \emph{learn} them from data; stacking many such
+layers lets a network build up from simple strokes to abstract objects, a
+hierarchy that culminated in AlexNet's decisive ImageNet
+victory~\citep{krizhevsky2012alexnet}.
+
+\begin{example}[The Sobel kernels]
+\label{ex:grids:sobel}
+A textbook hand-designed edge detector is the pair of \emph{Sobel kernels},
+discrete approximations of the partial derivatives of the image intensity
+$I(x,y)$:
+\[
+K_x = \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix},
+\qquad
+K_y = \begin{pmatrix} -1 & -2 & -1 \\ 0 & 0 & 0 \\ 1 & 2 & 1 \end{pmatrix},
+\]
+approximating $\partial I/\partial x$ and $\partial I/\partial y$, with edge
+strength $\norm{\nabla I} \approx \sqrt{(I \conv K_x)^2 + (I \conv K_y)^2}$.
+The kernels reveal a recurring theme: edge detectors are \emph{antisymmetric}
+along the detection direction and sum to zero (removing the constant
+component), while smoothing kernels are \emph{symmetric}. These algebraic
+symmetries mirror the geometric transformations each kernel responds to.
+\end{example}
+
+The defining property a learned convolutional layer must possess is
+\emph{translation equivariance}: if the input is shifted, the output shifts in
+exactly the same way. A feature should be recognized regardless of where it
+appears in the image, and its response should move with it. Formally, the group
+acting on grid data is the group of integer translations $\Z^d$, acting on a
+signal $f \colon \Z^d \to \R$ by
+\[
+  (T_b f)(x) = f(x - b), \qquad b \in \Z^d .
+\]
+This is the simplest non-trivial instance of the equivariance principle of
+\Cref{ch:priors}: among all conceivable linear maps from signals to signals,
+demanding commutation with every $T_b$ collapses the design space to a single
+family --- convolutions.
 
 \section{Convolution as an equivariant linear map}
-Placeholder.
+\label{sec:grids:convolution}
+
+We begin with the operation itself. In deep-learning practice the layer applied
+to an image is
+\begin{equation}
+  (I \conv K)(x,y) = \sum_{u=-k}^{k}\sum_{v=-k}^{k} I(x+u,\, y+v)\, K(u,v),
+  \label{eq:grids:crosscorr}
+\end{equation}
+which, strictly speaking, is a \emph{cross-correlation} rather than a
+convolution: the mathematical convolution carries a sign flip,
+$I(x-u,\,y-v)$. Because the kernel weights are learned, the distinction is
+immaterial --- the network simply learns the reflected kernel --- and we follow
+the universal convention of calling \Cref{eq:grids:crosscorr} a convolution.
+The same recipe extends to any dimension: a one-dimensional version processes
+audio and time series, a three-dimensional version processes volumes and video.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    cell/.style={minimum size=0.62cm, inner sep=0pt, outer sep=0pt,
+                 draw=gdlgray!50, line width=0.3pt},
+    inputcell/.style={cell, fill=gdlblue!15},
+    kernelhighlight/.style={cell, fill=gdlorange!25, draw=gdlorange!60, line width=0.5pt},
+    kernelcell/.style={cell, fill=gdlorange!20, draw=gdlorange!60, line width=0.5pt},
+    outputcell/.style={cell, fill=gdlgreen!15, draw=gdlgray!50},
+    outputhighlight/.style={cell, fill=gdlgreen!30, draw=gdlgreen!60, line width=0.6pt},
+    lbl/.style={font=\small\bfseries},
+]
+\def\cs{0.62}
+\def\ix{0}\def\iy{0}
+\foreach \r [count=\ri from 0] in {{1,0,2,1,3},{2,1,0,3,1},{0,3,1,2,0},{1,2,3,0,1},{3,0,1,2,2}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\ix + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\iy + (4-\ri)*\cs + \cs/2}
+    \node[inputcell] at (\px,\py) {\scriptsize\color{gdlblue!70!black}\val};
+  }}
+\foreach \r [count=\ri from 0] in {{1,0,2},{2,1,0},{0,3,1}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\ix + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\iy + (4-\ri)*\cs + \cs/2}
+    \node[kernelhighlight] at (\px,\py) {\scriptsize\color{gdlblue!70!black}\val};
+  }}
+\draw[gdlorange!80, line width=1.3pt, rounded corners=1pt] (\ix,\iy+2*\cs) rectangle ++(3*\cs,3*\cs);
+\node[lbl, text=gdlblue!70!black] at (\ix+2.5*\cs,\iy-0.5*\cs) {Input $\mathbf{X}$};
+\pgfmathsetmacro{\starx}{\ix + 5*\cs + 0.5}
+\pgfmathsetmacro{\stary}{\iy + 2.5*\cs}
+\node[font=\large, text=gdlgray!80!black] at (\starx,\stary) {$\star$};
+\pgfmathsetmacro{\kx}{\starx + 0.5}
+\pgfmathsetmacro{\ky}{\stary - 1.5*\cs}
+\foreach \r [count=\ri from 0] in {{1,0,-1},{1,0,-1},{1,0,-1}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\kx + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\ky + (2-\ri)*\cs + \cs/2}
+    \node[kernelcell] at (\px,\py) {\scriptsize\color{gdlorange!70!black}\val};
+  }}
+\draw[gdlorange!80, line width=1.1pt, rounded corners=1pt] (\kx,\ky) rectangle ++(3*\cs,3*\cs);
+\node[lbl, text=gdlorange!70!black] at (\kx+1.5*\cs,\ky-0.5*\cs) {Kernel $\mathbf{W}$};
+\pgfmathsetmacro{\eqx}{\kx + 3*\cs + 0.5}
+\node[font=\large, text=gdlgray!80!black] at (\eqx,\stary) {$=$};
+\pgfmathsetmacro{\ox}{\eqx + 0.5}
+\pgfmathsetmacro{\oy}{\ky}
+\foreach \r [count=\ri from 0] in {{0,-2,-1},{-1,1,2},{-1,1,2}} {
+  \foreach \val [count=\ci from 0] in \r {
+    \pgfmathsetmacro{\px}{\ox + \ci*\cs + \cs/2}
+    \pgfmathsetmacro{\py}{\oy + (2-\ri)*\cs + \cs/2}
+    \ifnum\ri=0 \ifnum\ci=0
+      \node[outputhighlight] at (\px,\py) {\scriptsize\bfseries\color{gdlgreen!70!black}\val};
+    \else
+      \node[outputcell] at (\px,\py) {\scriptsize\color{gdlgreen!70!black}\val};
+    \fi \else
+      \node[outputcell] at (\px,\py) {\scriptsize\color{gdlgreen!70!black}\val};
+    \fi
+  }}
+\draw[gdlgreen!60, line width=0.8pt, rounded corners=1pt] (\ox,\oy) rectangle ++(3*\cs,3*\cs);
+\node[lbl, text=gdlgreen!70!black] at (\ox+1.5*\cs,\oy-0.5*\cs) {Output $(\mathbf{X} \star \mathbf{W})$};
+\pgfmathsetmacro{\arcsrcx}{\ix + 1.5*\cs}
+\pgfmathsetmacro{\arcsrcy}{\iy + 5*\cs + 0.08}
+\pgfmathsetmacro{\arctgtx}{\ox + 0.5*\cs}
+\pgfmathsetmacro{\arctgty}{\oy + 3*\cs + 0.08}
+\draw[gdlpurple!55, dashed, line width=0.7pt, -stealth, shorten >=1pt]
+  (\arcsrcx,\arcsrcy) to[out=40,in=140] (\arctgtx,\arctgty);
+\end{tikzpicture}
+\caption[The 2D convolution operation]{The two-dimensional convolution
+operation. A $3 \times 3$ kernel $\mathbf{W}$ slides over the input
+$\mathbf{X}$, and at each position the local inner product
+$\sum_{u,v} X(x+u,y+v)\,W(u,v)$ produces one entry of the output activation map
+$(\mathbf{X} \star \mathbf{W})$. The highlighted output cell equals
+$1{\cdot}1 + 0{\cdot}0 + 2{\cdot}({-}1) + 2{\cdot}1 + 1{\cdot}0 + 0{\cdot}({-}1)
++ 0{\cdot}1 + 3{\cdot}0 + 1{\cdot}({-}1) = 0$.}
+\label{fig:grids:conv}
+\end{figure}
+
+For the theory it is cleaner to work with the genuine convolution on the full
+domain, which we now define.
+
+\begin{definition}[Discrete convolution]
+\label{def:grids:discrete-conv}
+For functions $f, g \colon \Z^d \to \R$, the \emph{discrete convolution} is
+\[
+  (f \conv g)(x) = \sum_{a \in \Z^d} f(a)\, g(x - a) .
+\]
+When $f$ has finite support, as for a digital image, the sum reduces to the
+finitely many points where $f(a) \neq 0$.
+\end{definition}
+
+\begin{definition}[Continuous convolution]
+\label{def:grids:continuous-conv}
+For functions $f, g \colon \R^d \to \R$, the \emph{continuous convolution} is
+\[
+  (f \conv g)(x) = \int_{\R^d} f(a)\, g(x - a)\, \mathrm{d}a,
+\]
+well defined when $f, g \in L^1(\R^d)$ or under compact-support assumptions.
+\end{definition}
+
+The discrete version is a Riemann-sum discretization of the continuous one; in
+digital image processing we use the discrete form, while continuous signals and
+theoretical analysis use the integral. Convolution carries a rich algebraic
+structure that underlies everything that follows.
+
+\begin{proposition}[Algebraic properties of convolution]
+\label{prop:grids:algebra}
+For finitely supported $f, g, h \colon \Z^d \to \R$:
+\begin{enumerate}
+  \item \textbf{Commutativity:} $f \conv g = g \conv f$.
+  \item \textbf{Associativity:} $(f \conv g) \conv h = f \conv (g \conv h)$.
+  \item \textbf{Distributivity:} $f \conv (g + h) = f \conv g + f \conv h$.
+  \item \textbf{Identity:} $f \conv \delta = f$, where $\delta$ is the Kronecker
+    delta.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Commutativity follows from the substitution $b = x - a$, which turns
+$\sum_a f(a)g(x-a)$ into $\sum_b f(x-b)g(b)$. Associativity follows by expanding
+both sides, exchanging the order of summation (a discrete Fubini), and
+substituting $c = b - a$. Distributivity is immediate from the linearity of the
+sum. The identity holds because $\delta(x-a)$ is non-zero only at $a = x$, so
+$\sum_a f(a)\delta(x-a) = f(x)$.
+\end{proof}
+
+These properties have direct architectural consequences. Associativity means
+that stacking two convolutional layers (ignoring nonlinearities) is itself a
+convolution, so depth composes cleanly; commutativity and the identity make the
+algebra of filters as well behaved as ordinary multiplication. The central
+result, however, is the link to symmetry.
+
+\begin{theorem}[Translation equivariance of convolution]
+\label{thm:grids:equivariance}
+Convolution is equivariant to the group of translations $\Z^d$: for every
+$b \in \Z^d$,
+\[
+  T_b(f \conv g) = (T_b f) \conv g = f \conv (T_b g),
+\]
+where $(T_b f)(x) = f(x-b)$.
+\end{theorem}
+
+\begin{proof}
+For the first equality, substitute $a' = a - b$:
+\[
+  \big[(T_b f) \conv g\big](x) = \sum_a f(a-b)\,g(x-a)
+   = \sum_{a'} f(a')\,g\big((x-b)-a'\big) = (f \conv g)(x-b).
+\]
+For the second, $(f\conv g)(x-b) = \sum_a f(a)\,g\big((x-a)-b\big)
+= \sum_a f(a)\,(T_b g)(x-a) = \big[f \conv (T_b g)\big](x)$.
+\end{proof}
+
+A small numerical instance makes the theorem tangible.
+
+\begin{example}[Equivariance in one dimension]
+\label{ex:grids:equiv-1d}
+Take the edge-detecting kernel $K = [-1, 0, 1]$ and the signal
+$f = [1, 2, 1, 0, 0]$, with zero-padding outside the domain. Convolving gives
+$f \conv K = [2, 0, -2, -1, 0]$. Shifting first, $T_1 f = [0, 1, 2, 1, 0]$, then
+convolving yields $(T_1 f) \conv K = [1, 2, 0, -2, -1]$, which is exactly
+$T_1(f \conv K)$. Shift then filter, or filter then shift: the result is the
+same.
+\end{example}
+
+The converse is what makes convolution \emph{the} grid layer rather than merely
+\emph{a} grid layer: any linear map between signals on $\Z^d$ that commutes with
+all translations is necessarily a convolution. The reasoning is short. A linear
+translation-equivariant operator $\Phi$ is determined by its response to the
+unit impulse $\delta$; call that response $w = \Phi\delta$. Any signal
+decomposes as $f = \sum_a f(a)\, T_a \delta$, and by linearity and equivariance
+$\Phi f = \sum_a f(a)\, T_a w = f \conv w$. Thus equivariance to translation does
+not merely \emph{permit} convolution --- it \emph{forces} it. This is the
+blueprint of \Cref{ch:priors} realized in its purest form, and it explains the
+architectural hallmark of CNNs.
+
+\paragraph{Weight sharing and locality.}
+\Cref{thm:grids:equivariance} has a concrete reading: the same kernel
+$w$ is applied at every spatial position. This \emph{weight sharing} is the
+algebraic face of equivariance. Compared with a fully connected layer, which
+would learn an independent weight for every pair of input and output locations,
+a convolution shares one small kernel across the whole image, slashing the
+parameter count from quadratic in the number of pixels to the constant size of
+the kernel. Restricting the kernel to a small window adds \emph{locality}:
+each output depends only on a local neighbourhood. Stacking such layers grows
+the \emph{receptive field} progressively, so that early layers capture simple
+strokes and deeper layers compose them into increasingly abstract structures.
+
+\paragraph{The limits of translation.}
+The strength of the CNN inductive bias is also its boundary. A standard
+convolutional network is equivariant to translations and nothing more. Rotate
+the digit ``6'' by $180^\circ$ and it becomes a ``9''; a CNN has no built-in way
+to relate the two and must learn rotated variants through data augmentation. In
+general $f(R\,x) \neq R\, f(x)$ for a rotation $R$. Removing this restriction ---
+enlarging the symmetry group beyond translation to include rotations and
+reflections, and eventually abandoning the global grid altogether --- is the
+thread that runs through the remaining Gs: group-equivariant networks
+(\Cref{ch:groups}), graphs (\Cref{ch:graphs}), manifolds (\Cref{ch:geodesics}),
+and gauges (\Cref{ch:gauges}).
 
 \section{Pooling, downsampling, and scale separation}
-Placeholder.
+\label{sec:grids:pooling}
+
+Convolution alone is not enough to build a deep recognition system. A second
+ingredient is needed: a way to coarsen the grid as information ascends the
+network, so that local features detected at fine resolution are aggregated into
+global features at coarse resolution. This is the role of \emph{pooling} and
+\emph{downsampling}.
+
+A pooling operation partitions the grid into small blocks --- typically
+$2 \times 2$ --- and replaces each block by a single summary value: the maximum
+(\emph{max pooling}) or the average (\emph{average pooling}) of its entries.
+The output lives on a grid of half the side length, so the spatial resolution
+drops by a factor of four while the receptive field of each subsequent kernel,
+measured in original pixels, doubles. Strided convolution achieves the same
+coarsening within the convolution itself by evaluating the output only at every
+$s$-th position.
+
+Pooling is \emph{translation invariant at the block scale}: shifting the input
+by less than the block size leaves the pooled output (approximately) unchanged.
+This is exactly the local robustness one wants from a feature detector --- the
+precise pixel where an edge sits should not matter, only that an edge is present
+nearby --- and it complements the global equivariance of convolution. Stacking
+convolution, nonlinearity, and pooling produces the canonical CNN block, and
+repeating it builds the multiscale pyramid in which early layers see fine local
+detail and later layers see coarse global structure.
+
+\paragraph{Scale separation.}
+The deeper justification for this architecture is the geometric prior of
+\emph{scale separation}. Natural signals are approximately compositional: a
+complex pattern is built from simpler patterns at finer scales, and the
+interactions across very different scales are weak. Faces are made of eyes and
+mouths, which are made of edges and textures, which are made of local intensity
+changes. A function with this structure can be approximated by composing
+\emph{local} operators (convolutions) with \emph{coarsening} operators
+(pooling), avoiding the exponential cost of modelling all long-range
+interactions at once. Translation symmetry and scale separation together ---
+weight sharing across positions, hierarchical coarsening across scales ---
+constitute the two geometric priors that make convolutional networks both
+statistically efficient and computationally tractable. They are the grid-domain
+specialization of the general blueprint, and they recur, suitably generalized,
+in every later chapter.
+
+\section{A spectral view: harmonic analysis of convolution}
+\label{sec:grids:spectral}
+
+There is a second, dual way to understand convolution, and it will become the
+organizing principle for convolution on graphs and manifolds. The idea is to
+move from the spatial domain to the \emph{frequency} domain via the Fourier
+transform.
+
+\begin{definition}[Fourier transform]
+\label{def:grids:fourier}
+For $f \colon \R^d \to \C$ integrable, the \emph{Fourier transform} is
+\[
+  \Ft[f](\omega) = \hat{f}(\omega) = \int_{\R^d} f(x)\, e^{-2\pi i\, \omega \cdot x}\, \mathrm{d}x,
+  \qquad \omega \in \R^d,
+\]
+with inverse $f(x) = \int_{\R^d} \hat{f}(\omega)\, e^{2\pi i\, \omega \cdot x}\, \mathrm{d}\omega$,
+valid (for instance) when $f, \hat{f} \in L^1(\R^d)$.
+\end{definition}
+
+The complex exponentials $e^{2\pi i\,\omega\cdot x}$ are exactly the
+\emph{eigenfunctions} of translation: shifting the argument multiplies the
+exponential by a phase. This is what makes Fourier analysis the natural language
+of translation symmetry --- and it foreshadows the central role of the Laplacian
+eigenbasis on graphs (\Cref{ch:graphs}), which plays the same part on irregular
+domains. The payoff is the convolution theorem.
+
+\begin{theorem}[Convolution theorem]
+\label{thm:grids:conv-theorem}
+For suitable $f, g \colon \R^d \to \C$,
+\[
+  \Ft[f \conv g] = \Ft[f] \cdot \Ft[g] .
+\]
+Convolution in the spatial domain is pointwise multiplication in the frequency
+domain.
+\end{theorem}
+
+The theorem turns the global, sliding operation of convolution into an
+independent rescaling of each frequency component. Three consequences matter
+here. First, it is the basis of fast convolution: via the Fast Fourier
+Transform (FFT), a convolution that costs $O(N^2)$ directly can be computed in
+$O(N \log N)$ by transforming, multiplying, and transforming back. Second, it
+gives a clean interpretation of what a filter \emph{does}: a kernel acts as a
+\emph{frequency mask}, amplifying some frequencies and attenuating others.
+Third, it exposes the meaning of the hand-designed kernels of
+\Cref{ex:grids:sobel}. A smoothing (Gaussian) kernel has a Fourier transform
+concentrated near $\omega = 0$, so it is a \emph{low-pass} filter that suppresses
+fine detail; a Sobel or Laplacian edge detector has a transform that vanishes at
+$\omega = 0$ and grows with $\norm{\omega}$, so it is a \emph{high-pass} filter
+that responds to rapid intensity changes. Learning a kernel is thus learning a
+frequency response.
+
+\begin{example}[Dual localization]
+\label{ex:grids:gaussian-pair}
+The Gaussian is its own Fourier transform up to rescaling:
+$\Ft[e^{-\alpha x^2}](\omega) = \sqrt{\pi/\alpha}\; e^{-\pi^2 \omega^2/\alpha}$.
+A \emph{narrow} Gaussian in space (small spatial extent, large $\alpha$) has a
+\emph{wide} transform in frequency, and vice versa. This space--frequency
+trade-off is the uncertainty principle, and it has a direct architectural
+meaning: a filter cannot be simultaneously sharply localized in space and
+sharply selective in frequency. CNNs resolve the tension across depth, using
+small local kernels at fine scales and, through pooling, effectively larger and
+more frequency-selective kernels at coarse scales.
+\end{example}
+
+The spectral viewpoint also clarifies the relationship between the two halves of
+this chapter. Convolution is the translation-equivariant operator in the spatial
+domain; in the spectral domain it is the operator \emph{diagonalized} by the
+Fourier basis. Both descriptions say the same thing about the grid, but the
+spectral one survives the loss of the grid. On a graph there is no notion of
+``sliding a kernel'', yet there is a Laplacian whose eigenvectors generalize the
+Fourier basis, and one can define convolution as multiplication in that basis.
+This is the bridge from grids to graphs that \Cref{ch:graphs} develops in full,
+and it shows that the humble convolutional layer is the first instance of a
+construction reaching across all five Gs.
 
 \section{Case study: CNNs for images and audio}
-Placeholder.
+\label{sec:grids:case-study}
+
+It is worth seeing how the pieces assemble in the architectures that defined the
+field. AlexNet~\citep{krizhevsky2012alexnet}, the network that won the 2012
+ImageNet competition and reduced its top-5 error from $26.2\%$ to $15.3\%$,
+is a stack of eight learned layers: five convolutional layers interleaved with
+max pooling, followed by three fully connected layers and a final classifier.
+The early convolutional layers, operating on the full-resolution image, learn
+oriented edge and colour detectors strikingly reminiscent of the hand-designed
+Sobel kernels of \Cref{ex:grids:sobel}; successive pooling stages coarsen the
+grid so that deeper layers, with larger effective receptive fields, respond to
+textures, parts, and finally whole objects. The translation equivariance of the
+convolutions guarantees that an object is recognized wherever it appears, and
+the pooling provides the local robustness to small shifts. The success rested on
+the three factors highlighted in \Cref{ch:introduction}: large labelled
+datasets, GPU compute, and an architecture --- the convolutional stack --- whose
+inductive bias matches the geometry of images.
+
+The same construction transfers to audio with a change of dimension. A waveform
+or its spectrogram is a one- or two-dimensional grid with translation symmetry
+along the time axis: a sound event should be detected regardless of when it
+occurs. One-dimensional convolutions over the raw waveform, or two-dimensional
+convolutions over the time--frequency spectrogram, share weights across time
+exactly as image convolutions share weights across space, with pooling
+aggregating local acoustic features into longer-range structure. The spectral
+view of \Cref{sec:grids:spectral} is especially natural here, since the
+spectrogram is itself a frequency representation and convolutional filters act as
+learned band-pass detectors on it.
+
+These examples make the chapter's thesis concrete. Convolutional networks are
+not an ad hoc engineering trick but the canonical realization of a single
+principle --- respect the translation symmetry of the grid --- combined with the
+scale-separation prior that licenses hierarchical coarsening. Holding the
+principle fixed and enlarging the symmetry group is precisely the programme of
+the chapters that follow, beginning in \Cref{ch:groups} with networks
+equivariant to rotations and reflections.

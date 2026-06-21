@@ -6,7 +6,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[english]{babel}
+\usepackage[\babellang]{babel} % language chosen by \booklang (see lang/)
 \usepackage{microtype}
 
 % ----- Math ----------------------------------------------------------
@@ -18,8 +18,17 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,calc}
+\usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit}
 \usepackage{float}
+
+% ----- Brand palette (shared by inline TikZ figures) ----------------
+\definecolor{gdlblue}{RGB}{41, 98, 168}
+\definecolor{gdlred}{RGB}{191, 49, 49}
+\definecolor{gdlgreen}{RGB}{30, 130, 76}
+\definecolor{gdlorange}{RGB}{217, 130, 30}
+\definecolor{gdlpurple}{RGB}{118, 56, 138}
+\definecolor{gdlgray}{RGB}{140, 140, 140}
+\definecolor{gdlyellow}{RGB}{190, 140, 10}
 
 % ----- Layout & misc -------------------------------------------------
 \usepackage{geometry}
@@ -50,16 +59,18 @@
 \usepackage[capitalise]{cleveref}
 
 % ----- Theorem environments -----------------------------------------
+% Theorem names come from the language file (lang/<booklang>.tex) so the
+% same source compiles in English or Spanish.
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}[chapter]
-\newtheorem{example}[definition]{Example}
-\newtheorem{remark}[definition]{Remark}
+\newtheorem{definition}{\nameDefinition}[chapter]
+\newtheorem{example}[definition]{\nameExample}
+\newtheorem{remark}[definition]{\nameRemark}
 
 \theoremstyle{plain}
-\newtheorem{theorem}[definition]{Theorem}
-\newtheorem{lemma}[definition]{Lemma}
-\newtheorem{proposition}[definition]{Proposition}
-\newtheorem{corollary}[definition]{Corollary}
+\newtheorem{theorem}[definition]{\nameTheorem}
+\newtheorem{lemma}[definition]{\nameLemma}
+\newtheorem{proposition}[definition]{\nameProposition}
+\newtheorem{corollary}[definition]{\nameCorollary}
 
 % ----- Math macros ---------------------------------------------------
 \newcommand{\R}{\mathbb{R}}

@@ -1,0 +1,279 @@
+\chapter{Introducci\'on}
+\label{ch:introduction}
+
+La inteligencia artificial ha experimentado un crecimiento exponencial en los
+\'ultimos a\~nos, no solo como campo de investigaci\'on cient\'ifica sino como
+una herramienta que se introduce r\'apidamente en la vida cotidiana de las
+personas. La tendencia es inequ\'ivoca, y es posible que nos encontremos ante
+uno de los cambios m\'as significativos en la historia de la tecnolog\'ia.
+
+La historia del aprendizaje autom\'atico se remonta a los a\~nos 1940--1950, con
+los primeros intentos de construir modelos computacionales inspirados en el
+cerebro. El perceptr\'on, propuesto por Frank Rosenblatt en
+1958~\citep{rosenblatt1958perceptron}, fue uno de los primeros algoritmos de
+aprendizaje capaces de clasificar patrones linealmente separables. Sus
+limitaciones te\'oricas, precisadas por Minsky y Papert~\citep{minsky1969perceptrons},
+contribuyeron al primer ``invierno de la inteligencia artificial'': un periodo
+prolongado de escepticismo y reducci\'on de la financiaci\'on. El resurgimiento
+lleg\'o en los a\~nos 1980 con el algoritmo de retropropagaci\'on
+(\emph{backpropagation})~\citep{rumelhart1986backprop}, que permiti\'o entrenar
+redes multicapa de forma eficiente. Aun as\'i, el desvanecimiento del gradiente
+y la limitada capacidad de c\'omputo de la \'epoca mantuvieron estas t\'ecnicas
+en un segundo plano durante a\~nos.
+
+La transformaci\'on que hoy conocemos como \emph{aprendizaje profundo}
+(\emph{deep learning}) lleg\'o en 2012, cuando AlexNet~\citep{krizhevsky2012alexnet}
+gan\'o la competici\'on ImageNet y redujo dr\'asticamente el error de
+clasificaci\'on de los m\'etodos tradicionales. Este \'exito se apoy\'o en la
+convergencia de tres factores: grandes conjuntos de datos etiquetados, hardware
+especializado accesible (GPU) capaz de entrenar modelos con millones de
+par\'ametros, y nuevas t\'ecnicas de entrenamiento que superaban los obst\'aculos
+hist\'oricos de las redes profundas. Desde entonces, el aprendizaje profundo ha
+demostrado una eficacia notable en reconocimiento de im\'agenes, procesamiento de
+lenguaje natural, generaci\'on de contenido y predicci\'on de estructuras
+prote\'icas, entre muchas otras tareas.
+
+Las arquitecturas responsables de estos logros ---redes convolucionales,
+recurrentes y de atenci\'on--- fueron concebidas para operar sobre datos
+organizados en dominios euclidianos regulares: rejillas de p\'ixeles, secuencias
+temporales, tablas de caracter\'isticas. A medida que la comunidad comenz\'o a
+aplicarlas a datos con estructura intr\'insecamente m\'as rica (mol\'eculas, redes
+sociales, superficies tridimensionales), se hizo patente que la suposici\'on de
+regularidad euclidiana constitu\'ia una limitaci\'on fundamental ---conceptual, y
+no meramente t\'ecnica---. Esta constataci\'on impuls\'o un nuevo paradigma, el
+\emph{aprendizaje profundo geom\'etrico} (\emph{geometric deep learning}, GDL),
+que invierte la relaci\'on tradicional entre datos y arquitectura: en lugar de
+forzar los datos a encajar en modelos preexistentes, son las propiedades
+geom\'etricas de los datos las que dictan la estructura del modelo.
+
+\section{¿Qu\'e es el aprendizaje profundo geom\'etrico?}
+\label{sec:what-is-gdl}
+
+Las arquitecturas tradicionales est\'an dise\~nadas para datos con estructura
+euclidiana regular. Las redes convolucionales aprovechan la rejilla regular de
+una imagen, donde cada p\'ixel tiene un n\'umero fijo de vecinos en posiciones
+predefinidas; los modelos recurrentes y de atenci\'on procesan secuencias dotadas
+de un orden temporal natural. Esta dependencia de los dominios regulares se
+rompe cuando los datos no se ajustan a tales plantillas.
+
+Consid\'erese el an\'alisis de una red social: los usuarios y sus conexiones
+forman un grafo irregular en el que cada nodo puede tener un n\'umero arbitrario
+de vecinos, sin un orden natural ni una rejilla. Aplicar directamente una red
+convolucional exigir\'ia aplanar el grafo en una representaci\'on euclidiana (como
+una matriz de adyacencia), descartando informaci\'on estructural crucial e
+introduciendo una gran cantidad de ceros que hacen el c\'omputo ineficiente. El
+an\'alisis de mol\'eculas en el descubrimiento de f\'armacos es igual de
+ilustrativo: las mol\'eculas son, de forma natural, grafos cuyos nodos son
+\'atomos y cuyas aristas son enlaces qu\'imicos, y su comportamiento
+farmacol\'ogico viene gobernado por la geometr\'ia tridimensional y la topolog\'ia
+de los enlaces. Los m\'etodos cl\'asicos depend\'ian de descriptores dise\~nados a
+mano o de codificaciones de cadena (como SMILES), perdiendo informaci\'on
+geom\'etrica esencial para la actividad biol\'ogica. La misma ``maldici\'on de la no
+euclidianidad'' aparece en el an\'alisis de formas 3D, donde las superficies no
+admiten una parametrizaci\'on natural sobre una rejilla regular y t\'ecnicas como
+la voxelizaci\'on o la proyecci\'on a m\'ultiples vistas introducen artefactos y
+borran detalle geom\'etrico fino.
+
+La \Cref{fig:data-types} ilustra las tres categor\'ias fundamentales de datos
+seg\'un su estructura geom\'etrica: datos euclidianos con rejilla regular, grafos
+con topolog\'ia irregular y variedades con geometr\'ia continua.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=0.9]
+% --- Panel izquierdo: euclidiano (rejilla regular) ---
+\begin{scope}[shift={(-5,0)}]
+    \begin{scope}[on background layer]
+        \fill[gdlblue!15, rounded corners=2pt] (-0.3,-0.3) rectangle (3.3,3.3);
+    \end{scope}
+    \foreach \x in {0,...,3} \foreach \y in {0,...,4}
+        \draw[gdlgray!50] (\x*0.75, \y*0.75) -- (\x*0.75+0.75, \y*0.75);
+    \foreach \x in {0,...,4} \foreach \y in {0,...,3}
+        \draw[gdlgray!50] (\x*0.75, \y*0.75) -- (\x*0.75, \y*0.75+0.75);
+    \foreach \x in {0,...,4} \foreach \y in {0,...,4}
+        \fill[gdlblue!60] (\x*0.75, \y*0.75) circle (2.5pt);
+    \node[below, font=\bfseries, text=gdlblue!70!black] at (1.5, -0.7) {Euclidiano};
+\end{scope}
+% --- Panel central: grafo (topolog\'ia irregular) ---
+\begin{scope}[shift={(0.5,0)}]
+    \coordinate (n1) at (0.3, 2.8); \coordinate (n2) at (1.8, 3.0);
+    \coordinate (n3) at (0.0, 1.5); \coordinate (n4) at (1.5, 1.6);
+    \coordinate (n5) at (2.8, 2.0); \coordinate (n6) at (0.5, 0.2);
+    \coordinate (n7) at (2.2, 0.3);
+    \foreach \a/\b in {n1/n2,n1/n3,n1/n4,n2/n4,n2/n5,n3/n4,n3/n6,n4/n5,n4/n6,n4/n7,n5/n7,n6/n7}
+        \draw[gdlgreen!50, thick] (\a) -- (\b);
+    \foreach \n in {n1,n2,n3,n4,n5,n6,n7} \fill[gdlgreen!70] (\n) circle (4pt);
+    \node[below, font=\bfseries, text=gdlgreen!70!black] at (1.5, -0.7) {Grafo};
+\end{scope}
+% --- Panel derecho: variedad (geometr\'ia continua) ---
+\begin{scope}[shift={(5.5,0)}]
+    \shade[ball color=gdlorange!25, opacity=0.9]
+        (0.0, 1.5) .. controls (-0.5, 2.8) and (1.0, 3.5) .. (1.8, 3.0)
+        .. controls (2.6, 2.5) and (3.3, 2.8) .. (3.2, 1.8)
+        .. controls (3.1, 0.8) and (2.5, -0.2) .. (1.5, 0.0)
+        .. controls (0.5, 0.2) and (0.5, 0.3) .. (0.0, 1.5);
+    \draw[thick, gdlorange!60]
+        (0.0, 1.5) .. controls (-0.5, 2.8) and (1.0, 3.5) .. (1.8, 3.0)
+        .. controls (2.6, 2.5) and (3.3, 2.8) .. (3.2, 1.8)
+        .. controls (3.1, 0.8) and (2.5, -0.2) .. (1.5, 0.0)
+        .. controls (0.5, 0.2) and (0.5, 0.3) .. (0.0, 1.5);
+    \draw[gdlorange!30, thin] (0.5, 1.2) .. controls (1.2, 1.8) .. (2.5, 1.5);
+    \draw[gdlorange!30, thin] (0.8, 2.2) .. controls (1.5, 2.6) .. (2.6, 2.2);
+    \node[below, font=\bfseries, text=gdlorange!70!black] at (1.5, -0.7) {Variedad};
+\end{scope}
+\end{tikzpicture}
+\caption[Tipos de datos geom\'etricos]{Los tres tipos fundamentales de datos
+seg\'un su estructura geom\'etrica: datos euclidianos sobre una rejilla regular
+(izquierda), grafos con topolog\'ia irregular donde cada nodo puede tener un
+n\'umero distinto de vecinos (centro) y variedades con geometr\'ia continua que
+requieren parametrizaciones locales (derecha).}
+\label{fig:data-types}
+\end{figure}
+
+El aprendizaje profundo geom\'etrico es una respuesta matem\'aticamente rigurosa a
+estas limitaciones. En lugar de adaptar los datos a las arquitecturas existentes
+---proceso que invariablemente pierde informaci\'on---, dise\~na arquitecturas que
+respetan y explotan la estructura geom\'etrica intr\'inseca de los datos. La
+observaci\'on central es que muchos dominios del mundo real poseen simetr\'ias y
+estructura geom\'etrica naturales que pueden aprovecharse para mejorar tanto la
+eficiencia computacional como el rendimiento predictivo. Al incorporar estas
+simetr\'ias directamente en la red, el GDL no solo resuelve los problemas de
+representaci\'on anteriores, sino que tambi\'en garantiza propiedades deseables
+como la equivarianza, la generalizaci\'on robusta y la eficiencia param\'etrica.
+
+Los fundamentos matem\'aticos completos ---la teor\'ia de grupos, las nociones de
+invarianza y equivarianza y el marco unificador de las ``5~Ges''--- se desarrollan
+en los \Cref{ch:foundations,ch:priors}. Por ahora basta con entender que el GDL
+proporciona un marco te\'orico que unifica arquitecturas aparentemente dispares
+---redes convolucionales, redes de grafos y mecanismos de atenci\'on--- bajo un
+paradigma geom\'etrico com\'un.
+
+\section{La simetr\'ia como principio de dise\~no}
+\label{sec:symmetry-principle}
+
+La idea organizadora del aprendizaje profundo geom\'etrico es la
+\emph{simetr\'ia}. Una simetr\'ia de un problema es una transformaci\'on de los
+datos que deja invariable la magnitud de inter\'es. Rotar la imagen de un gato
+sigue mostrando un gato; reetiquetar los nodos de un grafo molecular no cambia la
+mol\'ecula. Tales transformaciones forman un \emph{grupo}, y exigir que un modelo
+se comporte de forma coherente bajo ese grupo es una restricci\'on poderosa sobre
+su arquitectura.
+
+Dos nociones lo precisan. Una funci\'on es \emph{invariante} cuando su salida no
+cambia al transformar la entrada mediante el grupo ---adecuada, por ejemplo, para
+la clasificaci\'on de una imagen completa---. Es \emph{equivariante} cuando
+transformar la entrada produce una salida transformada de forma correspondiente:
+si $f$ es equivariante respecto de un grupo $\group$ que act\'ua sobre sus
+espacios de entrada y salida, entonces
+\[
+  f(g \cdot x) = g \cdot f(x) \qquad \text{para todo } g \in \group .
+\]
+La equivarianza es la propiedad que deseamos en las capas intermedias de una red:
+cada capa debe transformarse de forma predecible bajo la simetr\'ia, de modo que
+la estructura se preserve a medida que la informaci\'on fluye por el modelo, con
+una lectura invariante solo al final. Como la composici\'on de aplicaciones
+equivariantes es de nuevo equivariante, este principio proporciona una receta
+constructiva para arquitecturas completas, y no una propiedad que verificar a
+posteriori. Estas ideas se formalizan en el \Cref{ch:priors}.
+
+\section{Las 5 Ges: una hoja de ruta}
+\label{sec:five-gs}
+
+El aprendizaje profundo geom\'etrico organiza sus dominios y simetr\'ias en torno
+a cinco temas recurrentes ---las ``5~Ges'' que dan subt\'itulo a este libro:
+rejillas, grupos, grafos, geod\'esicas y gauges~\citep{bronstein2021geometric}---.
+La \Cref{tab:five-gs} las resume y se\~nala el cap\'itulo en el que se desarrolla
+cada una.
+
+\begin{table}[h]
+\centering
+\caption{Las cinco Ges del aprendizaje profundo geom\'etrico.}
+\label{tab:five-gs}
+\begin{tabular}{@{}lp{6.2cm}p{3.6cm}@{}}
+\toprule
+\textbf{Tema} & \textbf{Idea} & \textbf{Cap\'itulo} \\
+\midrule
+Rejillas & Dominios euclidianos regulares con simetr\'ia de traslaci\'on & Redes convolucionales (\Cref{ch:grids}) \\
+\addlinespace
+Grupos & Simetr\'ias globales m\'as all\'a de la traslaci\'on, como rotaciones y reflexiones & Redes equivariantes a grupos (\Cref{ch:groups}) \\
+\addlinespace
+Grafos & Dominios relacionales irregulares con simetr\'ia de permutaci\'on & Redes neuronales de grafos (\Cref{ch:graphs}) \\
+\addlinespace
+Geod\'esicas & Geometr\'ia intr\'inseca de las variedades: distancias, curvatura y flujo de informaci\'on & Aprendizaje en variedades (\Cref{ch:geodesics}) \\
+\addlinespace
+Gauges & Marcos de referencia locales y la libertad en la elecci\'on de coordenadas & Redes equivariantes gauge (\Cref{ch:gauges}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Estos temas no est\'an aislados. Las rejillas son el dominio m\'as r\'igido y el
+punto de partida hist\'orico; relajar la exigencia de una rejilla global
+conservando las simetr\'ias globales conduce a las redes equivariantes a grupos;
+descartar por completo la rejilla ambiente y conservar solo la estructura
+relacional conduce a los grafos; dotar a un dominio de distancias y curvatura
+intr\'insecas conduce a las variedades y las geod\'esicas; y reconocer que en un
+dominio curvo no existe una elecci\'on can\'onica de marco local conduce a los
+gauges. Un \'unico hilo ---el paso de mensajes--- recorre todos ellos y revela las
+redes convolucionales, las redes de grafos y los \emph{transformers} como
+instancias de una sola construcci\'on geom\'etrica.
+
+\section{C\'omo leer este libro}
+\label{sec:how-to-read}
+
+El libro sigue una progresi\'on l\'ogica desde los fundamentos hasta los modelos
+avanzados. La \Cref{fig:book-structure} muestra las dependencias entre
+cap\'itulos.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.4cm,
+    box/.style={rectangle, draw, rounded corners, minimum width=2.7cm,
+        minimum height=0.8cm, align=center, font=\small},
+    found/.style={box, fill=gdlblue!15},
+    five/.style={box, fill=gdlgreen!18},
+    prac/.style={box, fill=gdlpurple!16},
+    arrow/.style={->, thick, >=stealth}
+]
+\node[found] (intro) {Cap.\ 1\\Introducci\'on};
+\node[found, below=of intro] (found) {Cap.\ 2\\Fundamentos};
+\node[found, below=of found] (priors) {Cap.\ 3\\Sesgos geom\'etricos};
+\node[five, below left=1.1cm and 0.2cm of priors] (grids) {Cap.\ 4--5\\Rejillas, Grupos};
+\node[five, below right=1.1cm and 0.2cm of priors] (graphs) {Cap.\ 6--8\\Grafos, Geod\'esicas, Gauges};
+\node[prac, below=2.6cm of priors] (apps) {Cap.\ 9--10\\Aplicaciones, Conclusi\'on};
+\draw[arrow] (intro) -- (found);
+\draw[arrow] (found) -- (priors);
+\draw[arrow] (priors) -- (grids);
+\draw[arrow] (priors) -- (graphs);
+\draw[arrow] (grids) -- (apps);
+\draw[arrow] (graphs) -- (apps);
+\node[right=1.6cm of priors, font=\footnotesize, align=left] {
+    \tikz\fill[gdlblue!15] (0,0) rectangle (0.3,0.3); ~Fundamentos\\[2pt]
+    \tikz\fill[gdlgreen!18] (0,0) rectangle (0.3,0.3); ~Las Cinco Ges\\[2pt]
+    \tikz\fill[gdlpurple!16] (0,0) rectangle (0.3,0.3); ~Pr\'actica};
+\end{tikzpicture}
+\caption{Estructura del libro y dependencias entre cap\'itulos.}
+\label{fig:book-structure}
+\end{figure}
+
+\textbf{Parte I (Fundamentos).} El \Cref{ch:foundations} establece el lenguaje
+matem\'atico ---grupos, representaciones, espacios homog\'eneos y variedades---. El
+\Cref{ch:priors} introduce la invarianza y la equivarianza y el esquema que
+convierte una simetr\'ia en una arquitectura.
+
+\textbf{Parte II (Las Cinco Ges).} Los
+\Cref{ch:grids,ch:groups,ch:graphs,ch:geodesics,ch:gauges} desarrollan los cinco
+temas por turnos, desde las redes convolucionales sobre rejillas hasta las redes
+equivariantes gauge sobre variedades, mostrando c\'omo cada uno extiende al
+anterior y c\'omo el paso de mensajes los unifica.
+
+\textbf{Parte III (Pr\'actica).} El \Cref{ch:applications} recorre aplicaciones en
+visi\'on por computador, ciencias f\'isicas y datos relacionales, y el
+\Cref{ch:conclusion} sintetiza la visi\'on unificada y esboza los problemas
+abiertos.
+
+Este es un libro de naturaleza te\'orica, con \'enfasis en el rigor matem\'atico de
+sus definiciones, resultados y conexiones formales entre los marcos que presenta.
+Se supone que el lector est\'a c\'omodo con el \'algebra lineal, el c\'alculo
+multivariable y los fundamentos del aprendizaje autom\'atico; los prerrequisitos
+geom\'etricos y de teor\'ia de grupos se desarrollan a medida que se necesitan.

@@ -1,0 +1,730 @@
+\providecommand{\Ric}{\operatorname{Ric}}
+\providecommand{\divergence}{\operatorname{div}}
+\providecommand{\grad}{\operatorname{grad}}
+\providecommand{\Exp}{\operatorname{exp}}
+\providecommand{\Log}{\operatorname{log}}
+\providecommand{\TpM}{T_p\mathcal{M}}
+\providecommand{\M}{\mathcal{M}}
+
+\chapter{Geod\'esicas: Aprendizaje en Variedades}
+\label{ch:geodesics}
+
+Los cap\'itulos anteriores construyeron dos pilares del aprendizaje profundo
+geom\'etrico: los \emph{dominios} donde residen los datos y los \emph{grafos}
+que los discretizan. El \Cref{ch:graphs}, en particular, mostr\'o que el
+laplaciano de un grafo de proximidad converge al operador de Laplace--Beltrami
+de la superficie subyacente, y aprovech\'o esta conexi\'on para definir
+transformadas de Fourier intr\'insecas y filtros espectrales. Ese operador, sin
+embargo, presupone que el dominio est\'a dotado de una \emph{m\'etrica
+riemanniana}, noci\'on que las variedades diferenciables del
+\Cref{ch:foundations} a\'un no poseen: tienen estructura topol\'ogica y
+diferenciable, pero carecen de un sentido intr\'inseco de distancia.
+
+Las \emph{geod\'esicas} completan este vac\'io. En el espacio euclidiano, el
+camino m\'as corto entre dos puntos es trivialmente una recta; sobre una
+variedad curva, las geod\'esicas generalizan esta idea como curvas que minimizan
+localmente la longitud. Son el hilo que une los temas precedentes: proporcionan
+las distancias intr\'insecas que justifican los pesos de los grafos de
+proximidad, definen los sistemas de coordenadas locales necesarios para las
+convoluciones geom\'etricas y gobiernan c\'omo se propaga la informaci\'on de
+forma compatible con la curvatura del dominio. Para precisar estas ideas,
+dotamos primero a las variedades diferenciables de estructura m\'etrica
+(\Cref{sec:geo:intrinsic}), introducimos la conexi\'on y la curvatura que miden
+la desviaci\'on respecto al caso plano, definimos las geod\'esicas junto con los
+mapas exponencial y logar\'itmico (\Cref{sec:geo:geodesics}) y luego pasamos al
+aprendizaje: la convoluci\'on geod\'esica (\Cref{sec:geo:convolution}) y los
+m\'etodos espectrales en variedades (\Cref{sec:geo:spectral}).
+
+\section{Geometr\'ia intr\'inseca}
+\label{sec:geo:intrinsic}
+
+\subsection{M\'etricas riemannianas}
+\label{subsec:geo:metrics}
+
+Para hablar de geod\'esicas con rigor debemos equipar las variedades
+diferenciables del \Cref{ch:foundations} con estructura m\'etrica. Una
+\emph{m\'etrica riemanniana} proporciona la maquinaria para medir longitudes,
+\'angulos y vol\'umenes de manera intr\'inseca, es decir, usando solo magnitudes
+disponibles en la propia variedad, sin referencia a un espacio ambiente.
+
+\begin{definition}[M\'etrica riemanniana]
+\label{def:geo:metric}
+Una \emph{m\'etrica riemanniana} en una variedad diferenciable $\M$ es una
+asignaci\'on suave que a cada punto $p \in \M$ le asocia un producto interior
+$g_p \colon \TpM \times \TpM \to \R$ en el espacio tangente. En coordenadas
+locales $(x^1, \dots, x^m)$ se escribe
+\[
+  g_p = \sum_{i,j=1}^m g_{ij}(p)\, dx^i \otimes dx^j ,
+\]
+donde las $g_{ij}(p)$ son funciones suaves que forman una matriz sim\'etrica
+definida positiva en cada punto. El par $(\M, g)$ es una \emph{variedad
+riemanniana}.
+\end{definition}
+
+\begin{example}[M\'etricas en variedades comunes]
+\label{ex:geo:metrics}
+\leavevmode
+\begin{itemize}
+  \item \textbf{Espacio euclidiano} $\R^n$: la m\'etrica est\'andar es
+    $g_{ij} = \delta_{ij}$, lo que da $ds^2 = dx_1^2 + \cdots + dx_n^2$.
+  \item \textbf{Esfera} $S^2$: en coordenadas esf\'ericas $(\theta, \phi)$, la
+    m\'etrica inducida por la inmersi\'on en $\R^3$ es
+    $ds^2 = d\theta^2 + \sin^2\theta\, d\phi^2$.
+  \item \textbf{Espacio hiperb\'olico} $\mathbb{H}^n$ (modelo de Poincar\'e): en
+    el disco $\mathbb{D}^n = \{x \in \R^n : \norm{x} < 1\}$ la m\'etrica es
+    $g_{ij} = 4\delta_{ij} / (1 - \norm{x}^2)^2$, que ``estira'' las distancias
+    cerca del borde.
+\end{itemize}
+\end{example}
+
+La m\'etrica proporciona todo lo necesario para medir longitud y distancia,
+mediante una cadena de tres pasos. Primero, como $g_p$ es un producto interior
+en cada espacio tangente, induce una norma puntual $\norm{v}_g = \sqrt{g_p(v,v)}$;
+para una curva $\gamma(t)$, esta mide la velocidad instant\'anea
+$\norm{\dot\gamma(t)}_g$. Segundo, integrando la velocidad a lo largo de la
+curva se obtiene su longitud total. Tercero, tomando el \'infimo de la longitud
+sobre todas las curvas que unen dos puntos se obtiene la distancia geod\'esica.
+
+\begin{definition}[Longitud y distancia geod\'esica]
+\label{def:geo:distance}
+La \emph{longitud} de una curva $\gamma \colon [a,b] \to \M$ es
+\[
+  L(\gamma) = \int_a^b \sqrt{g_{\gamma(t)}\big(\dot\gamma(t), \dot\gamma(t)\big)}\, dt ,
+\]
+y la \emph{distancia geod\'esica} entre $p, q \in \M$ es
+\[
+  d_g(p,q) = \inf\{ L(\gamma) : \gamma \text{ curva suave de } p \text{ a } q\} .
+\]
+\end{definition}
+
+\begin{proposition}[La distancia geod\'esica es una m\'etrica]
+\label{prop:geo:dg-metric}
+En una variedad riemanniana conexa $(\M, g)$, la funci\'on $d_g$ es una
+m\'etrica en sentido topol\'ogico: para todo $p, q, r \in \M$,
+$d_g(p,q) \ge 0$ con igualdad si y solo si $p = q$; $d_g(p,q) = d_g(q,p)$; y
+$d_g(p,r) \le d_g(p,q) + d_g(q,r)$.
+\end{proposition}
+
+La simetr\'ia se sigue de invertir la parametrizaci\'on de las curvas, y la
+desigualdad triangular de concatenar curvas casi \'optimas. La no degeneraci\'on
+es el \'unico punto delicado: si $p \neq q$, un argumento de compacidad en una
+bola coordenada muestra que $g_x(v,v) \ge c\,\norm{v}_{\mathrm{euc}}^2$ para
+alg\'un $c > 0$, de modo que toda curva que abandone la bola tiene longitud
+acotada inferiormente por una constante positiva independiente de la curva.
+
+\begin{example}[Distancia geod\'esica en la esfera]
+\label{ex:geo:sphere-distance}
+En la esfera unitaria $S^2$ con m\'etrica $ds^2 = d\theta^2 + \sin^2\theta\,
+d\phi^2$, el arco de gran c\'irculo del polo norte $p$ a
+$q = (\sin\alpha, 0, \cos\alpha)$ es $\gamma(t) = (\sin t, 0, \cos t)$,
+$t \in [0,\alpha]$. Su velocidad es $g_{\gamma(t)}(\dot\gamma, \dot\gamma) = 1$,
+luego $L(\gamma) = \alpha$. Como los arcos de gran c\'irculo minimizan la
+longitud, $d_g(p,q) = \alpha = \arccos\inner{p}{q}$, donde
+$\inner{\cdot}{\cdot}$ es el producto interior euclidiano de $\R^3$.
+\end{example}
+
+La m\'etrica tambi\'en da \'angulos, $\cos\theta = g_p(v,w) /
+(\norm{v}_g \norm{w}_g)$, y un \emph{elemento de volumen} intr\'inseco
+$dV_g = \sqrt{\det(g_{ij})}\, dx^1 \wedge \cdots \wedge dx^m$, que permite
+integrar funciones sobre la variedad.
+
+\subsection{El operador de Laplace--Beltrami}
+\label{subsec:geo:laplacian}
+
+El laplaciano euclidiano $\nabla^2 f = \sum_i \partial^2 f / \partial(x^i)^2 =
+\divergence(\grad f)$ mide cu\'anto se desv\'ia el valor de $f$ en un punto
+respecto de su promedio local. Reemplazando el gradiente y la divergencia
+euclidianos por sus an\'alogos m\'etricos se obtiene su generalizaci\'on a
+variedades.
+
+\begin{definition}[Operador de Laplace--Beltrami]
+\label{def:geo:laplace-beltrami}
+En una variedad riemanniana $(\M, g)$, el \emph{operador de Laplace--Beltrami}
+$\Delta_\M$ act\'ua sobre funciones suaves $f \colon \M \to \R$ como
+\[
+  \Delta_\M f = \divergence(\grad f)
+    = \frac{1}{\sqrt{\det g}}\, \partial_i\!\left(\sqrt{\det g}\; g^{ij}\, \partial_j f\right),
+\]
+donde $g^{ij}$ son las componentes de la m\'etrica inversa. Cuando
+$(\M, g) = (\R^m, \delta_{ij})$ se tiene $\det g = 1$ y $g^{ij} = \delta^{ij}$,
+de modo que $\Delta_\M$ se reduce al laplaciano euclidiano.
+\end{definition}
+
+El operador de Laplace--Beltrami es el \'unico objeto que enlaza la geometr\'ia
+diferencial con el aprendizaje profundo geom\'etrico, por cuatro razones.
+
+\begin{remark}[Por qu\'e importa el operador de Laplace--Beltrami]
+\label{rem:geo:lb-role}
+\leavevmode
+\begin{enumerate}
+  \item \textbf{Difusi\'on.} $\Delta_\M$ gobierna la ecuaci\'on del calor
+    $\partial_t u = \Delta_\M u$, que modela la propagaci\'on de informaci\'on
+    por la variedad. Una capa que ``difunde'' caracter\'isticas hacia
+    vecindarios geod\'esicos es el an\'alogo aprendible de este proceso.
+  \item \textbf{An\'alisis espectral intr\'inseco.} Las autofunciones
+    $\{\varphi_k\}$ de $\Delta_\M$, con $\Delta_\M \varphi_k = \lambda_k
+    \varphi_k$, forman una base ortonormal de $L^2(\M)$ que generaliza la base
+    de Fourier, lo que habilita una transformada de Fourier intr\'inseca
+    $\hat f(\lambda_k) = \inner{f}{\varphi_k}$ y, con ella, convoluciones
+    espectrales (\Cref{sec:geo:spectral}).
+  \item \textbf{Invarianza bajo isometr\'ias.} Para toda isometr\'ia $\phi$ de
+    $\M$, $\Delta_\M(f \circ \phi) = (\Delta_\M f) \circ \phi$. Cualquier
+    arquitectura construida a partir de $\Delta_\M$ hereda as\'i la invarianza
+    bajo las simetr\'ias de la variedad, justo el principio de equivarianza del
+    \Cref{ch:priors}.
+  \item \textbf{Discretizaci\'on.} El laplaciano de grafo del \Cref{ch:graphs}
+    es el an\'alogo discreto de $\Delta_\M$ y, bajo muestreo adecuado, converge
+    a \'el, de modo que las t\'ecnicas se transfieren entre los mundos continuo
+    y discreto.
+\end{enumerate}
+\end{remark}
+
+\subsection{Conexiones y curvatura}
+\label{subsec:geo:curvature}
+
+Para definir geod\'esicas y cuantificar cu\'anto se desv\'ia una variedad del
+espacio plano necesitamos dos herramientas m\'as. En $\R^n$ todos los espacios
+tangentes se identifican can\'onicamente con $\R^n$, de modo que los vectores en
+puntos distintos pueden compararse directamente; en una variedad general $\TpM$
+y $T_q\M$ son espacios vectoriales distintos sin identificaci\'on can\'onica.
+Una \emph{conexi\'on} repara esto al prescribir c\'omo derivar campos
+vectoriales, y el \emph{tensor de curvatura} mide entonces la no conmutatividad
+de las derivadas covariantes resultantes.
+
+\begin{definition}[Conexi\'on af\'in]
+\label{def:geo:connection}
+Una \emph{conexi\'on af\'in} en $\M$ es una aplicaci\'on
+$\nabla \colon \Gamma(T\M) \times \Gamma(T\M) \to \Gamma(T\M)$,
+$(X,Y) \mapsto \nabla_X Y$ sobre campos vectoriales suaves que es
+$C^\infty(\M)$-lineal en $X$, $\R$-lineal en $Y$, y satisface la regla de
+Leibniz $\nabla_X(fY) = (Xf)Y + f\nabla_X Y$.
+\end{definition}
+
+Una variedad admite infinitas conexiones, pero una m\'etrica distingue una
+can\'onica.
+
+\begin{theorem}[Teorema fundamental de la geometr\'ia riemanniana]
+\label{thm:geo:levi-civita}
+En una variedad riemanniana $(\M, g)$ existe una \'unica conexi\'on af\'in
+$\nabla$, la \emph{conexi\'on de Levi--Civita}, que es \emph{compatible con la
+m\'etrica}, $X g(Y,Z) = g(\nabla_X Y, Z) + g(Y, \nabla_X Z)$, y \emph{libre de
+torsi\'on}, $\nabla_X Y - \nabla_Y X = [X,Y]$. En coordenadas locales queda
+determinada por los \emph{s\'imbolos de Christoffel}
+\[
+  \Gamma^k_{ij} = \tfrac{1}{2} g^{kl}\!\left(
+    \partial_j g_{il} + \partial_i g_{jl} - \partial_l g_{ij}\right).
+\]
+\end{theorem}
+
+La unicidad se sigue de la \emph{f\'ormula de Koszul}, obtenida al expandir
+c\'iclicamente la compatibilidad m\'etrica y usar la ausencia de torsi\'on para
+cancelar los t\'erminos cruzados; como $g$ es no degenerada, la f\'ormula
+determina $\nabla_X Y$ de forma \'unica, y una verificaci\'on directa muestra que
+satisface los axiomas. Geom\'etricamente, las dos propiedades que la definen
+afirman que el transporte paralelo preserva longitudes y \'angulos, y que los
+paralelogramos infinitesimales cierran --- el transporte no introduce rotaciones
+espurias.
+
+La conexi\'on de Levi--Civita permite comparar las segundas derivadas
+covariantes $\nabla_X \nabla_Y Z$ y $\nabla_Y \nabla_X Z$. En el espacio
+euclidiano coinciden; en una variedad curva difieren, y la discrepancia es la
+curvatura.
+
+\begin{definition}[Tensor de curvatura de Riemann]
+\label{def:geo:riemann}
+El \emph{tensor de curvatura de Riemann} de $(\M, g)$ es
+\[
+  R(X,Y)Z = \nabla_X \nabla_Y Z - \nabla_Y \nabla_X Z - \nabla_{[X,Y]} Z .
+\]
+Es $C^\infty(\M)$-multilineal, de modo que su valor en $p$ depende solo de
+$X, Y, Z$ en $p$. Una variedad riemanniana es localmente isom\'etrica a $\R^n$
+si y solo si $R \equiv 0$.
+\end{definition}
+
+\begin{definition}[Curvatura seccional, de Ricci y escalar]
+\label{def:geo:sectional}
+Para un $2$-plano $\sigma \subset \TpM$ generado por $u, v$ independientes, la
+\emph{curvatura seccional} es
+\[
+  K(\sigma) = \frac{\inner{R(u,v)v}{u}_g}{\norm{u}^2\norm{v}^2 - \inner{u}{v}_g^2},
+\]
+la curvatura de la superficie generada por geod\'esicas en direcciones de
+$\sigma$. Contrayendo $R$ se obtiene el \emph{tensor de Ricci}
+$R_{ij} = \sum_k \inner{R(\partial_i,\partial_k)\partial_j}{\partial_k}_g$, y
+trazando de nuevo la \emph{curvatura escalar} $\mathcal{R} = g^{ij}R_{ij}$.
+\end{definition}
+
+La curvatura seccional controla c\'omo se desv\'ia la geometr\'ia de los
+postulados de Euclides (\Cref{fig:geo:curvature}). En un tri\'angulo geod\'esico
+de \'area $A$, la suma de \'angulos es $\alpha + \beta + \gamma = \pi + K\,A$; un
+disco geod\'esico de radio $r$ tiene \'area que crece m\'as r\'apido que
+$\pi r^2$ cuando $K < 0$ y m\'as lento cuando $K > 0$; y la separaci\'on
+$\xi(t)$ entre geod\'esicas inicialmente paralelas obedece la ecuaci\'on de
+Jacobi $\ddot\xi + K\xi = 0$, cuyas soluciones son oscilatorias ($K > 0$),
+constantes ($K = 0$) o exponenciales ($K < 0$). Este \'ultimo hecho explica por
+qu\'e el espacio hiperb\'olico, con su crecimiento exponencial de volumen,
+embebe \'arboles con baja distorsi\'on --- propiedad que explotamos en la
+\Cref{subsec:geo:specific}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=1.0]
+% --- Curvatura negativa (silla) ---
+\begin{scope}[shift={(-5.2,0)}]
+  \shade[ball color=gdlred!18, opacity=0.85]
+    (-1.6,0.6) .. controls (-0.6,1.5) and (0.6,-0.5) .. (1.6,0.6)
+    .. controls (1.0,-0.2) and (0.4,-1.2) .. (0,-1.0)
+    .. controls (-0.4,-1.2) and (-1.0,-0.2) .. (-1.6,0.6);
+  \draw[gdlred!50, thin] (-1.4,0.5) .. controls (0,1.0) .. (1.4,0.5);
+  \draw[gdlred!50, thin] (-0.9,-0.7) .. controls (0,-0.3) .. (0.9,-0.7);
+  \node[below, font=\small\bfseries, text=gdlred!70!black] at (0,-1.6) {$K<0$};
+  \node[below, font=\footnotesize, text=gdlred!70!black] at (0,-2.0) {divergen};
+\end{scope}
+% --- Curvatura nula (plano) ---
+\begin{scope}[shift={(0,0)}]
+  \fill[gdlgreen!15] (-1.6,-1.0) -- (1.6,-1.0) -- (1.6,1.0) -- (-1.6,1.0) -- cycle;
+  \foreach \x in {-1.2,-0.6,0,0.6,1.2}
+    \draw[gdlgreen!45, thin] (\x,-1.0) -- (\x,1.0);
+  \foreach \y in {-0.6,0,0.6}
+    \draw[gdlgreen!45, thin] (-1.6,\y) -- (1.6,\y);
+  \node[below, font=\small\bfseries, text=gdlgreen!60!black] at (0,-1.6) {$K=0$};
+  \node[below, font=\footnotesize, text=gdlgreen!60!black] at (0,-2.0) {paralelas};
+\end{scope}
+% --- Curvatura positiva (esfera) ---
+\begin{scope}[shift={(5.2,0)}]
+  \shade[ball color=gdlblue!22, opacity=0.9] (0,0) circle (1.3cm);
+  \draw[gdlblue!50, thin] (0,0) circle (1.3cm);
+  \draw[gdlblue!50, thin] (-1.3,0) .. controls (0,0.35) .. (1.3,0);
+  \draw[gdlblue!50, thin] (0,1.3) .. controls (0.35,0) .. (0,-1.3);
+  \node[below, font=\small\bfseries, text=gdlblue!70!black] at (0,-1.6) {$K>0$};
+  \node[below, font=\footnotesize, text=gdlblue!70!black] at (0,-2.0) {convergen};
+\end{scope}
+\end{tikzpicture}
+\caption[Comparaci\'on de curvaturas]{Los tres reg\'imenes de curvatura
+seccional. Las geod\'esicas que parten paralelas divergen en una superficie de
+curvatura negativa ($K<0$, izquierda), permanecen paralelas en un plano
+($K=0$, centro) y convergen en una de curvatura positiva ($K>0$, derecha).}
+\label{fig:geo:curvature}
+\end{figure}
+
+\section{Geod\'esicas y mapas exponencial y logar\'itmico}
+\label{sec:geo:geodesics}
+
+Las \emph{geod\'esicas} son las curvas que minimizan localmente la longitud,
+generalizando las rectas al espacio curvo. La conexi\'on de Levi--Civita aporta
+la derivada covariante que las formaliza: una geod\'esica es una curva cuyo
+vector tangente es paralelo a lo largo de s\'i misma, de modo que ``no acelera''
+respecto de la geometr\'ia.
+
+\begin{definition}[Geod\'esica]
+\label{def:geo:geodesic}
+Una curva $\gamma \colon I \to \M$ es una \emph{geod\'esica} si
+$\nabla_{\dot\gamma}\dot\gamma = 0$, lo que en coordenadas locales es el sistema
+de segundo orden
+\[
+  \ddot\gamma^k + \Gamma^k_{ij}\, \dot\gamma^i \dot\gamma^j = 0 ,
+\]
+con la convenci\'on de suma de Einstein.
+\end{definition}
+
+Las geod\'esicas admiten tres lecturas complementarias: como extremales del
+funcional de longitud (principio variacional), como trayectorias de una
+part\'icula libre (inercia) y como caminos localmente m\'as cortos. Son rectas
+en $\R^n$, c\'irculos m\'aximos en $S^2$ y arcos de circunferencia que cortan el
+borde ortogonalmente en el modelo de Poincar\'e de $\mathbb{H}^n$.
+
+\begin{definition}[Mapas exponencial y logar\'itmico]
+\label{def:geo:exp-log}
+El \emph{mapa exponencial} $\exp_p \colon \TpM \to \M$ env\'ia $v$ a
+$\gamma_v(1)$, donde $\gamma_v$ es la \'unica geod\'esica con $\gamma_v(0) = p$ y
+$\dot\gamma_v(0) = v$ --- el punto alcanzado al recorrer la geod\'esica en
+direcci\'on $v$ durante tiempo unitario. Su inversa local, el \emph{mapa
+logar\'itmico} $\log_p \colon U \to \TpM$, se define en un entorno $U$ de $p$
+donde $\exp_p$ es un difeomorfismo: $\log_p(q)$ es el ``vector que apunta de $p$
+a $q$''.
+\end{definition}
+
+\begin{proposition}[Propiedades del mapa exponencial]
+\label{prop:geo:exp}
+Para $p \in \M$: (i) $\exp_p(0) = p$; (ii) $\exp_p(tv) = \gamma_v(t)$; (iii)
+$d(\exp_p)_0 = \operatorname{id}_{\TpM}$; (iv) $\exp_p$ es un difeomorfismo de un
+entorno de $0 \in \TpM$ en un entorno de $p$; y (v)
+$d_g(p, \exp_p(v)) = \norm{v}_g$ para $v$ suficientemente peque\~no.
+\end{proposition}
+
+La propiedad (iii) se sigue de derivar $t \mapsto \exp_p(tv)$ en $t = 0$; el
+teorema de la funci\'on inversa da entonces (iv). La propiedad (v) se cumple
+porque la conexi\'on de Levi--Civita mantiene constante $\norm{\dot\gamma_v}_g$,
+de modo que la geod\'esica $\gamma_v|_{[0,1]}$ tiene longitud $\norm{v}_g$ y es
+minimizante para $v$ peque\~no. La identidad $d_g(p,q) = \norm{\log_p(q)}_g$ es
+exactamente el puente entre la distancia intr\'inseca y el espacio tangente
+(\Cref{fig:geo:exp-log}).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+% Variedad (esfera)
+\shade[ball color=gdlblue!18, opacity=0.9] (0,0) circle (2.6cm);
+\draw[thick, gdlblue!45] (0,0) circle (2.6cm);
+\node[gdlblue!60!black, font=\small] at (-2.1,-2.0) {$\mathcal{M}$};
+% Punto p
+\coordinate (p) at (0,2.6);
+\fill[gdlred!75] (p) circle (2.5pt);
+\node[above right, font=\small] at (p) {$p$};
+% Plano tangente
+\begin{scope}[shift={(0,2.6)}]
+  \fill[gdlgreen!16] (-2.2,-0.25) -- (2.2,-0.25) -- (2.2,1.4) -- (-2.2,1.4) -- cycle;
+  \draw[gdlgreen!50] (-2.2,0) -- (2.2,0);
+  \node[gdlgreen!55!black, font=\small] at (2.4,1.0) {$T_p\mathcal{M}$};
+  \draw[->, very thick, gdlorange!80] (0,0) -- (1.3,0.7) node[above, font=\small] {$v$};
+\end{scope}
+% Geod\'esica
+\draw[very thick, gdlred!70, dashed] (0,2.6) arc (90:33:2.6cm);
+% Punto q
+\coordinate (q) at ({2.6*cos(33)},{2.6*sin(33)});
+\fill[gdlpurple!75] (q) circle (2.5pt);
+\node[right, font=\small, gdlpurple!75] at (q) {$q=\exp_p(v)$};
+% Mapas
+\draw[->, very thick, gdlorange!80] (1.3,3.3) .. controls (2.3,2.8) and (2.6,2.0) .. (q);
+\node[gdlorange!80, font=\small] at (3.0,3.0) {$\exp_p$};
+\draw[->, very thick, gdlpurple!75, dashed] ($(q)+(-0.25,0.3)$) .. controls (2.2,2.5) and (1.7,3.4) .. (1.0,3.5);
+\node[gdlpurple!75, font=\small] at (2.6,3.7) {$\log_p$};
+% Nota
+\node[font=\footnotesize, text width=4.4cm, align=left] at (-4.6,0.2) {
+  $\exp_p(v)=\gamma_v(1)$, $\gamma_v$ geod\'esica con $\dot\gamma_v(0)=v$\\[2pt]
+  $\log_p=\exp_p^{-1}$ (local)\\[2pt]
+  $d_g(p,q)=\norm{\log_p(q)}_g$};
+\end{tikzpicture}
+\caption[Mapas exponencial y logar\'itmico]{El mapa exponencial env\'ia un
+vector tangente $v \in T_p\mathcal{M}$ al extremo de la geod\'esica que genera;
+el mapa logar\'itmico es su inversa local. La distancia geod\'esica es igual a la
+norma en el espacio tangente de $\log_p(q)$.}
+\label{fig:geo:exp-log}
+\end{figure}
+
+\paragraph{Coordenadas normales.}
+Elegir una base ortonormal $\{e_1, \dots, e_m\}$ de $\TpM$ y definir
+$\phi(\exp_p(v^i e_i)) = (v^1, \dots, v^m)$ da las \emph{coordenadas normales
+geod\'esicas} centradas en $p$. En ellas, las geod\'esicas por $p$ son rectas
+por el origen, $g_{ij}(p) = \delta_{ij}$, los s\'imbolos de Christoffel se anulan
+en $p$ y tambi\'en las primeras derivadas de la m\'etrica. El t\'ermino de
+segundo orden revela la curvatura:
+\[
+  g_{ij}(x) = \delta_{ij} - \tfrac{1}{3} R_{ikjl}(p)\, x^k x^l + O(\norm{x}^3) .
+\]
+As\'i, las coordenadas normales \emph{linealizan} la variedad: dentro de una
+bola geod\'esica de radio $r$ parece euclidiana salvo correcciones $O(r^2)$
+gobernadas por la curvatura. Esta es precisamente la carta en la que operan las
+convoluciones geod\'esicas.
+
+\begin{remark}[La ambig\"uedad gauge]
+\label{rem:geo:gauge}
+La base $\{e_i\}$ no es can\'onica: cualquier otra base ortonormal difiere por
+una rotaci\'on $O \in O(m)$. Esta \emph{libertad gauge} rota la carta de
+coordenadas normales, de modo que un kernel de convoluci\'on expresado en ellas
+se transforma como $k'(r,\theta) = k(r, \theta - \alpha)$. Hacer que una red sea
+independiente de la elecci\'on exige restricciones de equivarianza sobre el
+kernel --- el tema del \Cref{ch:gauges}.
+\end{remark}
+
+\section{Convoluci\'on geod\'esica}
+\label{sec:geo:convolution}
+
+Las convoluciones de grupo (\Cref{ch:groups}) explotan una simetr\'ia global,
+pero muchos dominios del mundo real --- superficies 3D, l\'aminas corticales,
+espacios de configuraci\'on --- carecen de tal simetr\'ia: su geometr\'ia local
+var\'ia punto a punto, no hay una traslaci\'on globalmente consistente ni un
+sistema de coordenadas global can\'onico. El mapa exponencial elimina estos
+obst\'aculos localmente, y las \emph{redes neuronales convolucionales
+geod\'esicas}~\citep{masci2015geodesic} fueron la primera extensi\'on
+sistem\'atica de la convoluci\'on a variedades riemannianas generales.
+
+\subsection{Convoluci\'on en cartas geod\'esicas}
+\label{subsec:geo:gcnn}
+
+La idea es construir, alrededor de cada punto $p$, una carta local mediante el
+mapa exponencial y realizar una convoluci\'on en coordenadas polares dentro de
+ella. Una se\~nal $f \colon \M \to \R$ se convoluciona con un kernel aprendible
+$k$ muestreando la variedad a lo largo de rayos geod\'esicos:
+\begin{equation}
+\label{eq:geo:gcnn}
+  (f *_g k)(p) = \sum_{i,j} k(r_i, \theta_j)\;
+    f\!\left(\exp_p(r_i\, e_{\theta_j})\right)\; J_p(r_i, \theta_j),
+\end{equation}
+donde $e_{\theta_j} = \cos\theta_j\, e_1 + \sin\theta_j\, e_2$ es la direcci\'on
+angular, $(r_i, \theta_j)$ discretiza un disco geod\'esico en coordenadas
+polares y $J_p(r, \theta) = \sqrt{\det g_{\exp_p(r e_\theta)}}$ es un factor
+jacobiano que corrige la distorsi\'on entre el parche tangente y la variedad.
+Por la expansi\'on en coordenadas normales del entorno de \Cref{rem:geo:gauge},
+\[
+  J_p(r, \theta) = 1 - \tfrac{1}{6} K(p)\, r^2 + O(r^3),
+\]
+de modo que la correcci\'on es despreciable para parches peque\~nos y crece con
+la curvatura de Gauss $K(p)$. En la pr\'actica, construir cada carta requiere
+elegir una base tangente ortonormal, mapear una rejilla polar a trav\'es de
+$\exp_p$ e interpolar los valores de las caracter\'isticas en los puntos
+resultantes (\Cref{fig:geo:convolution}).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+% Parche de superficie curva
+\shade[ball color=gdlorange!20, opacity=0.9]
+  (-2.6,0) .. controls (-2.0,1.4) and (2.0,1.4) .. (2.6,0)
+  .. controls (2.0,-1.2) and (-2.0,-1.2) .. (-2.6,0);
+\draw[gdlorange!55, thick]
+  (-2.6,0) .. controls (-2.0,1.4) and (2.0,1.4) .. (2.6,0)
+  .. controls (2.0,-1.2) and (-2.0,-1.2) .. (-2.6,0);
+\node[gdlorange!60!black, font=\small] at (-2.4,-1.1) {$\mathcal{M}$};
+% Punto central p
+\coordinate (p) at (0,0.25);
+% Rejilla polar geod\'esica (anillos + rayos)
+\foreach \rr in {0.45,0.9,1.35}
+  \draw[gdlblue!55, thin] (p) ellipse ({\rr} and {0.55*\rr});
+\foreach \aa in {0,45,90,135,180,225,270,315}
+  \draw[gdlblue!40, thin] (p) -- ($(p)+({1.35*cos(\aa)} and {0.55*1.35*sin(\aa)})$);
+\fill[gdlred!80] (p) circle (2.5pt);
+\node[above, font=\small] at (p) {$p$};
+% Un vecino
+\coordinate (q) at ($(p)+({1.35*cos(35)} and {0.55*1.35*sin(35)})$);
+\fill[gdlgreen!70] (q) circle (2pt);
+\node[right, font=\small, gdlgreen!60!black] at (q) {$q_j=\exp_p(r_i e_{\theta_j})$};
+% etiqueta
+\node[font=\footnotesize, text=gdlblue!60!black] at (0,-1.5) {bola geod\'esica $B_r(p)$};
+\end{tikzpicture}
+\caption[Convoluci\'on geod\'esica]{Convoluci\'on geod\'esica. Una rejilla polar
+de radios $r_i$ y \'angulos $\theta_j$ se dispone en el espacio tangente en $p$
+y se mapea sobre la bola geod\'esica $B_r(p)$ a trav\'es de $\exp_p$; los pesos
+del kernel $k(r_i,\theta_j)$ se aplican a las caracter\'isticas interpoladas,
+corregidas por el jacobiano $J_p$.}
+\label{fig:geo:convolution}
+\end{figure}
+
+Las convoluciones geod\'esicas fueron un avance conceptual, pero tienen
+limitaciones claras. La construcci\'on depende de una elecci\'on de base
+tangente en cada punto, que puede ser inconsistente entre vecinos (la
+ambig\"uedad gauge de \Cref{rem:geo:gauge}); calcular cartas geod\'esicas y
+jacobianos es costoso en mallas de alta resoluci\'on; y el mapa exponencial
+requiere suficiente suavidad, por lo que los dominios singulares son
+problem\'aticos. Los \emph{descriptores de difusi\'on
+anisotr\'opica}~\citep{Boscaini2016AnisotropicDD} abordan la carencia an\'aloga
+de los descriptores espectrales isotr\'opicos al reemplazar el n\'ucleo del calor
+por una difusi\'on dependiente de la direcci\'on
+$\partial_t u = -\divergence(C \nabla u)$ cuyo tensor de conductividad $C$ se
+adapta a la geometr\'ia local, capturando la orientaci\'on de caracter\'isticas
+alargadas.
+
+\subsection{Un marco general: MoNet}
+\label{subsec:geo:monet}
+
+La dependencia de un sistema de coordenadas expl\'icito motiva una formulaci\'on
+m\'as abstracta. MoNet~\citep{DBLP:journals/corr/MontiBMRSB16} reemplaza las
+cartas geod\'esicas por \emph{pseudo-coordenadas}: una aplicaci\'on
+$u \colon \M \times \M \to \R^d$ que codifica la relaci\'on geom\'etrica local
+entre un punto $x$ y sus vecinos, es local (se anula fuera de un entorno),
+invariante bajo isometr\'ias y suave. La convoluci\'on se vuelve una agregaci\'on
+ponderada sobre un entorno $\mathcal{N}(x)$,
+\begin{equation}
+\label{eq:geo:monet}
+  (f * w)(x) = \int_{\mathcal{N}(x)} w_\theta\big(u(x,y)\big)\, f(y)\, dV_g(y),
+\end{equation}
+donde el kernel $w_\theta$ es una mezcla aprendible de funciones base
+param\'etricas, t\'ipicamente gaussianas,
+\[
+  w_\theta(u) = \sum_{j=1}^J \alpha_j\,
+    \exp\!\left(-\tfrac{1}{2}(u - \mu_j)^\top \Sigma_j^{-1} (u - \mu_j)\right),
+\]
+con pesos $\alpha_j$, medias $\mu_j$ y covarianzas $\Sigma_j$ aprendibles. En una
+malla discreta la integral se vuelve
+$(f * w)(x_i) = \sum_{j \in \mathcal{N}(i)} w_\theta(u(x_i,x_j))\, f(x_j)\, A_j$
+con pesos de \'area local $A_j$.
+
+\begin{theorem}[Aproximaci\'on universal de los kernels de MoNet]
+\label{thm:geo:monet}
+Para toda funci\'on continua de soporte compacto $k \colon \R^d \to \R$ y todo
+$\varepsilon > 0$ existen $J$ y par\'ametros
+$\{\alpha_j, \mu_j, \Sigma_j\}_{j=1}^J$ con
+$\sup_{u}\, \abs{k(u) - w_\theta(u)} < \varepsilon$.
+\end{theorem}
+
+Esto se sigue de la densidad de las mezclas gaussianas junto con la compacidad
+del soporte, y convierte a MoNet en una generalizaci\'on genuina: distintas
+elecciones de $u$ recuperan modelos anteriores. Tomando
+$u(x,y) = (d_g(x,y), \angle(x,y))$ (distancia geod\'esica y \'angulo polar) se
+reproducen las convoluciones geod\'esicas~\eqref{eq:geo:gcnn}; tomando
+coordenadas basadas en el grado $u(x,y) = (1/\sqrt{\deg x},\, 1/\sqrt{\deg y})$
+se recuperan las redes convolucionales de grafos (\Cref{ch:graphs}); y
+coordenadas de B-splines recuperan las convoluciones basadas en splines. As\'i,
+MoNet unifica las convoluciones en rejillas, grafos y variedades bajo una \'unica
+receta de kernel aprendible, y es a su vez una instancia de la plantilla de paso
+de mensajes del \Cref{ch:graphs}.
+
+\subsection{Transporte paralelo y variedades espec\'ificas}
+\label{subsec:geo:specific}
+
+Comparar vectores de caracter\'isticas que viven en espacios tangentes distintos
+exige llevar uno al otro. La conexi\'on de Levi--Civita proporciona el
+\emph{transporte paralelo} $\Pi_{p \to q}^\gamma \colon \TpM \to T_q\M$ a lo
+largo de la geod\'esica $\gamma$ que une $p$ y $q$; es una isometr\'ia lineal,
+preserva normas y \'angulos, y se compone a lo largo de caminos concatenados. La
+holonom\'ia alrededor de lazos cerrados est\'a controlada por la curvatura (el
+teorema de Ambrose--Singer identifica el \'algebra de Lie de holonom\'ia con los
+operadores de curvatura), de modo que el transporte paralelo codifica la
+geometr\'ia intr\'inseca completa. Las \emph{convoluciones por transporte
+paralelo}~\citep{schonsheck2018parallel} lo explotan para definir una
+convoluci\'on libre de coordenadas que transporta el kernel de forma consistente
+por la superficie, evitando la ambig\"uedad gauge de las cartas geod\'esicas.
+Estas ideas conectan directamente con las redes equivariantes gauge del
+\Cref{ch:gauges}.
+
+Los mapas exponencial y logar\'itmico tambi\'en permiten reformular bloques
+cl\'asicos de manera intr\'inseca. Una \emph{conexi\'on residual riemanniana}
+reemplaza la actualizaci\'on euclidiana $x_{\ell+1} = x_\ell + F_\ell(x_\ell)$
+por
+\[
+  x_{\ell+1} = \exp_{x_\ell}\!\big(F_\ell(x_\ell)\big),
+    \qquad F_\ell(x_\ell) \in T_{x_\ell}\M,
+\]
+que mantiene el estado sobre la variedad, y la interpolaci\'on geod\'esica
+$\gamma(t) = \exp_p(t \log_p(q))$ generaliza la interpolaci\'on lineal.
+
+Cuando los datos tienen una geometr\'ia conocida puede especializarse la
+variedad. Los datos jer\'arquicos --- \'arboles, taxonom\'ias, ontolog\'ias ---
+se embeben de forma natural en el \emph{espacio hiperb\'olico}: como el volumen
+de una bola hiperb\'olica crece exponencialmente con su radio (el r\'egimen
+$K < 0$ de \Cref{fig:geo:curvature}), un \'arbol cuyo n\'umero de nodos crece
+exponencialmente con la profundidad encaja con distorsi\'on acotada, algo
+imposible en cualquier espacio euclidiano de dimensi\'on fija. En la bola de
+Poincar\'e se reemplaza la suma de vectores por la operaci\'on de M\"obius y la
+distancia euclidiana por la distancia hiperb\'olica; las \emph{redes de
+atenci\'on hiperb\'olica}~\citep{gulcehre2019hyperbolic} ponderan la atenci\'on
+por $\exp(-d_{\mathbb{H}}(x,y)/\tau)$ con la distancia hiperb\'olica
+$d_{\mathbb{H}}$. El principio unificador es el mismo en todos los casos:
+respetar la geometr\'ia del espacio de datos al dise\~nar cada componente, de
+modo que la equivarianza bajo el grupo de isometr\'ias haga intr\'insecas las
+representaciones aprendidas.
+
+\subsection{Casos de estudio}
+\label{subsec:geo:cases}
+
+Tres aplicaciones muestran a los m\'etodos geod\'esicos superando a las
+referencias euclidianas.
+
+\paragraph{An\'alisis de formas 3D (FAUST).}
+El benchmark FAUST contiene mallas trianguladas de cuerpos humanos (unos $6890$
+v\'ertices cada una) en poses variadas, con fuertes variaciones de curvatura.
+Como las distancias geod\'esicas son invariantes bajo las deformaciones (casi
+isom\'etricas) de un cuerpo en movimiento, las convoluciones geod\'esicas y MoNet
+reconocen correspondencias y poses con mucha m\'as precisi\'on que una red
+euclidiana aplicada a una proyecci\'on plana, que es sensible al embebido. Las
+regiones de alta curvatura, como las articulaciones, son las que m\'as se
+benefician, y la correcci\'on jacobiana es cr\'itica cerca de ellas.
+
+\paragraph{Im\'agenes omnidireccionales ($360^\circ$).}
+Una imagen esf\'erica proyectada a un plano (equirectangular) sufre una severa
+distorsi\'on polar --- las \'areas cercanas a los polos se estiran en un orden de
+magnitud, rompiendo la invarianza a traslaci\'on que asume una convoluci\'on
+est\'andar. Tratar la imagen como una se\~nal en $S^2$ y convolucionar de forma
+geod\'esica (por ejemplo, sobre una discretizaci\'on icosa\'edrica) mantiene la
+distorsi\'on casi uniforme y preserva las formas locales, mejorando la
+clasificaci\'on de escenas y la segmentaci\'on sem\'antica.
+
+\paragraph{Superficies m\'edicas (corteza cerebral).}
+La superficie cortical es una variedad de g\'enero 0 con surcos profundos y
+variaci\'on extrema de curvatura, y presenta gran variabilidad anat\'omica entre
+sujetos. Convolucionar de forma intr\'inseca sobre la superficie cortical, en
+lugar de sobre una representaci\'on volum\'etrica o proyectada, respeta el
+patr\'on de plegamiento y produce caracter\'isticas anat\'omicamente
+consistentes para tareas como la parcelaci\'on en grandes cohortes.
+
+\section{M\'etodos espectrales en variedades}
+\label{sec:geo:spectral}
+
+La convoluci\'on geod\'esica es una construcci\'on \emph{intr\'inseca pero
+espacial}: opera en cartas geod\'esicas. El punto de vista espectral ofrece una
+alternativa complementaria, totalmente libre de coordenadas, construida
+directamente sobre el operador de Laplace--Beltrami de
+\Cref{def:geo:laplace-beltrami}. Es la contraparte en variedades de las
+convoluciones espectrales de grafos del \Cref{ch:graphs}, y hace exacta la
+analog\'ia entre los mundos continuo y discreto.
+
+\paragraph{La transformada de Fourier en variedades.}
+En una variedad compacta, $\Delta_\M$ tiene un espectro discreto
+$0 = \lambda_0 \le \lambda_1 \le \cdots$ con autofunciones $\{\varphi_k\}$ que
+forman una base ortonormal de $L^2(\M)$ (\Cref{rem:geo:lb-role}). Estas
+desempe\~nan el papel de las exponenciales complejas: en $\R^n$ los modos de
+Fourier $e^{i\inner{\xi}{x}}$ son exactamente las autofunciones del laplaciano
+euclidiano, y en una variedad general las $\varphi_k$ las generalizan. Se define
+la \emph{transformada de Fourier en variedades} y su inversa por
+\[
+  \hat f(\lambda_k) = \inner{f}{\varphi_k} = \int_\M f\, \varphi_k\, dV_g,
+  \qquad
+  f = \sum_{k} \hat f(\lambda_k)\, \varphi_k .
+\]
+Los autovalores bajos corresponden a modos suaves y de variaci\'on lenta, y los
+altos a modos oscilatorios, igual que las frecuencias bajas y altas en el
+an\'alisis de Fourier cl\'asico.
+
+\paragraph{Convoluci\'on espectral e invarianza bajo isometr\'ias.}
+Como en una variedad general no hay traslaci\'on, la convoluci\'on se
+\emph{define} mediante el teorema de convoluci\'on: un filtro espectral act\'ua
+modulando cada coeficiente de Fourier,
+\begin{equation}
+\label{eq:geo:spectral-conv}
+  (g_\eta \star f) = \sum_k \eta(\lambda_k)\, \hat f(\lambda_k)\, \varphi_k,
+\end{equation}
+donde $\eta$ es una funci\'on de transferencia aprendible del autovalor. Como
+$\Delta_\M$ conmuta con las isometr\'ias, tambi\'en lo hace cualquier filtro de
+la forma~\eqref{eq:geo:spectral-conv}: la arquitectura es autom\'aticamente
+invariante bajo las simetr\'ias de la variedad, realizando el principio de
+equivarianza del \Cref{ch:priors} sin restricciones adicionales. Elegir $\eta$
+como un polinomio en $\lambda$ hace el filtro \emph{local} (un polinomio de grado
+$K$ alcanza solo el vecindario geod\'esico de $K$ saltos) y evita calcular la
+descomposici\'on espectral completa --- exactamente el argumento de
+localizaci\'on que, en el caso discreto, produjo los filtros de Chebyshev y las
+convoluciones de grafos del \Cref{ch:graphs}.
+
+\paragraph{El puente continuo--discreto.}
+La construcci\'on espectral es lo que hace de las im\'agenes de variedad y de
+grafo dos caras de una misma teor\'ia. La \Cref{tab:geo:analogy} alinea la
+correspondencia: el laplaciano de grafo discretiza $\Delta_\M$, sus
+autovectores discretizan las autofunciones $\varphi_k$, y las transformadas de
+Fourier de grafo y de variedad coinciden en el l\'imite de muestreo. Un filtro
+espectral aprendido sobre una malla suficientemente densa aproxima, por tanto, un
+operador continuo independiente de la malla --- la propiedad que permite a tales
+modelos transferirse entre discretizaciones de la misma forma.
+
+\begin{table}[h]
+\centering
+\caption{Correspondencia entre el an\'alisis espectral en variedades y en grafos.}
+\label{tab:geo:analogy}
+\begin{tabular}{@{}p{5.4cm}p{6.0cm}@{}}
+\toprule
+\textbf{Variedad $(\M, g)$} & \textbf{Grafo $G = (V,E)$} \\
+\midrule
+Laplace--Beltrami $\Delta_\M$ & Laplaciano de grafo $L = D - W$ \\
+\addlinespace
+Autofunciones $\varphi_k$ & Autovectores del laplaciano $u_k$ \\
+\addlinespace
+Espectro $0 = \lambda_0 \le \lambda_1 \le \cdots$ & Autovalores $0 = \lambda_0 \le \cdots \le \lambda_{n-1}$ \\
+\addlinespace
+$\hat f(\lambda_k) = \inner{f}{\varphi_k}$ & $\hat f = U^\top f$ \\
+\addlinespace
+Filtro espectral $\eta(\lambda_k)$ & Filtro espectral $\eta(\Lambda)$ \\
+\addlinespace
+Elemento de volumen $dV_g$ & Pesos de v\'ertice / \'areas de Voronoi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Perspectiva.}
+Las geod\'esicas completan el cuadro geom\'etrico iniciado con rejillas, grupos y
+grafos: dotan a un dominio de distancia intr\'inseca, curvatura y una noci\'on
+rigurosa de flujo de informaci\'on. Dos hilos contin\'uan adelante. La
+ambig\"uedad gauge de las coordenadas normales (\Cref{rem:geo:gauge}) --- la
+ausencia de un marco local can\'onico en un dominio curvo --- es precisamente el
+problema que resuelven las redes equivariantes gauge del \Cref{ch:gauges}. Y el
+lenguaje espectral compartido de la \Cref{tab:geo:analogy}, junto con la
+agregaci\'on por pseudo-coordenadas de MoNet, sit\'ua las convoluciones en
+rejillas, grafos y variedades dentro del \'unico marco de paso de mensajes al
+que vuelven los \Cref{ch:applications,ch:conclusion}.

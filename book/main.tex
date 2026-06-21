@@ -21,6 +21,13 @@
       inner=0.9in,outer=0.7in,top=0.8in,bottom=0.9in}}
 \fi
 
+% ----- Language switch (set by the wrapper files) -------------------
+% \booklang selects the edition language: en (default) or es. It picks
+% the babel language, theorem names, and the localized chapter / front
+% matter sources under chapters/<lang>/ and frontmatter/<lang>/.
+\providecommand{\booklang}{en}
+\input{lang/\booklang}
+
 \input{preamble}
 
 \title{Geometric Deep Learning}
@@ -31,28 +38,28 @@
 
 % ----- Front matter -------------------------------------------------
 \frontmatter
-\input{frontmatter/titlepage}
-\input{frontmatter/abstract}
-\input{frontmatter/preface}
+\input{frontmatter/\booklang/titlepage}
+\input{frontmatter/\booklang/abstract}
+\input{frontmatter/\booklang/preface}
 \tableofcontents
 
 % ----- Main matter --------------------------------------------------
 \mainmatter
-\part{Foundations}
-\input{chapters/01-introduction}
-\input{chapters/02-mathematical-foundations}
-\input{chapters/03-geometric-priors}
+\part{\partFoundations}
+\input{chapters/\booklang/01-introduction}
+\input{chapters/\booklang/02-mathematical-foundations}
+\input{chapters/\booklang/03-geometric-priors}
 
-\part{The Five Gs}
-\input{chapters/04-grids}
-\input{chapters/05-groups}
-\input{chapters/06-graphs}
-\input{chapters/07-geodesics-manifolds}
-\input{chapters/08-gauges}
+\part{\partFiveGs}
+\input{chapters/\booklang/04-grids}
+\input{chapters/\booklang/05-groups}
+\input{chapters/\booklang/06-graphs}
+\input{chapters/\booklang/07-geodesics-manifolds}
+\input{chapters/\booklang/08-gauges}
 
-\part{Practice}
-\input{chapters/09-applications}
-\input{chapters/10-conclusion}
+\part{\partPractice}
+\input{chapters/\booklang/09-applications}
+\input{chapters/\booklang/10-conclusion}
 
 % ----- Back matter --------------------------------------------------
 \backmatter

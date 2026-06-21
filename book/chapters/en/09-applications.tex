@@ -1,11 +1,450 @@
+\providecommand{\SO}{\mathrm{SO}}
+\providecommand{\SE}{\mathrm{SE}}
+\providecommand{\Eucl}{\mathrm{E}}
+\providecommand{\Hyp}{\mathbb{H}}
+
 \chapter{Applications}
 \label{ch:applications}
 
+The previous chapters built a theory: domains carry symmetries, symmetries
+constrain architectures, and a single principle --- equivariant message
+passing --- unifies convolutional networks, graph networks, and attention
+mechanisms. This chapter turns to practice. Its purpose is not to catalogue
+every system that uses geometric deep learning, but to show how the abstract
+machinery of the ``5~Gs'' becomes concrete in real problems, and why the
+geometric viewpoint translates into measurable gains in accuracy, data
+efficiency, and physical consistency.
+
+We organize the survey around three families of data. \emph{Computer vision}
+ranges from regular pixel grids to unstructured three-dimensional point clouds,
+exercising the grid, group, and gauge themes. \emph{Molecules and physical
+systems} are the showcase of $\Eucl(3)$ and $\SE(3)$ equivariance, where
+respecting the symmetries of physics is not a refinement but a requirement.
+\emph{Recommender systems and social networks} are relational by nature and
+rely on permutation invariance and, increasingly, on non-Euclidean geometry. A
+fourth section, on \emph{geometric attention}, acts as a bridge: it shows how
+the transformer --- the architecture behind much of modern machine learning ---
+fits the geometric blueprint and reappears, suitably constrained, throughout the
+other application areas.
+
 \section{Computer vision}
-Placeholder.
+\label{sec:apps:vision}
+
+Computer vision is the historical birthplace of the ideas in this book.
+Convolutional neural networks won the ImageNet competition in
+2012~\citep{krizhevsky2012alexnet} precisely because they encode a symmetry of
+images: a translation of the input produces a translated feature map. As
+developed in \Cref{ch:grids}, this translation equivariance is what lets a
+single learned filter be reused at every position, slashing the parameter count
+and providing the inductive bias that makes images learnable from finite data.
+Everything that follows in computer vision can be read as an attempt to extend
+this success beyond the flat pixel grid.
+
+\paragraph{Beyond translation.}
+Many visual tasks are invariant to more than translation. A galaxy, a cell
+under a microscope, or an aerial image has no preferred orientation; a
+classifier should not have to relearn the same pattern in every rotated copy.
+Group-equivariant convolutional networks (\Cref{ch:groups}) build rotation and
+reflection symmetry directly into the convolution, so that a feature detected in
+one orientation is automatically detected in all of them. The payoff is sharper
+on small datasets, where data augmentation cannot cover the symmetry group
+densely enough and the architecture must supply the invariance instead.
+
+\paragraph{Three-dimensional vision.}
+The cleanest break from the grid comes with three-dimensional data. A LiDAR
+scan or a depth sensor returns a \emph{point cloud}: an unordered set of points
+in $\R^3$, with no grid, no canonical ordering, and a variable cardinality. The
+relevant symmetry is twofold. First, the output must be \emph{invariant to
+permutations} of the points, since the set $\{p_1,\dots,p_n\}$ does not depend on
+how we list its elements. Second, for many tasks it must be invariant or
+equivariant to rigid motions of the scene. The first requirement is captured
+exactly by the theory of functions on sets.
+
+\begin{theorem}[Universal representation of set functions]
+\label{thm:apps:deepsets}
+Any continuous permutation-invariant function $f$ of a set
+$\{x_1,\dots,x_n\}\subset\R^d$ can be written in the form
+\[
+  f(\{x_1,\dots,x_n\}) \;=\; \rho\!\left(\sum_{i=1}^n \phi(x_i)\right),
+\]
+for suitable continuous functions $\phi$ and $\rho$.
+\end{theorem}
+
+This result, due to the DeepSets framework~\citep{zaheer2017deepsets}, is the
+theoretical foundation of architectures such as
+PointNet~\citep{qi2017pointnet}: encode each point independently with a shared
+network $\phi$, pool the encodings with a permutation-invariant aggregator (a
+sum or a max), and decode with $\rho$. The construction is the simplest possible
+instance of the message-passing blueprint of \Cref{ch:graphs} --- a single
+round of messages on a graph with no edges --- and it already guarantees the
+correct invariance by design rather than by augmentation.
+
+\paragraph{Curved domains.}
+When the data lives on a curved surface rather than in free space, the gauge and
+geodesic themes (\Cref{ch:geodesics,ch:gauges}) take over. Spherical signals ---
+panoramic images, cosmological maps, the surface of the Earth --- are processed
+by spherical convolutional networks~\citep{cohen2018sphericalcnns} that are
+equivariant to the rotation group $\SO(3)$, so that rotating the sphere rotates
+the response coherently. On a general mesh there is no global frame, and
+gauge-equivariant networks ensure that the output does not depend on the
+arbitrary local choice of coordinates. In every case the recurring lesson is the
+same: identify the symmetry of the domain, then build it into the operator.
+
+\section{Geometric attention and transformers}
+\label{sec:apps:attention}
+
+The transformer~\citep{vaswani2017attentionneed} is, at first sight, a creature
+of a different world: it was designed for sequences of words, not for grids or
+graphs. Yet it fits the geometric picture precisely, and understanding why
+explains both its success and the long line of geometric variants that power the
+applications in the rest of this chapter.
+
+\paragraph{Attention as adaptive message passing.}
+Scaled dot-product attention computes, for each element, a weighted average of
+the others,
+\[
+  \mathrm{Attention}(Q,K,V)
+  = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
+  \qquad
+  y_i = \sum_{j} \alpha_{ij}\, v_j,
+\]
+where the weights $\alpha_{ij}\ge 0$ sum to one and form a probability
+distribution over the inputs. Read geometrically, this is message passing
+(\Cref{ch:graphs}) in which the edge weights are not fixed by the domain but
+\emph{computed from the data}: each element queries the others and decides how
+much to listen to each. Where a convolution hard-codes the neighbourhood
+weights and a graph network fixes them by the topology, attention learns them
+on the fly. This places attention at the adaptive end of a spectrum whose rigid
+end is the equivariant convolution --- a tension between built-in structure and
+learned flexibility that recurs throughout geometric deep learning.
+
+\paragraph{Attention on graphs.}
+The most direct geometric instance is the Graph Attention Network
+(GAT)~\citep{velickovic2017graph}, which restricts attention to the neighbours
+of each node and weights them adaptively. For a node $i$ with neighbourhood
+$\mathcal{N}(i)$, it computes attention coefficients from the node features,
+normalizes them over the neighbourhood, and aggregates,
+\[
+  e_{ij} = \operatorname{LeakyReLU}\!\bigl(a^\top[Wh_i \,\|\, Wh_j]\bigr),
+  \qquad
+  \alpha_{ij} = \operatorname{softmax}_j(e_{ij}),
+  \qquad
+  h_i' = \sigma\!\Bigl(\textstyle\sum_{j\in\mathcal{N}(i)} \alpha_{ij}\,Wh_j\Bigr).
+\]
+Because the coefficients depend only on the features of the nodes involved and
+not on any ordering, the layer is permutation-equivariant by construction
+(\Cref{fig:apps:gat}). Like all standard message-passing networks, its power to
+distinguish graphs is bounded by the Weisfeiler--Leman test~\citep{xu2019how},
+but the learned, anisotropic weighting of neighbours makes it markedly more
+expressive in practice than fixed-weight aggregation.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small]
+\tikzset{
+    targetnode/.style={circle, draw=gdlred!70, fill=gdlred!20,
+        minimum size=28pt, inner sep=0pt, font=\small\bfseries, line width=1.6pt},
+    neighnode/.style={circle, draw=gdlblue!60, fill=gdlblue!20,
+        minimum size=22pt, inner sep=0pt, font=\small},
+    nonneighnode/.style={circle, draw=gdlgray!40, fill=gdlgray!15,
+        minimum size=20pt, inner sep=0pt, font=\small, text=gdlgray!70!black}
+}
+\node[targetnode] (vi) at (0, 0) {$v_i$};
+\node[neighnode] (v1) at (-2.4, 1.8)  {$v_1$};
+\node[neighnode] (v2) at (0.0, 2.6)   {$v_2$};
+\node[neighnode] (v3) at (2.4, 1.4)   {$v_3$};
+\node[neighnode] (v4) at (-2.2, -1.4) {$v_4$};
+\node[nonneighnode] (v5) at (2.6, -1.6)  {$v_5$};
+\node[nonneighnode] (v6) at (-3.6, 0.2)  {$v_6$};
+\draw[gdlgray!40, thin] (v1) -- (v6);
+\draw[gdlgray!40, thin] (v4) -- (v6);
+\draw[gdlgray!40, thin] (v3) -- (v5);
+\draw[gdlgray!40, thin] (v1) -- (v2);
+\draw[gdlgray!40, thin] (vi) -- (v1);
+\draw[gdlgray!40, thin] (vi) -- (v2);
+\draw[gdlgray!40, thin] (vi) -- (v3);
+\draw[gdlgray!40, thin] (vi) -- (v4);
+\draw[gdlgray!40, thin] (v5) -- (v3);
+\draw[-{Stealth[length=7pt,width=5pt]}, line width=3.2pt,
+    gdlorange, opacity=0.90, shorten >=8pt, shorten <=7pt] (v2) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v2)!0.48!(vi) + (0.7, 0.1)$) {$\alpha_{2i} = 0.42$};
+\draw[-{Stealth[length=6pt,width=4.5pt]}, line width=2.2pt,
+    gdlorange, opacity=0.75, shorten >=8pt, shorten <=7pt] (v1) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v1)!0.48!(vi) + (-0.85, -0.15)$) {$\alpha_{1i} = 0.28$};
+\draw[-{Stealth[length=5.5pt,width=4pt]}, line width=1.5pt,
+    gdlorange, opacity=0.60, shorten >=8pt, shorten <=7pt] (v3) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v3)!0.48!(vi) + (0.85, -0.15)$) {$\alpha_{3i} = 0.19$};
+\draw[-{Stealth[length=5pt,width=3.5pt]}, line width=0.9pt,
+    gdlorange, opacity=0.45, shorten >=8pt, shorten <=7pt] (v4) -- (vi);
+\node[font=\scriptsize, text=gdlorange!70!black, fill=white, inner sep=1.5pt,
+    rounded corners=1pt] at ($(v4)!0.48!(vi) + (-0.85, 0.15)$) {$\alpha_{4i} = 0.11$};
+\begin{scope}[shift={(-3.6, -2.8)}]
+    \node[font=\scriptsize\bfseries, text=gdlgray!70!black, anchor=west]
+        at (0, 0) {Thickness $\propto$ attention weight};
+    \draw[-{Stealth[length=4pt,width=3pt]}, line width=0.9pt,
+        gdlorange, opacity=0.45] (0, -0.4) -- (1.2, -0.4);
+    \node[font=\tiny, text=gdlgray!70!black, anchor=west] at (1.35, -0.4) {low};
+    \draw[-{Stealth[length=5pt,width=4pt]}, line width=3.2pt,
+        gdlorange, opacity=0.90] (2.4, -0.4) -- (3.6, -0.4);
+    \node[font=\tiny, text=gdlgray!70!black, anchor=west] at (3.75, -0.4) {high};
+\end{scope}
+\end{tikzpicture}
+\caption[Graph attention mechanism]{The graph attention mechanism. The target
+node (red) computes attention coefficients $\alpha_{ij}$ with each neighbour
+(blue); the arrow thickness reflects the magnitude of the learned weight. The
+network learns to assign different importance to each neighbour from the node
+features alone, so the operation is invariant to how the neighbours are
+ordered.}
+\label{fig:apps:gat}
+\end{figure}
+
+\paragraph{Equivariant attention in 3D.}
+When the inputs carry geometric coordinates, attention must respect the
+symmetries of space. The general principle is clean: an attention mechanism is
+$G$-equivariant precisely when the compatibility scores are $G$-invariant and
+the value transformation commutes with the group action.
+
+\begin{proposition}[Equivariant attention]
+\label{prop:apps:equiv-attn}
+An attention layer is $G$-equivariant if the attention scores $\alpha_{ij}$ are
+invariant under the action of $G$ and the value map commutes with that action.
+Then $f(g\cdot x) = g\cdot f(x)$ for every $g\in G$.
+\end{proposition}
+
+The $\SE(3)$-Transformer~\citep{fuchs2020se3transformers} realizes this for
+rigid motions in three dimensions. It computes attention scores from quantities
+that are invariant under rotations and translations --- scalar features,
+interatomic distances $\|r_i - r_j\|$, and inner products of vector features ---
+and aggregates type-$\ell$ features so that vectors rotate with the scene while
+scalars stay fixed. The Equiformer~\citep{liao2022equiformer} replaces the dot
+product with an equivariant network acting on tensor products of irreducible
+representations, allowing richer interactions while preserving $\SO(3)$
+equivariance, and the Point Transformer~\citep{zhao2021point} brings vector
+attention to point clouds. These models are the workhorses of the molecular and
+physical applications of the next section.
+
+\paragraph{Non-Euclidean and algebraic attention.}
+Two further directions widen the reach of attention. Hyperbolic attention
+networks~\citep{gulcehre2018hyperbolic} replace the Euclidean inner product with
+operations in hyperbolic space, whose exponentially growing volume embeds
+tree-like and hierarchical data with far less distortion than Euclidean space
+(developed in \Cref{ch:geodesics}). Geometric Algebra Transformers
+(GATr)~\citep{brehmer2023geometric} represent points, lines, and planes uniformly
+as multivectors of a Clifford algebra and build $\Eucl(3)$-equivariant attention
+on top, yielding a single architecture that handles diverse 3D geometric
+primitives. The common thread is that the inductive bias of the geometry --- be
+it negative curvature or the algebra of rigid motions --- is carried into the
+attention operator itself.
 
 \section{Molecules and physical systems}
-Placeholder.
+\label{sec:apps:molecules}
+
+If there is one domain that vindicates geometric deep learning, it is the
+physical and life sciences. Molecules \emph{are} graphs whose nodes are atoms
+and whose edges are bonds, embedded in $\R^3$; the laws governing them are
+manifestly invariant under rigid motions of space. A model that ignores these
+symmetries wastes capacity relearning physics that could simply be assumed.
+
+\paragraph{Molecular property prediction.}
+Graph neural networks predict pharmacological and quantum-chemical properties
+directly from the molecular graph, replacing the hand-crafted descriptors and
+string encodings (such as SMILES) of classical cheminformatics, which discard
+the three-dimensional information that governs biological activity. When the
+target depends on the molecular conformation --- energies, forces, dipole
+moments --- the model must be $\Eucl(3)$- or $\SE(3)$-equivariant: rotating the
+molecule must rotate predicted vectors and leave predicted scalars unchanged.
+The equivariant attention architectures of the previous section, together with
+tensor-field and equivariant message-passing networks, are precisely the tools
+that enforce this.
+
+\begin{example}[AlphaFold and protein structure]
+\label{ex:apps:alphafold}
+The most celebrated success of the field is
+AlphaFold~\citep{jumper2021alphafold}, which solved the decades-old problem of
+predicting a protein's three-dimensional structure from its amino-acid sequence.
+At its core lies an attention-based architecture that reasons about the geometry
+of residues in space while respecting the $\SE(3)$ symmetry of rigid motions:
+the predicted structure transforms consistently when the frame of reference is
+rotated or translated. Geometric equivariance is not a stylistic choice here but
+a structural requirement, and it is a large part of why the model generalizes so
+well.
+\end{example}
+
+\paragraph{Physical simulation.}
+The same principles extend from static structures to dynamics. Equivariant
+networks learn to simulate physical systems --- fluids, deformable materials,
+many-body dynamics --- by operating on irregular meshes or particle sets while
+respecting the symmetries of the underlying differential equations. Because the
+symmetry is built in, the predictions are physically consistent by construction
+(a rotated input yields a correspondingly rotated forecast) and the models often
+match or exceed classical numerical solvers at a fraction of the cost. A single
+foundation model can even be pretrained across small molecules and proteins at
+once: equivariance is an architectural property, independent of the data, so a
+network trained to be equivariant on one domain remains equivariant when
+transferred to another with the same symmetry~\citep{jiao2024ept}.
+
+\paragraph{Materials science.}
+Crystalline solids add a further layer of symmetry: the discrete translational
+and point-group symmetries of the crystal lattice. Encoding these symmetries in
+equivariant networks lets models predict mechanical, thermal, and electronic
+properties of candidate compounds, accelerating the search for new materials. As
+in the molecular case, the geometric prior turns scarce, expensive labels into a
+tractable learning problem.
 
 \section{Recommender systems and social networks}
-Placeholder.
+\label{sec:apps:graphs}
+
+Relational data --- who interacts with whom, who buys what --- is graph-shaped
+by nature, and here the governing symmetry is permutation invariance: the
+identity of a user does not depend on the order in which we list the accounts.
+Graph neural networks (\Cref{ch:graphs}) exploit this directly, propagating
+information along the edges of the interaction graph so that each node's
+representation is shaped by its neighbourhood.
+
+\paragraph{Recommendation and social analysis.}
+Recommender systems model users and items as nodes of a bipartite graph and
+learn embeddings by message passing over observed interactions, capturing
+collaborative signals that flat feature tables miss. Social-network analysis
+uses the same machinery for node classification (inferring user attributes),
+link prediction (suggesting connections), and community detection. In all of
+these the irregular topology --- nodes with wildly different numbers of
+neighbours and no natural ordering --- is exactly what convolutional models
+cannot handle and graph networks are built for.
+
+\paragraph{Hierarchies and hyperbolic geometry.}
+Many relational datasets are not merely irregular but \emph{hierarchical}:
+taxonomies, organizational charts, knowledge graphs, and the follower structure
+of social networks all branch like trees. The number of nodes at distance $r$
+from a root grows exponentially in $r$, and Euclidean space simply does not have
+enough room to embed such growth without crushing distances. Hyperbolic space
+does: its volume also grows exponentially, so a tree embeds with almost no
+distortion (\Cref{fig:apps:hyperbolic}). This is the geometric motivation behind
+hyperbolic embeddings and the hyperbolic attention networks of
+\Cref{sec:apps:attention}, which place knowledge-graph entities and hierarchical
+users in negatively curved space.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    root node/.style={circle, draw=gdlpurple!80, fill=gdlpurple!70,
+        minimum size=12pt, inner sep=0pt},
+    depth1 node/.style={circle, draw=gdlblue!80, fill=gdlblue!60,
+        minimum size=10pt, inner sep=0pt},
+    depth2 node/.style={circle, draw=gdlgreen!80, fill=gdlgreen!60,
+        minimum size=10pt, inner sep=0pt},
+    leaf node/.style={circle, draw=gdlyellow!80, fill=gdlyellow!70,
+        minimum size=8pt, inner sep=0pt},
+    tree edge/.style={draw=gdlgray!50, line width=0.8pt},
+    scale=0.82, every node/.style={transform shape}
+]
+% LEFT: Euclidean
+\begin{scope}[shift={(0,0)}]
+    \coordinate (r) at (0, 1.9);
+    \coordinate (d1-0) at (-1.8, 0.4); \coordinate (d1-1) at ( 1.8, 0.4);
+    \coordinate (d2-0) at (-2.7, -1.1); \coordinate (d2-1) at (-0.9, -1.1);
+    \coordinate (d2-2) at ( 0.9, -1.1); \coordinate (d2-3) at ( 2.7, -1.1);
+    \coordinate (d3-0) at (-3.15, -2.6); \coordinate (d3-1) at (-2.25, -2.6);
+    \coordinate (d3-2) at (-1.35, -2.6); \coordinate (d3-3) at (-0.45, -2.6);
+    \coordinate (d3-4) at ( 0.45, -2.6); \coordinate (d3-5) at ( 1.35, -2.6);
+    \coordinate (d3-6) at ( 2.25, -2.6); \coordinate (d3-7) at ( 3.15, -2.6);
+    \draw[dashed, gdlgray!50, line width=0.8pt] (0,-0.35) circle (3.6);
+    \draw[tree edge] (r) -- (d1-0); \draw[tree edge] (r) -- (d1-1);
+    \draw[tree edge] (d1-0) -- (d2-0); \draw[tree edge] (d1-0) -- (d2-1);
+    \draw[tree edge] (d1-1) -- (d2-2); \draw[tree edge] (d1-1) -- (d2-3);
+    \draw[tree edge] (d2-0) -- (d3-0); \draw[tree edge] (d2-0) -- (d3-1);
+    \draw[tree edge] (d2-1) -- (d3-2); \draw[tree edge] (d2-1) -- (d3-3);
+    \draw[tree edge] (d2-2) -- (d3-4); \draw[tree edge] (d2-2) -- (d3-5);
+    \draw[tree edge] (d2-3) -- (d3-6); \draw[tree edge] (d2-3) -- (d3-7);
+    \node[root node] at (r) {};
+    \node[depth1 node] at (d1-0) {}; \node[depth1 node] at (d1-1) {};
+    \foreach \i in {0,...,3} {\node[depth2 node] at (d2-\i) {};}
+    \foreach \i in {0,...,7} {\node[leaf node] at (d3-\i) {};}
+    \node[font=\footnotesize\itshape, text=gdlgray!70!black] at (0, -4.6)
+        {Euclidean embedding};
+\end{scope}
+% RIGHT: Poincaré disk
+\begin{scope}[shift={(9.0, -0.35)}]
+    \pgfmathsetmacro{\R}{3.6}
+    \foreach \rad in {0.30, 0.52, 0.70, 0.83, 0.92} {
+        \draw[gdlgray!20, thin] (0,0) circle (\rad*\R);}
+    \foreach \ang in {0,30,60,90,120,150,180,210,240,270,300,330} {
+        \draw[gdlgray!20, thin] (0,0) -- ({\ang}:\R);}
+    \draw[black, line width=1.2pt] (0,0) circle (\R);
+    \pgfmathsetmacro{\rone}{0.6044*\R}
+    \pgfmathsetmacro{\rtwo}{0.8854*\R}
+    \pgfmathsetmacro{\rthree}{0.9505*\R}
+    \coordinate (pr) at (0, 0);
+    \coordinate (pd1-0) at ({90}:{\rone}); \coordinate (pd1-1) at ({270}:{\rone});
+    \coordinate (pd2-0) at ({50}:{\rtwo}); \coordinate (pd2-1) at ({130}:{\rtwo});
+    \coordinate (pd2-2) at ({230}:{\rtwo}); \coordinate (pd2-3) at ({310}:{\rtwo});
+    \coordinate (pd3-0) at ({35}:{\rthree}); \coordinate (pd3-1) at ({65}:{\rthree});
+    \coordinate (pd3-2) at ({115}:{\rthree}); \coordinate (pd3-3) at ({145}:{\rthree});
+    \coordinate (pd3-4) at ({215}:{\rthree}); \coordinate (pd3-5) at ({245}:{\rthree});
+    \coordinate (pd3-6) at ({295}:{\rthree}); \coordinate (pd3-7) at ({325}:{\rthree});
+    \draw[tree edge] (pr) -- (pd1-0); \draw[tree edge] (pr) -- (pd1-1);
+    \draw[tree edge] (pd1-0) -- (pd2-0); \draw[tree edge] (pd1-0) -- (pd2-1);
+    \draw[tree edge] (pd1-1) -- (pd2-2); \draw[tree edge] (pd1-1) -- (pd2-3);
+    \draw[tree edge] (pd2-0) -- (pd3-0); \draw[tree edge] (pd2-0) -- (pd3-1);
+    \draw[tree edge] (pd2-1) -- (pd3-2); \draw[tree edge] (pd2-1) -- (pd3-3);
+    \draw[tree edge] (pd2-2) -- (pd3-4); \draw[tree edge] (pd2-2) -- (pd3-5);
+    \draw[tree edge] (pd2-3) -- (pd3-6); \draw[tree edge] (pd2-3) -- (pd3-7);
+    \node[root node] at (pr) {};
+    \node[depth1 node] at (pd1-0) {}; \node[depth1 node] at (pd1-1) {};
+    \foreach \i in {0,...,3} {\node[depth2 node] at (pd2-\i) {};}
+    \foreach \i in {0,...,7} {\node[leaf node] at (pd3-\i) {};}
+    \node[font=\footnotesize\itshape, text=gdlgray!70!black] at (0, -4.25)
+        {Poincar\'e-disk embedding};
+\end{scope}
+\end{tikzpicture}
+\caption[Euclidean versus hyperbolic embedding of a tree]{Embedding a balanced
+tree in Euclidean space (left) and in the Poincar\'e disk (right). In the plane,
+successive levels crowd together and sibling subtrees overlap, distorting
+distances; in hyperbolic space the exponentially growing volume gives every
+level room to spread out, so the tree embeds with little distortion. This is why
+hierarchical relational data is naturally modelled in negatively curved space.}
+\label{fig:apps:hyperbolic}
+\end{figure}
+
+\paragraph{Temporal graphs: fraud and risk.}
+Financial transactions form graphs whose topology evolves in time. Graph neural
+networks operating on these temporal graphs detect fraud rings and systemic
+risk by recognizing structural patterns --- unusual subgraphs, sudden changes in
+connectivity --- that tabular models, blind to the relational structure, cannot
+see. The geometric prior is again decisive: it is the \emph{shape} of the
+interaction pattern, not the individual features, that carries the signal.
+
+\section{A common principle}
+\label{sec:apps:common}
+
+Across these domains a single message recurs. In computer vision the symmetry is
+translation, rotation, or the gauge freedom of a curved surface; in molecular
+and physical modelling it is the Euclidean group of rigid motions; in relational
+data it is permutation of nodes, and the geometry of the embedding space may be
+flat or negatively curved. In every case the same recipe applies: identify the
+symmetry the problem respects, build it into the architecture, and let the
+network spend its capacity on what actually varies.
+
+\begin{remark}[Geometry as the organizing principle]
+\label{rem:apps:unification}
+The breadth of these applications is itself the strongest evidence for the
+central claim of this book. Convolutional networks for images, equivariant
+transformers for proteins, and graph networks for social data look like
+unrelated tools, yet each is an instance of equivariant message passing,
+differing only in the domain and the symmetry group it respects. Geometry is not
+a domain-specific trick but the common principle that geometric deep learning
+identifies, formalizes, and exploits.
+\end{remark}
+
+Beyond these consolidated areas, the same ideas are opening lines of research
+wherever geometric structure is fundamental: computational neuroscience, where
+graph networks model structural and functional brain connectivity and reveal
+patterns of neurological disorder invisible to tabular methods; and climate
+science, where the spherical geometry of the Earth invites $\SO(3)$-equivariant
+spherical networks for weather and climate prediction. The diversity of these
+settings underscores that respecting the geometry of data is not an
+optimization detail but the organizing principle of the field, and the bridge
+from the theory of the preceding chapters to the systems that are reshaping
+science and technology.

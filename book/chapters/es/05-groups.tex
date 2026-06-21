@@ -1,0 +1,738 @@
+\providecommand{\SO}{\operatorname{SO}}
+\providecommand{\OO}{\operatorname{O}}
+\providecommand{\SE}{\operatorname{SE}}
+\providecommand{\Eucl}{\operatorname{E}}
+\providecommand{\GL}{\operatorname{GL}}
+\providecommand{\Sym}{\mathfrak{S}}
+\providecommand{\Haar}{\mathrm{d}\mu}
+
+\chapter{Grupos: Redes Equivariantes a Grupos}
+\label{ch:groups}
+
+Las redes convolucionales del \Cref{ch:grids} deben su \'exito a una sola
+simetr\'ia: la traslaci\'on. Un filtro que reconoce un borde en una esquina de
+una imagen reconoce el mismo borde en cualquier otra parte, porque la
+convoluci\'on conmuta con los desplazamientos. Pero la traslaci\'on es solo una
+simetr\'ia entre muchas. Una imagen de tejido al microscopio no tiene un
+``arriba'' privilegiado; una fotograf\'ia de sat\'elite puede aparecer rotada un
+\'angulo cualquiera; una mol\'ecula puede reflejarse en su imagen especular. Una
+red equivariante solo a traslaciones debe redescubrir de forma independiente cada
+patr\'on rotado o reflejado, malgastando capacidad en copias de la misma
+caracter\'istica.
+
+Este cap\'itulo desarrolla la respuesta sistem\'atica: sustituir el grupo de
+traslaciones por un grupo de simetr\'ia arbitrario $\group$ y generalizar la
+convoluci\'on en consecuencia. El resultado ---la \emph{convoluci\'on de
+grupo}--- produce redes equivariantes por construcci\'on a rotaciones,
+reflexiones y otras transformaciones geom\'etricas. Construimos la teor\'ia desde
+los grupos finitos, como las simetr\'ias del cuadrado, la extendemos a grupos
+compactos continuos ($\SO(2)$, $\SO(3)$) mediante filtros orientables y an\'alisis
+arm\'onico, la llevamos a los grupos eucl\'ideos no compactos ($\Eucl(3)$,
+$\SE(3)$) que rigen las nubes de puntos tridimensionales y las mol\'eculas, y
+cerramos con el grupo de permutaciones, la simetr\'ia de los conjuntos no
+ordenados. En todo momento sigue vigente el principio rector del \Cref{ch:priors}:
+las capas equivariantes se componen en redes equivariantes, y una \'unica lectura
+invariante al final produce una predicci\'on insensible a la pose elegida.
+
+\section{M\'as all\'a de las traslaciones}
+\label{sec:groups:beyond}
+
+Recordemos del \Cref{ch:priors} que una aplicaci\'on $\Phi$ entre espacios de
+se\~nales es \emph{$\group$-equivariante} si $\Phi(L_g f) = L'_g\,\Phi(f)$ para
+todo $g \in \group$, donde $L_g$ y $L'_g$ denotan la acci\'on de $g$ sobre la
+entrada y la salida, e \emph{$\group$-invariante} si $\Phi(L_g f) = \Phi(f)$. Las
+redes convolucionales cl\'asicas realizan esta propiedad para el grupo de
+traslaciones enteras $\group = (\Z^2, +)$. La equivarianza generaliza su
+caracter\'istico reparto de pesos: si los datos poseen simetr\'ias bajo un grupo
+$\group$, las aplicaciones $\group$-equivariantes preservan esas simetr\'ias en
+cada capa, dando lugar a representaciones m\'as robustas y eficientes en
+par\'ametros.
+
+Muchos dominios portan simetr\'ias estrictamente mayores que la traslaci\'on. Las
+rotaciones por m\'ultiplos de $90^\circ$ y las reflexiones dejan invariable el
+aspecto de texturas, cristales e im\'agenes a\'ereas; las rotaciones planares
+arbitrarias act\'uan sobre las crestas de huellas dactilares y las im\'agenes de
+fibras; las rotaciones tridimensionales act\'uan sobre mol\'eculas, prote\'inas y
+nubes de puntos; y reetiquetar los elementos de un conjunto deja invariable el
+propio conjunto. Cada una de estas se describe mediante un grupo, y cada una
+admite una red equivariante construida sobre el mismo esquema.
+
+\begin{example}[El grupo di\'edrico del cuadrado]
+\label{ex:groups:d4}
+Las simetr\'ias de un cuadrado forman el grupo di\'edrico $D_4$, con ocho
+elementos
+\[
+  D_4 = \{e,\, r,\, r^2,\, r^3,\, s,\, sr,\, sr^2,\, sr^3\},
+\]
+donde $r$ es la rotaci\'on por $90^\circ$ (con $r^4 = e$), $s$ es una reflexi\'on
+(con $s^2 = e$), y los dos generadores satisfacen $srs = r^{-1}$. Su acci\'on
+sobre el plano est\'a generada por
+\[
+  r\cdot(x,y) = (-y,\,x), \qquad s\cdot(x,y) = (x,\,-y).
+\]
+Las cuatro rotaciones por s\'i solas forman el subgrupo c\'iclico $C_4$. Estos
+grupos discretos preservan exactamente la rejilla de p\'ixeles, lo que los
+convierte en el primer objetivo natural de las arquitecturas equivariantes de
+visi\'on.
+\end{example}
+
+La \Cref{fig:groups:d4} muestra los ocho elementos de $D_4$ actuando sobre un
+parche asim\'etrico. Una red $D_4$-equivariante produce respuestas de
+caracter\'isticas que se transforman de forma coherente bajo las ocho
+transformaciones, y una capa invariante final las colapsa en una \'unica
+respuesta independiente de la orientaci\'on o la quiralidad del parche.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.72,
+  cell/.style={draw=gdlgray!50, line width=0.3pt},
+  fill/.style={fill=gdlblue!55}, blank/.style={fill=gdlgray!12},
+  lbl/.style={font=\small, text=gdlpurple!70!black}]
+\newcommand{\glyph}[2]{%
+  \begin{scope}[shift={(#1)}]
+    \foreach \x in {0,1,2} \foreach \y in {0,1,2} {
+      \draw[cell, blank] (\x*0.5, \y*0.5) rectangle ++(0.5,0.5);
+    }
+    \foreach \c in {#2} {
+      \fill[fill] (\c) rectangle ++(0.5,0.5);
+    }
+  \end{scope}}
+\glyph{0,0}{0/0, 0/0.5, 0/1, 0.5/1, 1/1}
+\node[lbl] at (0.75,-0.45) {$e$};
+\glyph{2.4,0}{0/0, 0.5/0, 1/0, 1/0.5, 1/1}
+\node[lbl] at (3.15,-0.45) {$r$};
+\glyph{4.8,0}{2/2, 2/1.5, 2/1, 1.5/1, 1/1}
+\node[lbl] at (5.55,-0.45) {$r^2$};
+\glyph{7.2,0}{0/2, 0.5/2, 1/2, 0/1.5, 0/1}
+\node[lbl] at (7.95,-0.45) {$r^3$};
+\glyph{0,-2.6}{1/0, 1/0.5, 1/1, 0.5/1, 0/1}
+\node[lbl] at (0.75,-3.05) {$s$};
+\glyph{2.4,-2.6}{1/0, 0.5/0, 0/0, 0/0.5, 0/1}
+\node[lbl] at (3.15,-3.05) {$sr$};
+\glyph{4.8,-2.6}{0/2, 0/1.5, 0/1, 0.5/1, 1/1}
+\node[lbl] at (5.55,-3.05) {$sr^2$};
+\glyph{7.2,-2.6}{2/2, 1.5/2, 1/2, 2/1.5, 2/1}
+\node[lbl] at (7.95,-3.05) {$sr^3$};
+\node[font=\itshape\small, text=gdlgray!75!black, anchor=west] at (9.4,0.75) {rotaciones};
+\node[font=\itshape\small, text=gdlgray!75!black, anchor=west] at (9.4,-1.85) {reflexiones};
+\end{tikzpicture}
+\caption[Acci\'on del grupo di\'edrico $D_4$]{Los ocho elementos del grupo
+di\'edrico $D_4$ actuando sobre un glifo asim\'etrico. Fila superior: las cuatro
+rotaciones $e, r, r^2, r^3$. Fila inferior: las cuatro reflexiones
+$s, sr, sr^2, sr^3$. Una red $D_4$-equivariante responde de forma coherente en
+las ocho poses.}
+\label{fig:groups:d4}
+\end{figure}
+
+\section{Convoluciones de grupo}
+\label{sec:groups:gconv}
+
+Los prerrequisitos matem\'aticos ---grupos, acciones de grupo, representaciones,
+espacios homog\'eneos y la medida de Haar--- se desarrollan en el
+\Cref{ch:foundations}. Aqu\'i los aplicamos para definir la convoluci\'on sobre un
+grupo y caracterizar las capas equivariantes.
+
+\subsection{Convoluci\'on sobre un grupo}
+
+La convoluci\'on cl\'asica $(f * \psi)(x) = \int f(x-v)\,\psi(v)\,dv$ se apoya en
+la resta $x - v$, que expresa la traslaci\'on. Sustituirla por la operaci\'on de
+grupo produce la definici\'on general.
+
+\begin{definition}[Convoluci\'on de grupo]
+\label{def:groups:gconv}
+Para funciones $f, \psi : \group \to \R$ sobre un grupo $\group$ dotado de medida
+de Haar $\mu$, la \emph{convoluci\'on de grupo} es
+\[
+  (f *_\group \psi)(u) = \int_\group f(uv^{-1})\,\psi(v)\,d\mu(v),
+  \qquad u \in \group .
+\]
+Para un grupo finito la integral se convierte en una suma sobre los $|\group|$
+elementos.
+\end{definition}
+
+Tomando $\group = \Z^2$ se recupera la convoluci\'on ordinaria, pues $uv^{-1}$ se
+convierte en $u - v$ y la medida de Haar es la medida de conteo. La convoluci\'on
+de grupo hereda la propiedad que hac\'ia equivariante a la versi\'on cl\'asica:
+conmuta con la acci\'on por la izquierda del grupo.
+
+\begin{proposition}[Equivarianza de la convoluci\'on de grupo]
+\label{prop:groups:gconv-equiv}
+Sea $(L_h f)(u) = f(h^{-1}u)$ la traslaci\'on por la izquierda de $f$ por
+$h \in \group$. Entonces $(L_h f) *_\group \psi = L_h (f *_\group \psi)$, de modo
+que la convoluci\'on de grupo es $\group$-equivariante.
+\end{proposition}
+
+\begin{proof}
+Usando la sustituci\'on y la invarianza de la medida de Haar,
+\[
+  \big((L_h f) *_\group \psi\big)(u)
+    = \int_\group f(h^{-1}uv^{-1})\,\psi(v)\,d\mu(v)
+    = (f *_\group \psi)(h^{-1}u)
+    = \big(L_h (f *_\group \psi)\big)(u). \qedhere
+\]
+\end{proof}
+
+Este enunciado local tiene un rec\'iproco global notable, que justifica la
+convoluci\'on de grupo como \emph{la} operaci\'on equivariante y no meramente como
+\emph{una} operaci\'on equivariante.
+
+\begin{theorem}[Kondor--Trivedi]
+\label{thm:groups:kondor-trivedi}
+Una red neuronal feedforward es equivariante a la acci\'on de un grupo compacto
+$\group$ sobre sus entradas si y solo si cada una de sus capas lineales es una
+convoluci\'on de grupo generalizada en el sentido de la
+\Cref{def:groups:gconv}~\citep{kondor2018generalizationconvolutionalneural}.
+\end{theorem}
+
+La direcci\'on directa es la \Cref{prop:groups:gconv-equiv} aplicada capa a capa.
+El rec\'iproco usa la teor\'ia de representaciones y el an\'alisis arm\'onico para
+demostrar que toda aplicaci\'on lineal equivariante entre espacios de
+caracter\'isticas debe tener la forma de una convoluci\'on de grupo. El teorema
+eleva la convoluci\'on de grupo de una c\'omoda elecci\'on de dise\~no a una
+necesidad estructural: la equivarianza y la convoluci\'on son dos caras de la
+misma restricci\'on.
+
+\subsection{Elevaci\'on y capas de convoluci\'on de grupo}
+
+En la pr\'actica la se\~nal de entrada no es una funci\'on sobre el grupo, sino
+una funci\'on sobre un dominio como el plano $\R^2$, sobre el cual act\'ua
+$\group$. Una red $\group$-equivariante procede, por tanto, en tres etapas: una
+capa de \emph{elevaci\'on} que lleva la se\~nal planar a una funci\'on sobre el
+grupo, una o varias capas de \emph{convoluci\'on de grupo} que operan sobre el
+grupo, y una \emph{lectura invariante} final. Este es exactamente el patr\'on
+codificador--procesador--decodificador del \Cref{ch:priors}, instanciado para
+$\group$.
+
+\begin{definition}[Convoluci\'on de elevaci\'on]
+\label{def:groups:lift}
+Dada una se\~nal $f : \R^2 \to \R$ y un filtro $\psi : \R^2 \to \R$, la
+\emph{convoluci\'on de elevaci\'on} produce una funci\'on $F : \group \to \R$
+sobre el grupo,
+\[
+  (f \star \psi)(g) = \int_{\R^2} f(x)\,\psi(g^{-1}\!\cdot x)\,dx,
+  \qquad g \in \group ,
+\]
+donde $g^{-1}\!\cdot x$ denota la acci\'on de $g^{-1}$ sobre el punto
+$x \in \R^2$.
+\end{definition}
+
+La capa de elevaci\'on eval\'ua el filtro en cada pose $g$, registrando para cada
+una con qu\'e intensidad el filtro transformado correspondiente coincide con la
+entrada. Para $\group = D_4$ esto significa correlacionar la imagen con las ocho
+copias rotadas y reflejadas del filtro aprendible, produciendo un mapa de
+caracter\'isticas de ocho canales indexados por elementos del grupo.
+
+\begin{theorem}[Equivarianza de la elevaci\'on]
+\label{thm:groups:lift-equiv}
+Con $(L_h f)(x) = f(h^{-1}\!\cdot x)$, la convoluci\'on de elevaci\'on satisface
+\[
+  \big((L_h f) \star \psi\big)(g) = (f \star \psi)(h^{-1}g),
+\]
+de modo que una traslaci\'on de la entrada por $h$ se convierte en una
+traslaci\'on por la izquierda del mapa de caracter\'isticas elevado.
+\end{theorem}
+
+\begin{proof}
+Por definici\'on y mediante el cambio de variable $y = h^{-1}\!\cdot x$, cuyo
+jacobiano es constante porque $\group$ act\'ua por isometr\'ias,
+\[
+  \big((L_h f) \star \psi\big)(g)
+    = \int_{\R^2} f(h^{-1}\!\cdot x)\,\psi(g^{-1}\!\cdot x)\,dx
+    = \int_{\R^2} f(y)\,\psi\big((h^{-1}g)^{-1}\!\cdot y\big)\,dy
+    = (f \star \psi)(h^{-1}g). \qedhere
+\]
+\end{proof}
+
+Las capas posteriores operan sobre funciones definidas en el propio grupo y usan
+la convoluci\'on de grupo de la \Cref{def:groups:gconv}, cuya equivarianza es la
+\Cref{prop:groups:gconv-equiv}. Apilar una capa de elevaci\'on, varias capas de
+convoluci\'on de grupo y un \emph{pooling} invariante final (por ejemplo, una
+suma o un m\'aximo sobre el grupo) produce una red invariante a $\group$, como
+composici\'on de aplicaciones equivariantes seguida de una lectura invariante.
+
+\begin{example}[Representaci\'on regular en redes convolucionales de grupo]
+\label{ex:groups:regular}
+Para un grupo finito $\group = \{g_1, \dots, g_n\}$, el mapa de caracter\'isticas
+elevado es una funci\'on $F : \group \to \R^d$ y el grupo act\'ua sobre ella
+mediante la \emph{representaci\'on regular izquierda}
+\[
+  (\rho(g) F)(h) = F(g^{-1}h).
+\]
+La dimensi\'on del grupo $|\group|$ se convierte en un factor multiplicativo sobre
+el n\'umero de canales: cada posici\'on espacial porta ahora $|\group|$ canales de
+orientaci\'on, y la convoluci\'on de grupo los mezcla de un modo que respeta la
+estructura del grupo. Esta es la construcci\'on de las redes convolucionales
+equivariantes a grupos originales de \citet{cohen2016group}.
+\end{example}
+
+\subsection{Por qu\'e compensa la equivarianza}
+
+El poder expresivo de estas redes no se paga al precio de la universalidad. Sobre
+un dominio compacto $\mathcal{D}$ con un grupo compacto $\group$ actuando sobre
+\'el, las redes convolucionales $\group$-equivariantes son aproximadores
+universales de las aplicaciones continuas $\group$-equivariantes: para toda $f$
+equivariante continua y todo $\epsilon > 0$ existe una red de este tipo $\Phi$ con
+$\norm{f - \Phi}_{L^2} < \epsilon$. Restringir la atenci\'on a las aplicaciones
+equivariantes no pierde, por tanto, nada dentro de la clase de funciones que
+realmente se desea aprender.
+
+Lo que gana es eficiencia param\'etrica. Un modelo sin restricciones debe aprender
+el valor de un objetivo equivariante de forma independiente en cada punto de cada
+\'orbita $\{g\cdot x : g \in \group\}$; un modelo equivariante solo necesita
+aprenderlo en un dominio fundamental, ya que las restantes $|\group| - 1$ copias
+quedan fijadas por la \Cref{prop:groups:gconv-equiv}. Para un grupo finito esto
+reduce el n\'umero efectivo de par\'ametros libres aproximadamente en un factor
+$|\group|$ sin sacrificar precisi\'on de aproximaci\'on. Las arquitecturas
+equivariantes encogen as\'i el espacio de hip\'otesis precisamente en las
+direcciones que la simetr\'ia vuelve redundantes.
+
+\section{Filtros orientables y representaciones irreducibles}
+\label{sec:groups:steerable}
+
+Discretizar una simetr\'ia continua sacrifica precisi\'on. Una red
+$C_4$-equivariante ve un objeto rotado $45^\circ$ solo a trav\'es de su
+orientaci\'on de $90^\circ$ m\'as cercana, un error que puede alcanzar
+$45^\circ$. Para lograr la equivarianza al grupo continuo completo de rotaciones
+$\SO(2) = \{R_\theta : \theta \in [0,2\pi)\}$ ---que es compacto (un c\'irculo),
+abeliano ($R_\alpha R_\beta = R_{\alpha+\beta}$) y unidimensional--- no podemos
+simplemente sumar sobre sus elementos como hicimos para $D_4$. La soluci\'on es el
+an\'alisis arm\'onico: representar los filtros en una base que se transforme de
+forma sencilla bajo rotaci\'on.
+
+\subsection{Filtros orientables}
+
+\begin{definition}[Filtro orientable]
+\label{def:groups:steerable}
+Un filtro $h : \R^2 \to \R$ es \emph{orientable} (\emph{steerable}) de orden $N$
+si existen filtros base $h_0, \dots, h_{N-1}$ y funciones de interpolaci\'on
+$k_0, \dots, k_{N-1}$ tales que el filtro rotado satisface
+\[
+  h_\theta(x,y) = \sum_{n=0}^{N-1} k_n(\theta)\,h_n(x,y),
+\]
+donde $h_\theta$ es $h$ rotado un \'angulo $\theta$.
+\end{definition}
+
+La orientabilidad significa que las rotaciones arbitrarias de un filtro viven en
+el subespacio de dimensi\'on finita generado por unos pocos filtros base; se
+almacena la base y se sintetiza cualquier orientaci\'on a demanda. La base natural
+proviene de los arm\'onicos circulares, los modos de Fourier sobre el c\'irculo de
+orientaciones.
+
+\begin{theorem}[Los arm\'onicos circulares se orientan de forma sencilla]
+\label{thm:groups:circ-harm}
+Toda $f \in L^2(S^1)$ se expande como $f(\theta) = \sum_{k\in\Z} c_k\,e^{ik\theta}$.
+Si $g_\phi(\theta) = f(\theta + \phi)$ es la rotaci\'on de $f$ por $\phi$, sus
+coeficientes son $c_k\,e^{ik\phi}$: la rotaci\'on multiplica cada modo de Fourier
+por una fase, sin mezclar modos de distinta frecuencia.
+\end{theorem}
+
+\begin{proof}
+El sistema $\{e^{ik\theta}\}_{k\in\Z}$ es una base ortonormal completa de
+$L^2(S^1)$, con $c_k = \frac{1}{2\pi}\int_0^{2\pi} f(\theta)e^{-ik\theta}d\theta$.
+Con $\alpha = \theta + \phi$,
+\[
+  \hat g_k = \frac{1}{2\pi}\int_0^{2\pi} f(\theta+\phi)\,e^{-ik\theta}\,d\theta
+    = \frac{1}{2\pi}\int_0^{2\pi} f(\alpha)\,e^{-ik(\alpha-\phi)}\,d\alpha
+    = e^{ik\phi}\,c_k. \qedhere
+\]
+\end{proof}
+
+Un filtro arm\'onico circular de frecuencia $k$ en coordenadas polares es
+$\psi_k(r,\theta) = R_k(r)\,e^{ik\theta}$, con un perfil radial aprendible
+$R_k(r)$ y una parte angular fija $e^{ik\theta}$. Rotarlo simplemente lo
+multiplica por $e^{ik\phi}$, de modo que un \'unico filtro de este tipo es
+orientable para todo \'angulo ---el an\'alogo continuo de las ocho copias
+discretas usadas para $D_4$---. La \Cref{fig:groups:steerable} ilustra la idea.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.0]
+\node[font=\small, text=gdlgray!80!black] at (0,1.55) {filtros base};
+\foreach \cx/\sgnp/\col in {-1.1/1/gdlblue, 0/-1/gdlred, 1.1/1/gdlgreen}{
+  \begin{scope}[shift={(\cx,0.4)}]
+    \draw[gdlgray!40, line width=0.3pt] (0,0) circle (0.42);
+    \fill[\col!60, rotate=0] (0,0) -- (0.42,0) arc (0:90:0.42) -- cycle;
+    \fill[\col!25, rotate=0] (0,0) -- (0,0.42) arc (90:180:0.42) -- cycle;
+  \end{scope}}
+\node[font=\Large] at (1.95,0.4) {$+\;\dots$};
+\draw[->, line width=1pt, gdlpurple!70] (2.9,0.4) -- (4.0,0.4)
+  node[midway, above, font=\footnotesize, text=gdlpurple!70!black] {$\sum_n k_n(\theta)\,h_n$};
+\node[font=\small, text=gdlgray!80!black] at (5.4,1.55) {cualquier rotaci\'on $h_\theta$};
+\begin{scope}[shift={(5.4,0.4)}]
+  \draw[gdlgray!40, line width=0.3pt] (0,0) circle (0.5);
+  \fill[gdlorange!60, rotate=35] (0,0) -- (0.5,0) arc (0:120:0.5) -- cycle;
+  \fill[gdlorange!25, rotate=35] (0,0) -- (0.5,0) arc (0:-60:0.5) -- cycle;
+  \draw[->, gdlgray!70] (0,0) -- (35:0.68);
+\end{scope}
+\end{tikzpicture}
+\caption[Filtros orientables]{Cualquier rotaci\'on $h_\theta$ de un filtro
+orientable es una combinaci\'on lineal fija de una base finita $\{h_n\}$ con
+coeficientes $k_n(\theta)$ dependientes del \'angulo. Los arm\'onicos circulares
+proporcionan tal base, dando equivarianza exacta a $\SO(2)$ con un n\'umero finito
+de par\'ametros.}
+\label{fig:groups:steerable}
+\end{figure}
+
+\subsection{Representaciones irreducibles y campos geom\'etricos}
+
+La raz\'on profunda de que los arm\'onicos circulares se comporten tan bien es la
+teor\'ia de representaciones. La aplicaci\'on $R_\theta \mapsto e^{ik\theta}$ es,
+para cada entero $k$, una \emph{representaci\'on irreducible} compleja
+unidimensional de $\SO(2)$; sobre los reales, las frecuencias $\pm k$ se combinan
+en el bloque de rotaci\'on bidimensional
+\[
+  \rho_k(R_\theta) = \begin{pmatrix}\cos k\theta & -\sin k\theta\\ \sin k\theta & \cos k\theta\end{pmatrix}.
+\]
+Las redes convolucionales orientables, formalizadas por \citet{weiler2019general},
+no discretizan en absoluto la orientaci\'on. Operan sobre \emph{campos
+geom\'etricos}: una caracter\'istica de tipo $\rho$ es una funci\'on
+$f : \R^2 \to V$ con valores en un espacio de representaci\'on, que se transforma
+como $(g\cdot f)(x) = \rho(g)\,f(g^{-1}x)$. Cada campo porta un tipo irreducible
+---escalares ($k=0$, invariantes bajo rotaci\'on), vectores ($k=1$, que rotan con
+el plano) y tensores de frecuencia superior--- y los filtros de la red est\'an
+restringidos a aplicar tipos de campo entre s\'i de forma equivariante.
+
+Esta es la misma idea que la descomposici\'on de Peter--Weyl del
+\Cref{ch:foundations}: el espacio de se\~nales sobre un grupo compacto se
+descompone en suma directa de bloques irreducibles, y los tipos irreducibles
+indexan los canales de una red equivariante. Elegir qu\'e irreducibles portar, y
+con qu\'e multiplicidades, es el an\'alogo para grupos continuos de elegir
+cu\'antos canales de caracter\'isticas debe tener una capa convolucional.
+
+\section{Spherical CNNs y equivarianza a $\SO(3)$}
+\label{sec:groups:so3}
+
+Los datos tridimensionales ---im\'agenes omnidireccionales, densidades
+electr\'onicas moleculares, mapas cosmol\'ogicos, se\~nales direccionales sobre la
+esfera--- viven de forma m\'as natural sobre la esfera $S^2$, el espacio
+homog\'eneo $\SO(3)/\SO(2)$, con el grupo de rotaciones $\SO(3)$ actuando sobre
+ella. A diferencia de $\SO(2)$, el grupo $\SO(3)$ es no abeliano
+($R_1 R_2 \neq R_2 R_1$ en general), compacto y tridimensional, lo que obliga a
+usar un an\'alisis arm\'onico genuinamente matricial.
+
+\subsection{Arm\'onicos esf\'ericos}
+
+El papel que desempe\~nan los arm\'onicos circulares sobre $S^1$ lo desempe\~nan
+sobre $S^2$ los arm\'onicos esf\'ericos $Y_l^m(\theta,\phi)$, indexados por un
+grado $l \ge 0$ y un orden $|m| \le l$. Forman una base ortonormal completa de
+$L^2(S^2)$, de modo que toda se\~nal esf\'erica se expande como
+\[
+  f(\theta,\phi) = \sum_{l=0}^{\infty}\sum_{m=-l}^{l} f_l^m\,Y_l^m(\theta,\phi),
+  \qquad f_l^m = \int_{S^2} f\,\overline{Y_l^m}\,d\Omega .
+\]
+Su propiedad decisiva es la manera en que se transforman bajo rotaci\'on.
+
+\begin{theorem}[Arm\'onicos esf\'ericos y matrices de Wigner]
+\label{thm:groups:wigner}
+Bajo una rotaci\'on $R \in \SO(3)$,
+\[
+  Y_l^m(R^{-1}\mathbf{x}) = \sum_{m'=-l}^{l} D^{(l)}_{m'm}(R)\,Y_l^{m'}(\mathbf{x}),
+\]
+donde $D^{(l)}(R)$ es la \emph{matriz de Wigner} de tama\~no
+$(2l+1)\times(2l+1)$, la representaci\'on irreducible de $\SO(3)$ de grado $l$.
+Las rotaciones mezclan arm\'onicos solo dentro del mismo grado $l$.
+\end{theorem}
+
+\begin{proof}[Esbozo]
+Los arm\'onicos $\{Y_l^m\}_{m=-l}^{l}$ generan el espacio $\mathcal H_l$ de
+polinomios arm\'onicos homog\'eneos de grado $l$ restringidos a $S^2$. Como el
+laplaciano conmuta con las rotaciones, $\mathcal H_l$ es invariante bajo $\SO(3)$;
+al ser de dimensi\'on $(2l+1)$ e invariante, $Y_l^m \circ R^{-1}$ se expande en la
+misma base, lo que define la matriz $D^{(l)}$. El espacio $\mathcal H_l$ no admite
+subespacio invariante propio, de modo que $D^{(l)}$ es irreducible.
+\end{proof}
+
+Las representaciones irreducibles de $\SO(3)$ quedan as\'i etiquetadas por el
+grado $l = 0, 1, 2, \dots$, con dimensiones $2l+1$: el grado $0$ es el tipo escalar
+(invariante), el grado $1$ el tipo vectorial que se transforma como
+$\mathbf v' = R\mathbf v$, y el grado $2$ los tensores sim\'etricos sin traza de
+segundo orden.
+
+\subsection{Convoluci\'on esf\'erica}
+
+Las redes convolucionales esf\'ericas, introducidas por
+\citet{cohen2018sphericalcnns}, realizan la equivarianza a $\SO(3)$ convolucionando
+sobre el propio grupo.
+
+\begin{definition}[Convoluci\'on en $\SO(3)$]
+\label{def:groups:so3conv}
+Para $f : \SO(3) \to \R^{C_{\mathrm{in}}}$ y un n\'ucleo
+$\psi : \SO(3) \to \R^{C_{\mathrm{out}}\times C_{\mathrm{in}}}$,
+\[
+  (f \star \psi)(g) = \int_{\SO(3)} f(h)\,\psi(g^{-1}h)\,dh,
+\]
+con $dh$ la medida de Haar sobre $\SO(3)$.
+\end{definition}
+
+Esta es la \Cref{def:groups:gconv} especializada a $\SO(3)$, de modo que es
+equivariante por la \Cref{prop:groups:gconv-equiv}. Una se\~nal esf\'erica sobre
+$S^2$ se eleva primero a una funci\'on sobre $\SO(3)$, tras lo cual act\'uan las
+convoluciones de grupo. La ganancia de eficiencia crucial es que, por la
+\Cref{thm:groups:wigner}, tanto la convoluci\'on como la elevaci\'on pueden
+calcularse en el dominio espectral: se expanden se\~nal y n\'ucleo en arm\'onicos
+esf\'ericos, se multiplica bloque de Wigner a bloque de Wigner y se transforma de
+vuelta mediante una transformada r\'apida de Fourier esf\'erica. El teorema de
+convoluci\'on del \Cref{ch:grids} se generaliza a los grupos compactos,
+convirtiendo la convoluci\'on en un producto bloque-diagonal en la base
+irreducible.
+
+\section{Grupos no compactos: equivarianza a $\Eucl(3)$ y $\SE(3)$}
+\label{sec:groups:se3}
+
+Las mol\'eculas, las prote\'inas y las nubes de puntos viven en $\R^3$ y son
+sim\'etricas no solo bajo rotaciones, sino bajo \emph{movimientos r\'igidos}:
+rotaciones junto con traslaciones, y posiblemente reflexiones. Los grupos
+relevantes son el grupo eucl\'ideo $\Eucl(3) = \R^3 \rtimes \OO(3)$ de todas las
+isometr\'ias de $\R^3$ y su subgrupo que preserva la orientaci\'on, el grupo
+especial eucl\'ideo $\SE(3) = \R^3 \rtimes \SO(3)$. Un elemento $(R,\mathbf t)$
+act\'ua mediante $\mathbf x \mapsto R\mathbf x + \mathbf t$, y los elementos se
+componen por $(R_1,\mathbf t_1)(R_2,\mathbf t_2) = (R_1 R_2,\, R_1\mathbf t_2 +
+\mathbf t_1)$, la ley de un producto semidirecto. La distinci\'on importa:
+$\SE(3)$ excluye las reflexiones, lo cual es esencial cuando la quiralidad es
+f\'isicamente significativa, pues una mol\'ecula y su imagen especular
+(enanti\'omero) pueden comportarse de forma distinta.
+
+Estos grupos son \emph{no compactos} ---el subgrupo de traslaciones $\R^3$ es no
+acotado---, de modo que no hay una medida de Haar finita sobre la que integrar y
+la maquinaria espectral de los grupos compactos no se aplica directamente. Han
+surgido dos filosof\'ias de dise\~no, que difieren en cu\'an rica es la
+representaci\'on que porta cada nodo.
+
+\subsection{Mensajes invariantes: redes de grafos equivariantes a \texorpdfstring{$\Eucl(n)$}{E(n)}}
+
+La v\'ia m\'as simple, adoptada por las redes neuronales de grafos equivariantes a
+$\Eucl(n)$ de \citet{satorras2021enequivariant}, conserva solo caracter\'isticas
+escalares y coordenadas crudas, explotando un hecho estructural: toda
+representaci\'on de dimensi\'on finita en la que las traslaciones act\'uan
+trivialmente se factoriza a trav\'es de la parte rotacional,
+$\rho(R,\mathbf t) = \rho_{\OO(n)}(R)$. Se separan, por tanto, las
+caracter\'isticas escalares \emph{invariantes} $h_i \in \R^d$ de las coordenadas
+\emph{equivariantes} $\mathbf x_i \in \R^n$ y se actualiza cada una de forma
+apropiada. Una capa procede en tres pasos:
+\begin{align*}
+  \mathbf m_{ij} &= \phi_e\big(h_i,\,h_j,\,\norm{\mathbf x_i - \mathbf x_j}^2,\,a_{ij}\big),
+    && \text{(mensajes invariantes)}\\
+  \mathbf x_i' &= \mathbf x_i + C\!\!\sum_{j\in\mathcal N(i)}\!(\mathbf x_i - \mathbf x_j)\,\phi_x(\mathbf m_{ij}),
+    && \text{(actualizaci\'on equivariante de coordenadas)}\\
+  h_i' &= \phi_h\Big(h_i,\,\textstyle\sum_{j\in\mathcal N(i)}\mathbf m_{ij}\Big),
+    && \text{(actualizaci\'on invariante de caracter\'isticas)}
+\end{align*}
+donde $\phi_e, \phi_x, \phi_h$ son perceptrones multicapa. Los mensajes dependen
+solo de distancias al cuadrado $\norm{\mathbf x_i - \mathbf x_j}^2$, que son
+$\Eucl(n)$-invariantes, mientras que las coordenadas se actualizan mediante
+diferencias vectoriales.
+
+\begin{proposition}[Equivarianza de la actualizaci\'on de coordenadas]
+\label{prop:groups:egnn}
+La actualizaci\'on de coordenadas es $\Eucl(n)$-equivariante: aplicar
+$(R,\mathbf t)$ a todas las entradas env\'ia $\mathbf x_i' \mapsto R\mathbf x_i' +
+\mathbf t$, mientras que $h_i'$ permanece invariable.
+\end{proposition}
+
+\begin{proof}
+Escribamos $\tilde{\mathbf x}_i = R\mathbf x_i + \mathbf t$. Los mensajes son
+invariantes porque dependen de las entradas solo a trav\'es de distancias. Por
+tanto
+\[
+  \tilde{\mathbf x}_i'
+    = \tilde{\mathbf x}_i + C\!\!\sum_{j}(\tilde{\mathbf x}_i - \tilde{\mathbf x}_j)\,\phi_x(\mathbf m_{ij})
+    = R\mathbf x_i + \mathbf t + C\!\!\sum_j R(\mathbf x_i - \mathbf x_j)\,\phi_x(\mathbf m_{ij})
+    = R\mathbf x_i' + \mathbf t,
+\]
+pues las traslaciones se cancelan en las diferencias. La actualizaci\'on escalar
+opera solo sobre cantidades invariantes, de modo que $h_i'$ no cambia.
+\end{proof}
+
+Esta forma de paso de mensajes ya anticipa las redes neuronales de grafos del
+\Cref{ch:graphs}: una red equivariante a $\Eucl(n)$ es una red de grafos cuyos
+mensajes se construyen a partir de cantidades geom\'etricas invariantes.
+
+\subsection{Caracter\'isticas tensoriales: Tensor Field Networks y $\SE(3)$-Transformers}
+
+Una v\'ia m\'as expresiva equipa cada nodo con caracter\'isticas tensoriales
+completas que se transforman bajo las representaciones irreducibles de grado
+superior de $\SO(3)$. Una caracter\'istica de tipo $l$ en el nodo $i$ es un vector
+$\mathbf f_i^{(l)} \in \R^{2l+1}$ que se transforma como
+$\mathbf f_i^{(l)} \mapsto D^{(l)}(R)\,\mathbf f_i^{(l)}$, y cada nodo porta varios
+tipos con multiplicidades.
+
+Las Tensor Field Networks~\citep{thomas2018tensorfieldnetworks} construyen
+convoluciones equivariantes a $\SE(3)$ entre tales campos. La clave es factorizar
+el n\'ucleo de convoluci\'on que act\'ua a lo largo del vector relativo
+$\mathbf r_{ij} = \mathbf x_i - \mathbf x_j$ en una parte radial aprendible y una
+parte angular fija dada por arm\'onicos esf\'ericos,
+\[
+  K^{(l_{\mathrm{out}},\,l_{\mathrm{in}})}(\mathbf r)
+    = \sum_{l_f} R_{l_f}(\norm{\mathbf r})\,\mathcal Y^{(l_f)}(\hat{\mathbf r}),
+\]
+y acoplar las caracter\'isticas de entrada con la parte angular mediante productos
+de Clebsch--Gordan. Estos productos tensoriales combinan una caracter\'istica de
+grado $l_{\mathrm{in}}$ con un filtro de grado $l_f$ en salidas de grado
+$l_{\mathrm{out}}$, sujetas a la regla de selecci\'on del momento angular
+\[
+  |l_{\mathrm{in}} - l_f| \le l_{\mathrm{out}} \le l_{\mathrm{in}} + l_f .
+\]
+Como la parte radial es invariante bajo rotaci\'on y la parte angular se transforma
+mediante matrices de Wigner, el n\'ucleo satisface
+$K(R\mathbf r) = D^{(l_{\mathrm{out}})}(R)\,K(\mathbf r)\,D^{(l_{\mathrm{in}})}(R)^{-1}$,
+que es precisamente la restricci\'on que vuelve equivariante a la capa. La
+\Cref{fig:groups:tfn} esboza la estructura de arm\'onicos esf\'ericos que subyace
+a esta construcci\'on.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.9]
+\node[font=\small, text=gdlgray!80!black] at (-2.3,1.1) {$l=0$};
+\node[font=\small, text=gdlgray!80!black] at (0,1.1) {$l=1$};
+\node[font=\small, text=gdlgray!80!black] at (2.3,1.1) {$l=2$};
+\shade[ball color=gdlblue!45] (-2.3,0) circle (0.45);
+\node[font=\footnotesize, text=gdlgray!75!black] at (-2.3,-0.85) {escalar};
+\fill[gdlred!55] (0,0) ++(0,0.05) ellipse (0.3 and 0.45);
+\fill[gdlblue!45] (0,0) ++(0,-0.05) ellipse (0.3 and 0.45);
+\draw[->, gdlgray!70] (0,-0.5) -- (0,0.6);
+\node[font=\footnotesize, text=gdlgray!75!black] at (0,-0.85) {vector};
+\foreach \a in {45,135,225,315}{
+  \fill[gdlgreen!50] (2.3,0) ++(\a:0.18) ellipse [x radius=0.18, y radius=0.42, rotate=\a-90];
+}
+\node[font=\footnotesize, text=gdlgray!75!black] at (2.3,-0.85) {tensor};
+\end{tikzpicture}
+\caption[Tipos de caracter\'istica de arm\'onicos esf\'ericos]{Los tipos de
+caracter\'istica en las redes equivariantes a $\SE(3)$ corresponden a las
+representaciones irreducibles de $\SO(3)$: escalares ($l=0$), vectores ($l=1$) y
+tensores superiores ($l=2,\dots$). Los arm\'onicos esf\'ericos aportan la parte
+angular de los n\'ucleos equivariantes, y los productos de Clebsch--Gordan acoplan
+los tipos.}
+\label{fig:groups:tfn}
+\end{figure}
+
+Los $\SE(3)$-Transformers de \citet{fuchs2020se3transformers} injertan un
+mecanismo de atenci\'on sobre esta maquinaria de campos tensoriales: las
+consultas, claves y valores son tensores de $\SO(3)$, y los pesos de atenci\'on se
+construyen a partir de cantidades invariantes, de modo que toda la capa es
+equivariante a $\SE(3)$ a la vez que gana el ponderado dependiente de los datos
+propio de la atenci\'on. El compromiso frente a las redes equivariantes a
+$\Eucl(n)$ m\'as simples es expresividad frente a coste: los modelos de campos
+tensoriales capturan informaci\'on direccional m\'as rica, pero requieren el
+\'algebra de Clebsch--Gordan y se encarecen con el grado m\'aximo $L_{\max}$.
+
+\section{Grupos de permutaciones: aprendizaje sobre conjuntos}
+\label{sec:groups:perm}
+
+La \'ultima simetr\'ia de este cap\'itulo es puramente combinatoria. Un
+\emph{conjunto} no porta orden, de modo que una funci\'on de un conjunto no debe
+depender de c\'omo se enumeren sus elementos. El grupo relevante es el grupo
+sim\'etrico $\Sym_n$ de todas las $n!$ permutaciones de $\{1,\dots,n\}$, que
+act\'ua sobre una matriz de caracter\'isticas $X \in \R^{n\times d}$ permutando sus
+filas. Por el teorema de Cayley, todo grupo finito se sumerge en alg\'un $\Sym_n$,
+de modo que la simetr\'ia de permutaci\'on es, en cierto sentido, la simetr\'ia
+discreta universal, y es la simetr\'ia de los grafos estudiados en el
+\Cref{ch:graphs}.
+
+\begin{definition}[Invarianza y equivarianza a permutaciones]
+\label{def:groups:perm}
+Una aplicaci\'on $f : \R^{n\times d} \to \R^k$ es \emph{invariante a
+permutaciones} si $f(\pi\cdot X) = f(X)$ para todo $\pi \in \Sym_n$, y una
+aplicaci\'on $f : \R^{n\times d} \to \R^{n\times k}$ es \emph{equivariante a
+permutaciones} si $f(\pi\cdot X) = \pi\cdot f(X)$.
+\end{definition}
+
+Invariantes sencillos son los agregadores sim\'etricos: la suma, la media y el
+m\'aximo elemento a elemento de las filas. El resultado fundamental es que, de
+ellos, la suma ya basta para representar \emph{toda} funci\'on invariante
+continua.
+
+\begin{theorem}[Universalidad de Deep Sets]
+\label{thm:groups:deepsets}
+Sea $f : \mathcal X^n \to \mathcal Y$ continua e invariante a permutaciones, con
+$\mathcal X \subset \R^d$ y $\mathcal Y \subset \R^k$ compactos. Entonces, para
+todo $\epsilon > 0$ existen aplicaciones continuas $\phi : \mathcal X \to \R^m$ y
+$\rho : \R^m \to \mathcal Y$ (con $m$ suficientemente grande) tales que
+\[
+  \sup_{X \in \mathcal X^n}\Big\lVert f(X) - \rho\Big(\textstyle\sum_{i=1}^n \phi(x_i)\Big)\Big\rVert < \epsilon,
+\]
+y tanto $\phi$ como $\rho$ pueden realizarse mediante redes
+neuronales~\citep{zaheer2017deepsets}.
+\end{theorem}
+
+\begin{proof}[Esbozo]
+Identif\'iquese el conjunto $\{x_1,\dots,x_n\}$ con su medida emp\'irica
+$\mu_X = \frac1n\sum_i \delta_{x_i}$; el invariante $f$ se convierte en una
+funci\'on continua de $\mu_X$. Por un argumento de tipo Weierstrass, toda funci\'on
+de esta clase se aproxima mediante un funcional de un n\'umero finito de momentos
+$\int g_j\,d\mu_X = \frac1n\sum_i g_j(x_i)$. Tomando $\phi = (g_1,\dots,g_M)$, la
+suma $\sum_i \phi(x_i)$ recoge exactamente estos momentos, y una $\rho$ continua
+recupera $f$. Ambas aplicaciones se aproximan despu\'es mediante redes a trav\'es
+del teorema de aproximaci\'on universal est\'andar.
+\end{proof}
+
+La suma es distinguida: el m\'aximo y la media son estrictamente menos expresivos
+---por ejemplo, tras aplicar $\phi(x) = x$, el m\'aximo no puede distinguir el
+conjunto $\{(1,0),(0,1)\}$ de $\{(1,1)\}$---. La representaci\'on exacta (en lugar
+de aproximada) tiene un precio: \citet{wagstaff2019limitations} muestran que una
+representaci\'on exacta continua requiere dimensi\'on latente $m \ge n$, el tama\~no
+del conjunto.
+
+\begin{example}[PointNet]
+\label{ex:groups:pointnet}
+PointNet~\citep{qi2017pointnet} aplica este principio a las nubes de puntos
+tridimensionales $\mathcal P = \{\mathbf p_1,\dots,\mathbf p_n\} \subset \R^3$.
+Calcula
+\[
+  f_{\mathrm{PointNet}}(\mathcal P)
+    = \rho_\psi\Big(\max_{i=1,\dots,n}\,\phi_\theta(T\mathbf p_i)\Big),
+\]
+un codificador compartido por punto $\phi_\theta$, un \emph{max-pooling}
+sim\'etrico y un decodificador global $\rho_\psi$, con una transformaci\'on de
+entrada aprendida $T$. Como el m\'aximo es una operaci\'on sim\'etrica,
+$f_{\mathrm{PointNet}}(\pi\cdot\mathcal P) = f_{\mathrm{PointNet}}(\mathcal P)$
+exactamente para toda permutaci\'on $\pi$: reindexar los puntos no puede cambiar el
+resultado. PointNet usa \emph{max-pooling} en lugar de la suma te\'oricamente
+\'optima porque, para las nubes de puntos, la geometr\'ia extremal es muy
+informativa.
+\end{example}
+
+\section{Una visi\'on unificada}
+\label{sec:groups:unified}
+
+Las arquitecturas de este cap\'itulo son cinco instancias de una sola receta.
+Identificar el grupo $\group$ que deja invariante la tarea; elevar la se\~nal a una
+funci\'on sobre $\group$ (o a campos indexados por las representaciones
+irreducibles de $\group$); procesarla con $\group$-convoluciones, que el teorema de
+Kondor--Trivedi identifica como las \'unicas aplicaciones lineales equivariantes; y
+leer con una \'unica capa invariante. Para grupos finitos como $D_4$ esto es una
+suma directa sobre los elementos del grupo; para grupos compactos como $\SO(2)$ y
+$\SO(3)$ se convierte en an\'alisis arm\'onico con filtros orientables y arm\'onicos
+esf\'ericos; para el $\SE(3)$ no compacto separa los escalares invariantes de los
+tensores equivariantes acoplados por productos de Clebsch--Gordan; y para el grupo
+de permutaciones se reduce a una agregaci\'on sim\'etrica de caracter\'isticas por
+elemento.
+
+La \Cref{tab:groups:summary} recoge los casos. Dos hilos se prolongan hacia los
+cap\'itulos siguientes. La forma de paso de mensajes de las redes equivariantes a
+$\Eucl(n)$ es exactamente la construcci\'on generalizada a datos relacionales
+arbitrarios en el \Cref{ch:graphs}, donde la equivarianza a permutaciones se
+convierte en la simetr\'ia definitoria. Y el paso de un grupo global actuando sobre
+un dominio plano a simetr\'ias locales actuando sobre uno curvo ---anticipado por
+la aparici\'on de espacios homog\'eneos $\group/H$ como $S^2 = \SO(3)/\SO(2)$---
+conduce a las variedades y simetr\'ias gauge de los \Cref{ch:geodesics,ch:gauges}.
+
+\begin{table}[ht]
+\centering
+\caption{Arquitecturas equivariantes a grupos por grupo de simetr\'ia.}
+\label{tab:groups:summary}
+\begin{tabular}{@{}lp{4.3cm}p{4.6cm}@{}}
+\toprule
+\textbf{Grupo} & \textbf{Mecanismo} & \textbf{Arquitectura} \\
+\midrule
+$C_4$, $D_4$ (finito) & Suma sobre los elementos del grupo; representaci\'on regular & CNN equivariantes a grupos~\citep{cohen2016group} \\
+\addlinespace
+$\SO(2)$ (compacto) & Filtros orientables; arm\'onicos circulares & Steerable CNNs~\citep{weiler2019general} \\
+\addlinespace
+$\SO(3)$ (compacto) & Arm\'onicos esf\'ericos; matrices de Wigner & Spherical CNNs~\citep{cohen2018sphericalcnns} \\
+\addlinespace
+$\Eucl(3)$, $\SE(3)$ (no compacto) & Mensajes invariantes o productos tensoriales de Clebsch--Gordan & EGNN~\citep{satorras2021enequivariant}, TFN~\citep{thomas2018tensorfieldnetworks}, $\SE(3)$-Transformer~\citep{fuchs2020se3transformers} \\
+\addlinespace
+$\Sym_n$ (permutaciones) & Agregaci\'on sim\'etrica de caracter\'isticas por elemento & Deep Sets~\citep{zaheer2017deepsets}, PointNet~\citep{qi2017pointnet} \\
+\bottomrule
+\end{tabular}
+\end{table}

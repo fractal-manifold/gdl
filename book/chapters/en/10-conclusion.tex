@@ -1,8 +1,181 @@
 \chapter{Conclusion and Outlook}
 \label{ch:conclusion}
 
+\providecommand{\WL}{\textsc{wl}}
+
+This book has built a single arc. It began with the observation that the
+architectures behind the deep-learning revolution --- fully connected,
+convolutional, recurrent, and attention-based networks --- were all conceived
+for data laid out on regular Euclidean domains, and that this assumption breaks
+down for the molecules, networks, and surfaces that pervade the sciences. From
+there it developed the mathematical language of symmetry
+(\Cref{ch:foundations}), turned that language into a constructive design
+principle (\Cref{ch:priors}), and followed the principle through the five
+recurring themes --- grids, groups, graphs, geodesics, and gauges
+(\Cref{ch:grids,ch:groups,ch:graphs,ch:geodesics,ch:gauges}) --- before
+surveying what the resulting models achieve in practice (\Cref{ch:applications}).
+
+This closing chapter does not introduce new machinery. Its purpose is to tie the
+threads together: to show that the chapters describe one idea seen from several
+angles, to be honest about where that idea reaches its present limits, and to
+point to the directions in which it is likely to grow.
+
 \section{A unified view}
-Placeholder.
+\label{sec:concl:unified}
+
+The deepest lesson of geometric deep learning is that architectures which look
+unrelated are special cases of a single construction. A fully connected layer, a
+convolution, a graph network, and a self-attention block differ not in kind but
+in three geometric choices: the \emph{domain} on which the signal lives, the
+\emph{symmetry group} the architecture is required to respect, and the
+\emph{connectivity} through which information is allowed to flow.
+
+The thread that makes this concrete is \emph{message passing}. A message-passing
+layer operates on a graph by computing, for every node, a message from each of
+its neighbours, aggregating those messages, and updating the node's state. The
+remarkable fact, established across the preceding chapters, is that the principal
+deep-learning architectures are this same layer with different graphs and
+different weight-sharing rules.
+
+\begin{itemize}
+  \item A \emph{fully connected layer} is message passing on the complete graph
+  with a distinct weight for every pair of features. It assumes no geometric
+  structure whatsoever, which is precisely why it has no inductive bias and must
+  learn every invariance from data.
+  \item A \emph{convolutional layer} (\Cref{ch:grids}) is message passing on a
+  regular grid in which the weight depends only on the \emph{relative} position
+  of sender and receiver. This weight sharing \emph{is} translation equivariance,
+  and it is what reduces the parameter count from quadratic in the signal size to
+  linear in the kernel support.
+  \item A \emph{self-attention layer} (the transformer) is message passing on the
+  complete graph in which the weights are computed dynamically from the content
+  of the nodes. The communication pattern is learned per input rather than fixed,
+  buying global, adaptive connectivity at quadratic cost in the sequence length.
+  \item A \emph{graph neural network} (\Cref{ch:graphs}) is the general case:
+  message passing on an arbitrary graph with permutation symmetry, of which the
+  three architectures above are the regular, complete, and adaptive specializations.
+\end{itemize}
+
+Group-equivariant networks (\Cref{ch:groups}) refine the convolutional case by
+replacing translations with a larger global symmetry, so that weight sharing is
+governed by the action of a group rather than a grid. Learning on manifolds
+(\Cref{ch:geodesics}) replaces the ambient grid with intrinsic distances and
+curvature, recovering message passing as the discretization of a continuous
+diffusion. Gauge-equivariant networks (\Cref{ch:gauges}) acknowledge that on a
+curved domain there is no canonical local frame, and demand that the construction
+be independent of that arbitrary choice. In each step the same skeleton ---
+local messages, symmetry-constrained weights, equivariant composition --- is
+carried to a more general geometry.
+
+This unification is not merely a tidy taxonomy. It carries genuine explanatory
+and predictive force. It explains \emph{why} a given architecture suits a given
+kind of data: the symmetry of the domain dictates the equivariance constraints
+the network must satisfy, and those constraints in turn fix the form of the
+admissible layers. And it is predictive: given a new domain, the framework tells
+us which symmetries must be respected and, through equivariant universality
+results, what expressive guarantees the resulting model can offer. Geometric deep
+learning is therefore not only a description of the architectures we already have
+but a recipe for designing the ones we do not.
 
 \section{Open problems}
-Placeholder.
+\label{sec:concl:open}
+
+The same theory that unifies these architectures also exposes, with unusual
+clarity, the boundaries of what is currently possible. Four limitations stand out
+because they emerge from the formalism itself rather than from engineering
+contingency.
+
+\paragraph{Expressivity and the Weisfeiler--Leman barrier.}
+The expressive power of standard message-passing networks is bounded exactly by
+the one-dimensional Weisfeiler--Leman graph-isomorphism test: two graphs that the
+test cannot tell apart will receive identical representations from any such
+network. Higher-order ($k$-\WL{}) variants break through this ceiling, but their
+cost grows exponentially in $k$, which makes them impractical even for graphs of
+moderate size. Designing architectures that surpass the one-dimensional barrier
+at polynomial cost --- for instance through structural features or higher-order
+attention --- remains a central open problem.
+
+\paragraph{Rigidity versus adaptability.}
+There is a fundamental tension between baking symmetry into the architecture and
+leaving it to be learned. Equivariant convolutional networks encode symmetry
+rigidly: they are data-efficient and come with theoretical guarantees, but they
+struggle when the symmetry is only approximate. Attention mechanisms are flexible
+and learn context-dependent relations, but they demand more data and offer weaker
+structural regularization. There is reason to believe the two paradigms converge
+under suitable conditions, yet the optimal point on the rigidity--adaptability
+spectrum for any concrete domain is not understood.
+
+\paragraph{Gauge equivariance and global topology.}
+The gauge formalism (\Cref{ch:gauges}) gives a rigorous account of local
+symmetries, but the global topology of the domain resists it. Non-trivial bundles
+and non-trivial holonomy around loops pose difficulties that are at once
+theoretical and computational, and current gauge-equivariant networks rely on
+discretizations that may fail to preserve the global topological properties of
+the underlying space. Closing the gap between the elegance of the formalism and
+efficient, topology-faithful implementations is a significant practical
+challenge.
+
+\paragraph{Higher-order structures.}
+The tools that capture relations beyond pairwise interactions --- Hodge
+Laplacians, simplicial and cellular complexes, persistent homology --- are
+mathematically mature, but the architectures built on them are not. Designing
+convolution and attention operations on general cellular complexes that respect
+the algebraic structure of the underlying topology without incurring prohibitive
+cost is an open and increasingly active problem.
+
+\section{Future directions}
+\label{sec:concl:future}
+
+The limitations above suggest, almost by negation, where the field is heading.
+Three directions follow directly from the material of this book.
+
+\paragraph{Hybrid convolution--attention architectures.}
+The formal correspondence between convolution and attention, together with the
+analysis of the rigidity--adaptability spectrum, points to architectures that
+combine the two in a controlled way. The goal is to interpolate between the
+data efficiency of equivariant convolutions and the expressiveness of attention,
+rather than choosing one wholesale. The transformer's success on grids ---
+domains where convolution already excels --- shows that the boundary between the
+two is porous, and a principled way of placing a model anywhere along it would be
+of broad value.
+
+\paragraph{Complex geometric domains.}
+The five-Gs framework extends naturally to product spaces that mix curvatures
+--- hyperbolic, spherical, and Euclidean --- within a single model, which is
+appropriate for data that is simultaneously hierarchical and cyclic. In the
+topological direction, the theory of cellular sheaves provides a foundation for
+\emph{sheaf neural networks}, which generalize graph networks by equipping the
+relations between nodes with the algebraic structure of a sheaf. Both extensions
+enlarge the class of domains the framework can address while keeping its
+equivariant backbone intact.
+
+\paragraph{Generalized harmonic analysis.}
+Harmonic analysis has been a unifying tool throughout, from spectral convolutions
+to spherical harmonics. Its central result, the Peter--Weyl theorem, requires the
+symmetry group to be compact. Extending the framework to non-compact groups ---
+the Lorentz group, the affine groups --- calls for non-commutative harmonic
+analysis beyond what the present theory provides, and would widen the reach of
+equivariant networks to symmetries that matter in relativistic physics and
+general signal processing.
+
+\section{A closing reflection}
+\label{sec:concl:reflection}
+
+The argument of this book is that geometry is not a collection of tricks for
+squeezing extra accuracy out of a model, but an organizing principle that
+explains why particular architectures work for particular data. The differences
+between fully connected networks, convolutional networks, graph networks, and
+transformers reflect three choices --- domain, symmetry group, and connectivity
+--- and once those choices are made explicit, the architectures cease to be a
+zoo and become a family.
+
+The mathematics that sustains this view --- Lie theory, Riemannian geometry,
+gauge theory, algebraic topology --- has a reach that goes beyond describing the
+models we already have. Equivariant universality results and the correspondences
+between paradigms give the framework predictive power: they let us anticipate
+which geometric constraints a domain demands and what guarantees the resulting
+architecture will offer. In that sense geometric deep learning is less a finished
+theory than a programme, and the problems left open in this chapter are an
+invitation to continue it. As the data we wish to learn from grows in geometric
+richness, the case for letting that geometry shape the model --- rather than the
+other way around --- only grows stronger~\citep{bronstein2021geometric}.
