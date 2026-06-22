@@ -58,6 +58,15 @@
 \fi
 \usepackage[capitalise]{cleveref}
 
+% ----- Spanish / TikZ shorthand clash -------------------------------
+% babel-spanish makes < and > active (for << >> guillemets), which breaks
+% TikZ arrow syntax such as ->, >=stealth and <-. Disable just those two
+% shorthands for the Spanish edition; accents are written explicitly (\'o).
+\def\esbooklang{es}
+\ifx\booklang\esbooklang
+  \shorthandoff{<>}
+\fi
+
 % ----- Theorem environments -----------------------------------------
 % Theorem names come from the language file (lang/<booklang>.tex) so the
 % same source compiles in English or Spanish.
