@@ -62,9 +62,11 @@
 % babel-spanish makes < and > active (for << >> guillemets), which breaks
 % TikZ arrow syntax such as ->, >=stealth and <-. Disable just those two
 % shorthands for the Spanish edition; accents are written explicitly (\'o).
+% babel activates its shorthands at \begin{document}, so disabling them must
+% happen there too (a preamble \shorthandoff would be undone).
 \def\esbooklang{es}
 \ifx\booklang\esbooklang
-  \shorthandoff{<>}
+  \AtBeginDocument{\shorthandoff{<>}}
 \fi
 
 % ----- Theorem environments -----------------------------------------
