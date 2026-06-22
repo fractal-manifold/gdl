@@ -1,9 +1,18 @@
 \providecommand{\GL}{\operatorname{GL}}
 \providecommand{\SO}{\operatorname{SO}}
 \providecommand{\Orth}{\operatorname{O}}
+\providecommand{\SU}{\operatorname{SU}}
+\providecommand{\U}{\operatorname{U}}
+\providecommand{\SL}{\operatorname{SL}}
+\providecommand{\SE}{\operatorname{SE}}
 \providecommand{\Sym}{\operatorname{Sym}}
 \providecommand{\Stab}{\operatorname{Stab}}
 \providecommand{\Orb}{\operatorname{Orb}}
+\providecommand{\Aut}{\operatorname{Aut}}
+\providecommand{\Img}{\operatorname{Im}}
+\providecommand{\rank}{\operatorname{rank}}
+\providecommand{\tr}{\operatorname{tr}}
+\providecommand{\ReLU}{\operatorname{ReLU}}
 \providecommand{\Lie}[1]{\mathfrak{#1}}
 
 \chapter{Mathematical Foundations}
@@ -11,91 +20,1753 @@
 
 The premise of geometric deep learning, set out in \Cref{ch:introduction}, is
 that the geometric structure of the data should dictate the structure of the
-model. To make this premise operational we need a precise language for two
-kinds of structure: the \emph{symmetries} that a problem possesses, and the
-\emph{spaces} on which the data lives. This chapter develops that language. We
-begin with groups and the way they act on sets, which formalize symmetry; we
-then turn to linear representations, the mechanism by which an abstract symmetry
-acts on the feature spaces of a neural network; we describe homogeneous spaces
-and quotients, which unify domains as different as the sphere and the plane
-under a single construction; and we close with manifolds and tangent spaces,
-the geometry on which the later chapters build. The treatment is deliberately
-self-contained but selective: we state the definitions and theorems used in the
-rest of the book and prove only those results whose proofs are illuminating.
-Standard references for the material are~\citet{lee2012introduction} for
-manifolds, \citet{munkres2000topology} for topology, and
-\citet{Kirillov2008,Fulton1991} for Lie groups and representation theory.
+model. Making this premise operational requires two languages developed in
+parallel. The first is the language of neural networks: how a network is built
+from neurons and layers, what the data it processes really is, and how it
+learns. The second is the geometric language: the \emph{symmetries} that a
+problem possesses, formalized by groups and their representations, and the
+\emph{spaces} on which data lives, formalized by manifolds and homogeneous
+spaces. This is the longest chapter of the book precisely because both
+foundations must be laid here before the geometric synthesis of \Cref{ch:priors}
+and the architectures that follow.
+
+We begin with the artificial neuron and the activation functions that give it
+its expressive power. We then ask what the data flowing through a network
+actually is, introducing the notion of a signal on a structured domain. We
+describe layers and the various ways of viewing a network as a graph. We
+formalize learning --- loss functions, gradient descent, backpropagation, the
+universal approximation theorem, convergence theory, and modern optimizers ---
+and survey the advantages of depth. With the neural foundations in place we turn
+to geometry: manifolds and tangent spaces, groups and their linear
+representations, and homogeneous spaces, the constructions that unify domains as
+different as the sphere and the plane. The treatment is self-contained but
+selective; standard references for the geometric material are
+\citet{lee2012introduction} for manifolds, \citet{munkres2000topology} for
+topology, and \citet{Kirillov2008,Fulton1991} for Lie groups and representation
+theory. The heavier measure-theoretic and functional-analytic prerequisites
+behind the universal approximation theorem are collected in the appendix
+(\Cref{ch:appendix}) and invoked here as needed.
+
+\section{The artificial neuron}
+\label{sec:found:neuron}
+
+Artificial neural networks are one of the earliest and most successful
+approaches to biologically inspired computation. Their development began in 1943
+when Warren McCulloch and Walter Pitts proposed the first formal mathematical
+model of an artificial neuron~\citep{McCullochPitts1943}, establishing
+conceptual foundations that endure to this day. The central motivation is to
+emulate, in simplified form, the information processing of biological neurons:
+specialized cells that receive input signals, integrate them through complex
+electrochemical processes, and produce output responses that propagate through
+interconnected networks. Crucially, biological neurons exhibit synaptic
+plasticity, adapting their responses with experience and thereby learning from
+examples.
+
+In the nervous system, a neuron receives electrochemical signals from other
+cells through dendrites and synaptic connections; these are integrated in the
+cell body, and if the weighted sum exceeds a critical depolarization threshold,
+the neuron fires an action potential that propagates along the axon. Abstracting
+this mechanism, an artificial neuron is a mathematical model that (1) receives
+several numerical input signals, (2) weights them through adjustable parameters
+(synaptic weights), (3) applies a nonlinear activation function modelling the
+firing threshold, and (4) produces an output signal that may feed other neurons.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    input/.style={circle, draw, minimum size=0.6cm, fill=gdlblue!15},
+    weight/.style={rectangle, draw, minimum width=0.6cm, minimum height=0.4cm, fill=gdlgray!15, font=\scriptsize},
+    sum/.style={circle, draw, minimum size=0.8cm, fill=gdlyellow!20},
+    activation/.style={rectangle, draw, rounded corners, minimum width=0.8cm, minimum height=0.6cm, fill=gdlgreen!20},
+    output/.style={circle, draw, minimum size=0.6cm, fill=gdlred!15},
+    arrow/.style={->, thick, >=stealth}
+]
+\node[input] (x1) at (0, 1.5) {$x_1$};
+\node[input] (x2) at (0, 0) {$x_2$};
+\node[input] (xn) at (0, -1.5) {$x_n$};
+\node at (0, -0.75) {$\vdots$};
+\node[weight] (w1) at (1.5, 1.5) {$w_1$};
+\node[weight] (w2) at (1.5, 0) {$w_2$};
+\node[weight] (wn) at (1.5, -1.5) {$w_n$};
+\node[sum] (suma) at (3.5, 0) {$\sum$};
+\node[below=0.1cm of suma, font=\scriptsize] {$+b$};
+\node[activation] (sigma) at (5.5, 0) {$\sigma$};
+\node[output] (y) at (7, 0) {$y$};
+\draw[arrow] (x1) -- (w1);
+\draw[arrow] (x2) -- (w2);
+\draw[arrow] (xn) -- (wn);
+\draw[arrow] (w1) -- (suma);
+\draw[arrow] (w2) -- (suma);
+\draw[arrow] (wn) -- (suma);
+\draw[arrow] (suma) -- node[above, font=\scriptsize] {$z$} (sigma);
+\draw[arrow] (sigma) -- (y);
+\node[above=1.5cm of x1, font=\small\bfseries] {Inputs};
+\node[above=0.3cm of w1, font=\small\bfseries] {Weights};
+\node[above=0.5cm of suma, font=\small\bfseries] {Sum};
+\node[above=0.5cm of sigma, font=\small\bfseries] {Activation};
+\end{tikzpicture}
+\caption[Structure of an artificial neuron]{Structure of an artificial neuron.
+The inputs $x_i$ are multiplied by weights $w_i$, summed together with the bias
+$b$, and the result $z = \sum_i w_i x_i + b$ is transformed by the activation
+function $\sigma$ to produce the output $y = \sigma(z)$.}
+\label{fig:found:neuron}
+\end{figure}
+
+Real biological neurons are vastly more complex than this abstraction: their
+dynamics involve precise temporal patterns, specific chemical neurotransmitters,
+time-dependent synaptic plasticity, and intricate three-dimensional dendritic
+architectures. Models closer to biology exist, such as \emph{spiking neural
+networks}, regarded as the ``third generation'' of neural
+networks~\citep{Maass1997spiking}: rather than emitting a continuous value, they
+process information through discrete spikes that propagate in time, capturing the
+temporal dynamics of biological neurons and offering significant advantages in
+energy efficiency on neuromorphic hardware~\citep{Tavanaei2018deep}. The
+classical McCulloch--Pitts abstraction has nonetheless proved extraordinarily
+fruitful, and it is the model we adopt throughout.
+
+We begin by formalizing the activation function and then the neuron itself.
+
+\begin{definition}[Activation function]
+\label{def:found:activation}
+An \emph{activation function} is a function $\sigma : \R \to \R$ satisfying:
+\begin{itemize}
+  \item \textbf{Nonlinearity:} $\sigma$ is not an affine map;
+  \item \textbf{Continuity:} $\sigma$ is continuous;
+  \item \textbf{Differentiability almost everywhere:} $\sigma$ is differentiable
+    except possibly on a set of Lebesgue measure zero.\footnote{A set
+    $A \subset \R$ has Lebesgue measure zero if it can be covered by intervals
+    whose total length is arbitrarily small; see \Cref{ch:appendix}.}
+\end{itemize}
+\end{definition}
+
+These properties ensure that $\sigma$ introduces the nonlinearity required for
+expressive power while still permitting gradient computation for training by
+backpropagation.
+
+\begin{definition}[Artificial neuron]
+\label{def:found:neuron}
+Let $n \in \mathbb{N}$ and let $\sigma : \R \to \R$ be an activation function.
+For each $\theta = (\mathbf{w}, b) \in \R^{n+1}$ with $\mathbf{w} \in \R^n$
+(weights) and $b \in \R$ (bias), an \emph{artificial neuron} is the function
+$f_\theta : \R^n \to \R$ given by the composition of an affine map with the
+activation,
+\[
+  f_\theta(\mathbf{x}) = \sigma\bigl(T_\theta(\mathbf{x})\bigr)
+  = \sigma\bigl(\inner{\mathbf{w}}{\mathbf{x}} + b\bigr),
+\]
+where $T_\theta(\mathbf{x}) = \inner{\mathbf{w}}{\mathbf{x}} + b$ is the affine
+map. A neuron thus defines a \emph{family of functions}
+$\{f_\theta : \theta \in \R^{n+1}\}$ parametrized by the weights and bias.
+\end{definition}
+
+The nonlinearity of $\sigma$ is essential: a composition of affine maps is again
+affine, so without nonlinear activations a deep network with many layers would
+collapse to a single linear transformation, losing all expressive power. It is
+exactly this nonlinearity that lets neural networks approximate arbitrarily
+complex functions, as the universal approximation theorem
+(\Cref{thm:found:universal}) makes precise.
+
+\subsection{Desirable properties of activation functions}
+\label{sec:found:activation-properties}
+
+\Cref{def:found:activation} states the minimal requirements. In practice it is
+desirable that $\sigma$ satisfy additional properties that ease training and
+improve network behaviour.
+
+\begin{definition}[Controlled growth]
+\label{def:found:bounded}
+An activation function $\sigma : \R \to \R$ has \emph{controlled growth} if it
+satisfies one of:
+\begin{enumerate}
+  \item \textbf{Boundedness:} there exists $M > 0$ with $\abs{\sigma(z)} \le M$
+    for all $z \in \R$;
+  \item \textbf{Linear growth:} there exist $C_1, C_2 > 0$ with
+    $\abs{\sigma(z)} \le C_1\abs{z} + C_2$ for all $z \in \R$.
+\end{enumerate}
+\end{definition}
+
+This property is crucial for numerical stability during training. Boundedness
+keeps activations within a finite range regardless of input magnitude,
+preventing numerical overflow; linear growth is more permissive, allowing
+activations to grow but no faster than the input itself.
+
+\begin{definition}[Monotonicity]
+\label{def:found:monotone}
+A function $\sigma : \R \to \R$ is \emph{monotone} (increasing) if
+$z_1 < z_2$ implies $\sigma(z_1) \le \sigma(z_2)$.
+\end{definition}
+
+Monotonicity preserves the relative order of inputs, simplifies the optimization
+landscape when combined with a convex loss, and reduces spurious local minima.
+Most classical activations are monotone, although monotonicity is not necessary
+for good empirical performance.
+
+\begin{definition}[Zero-centred]
+\label{def:found:zerocentered}
+An activation function $\sigma : \R \to \R$ is \emph{zero-centred} if
+$\sigma(0) = 0$ (or $\sigma(0) \approx 0$) and it is odd,
+$\sigma(-z) = -\sigma(z)$ for all $z$.
+\end{definition}
+
+When activations are zero-centred, gradients have mean close to zero, avoiding
+systematic biases in weight updates. When this fails (for instance if
+$\sigma(0) \ne 0$), the outputs of each layer carry a systematic bias, so all
+gradients with respect to the weights of a layer share the same sign, producing
+the ``zigzagging'' behaviour of gradient descent.
+
+\begin{definition}[Non-saturating gradient]
+\label{def:found:nonsaturating}
+An activation function $\sigma : \R \to \R$ has \emph{non-saturating gradient}
+if there exist $\delta > 0$ and a set $S \subseteq \R$ of infinite measure such
+that $\abs{\sigma'(z)} \ge \delta$ for all $z \in S$.
+\end{definition}
+
+This property is fundamental to avoiding the \emph{vanishing gradient problem},
+one of the principal obstacles in training deep networks
+(\Cref{sec:found:vanishing}).
+
+\begin{corollary}
+\label{cor:found:saturates}
+Every bounded activation function with horizontal asymptotes necessarily
+saturates.
+\end{corollary}
+
+\begin{proof}
+If $\lim_{z\to\pm\infty}\sigma(z) = c_{\pm}$ with $c_+, c_-$ finite, then
+$\lim_{z\to\pm\infty}\sigma'(z) = 0$. For any $\delta > 0$ there is $M > 0$ with
+$\abs{\sigma'(z)} < \delta$ for all $\abs{z} > M$, so the set
+$\{z : \abs{\sigma'(z)} \ge \delta\} \subseteq [-M, M]$ has finite measure. By
+\Cref{def:found:nonsaturating}, $\sigma$ cannot have a non-saturating gradient,
+hence it saturates.
+\end{proof}
+
+For large $\abs{z}$, $\abs{\sigma'(z)} \approx 0$, which causes gradients to
+become exponentially small in deep layers during backpropagation: the gradient
+of the loss with respect to the weights of the first layers is proportional to
+$\prod_{\ell=1}^L \sigma'(z^{(\ell)})$, which can vanish numerically. An
+activation that keeps $\abs{\sigma'(z)} \ge \delta > 0$ on a set of infinite
+measure lets the gradient flow without attenuation across many layers.
+
+\begin{definition}[Computational efficiency]
+\label{def:found:efficiency}
+An activation function is \emph{computationally efficient} if both $\sigma(z)$
+and its derivative $\sigma'(z)$ can be evaluated in $O(1)$ time with basic
+arithmetic operations.
+\end{definition}
+
+In deep networks with millions of neurons the activation is evaluated billions
+of times during training, so its efficiency directly affects total training
+time. Functions defined piecewise through $\max$ require only comparisons and
+selections, making them extremely efficient; transcendental functions
+(exponentials, logarithms) are still $O(1)$ but with a much larger constant.
+
+\begin{definition}[Lipschitz continuity]
+\label{def:found:lipschitz}
+A function $\sigma : \R \to \R$ is \emph{Lipschitz continuous} if there exists
+$L > 0$ (the \emph{Lipschitz constant}) such that
+$\abs{\sigma(z_1) - \sigma(z_2)} \le L\abs{z_1 - z_2}$ for all $z_1, z_2 \in \R$.
+\end{definition}
+
+Lipschitz continuity provides quantitative control over how input perturbations
+propagate to the output: small changes in the weights produce bounded changes in
+the activations, and if $\sigma$ is Lipschitz with constant $L$ then
+$\abs{\sigma'(z)} \le L$ almost everywhere. Many convergence theorems for
+optimization algorithms assume Lipschitz continuity of the objective. For
+activations differentiable almost everywhere,
+$L = \sup_z \abs{\sigma'(z)}$.
+
+\Cref{tab:found:activations} summarizes the most common activation functions and
+their properties; each is described in detail in
+\Cref{sec:found:traditional-layers}.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of common activation functions.}
+\label{tab:found:activations}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Function} & \textbf{Formula} & \textbf{Range} & \textbf{Centred} & \textbf{Non-sat.} & \textbf{Lipschitz} \\
+\midrule
+Sigmoid & $\frac{1}{1+e^{-z}}$ & $(0,1)$ & No & No & $L=\frac{1}{4}$ \\
+\addlinespace
+Tanh & $\frac{e^z-e^{-z}}{e^z+e^{-z}}$ & $(-1,1)$ & Yes & No & $L=1$ \\
+\addlinespace
+ReLU & $\max(0,z)$ & $[0,\infty)$ & No & Yes ($z>0$) & $L=1$ \\
+\addlinespace
+Leaky ReLU & $\max(\alpha z,z)$ & $\R$ & No & Yes & $L=1$ \\
+\addlinespace
+Swish & $z \cdot \sigma(z)$ & $\approx(-0.3,\infty)$ & No & Partial & $L\approx 1.1$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Data and its structure}
+\label{sec:found:data}
+
+We defined the artificial neuron as a function that processes input data and
+produces output data. But we have not yet asked what the data flowing through a
+network really is --- what the space $\R^n$ actually represents. When we
+represent a $28 \times 28$ image as a vector in $\R^{784}$, we are not dealing
+with $784$ independent values: each component corresponds to a specific pixel on
+a two-dimensional grid, and spatially neighbouring pixels are naturally related.
+The grid structure is not arbitrary but intrinsic to the image. This section
+formalizes that distinction through two equivalent conceptual frameworks: the
+\emph{domain--structure--signal} triple $(\Omega, \mathcal{S}, f)$ and the
+\emph{geometry--attributes} pair.
+
+\subsection{Signals on structured domains}
+\label{sec:found:signals}
+
+The first framework rests on three components that cleanly separate the notions
+of position, relation, and value. This tripartite decomposition underlies the
+unifying paradigm developed in \Cref{ch:priors} and the chapters on the five
+themes.
+
+\begin{definition}[Data domain]
+\label{def:found:domain}
+A \emph{data domain} is a set $\Omega$ whose elements represent the positions
+where data is observed. It may be discrete and finite
+($\Omega = \{p_1, \ldots, p_n\}$, e.g.\ graph vertices, image pixels, vector
+indices), discrete and infinite ($\Omega = \Z^d$, an infinite grid), or
+continuous ($\Omega \subseteq \R^d$ or a smooth manifold $\mathcal{M}$).
+\end{definition}
+
+\begin{definition}[Domain structure]
+\label{def:found:structure}
+The \emph{structure} $\mathcal{S}$ on a domain $\Omega$ specifies the intrinsic
+relations between its elements. It may be \emph{topological} (a topology defining
+open sets and neighbourhoods), \emph{metric} (a distance
+$d : \Omega \times \Omega \to \R_{\ge 0}$), \emph{algebraic} (a group $\group$
+acting on $\Omega$), \emph{combinatorial} (a graph $(V,E)$ of explicit
+connections), or \emph{geometric} (a smooth manifold with atlas, Riemannian
+metric, connection). The pair $(\Omega, \mathcal{S})$ is a \emph{structured
+domain}.
+\end{definition}
+
+\begin{definition}[Signal]
+\label{def:found:signal}
+A \emph{signal} on a structured domain $(\Omega, \mathcal{S})$ is a function
+$f : \Omega \to \mathcal{C}$ assigning to each point $p \in \Omega$ a feature
+vector $f(p) \in \mathcal{C}$, where $\mathcal{C}$ is a vector space called the
+\emph{channel space}, typically $\mathcal{C} = \R^d$ with $d$ the number of
+channels. When $\Omega = \{p_1, \ldots, p_n\}$ is finite and
+$\mathcal{C} = \R^d$, the signal is represented by the matrix
+$F = (f(p_1)^\top; \ldots; f(p_n)^\top) \in \R^{n \times d}$, each row holding
+the features observed at position $p_i$.
+\end{definition}
+
+\begin{remark}
+\label{rem:found:channels}
+The choice $\mathcal{C} = \R^d$ suffices for most of this chapter. In later
+chapters the channel space acquires richer structure: in
+\Cref{ch:groups}, $\mathcal{C}$ may be a representation space of a symmetry group
+$\group$ (e.g.\ spherical harmonics for $\SO(3)$), and for gauge-equivariant
+networks $\mathcal{C}$ is the fibre of an associated vector bundle over the base
+manifold.
+\end{remark}
+
+\begin{definition}[Signal space]
+\label{def:found:signal-space}
+Given a structured domain $(\Omega, \mathcal{S})$ and a channel space
+$\mathcal{C}$, the \emph{signal space} is
+$\mathcal{F}(\Omega, \mathcal{C}) = \{f : \Omega \to \mathcal{C}\}$. When
+$\Omega$ is finite with $\abs{\Omega} = n$ and $\mathcal{C} = \R^d$, it is
+isomorphic to the matrix space $\R^{n \times d}$. When $\Omega$ is continuous,
+$\mathcal{F}(\Omega, \mathcal{C})$ restricts to a function space with appropriate
+regularity (for example $L^2(\Omega, \mathcal{C})$ or
+$C^k(\Omega, \mathcal{C})$).
+\end{definition}
+
+A neural network can then be seen as an operator between signal spaces: a layer
+transforms input signals into output signals, possibly over different domains
+and channel spaces, $T : \mathcal{F}(\Omega, \mathcal{C}) \to
+\mathcal{F}(\Omega', \mathcal{C}')$. This functional viewpoint is central to the
+convolutional networks of \Cref{ch:grids}, where convolution is an equivariant
+linear operator between signal spaces. In summary: the domain $\Omega$ defines
+\emph{where} the data is, the structure $\mathcal{S}$ defines \emph{how the
+positions relate}, and the signal $f$ defines the \emph{values observed} at each
+position. A vector $\mathbf{x} \in \R^n$ is therefore not merely a collection of
+$n$ numbers but a signal on a domain with a specific structure.
+
+\begin{example}[Audio signal]
+\label{ex:found:audio}
+An audio signal has domain $\Omega = [0,T] \subset \R$ (a continuous time
+interval), structure $\mathcal{S}$ given by the total order of $\R$ with its
+standard topology, and signal $f(t) \in \R$ (sound amplitude at instant $t$).
+The order is causal: $t_1 < t_2$ has meaning, and nearby instants are typically
+correlated.
+\end{example}
+
+\begin{example}[Digital image on a grid]
+\label{ex:found:image}
+A digital image has domain $\Omega = \{1,\ldots,H\} \times \{1,\ldots,W\}$,
+structure given by a rectangular 2D grid with local (4- or 8-connected)
+neighbourhoods, and signal $f(i,j) \in \R^3$ (RGB intensities). Permuting the
+pixel order when vectorizing changes the vector representation but not the image
+as a signal on the grid: the grid structure is intrinsic to the geometric
+object, not to its particular vectorization.
+\end{example}
+
+\begin{example}[Social network]
+\label{ex:found:graph}
+A social network has domain $\Omega = V = \{u_1, \ldots, u_n\}$ (users),
+structure $\mathcal{S} = (V, E)$ with $E \subseteq V \times V$ representing
+friendships, and signal $f(u) \in \R^d$ (the profile of user $u$). There is no
+canonical ordering of users: a user's ``position'' is its abstract identity in
+the graph, and two users are neighbours if and only if $(u_i, u_j) \in E$.
+\end{example}
+
+\begin{example}[Molecule]
+\label{ex:found:molecule}
+A molecule combines discrete connectivity with continuous geometry: domain
+$\Omega = \{a_1, \ldots, a_n\}$ (atoms), structure given by the chemical-bond
+graph together with positions in $\R^3$ and the symmetries of the Euclidean
+group $E(3)$, and signal $f(a) \in \R^d$ (atomic type, partial charge, mass,
+hybridization). Physicochemical properties are invariant under $E(3)$:
+translations, rotations, and reflections do not change the molecule.
+\end{example}
+
+\begin{example}[3D point cloud and surface]
+\label{ex:found:pointcloud}
+A 3D point cloud has domain $\Omega = \{p_1, \ldots, p_n\} \subset \R^3$,
+structure the Euclidean metric $d(p_i, p_j) = \norm{p_i - p_j}_2$, and signal
+$f(p) \in \R^d$ (surface normals, curvatures, colours, LIDAR intensity). There is
+no natural order: only relative distances matter. A 3D surface modelled as a
+Riemannian manifold $\mathcal{M}$ embedded in $\R^3$ carries the induced metric
+$g$, and its geodesic distances and curvature are intrinsic, independent of the
+particular embedding.
+\end{example}
+
+\begin{remark}[Permutation invariance]
+\label{rem:found:permutation}
+The examples reveal a fundamental distinction. In some domains (audio, text,
+image) there is a canonical or partial ordering of positions, so the matrix
+representation $F \in \R^{n \times d}$ is essentially unique. In others (graphs,
+point clouds) there is no such order: if $P \in \{0,1\}^{n \times n}$ is a
+permutation matrix, then $F$ and $PF$ represent the same signal on the same
+domain, merely with positions enumerated in a different order. A network
+processing data without a canonical order must therefore produce results that are
+invariant (for classification) or equivariant (for per-node prediction) under
+input permutations --- one of the central ideas of geometric deep learning,
+formalized in \Cref{ch:priors,ch:graphs}.
+\end{remark}
+
+\subsection{Geometry and attributes}
+\label{sec:found:geometry-attributes}
+
+The previous framework separates domain, structure, and signal into three
+components. It is sometimes useful to unify the domain and its structure into a
+single entity: the \emph{geometry} of the problem.
+
+\begin{definition}[Geometry and attributes]
+\label{def:found:geometry}
+The \emph{geometry} of a data problem is the pair $\mathcal{D} = (\Omega,
+\mathcal{S})$ combining the domain with its structure into a single entity. The
+\emph{attributes} (or features) are the signal $f : \Omega \to \mathcal{C}$
+assigning observed values to each position.
+\end{definition}
+
+The two frameworks are mathematically equivalent, with the correspondence
+$(\Omega, \mathcal{S}, f) \leftrightarrow (\mathcal{D}, f)$. The
+geometry/attributes view emphasizes that the geometry $\mathcal{D}$ is typically
+fixed or intrinsic to each datum (it defines the ``shape'' of the data space),
+while the attributes $f$ are variable: different data instances share the same
+geometry but have different attributes. Operations should respect the geometry
+while transforming the attributes.
+
+\subsection{Neural processing of signals}
+\label{sec:found:neuron-as-operator}
+
+An artificial neuron $f_\theta : \R^n \to \R$ can be reinterpreted as an operator
+on signals over a discrete domain: input domain $\Omega = \{1, \ldots, n\}$ (a
+finite set of indices with no particular geometric meaning), no significant
+structure, input signal $x : \Omega \to \R$ with $x(i) = x_i$, and processing
+$y = \sigma(\inner{\mathbf{w}}{\mathbf{x}} + b)$. The linear part
+$\inner{\mathbf{w}}{\mathbf{x}} = \sum_i w_i x_i$ combines all components
+globally. There is no notion of \emph{locality} (all positions contribute
+equally), no \emph{structured neighbourhood} (the connection $w_1 x_1$ is
+structurally indistinguishable from $w_{100} x_{100}$), and no \emph{geometric
+invariance} (permuting the indices generally changes the output, even when the
+permutation is semantically irrelevant). Traditional networks focus on
+transforming the signal between layers, leaving the geometry in the background;
+geometric deep learning makes the geometry of the data a central pillar, as
+developed in \Cref{ch:priors}.
+
+\section{Layers of a neural network}
+\label{sec:found:layers}
+
+We defined an artificial neuron as a function with a single scalar output. This
+is not arbitrary: biological neurons emit a single output signal (firing rate),
+and a $\R^n \to \R$ function is conceptually simpler than a $\R^n \to \R^m$ one,
+easing the analysis of an individual unit. A vector-valued neuron adds no
+expressive power: a neuron with $m$ outputs is functionally equivalent to $m$
+scalar neurons operating in parallel. We therefore take the scalar neuron as the
+primitive and build richer architectures by composition and parallelization.
+
+\begin{definition}[Neural layer]
+\label{def:found:layer}
+A \emph{neural layer} is a set of $m$ neurons sharing the same input domain and
+operating in parallel. Given an input signal $\mathbf{x} \in \R^n$, the layer
+produces $\mathbf{y} \in \R^m$ via
+\[
+  L(\mathbf{x}) = \sigma(\mathbf{W}\mathbf{x} + \mathbf{b}),
+\]
+where $\mathbf{W} \in \R^{m \times n}$ is the \emph{weight matrix} (whose $i$-th
+row holds the weights of neuron $i$), $\mathbf{b} \in \R^m$ is the \emph{bias
+vector}, and $\sigma$ is applied componentwise. Each neuron computes
+$y_i = \sigma(\mathbf{w}_i^\top \mathbf{x} + b_i)$.
+\end{definition}
+
+The matrix form is fully general: if a neuron processes only a subset of input
+positions, this is expressed by zero coefficients $W_{ij} = 0$. Architectures
+with structured connectivity, such as convolutional networks, exploit this
+sparsity. In many architectures the weights are \emph{shared} between neurons:
+several rows of $\mathbf{W}$ hold identical values, drastically reducing the
+number of free parameters.
+
+\subsection{Composition of layers}
+\label{sec:found:composition}
+
+A single neuron computes $y = \sigma(\sum_i w_i x_i + b)$, whose linear part
+defines a hyperplane in $\R^n$; a single neuron can only separate the input space
+by one nonlinearly transformed hyperplane, limiting its expressive power. By
+connecting many neurons in layers we obtain a \emph{functional composition} of
+nonlinear transformations. Writing $L_i : \R^{n_{i-1}} \to \R^{n_i}$ for the
+$i$-th layer, a $k$-layer network computes
+\[
+  \mathcal{N} = L_k \circ L_{k-1} \circ \cdots \circ L_1 :
+  \R^{n_0} \to \R^{n_k}.
+\]
+This composition yields \emph{hierarchical representations} (early layers detect
+simple patterns such as edges and textures; later layers combine them into
+higher-level structures) and \emph{complex partitioning} of the space (multiple
+neurons generate multiple hyperplanes, partitioning $\R^n$ into arbitrarily
+complex polyhedral regions). The first layer is the input layer, the last is the
+output layer, and the intermediate layers are the \emph{hidden} layers.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    x=2.1cm, y=0.85cm,
+    neuron/.style={circle, minimum size=5.5mm, line width=0.6pt},
+    input/.style={neuron, draw=gdlblue!70, fill=gdlblue!15},
+    hidden1/.style={neuron, draw=gdlgreen!60!black, fill=gdlgreen!15},
+    hidden3/.style={neuron, draw=gdlpurple!70, fill=gdlpurple!18},
+    output/.style={neuron, draw=gdlorange!70, fill=gdlorange!18},
+    conn/.style={->, >=stealth, draw=gdlgray!35, line width=0.2pt},
+    lbl/.style={font=\small\bfseries}
+]
+\node[input] (I1) at (0, 2) {};
+\node[input] (I2) at (0, 1) {};
+\node[input] (I3) at (0, 0) {};
+\node[left=1mm of I1, font=\small] {$x_1$};
+\node[left=1mm of I3, font=\small] {$x_3$};
+\node[lbl] at (0, 3.5) {Input};
+\foreach \j in {1,...,4} \node[hidden1] (H1-\j) at (1, 3-\j) {};
+\node[lbl] at (1, 3.5) {Hidden 1};
+\foreach \j in {1,...,4} \node[hidden1] (H2-\j) at (2, 3-\j) {};
+\node[lbl] at (2, 3.5) {Hidden 2};
+\foreach \j in {1,...,4} \node[hidden3] (H3-\j) at (3, 3-\j) {};
+\node[lbl] at (3, 3.5) {Hidden 3};
+\node[output] (O1) at (4, 1.5) {};
+\node[output] (O2) at (4, 0.5) {};
+\node[right=1mm of O1, font=\small] {$y_1$};
+\node[right=1mm of O2, font=\small] {$y_2$};
+\node[lbl] at (4, 3.5) {Output};
+\foreach \i in {1,2,3} \foreach \j in {1,...,4} \draw[conn] (I\i) -- (H1-\j);
+\foreach \i in {1,...,4} \foreach \j in {1,...,4} \draw[conn] (H1-\i) -- (H2-\j);
+\foreach \i in {1,...,4} \foreach \j in {1,...,4} \draw[conn] (H2-\i) -- (H3-\j);
+\foreach \i in {1,...,4} \foreach \j in {1,2} \draw[conn] (H3-\i) -- (O\j);
+\draw[decorate, decoration={brace, amplitude=4pt, raise=2pt}, gdlgray!60, thick]
+    (1, 3.7) -- (3, 3.7) node[midway, above=5pt, font=\small\itshape] {Hidden layers};
+\end{tikzpicture}
+\caption[Structure of a layered neural network]{A feedforward neural network
+organized in layers. Nodes are neurons coloured by layer type; arrows are
+weighted connections $w_{ij}^{(\ell)}$.}
+\label{fig:found:network}
+\end{figure}
+
+\paragraph{The XOR problem.}
+The exclusive-or function $\mathrm{XOR}(x_1, x_2)$ returns $1$ when exactly one
+input is $1$ and $0$ otherwise. It is \emph{not linearly separable}: no single
+hyperplane separates the classes $\{(0,0),(1,1)\}$ from $\{(0,1),(1,0)\}$ in
+$\R^2$. A single neuron computes one hyperplane and cannot solve it; many layers
+of one neuron each also fail, because a scalar map $\R^2 \to \R$ collapses the
+two-dimensional information immediately. A network with two hidden neurons and
+one output neuron suffices: the hidden layer creates two hyperplanes that
+partition $\R^2$, and the output neuron combines them to produce the XOR
+boundary. Thus neither width alone nor depth alone is enough: we need at least
+two neurons in some layer \emph{and} at least two layers.
+
+\subsection{Width versus depth}
+\label{sec:found:width-depth}
+
+\begin{definition}[Width and depth]
+\label{def:found:width-depth}
+The \emph{width} of a layer $L_i : \R^{n_{i-1}} \to \R^{n_i}$ is the dimension
+$n_i$ of its output space, the number of neurons it contains. The \emph{depth} of
+a network $\mathcal{N} = L_k \circ \cdots \circ L_1$ is the number $k$ of layers
+in the composition.
+\end{definition}
+
+Width provides \emph{feature diversity}: each neuron captures a different aspect
+of the input. Depth provides \emph{hierarchical abstraction}: each layer performs
+an intermediate transformation, building a hierarchy of increasingly abstract
+representations,
+$x \xrightarrow{L_1} h^{(1)} \xrightarrow{L_2} \cdots \xrightarrow{L_k} y$. Early
+layers detect low-level features (edges, textures), intermediate layers combine
+them into more complex patterns, and final layers represent task-specific
+high-level concepts. As the universal approximation theorem
+(\Cref{thm:found:universal}) shows, a single sufficiently wide hidden layer can
+approximate any continuous function on a compact set, but this existential
+guarantee says nothing about the efficiency of the approximation; depth provides
+exponential advantages in expressive power (\Cref{sec:found:depth}).
+
+\subsection{Types of layers}
+\label{sec:found:layer-types}
+
+Layers may transform the signal, the domain, or both. This distinction is
+fundamental to the difference between traditional networks and geometric deep
+learning: the former typically ignore or destroy the original geometry, while the
+latter preserve and exploit it.
+
+\begin{definition}[Pure signal transformation]
+\label{def:found:signal-transform}
+A layer $L$ is a \emph{pure signal transformation} if it preserves the structure
+of the input domain: if the input is $f : \Omega \to \R^{c_{\mathrm{in}}}$, the
+output is $g : \Omega \to \R^{c_{\mathrm{out}}}$ with $\Omega$ unchanged.
+Typically $g(x) = \phi(f(x))$ for some
+$\phi : \R^{c_{\mathrm{in}}} \to \R^{c_{\mathrm{out}}}$ applied pointwise; such
+layers preserve the tensor shape and require no neighbourhood information.
+\end{definition}
+
+\begin{definition}[Pure geometric transformation]
+\label{def:found:geometry-transform}
+A layer $L$ is a \emph{pure geometric transformation} if it modifies the
+geometric structure of the domain without nontrivially processing the signal
+values: $L(f) = g : (\Omega', \mathcal{G}') \to \R^c$ with
+$\mathcal{G}' \ne \mathcal{G}$, the values being preserved or reindexed by a
+correspondence $\pi : \Omega' \to \Omega$.
+\end{definition}
+
+\begin{definition}[Coupled signal--geometry transformation]
+\label{def:found:coupled-transform}
+A layer $L$ is a \emph{coupled transformation} if it simultaneously and
+intrinsically modifies both signal and domain: $L$ maps
+$f : \Omega \to \R^{c_{\mathrm{in}}}$ to $g : \Omega' \to \R^{c_{\mathrm{out}}}$
+with $\Omega' \ne \Omega$ and $g$ not expressible as a reindexing of $f$.
+\end{definition}
+
+Traditional networks (multilayer perceptrons, dense networks) rely mainly on
+layers that destroy or ignore the original geometry, typically flattening it into
+a vector and losing all information about spatial neighbourhoods. Geometric deep
+learning, by contrast, systematically preserves and exploits the underlying
+geometry, as developed throughout the book.
+
+\subsection{Traditional layers}
+\label{sec:found:traditional-layers}
+
+We briefly present some layers used traditionally in deep learning.
+
+\paragraph{Activation functions as layers.}
+Although the activation is intrinsic to the neuron, it is often implemented as a
+separate layer applying $\sigma$ componentwise; these are pure signal
+transformations. The \emph{sigmoid}
+$\sigma(z) = 1/(1+e^{-z})$ has range $(0,1)$, is bounded
+(\Cref{def:found:bounded}), monotone (\Cref{def:found:monotone}), and Lipschitz
+with $L = 1/4$, but is not zero-centred (\Cref{def:found:zerocentered}) and
+saturates at both ends. The \emph{hyperbolic tangent}
+$\tanh(z) = (e^z - e^{-z})/(e^z + e^{-z})$ has range $(-1,1)$, is zero-centred
+and Lipschitz with $L = 1$, but, being bounded with horizontal asymptotes, also
+saturates --- causing the vanishing gradient problem of \Cref{sec:found:vanishing}.
+The \emph{rectified linear unit} $\ReLU(z) = \max(0, z)$ has
+$\ReLU'(z) = 1$ for $z > 0$, satisfying \Cref{def:found:nonsaturating} on the
+positive half-line; it has linear growth, is monotone and Lipschitz with $L=1$,
+and is extremely efficient, but is not zero-centred and its zero gradient for
+$z \le 0$ can cause ``dead neurons.'' The \emph{leaky ReLU}
+$\mathrm{LeakyReLU}(z) = \max(\alpha z, z)$ with small $\alpha > 0$ keeps
+$\abs{\sigma'(z)} \ge \alpha > 0$ for all $z \ne 0$, eliminating both saturation
+and dead neurons.
+
+\begin{definition}[Softmax]
+\label{def:found:softmax}
+The \emph{softmax} function $\sigma : \R^n \to (0,1)^n$ transforms a real vector
+into a probability distribution: for $\mathbf{z} \in \R^n$,
+\[
+  \sigma(\mathbf{z})_i = \frac{e^{z_i}}{\sum_{j=1}^n e^{z_j}}, \qquad
+  i = 1, \ldots, n.
+\]
+\end{definition}
+
+\begin{proposition}[Properties of softmax]
+\label{prop:found:softmax}
+The softmax satisfies: (1) \emph{normalization}, $\sum_i \sigma(\mathbf{z})_i =
+1$; (2) \emph{positivity}, $\sigma(\mathbf{z})_i > 0$; (3) \emph{translation
+invariance}, $\sigma(\mathbf{z} + c\mathbf{1}) = \sigma(\mathbf{z})$; (4) the
+Jacobian is $\partial \sigma_i / \partial z_j = \sigma_i(\delta_{ij} -
+\sigma_j)$; and (5) \emph{permutation equivariance}, $\sigma(P\mathbf{z}) =
+P\sigma(\mathbf{z})$ for every permutation matrix $P$.
+\end{proposition}
+
+\begin{proof}
+Properties (1) and (2) are immediate. For (3), $e^{z_i + c}/\sum_j e^{z_j + c} =
+e^{z_i}/\sum_j e^{z_j}$. For (4), the quotient rule gives
+$\partial \sigma_i/\partial z_j = (\delta_{ij}e^{z_i}\sum_k e^{z_k} -
+e^{z_i}e^{z_j})/(\sum_k e^{z_k})^2 = \sigma_i(\delta_{ij} - \sigma_j)$.
+Property (5) follows because the denominator is invariant under reindexing.
+\end{proof}
+
+\paragraph{Normalization.}
+Normalization layers standardize the distribution of activations, addressing
+internal covariate shift and gradient instability; they are pure signal
+transformations. A normalization applies
+$\mathrm{Norm}(\mathbf{x}) = \gamma \odot (\mathbf{x} - \boldsymbol{\mu})/
+\boldsymbol{\sigma} + \boldsymbol{\beta}$, where $\boldsymbol{\mu},
+\boldsymbol{\sigma}$ are centring and scaling statistics and $\gamma,
+\boldsymbol{\beta}$ are learnable. \emph{Batch
+normalization}~\citep{ioffe2015batch} computes statistics over the mini-batch;
+\emph{layer normalization}~\citep{ba2016layer} over the features of each sample;
+\emph{group normalization}~\citep{wu2018group} over groups of channels; and
+\emph{instance normalization}~\citep{ulyanov2016instance} per channel and per
+sample.
+
+\paragraph{Dropout.}
+Dropout~\citep{srivastava2014dropout} is a regularization technique that, during
+training, randomly deactivates neurons with probability $p_{\mathrm{drop}}$,
+setting their outputs to zero:
+$\mathbf{y} = \frac{1}{1-p_{\mathrm{drop}}}\,\mathbf{r} \odot \mathbf{x}$ with
+$\mathbf{r} \sim \mathrm{Bernoulli}(1-p_{\mathrm{drop}})$. It reduces
+co-adaptation between neurons and improves generalization. It is a pure signal
+transformation.
+
+\paragraph{Dense layers.}
+A \emph{dense} (fully connected) layer is precisely a neural layer
+(\Cref{def:found:layer}) with no structural restriction on $\mathbf{W}$: every
+output neuron receives signal from every input position. It performs a linear
+transformation, a translation, and a nonlinear deformation, and by imposing no
+sparse connectivity or weight sharing it destroys the original geometry of the
+input through an affine projection. It is a coupled signal--geometry
+transformation.
+
+\paragraph{Embedding layers.}
+An \emph{embedding} maps discrete indices to dense vectors:
+$\mathrm{Embedding} : \{1, \ldots, V_{\mathrm{vocab}}\} \to \R^{d_{\mathrm{emb}}}$,
+implemented by a lookup matrix
+$E \in \R^{V_{\mathrm{vocab}} \times d_{\mathrm{emb}}}$. Embeddings transform a
+discrete, disconnected space into a continuous manifold where Euclidean geometry
+captures semantic relations; they are coupled transformations (discrete
+$\to$ continuous).
+
+\paragraph{Structure transformations.}
+\emph{Reshape} reorganizes a tensor while preserving the total number of
+elements; \emph{flatten} is the special case mapping
+$\R^{d_1 \times \cdots \times d_n} \to \R^{\prod_i d_i}$, often used to bridge
+convolutional and dense layers. \emph{Pooling} reduces spatial dimension by
+aggregating local windows with a function $f$, providing limited translational
+invariance: \emph{max pooling} selects the maximum, \emph{average pooling} the
+arithmetic mean.
+
+\paragraph{Convolutions.}
+Convolutional layers, studied in detail in \Cref{ch:grids}, are used mainly for
+grid data such as images or audio. For an input $f : \Z^d \to \R$ and a kernel
+$g : \Z^d \to \R$, the \emph{discrete convolution} is
+$(f * g)[n] = \sum_{m \in \Z^d} f[m]\, g[n - m]$. In traditional networks
+convolutions are introduced chiefly as a computational optimization exploiting
+the regular grid; \Cref{ch:grids} develops the geometric meaning.
+
+\paragraph{Recurrent layers.}
+A \emph{recurrent neural network} has at least one cycle in its connectivity
+graph, with hidden state evolving as
+$\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}_t; \boldsymbol{\theta})$. The
+simplest form uses
+$\mathbf{h}_t = \tanh(W_h \mathbf{h}_{t-1} + W_x \mathbf{x}_t + \mathbf{b}_h)$,
+$\mathbf{y}_t = W_y \mathbf{h}_t + \mathbf{b}_y$, with the same parameters applied
+at every time step. This gives temporal generalization and parameter efficiency
+but suffers from limited memory and vanishing gradients, and requires
+backpropagation through time~\citep{werbos1990bptt}.
+
+\paragraph{Long short-term memory.}
+\emph{Long short-term memory} (LSTM) cells~\citep{hochreiter1997long} address the
+vanishing gradient by maintaining a cell state $\mathbf{C}_t$ and a hidden state
+$\mathbf{h}_t$ controlled by three gates --- forget
+$\mathbf{f}_t = \sigma(W_f [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f)$,
+input $\mathbf{i}_t$, and output $\mathbf{o}_t$ --- with updates
+\[
+  \tilde{\mathbf{C}}_t = \tanh(W_C [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_C),
+  \quad \mathbf{C}_t = \mathbf{f}_t \odot \mathbf{C}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{C}}_t,
+  \quad \mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{C}_t).
+\]
+The forget gate can stay near $1$ for important information, creating gradient
+paths that persist over long horizons. The \emph{gated recurrent unit}
+(GRU)~\citep{cho2014learning} is a simplification combining the forget and input
+gates, with comparable performance~\citep{chung2014empirical}.
+
+\paragraph{Residual connections.}
+A \emph{residual connection}~\citep{he2016deep} adds the input of a block of
+layers $\mathcal{F}$ directly to its output, $\mathbf{y} = \mathcal{F}(\mathbf{x})
++ \mathbf{x}$. The skip connection lets the gradient flow directly during
+backpropagation, mitigating the vanishing gradient in very deep networks and
+enabling the training of networks far deeper than previously possible.
+
+\section{Neural networks as graphs}
+\label{sec:found:nets-as-graphs}
+
+We have described layers and their composition algebraically. There is an equally
+important complementary view: representing neural networks as \emph{graphs}, with
+nodes as computational units and edges as the flow of information. This view
+gives a precise language for architecture, distinguishes families of networks by
+topological properties, and underlies the automatic differentiation of modern
+frameworks.
+
+\begin{definition}[Graph and directed graph]
+\label{def:found:graph}
+A \emph{graph} is a pair $\mathcal{G} = (V, E)$ of a vertex set $V$ and an edge
+set $E$. In a \emph{directed graph} each edge $(u,v) \in \vec{E}$ has a direction
+from $u$ to $v$, and $(u,v) \ne (v,u)$; an \emph{undirected} graph has symmetric
+edges. A \emph{path} of length $k$ is a sequence $v_0, \ldots, v_k$ with
+$(v_i, v_{i+1}) \in \vec{E}$; a \emph{cycle} is a path with $v_0 = v_k$,
+$k \ge 1$, and distinct intermediate vertices. A \emph{directed acyclic graph}
+(DAG) is a directed graph with no cycles.
+\end{definition}
+
+In a neural network the directed edges represent the flow of information: the
+output of neuron $u$ becomes an input to neuron $v$. A cycle represents feedback
+or memory.
+
+\begin{theorem}[Topological ordering]
+\label{thm:found:topological}
+Every directed acyclic graph $\mathcal{G} = (V, \vec{E})$ admits at least one
+\emph{topological ordering}: a numbering $v_1, \ldots, v_{\abs{V}}$ such that
+$(v_i, v_j) \in \vec{E}$ implies $i < j$.
+\end{theorem}
+
+\begin{proof}
+By induction on $n = \abs{V}$. For $n = 1$ the ordering is trivial. Assume the
+result for $n$ vertices and let $\mathcal{G}$ have $n+1$. We claim $\mathcal{G}$
+has a vertex $v$ of in-degree zero: otherwise every vertex would have an incoming
+edge, and walking backwards indefinitely would, by the pigeonhole principle,
+produce a cycle, contradicting acyclicity. Place such a $v$ first; the reduced
+graph on $V \setminus \{v\}$ is still acyclic and has $n$ vertices, so by
+induction it has a topological ordering. Prepending $v$ gives one for
+$\mathcal{G}$.
+\end{proof}
+
+A topological ordering guarantees that the outputs of all neurons can be computed
+sequentially without solving implicit systems, making feedforward networks
+computationally efficient.
+
+\paragraph{Feedforward networks as DAGs; recurrent networks as cyclic graphs.}
+Feedforward networks are exactly those whose neuron graph is a DAG. Acyclicity
+allows deterministic one-pass computation following a topological order, parallel
+computation of neurons at the same depth, and efficient backpropagation in a
+single reverse pass. Recurrent networks have directed cycles representing memory,
+yielding equations $h_t = f(h_{t-1}, x_t; \theta)$. Modern architectures tend to
+favour DAGs for parallelizability and numerical stability; attention and
+transformers (\Cref{sec:found:modern}) capture long-range dependencies while
+preserving the DAG structure.
+
+\paragraph{Layer graphs.}
+At a higher level of abstraction, a network may be viewed as a \emph{layer
+graph} $\mathcal{G}_{\mathcal{N}} = (V_L, E_L)$, with each node a complete layer
+and an edge $(L_i, L_j)$ when the output of $L_i$ is part of the input of $L_j$.
+A classical feedforward network is the simplest possible DAG, a directed path
+$L_1 \to L_2 \to \cdots \to L_k$. Modern architectures use nonlinear DAGs:
+residual connections~\citep{he2016deep} add skip edges
+$h^{(\ell+1)} = h^{(\ell)} + F(h^{(\ell)}; \theta_\ell)$, and Inception-style
+networks~\citep{szegedy2015going} process the input through parallel paths that
+are later concatenated. The neuron graph is the microscopic description, the
+layer graph the macroscopic one; a projection $\pi : V_N \to V_L$ relates them.
+
+\section{Learning in neural networks}
+\label{sec:found:learning}
+
+Training a neural network is an iterative process of optimizing its parameters
+$\theta$ to minimize an error measured against examples of the expected output.
+With the error at each step, an optimization algorithm --- gradient descent or
+one of its variants such as stochastic gradient descent --- updates $\theta$.
+
+\subsection{Loss functions}
+\label{sec:found:loss}
+
+\begin{definition}[Loss function]
+\label{def:found:loss}
+A \emph{loss function} is a map $\mathcal{L} : \mathcal{Y} \times \mathcal{Y} \to
+\R_{\ge 0}$ measuring the discrepancy between a prediction $\hat{y}$ and a true
+value $y$, satisfying: (1) \emph{non-negativity}, $\mathcal{L}(y, \hat{y}) \ge
+0$; (2) \emph{consistency}, $\mathcal{L}(y, y) = 0$; and (3)
+\emph{differentiability} with respect to $\hat{y}$, to permit gradient-based
+optimization.
+\end{definition}
+
+Some losses satisfy the stronger condition $\mathcal{L}(y, \hat{y}) = 0
+\Leftrightarrow y = \hat{y}$ (e.g.\ mean squared error), while others reach zero
+on a larger region. For \emph{regression}, the \emph{mean squared error}
+$\mathcal{L}_{\mathrm{MSE}} = \frac{1}{n}\sum_i (y_i - \hat{y}_i)^2$ penalizes
+large errors strongly and is sensitive to outliers; the \emph{mean absolute
+error} $\frac{1}{n}\sum_i \abs{y_i - \hat{y}_i}$ is more robust but not
+differentiable at $\hat{y} = y$; the \emph{Huber loss} is quadratic for small
+errors and linear for large ones, combining the advantages of both. For
+\emph{classification}, the \emph{cross-entropy}
+$\mathcal{L}(y, \hat{y}) = -\sum_{i=1}^K y_i \log \hat{y}_i$ measures the
+divergence between the true and estimated class distributions (with softmax
+producing the probabilities), specializing to the \emph{binary log loss} for
+$K = 2$; the \emph{hinge loss} $\max(0, 1 - y\hat{y})$ induces maximum-margin
+solutions. For comparing \emph{probability distributions}, the
+\emph{Kullback--Leibler divergence}
+$D_{\mathrm{KL}}(P \| Q) = \sum_x P(x) \log(P(x)/Q(x))$ is a special case of the
+\emph{$f$-divergence} $D_f(P \| Q) = \sum_x Q(x) f(P(x)/Q(x))$ for a convex $f$
+with $f(1) = 0$, which also encompasses Jensen--Shannon, total variation, and
+$\chi^2$. For \emph{representation learning}, the \emph{contrastive
+loss}~\citep{hadsell2006dimensionality} and the \emph{triplet
+loss}~\citep{schroff2015facenet} operate on pairs and triplets of embeddings,
+shaping the geometry so that similar items are close and dissimilar ones are
+far.
+
+\begin{definition}[Metric]
+\label{def:found:metric}
+A \emph{metric} on a set $X$ is a map $d : X \times X \to \R_{\ge 0}$ satisfying,
+for all $x, y, z$: (1) non-negativity; (2) identity of indiscernibles,
+$d(x,y) = 0 \Leftrightarrow x = y$; (3) symmetry, $d(x,y) = d(y,x)$; and (4) the
+triangle inequality $d(x,z) \le d(x,y) + d(y,z)$.
+\end{definition}
+
+Many losses are not metrics: cross-entropy is not symmetric, and the
+Kullback--Leibler divergence satisfies neither symmetry nor the triangle
+inequality. What matters for learning is not that $\mathcal{L}$ be a metric, but
+that it provide informative gradients, penalize large errors, and align with the
+task.
+
+\subsection{Gradient descent}
+\label{sec:found:gradient-descent}
+
+Supervised training by backpropagation proceeds in five steps: initialize the
+parameters with small random values; propagate an input forward to obtain a
+prediction; compute the loss against the true output; backpropagate to obtain the
+gradient of the loss with respect to every weight via the chain rule; and update
+the weights with an optimization method. In practice the update is applied not to
+the whole dataset at once but to small batches, giving stochastic gradient
+descent.
+
+\begin{definition}[Gradient descent]
+\label{def:found:gd}
+Let $\mathcal{L} : \R^p \to \R$ be a differentiable loss. \emph{Gradient
+descent} is the iteration
+\[
+  \theta_{t+1} = \theta_t - \eta\, \nabla_\theta \mathcal{L}(\theta_t),
+\]
+where $\eta > 0$ is the \emph{learning rate}.
+\end{definition}
+
+\begin{definition}[Stochastic gradient descent]
+\label{def:found:sgd}
+Given a dataset $\{(x_i, y_i)\}_{i=1}^N$ and empirical loss
+$\mathcal{L}(\theta) = \frac{1}{N}\sum_i \ell(f_\theta(x_i), y_i)$,
+\emph{stochastic gradient descent} (SGD) approximates the gradient on a random
+mini-batch $\mathcal{B} \subset \{1,\ldots,N\}$:
+\[
+  \theta_{t+1} = \theta_t - \eta \cdot \frac{1}{\abs{\mathcal{B}}}
+  \sum_{i \in \mathcal{B}} \nabla_\theta \ell(f_\theta(x_i), y_i).
+\]
+\end{definition}
+
+The mini-batch gradient is an \emph{unbiased} estimator of the true gradient,
+$\E_{\mathcal{B}}[\,\cdot\,] = \nabla_\theta \mathcal{L}(\theta)$. Its higher
+variance can act as implicit regularization, helping to escape suboptimal local
+minima.
+
+\subsection{Backpropagation}
+\label{sec:found:backprop}
+
+The backpropagation algorithm computes the gradients required by gradient descent
+efficiently by exploiting the graph structure of the network.
+
+\begin{definition}[Computational graph]
+\label{def:found:compgraph}
+A \emph{computational graph} is a directed acyclic graph $G = (V, E)$ in which
+each node $v$ represents a variable or a differentiable operation $f_v$; the
+input nodes (no incoming edges) correspond to parameters $\theta$ and data $x$;
+each edge $(u, v)$ indicates that $v$ depends on $u$; and the single output node
+produces the loss $\mathcal{L}$.
+\end{definition}
+
+The three graphs --- layer graph, neuron graph, computational graph --- describe
+the same network at decreasing levels of abstraction; the computational graph
+unfolds each neuron into its elementary operations, allowing the chain rule to be
+applied systematically.
+
+\begin{theorem}[Chain rule on computational graphs]
+\label{thm:found:backprop}
+Let $G = (V, E)$ be a computational graph with output node $\mathcal{L}$. For
+each intermediate node $v$ with successors $\{u_1, \ldots, u_k\}$,
+\[
+  \frac{\partial \mathcal{L}}{\partial v}
+  = \sum_{i=1}^k \frac{\partial \mathcal{L}}{\partial u_i}\,
+  \frac{\partial u_i}{\partial v}.
+\]
+Backpropagation computes all gradients $\partial\mathcal{L}/\partial v$ in time
+$O(\abs{V} + \abs{E})$, linear in the size of the graph.
+\end{theorem}
+
+\begin{proof}
+Since $G$ is a DAG, \Cref{thm:found:topological} yields a topological ordering
+$v_1, \ldots, v_n$, computable in $O(\abs{V} + \abs{E})$. In the \emph{forward
+pass} we traverse the nodes in this order; each operation node $v_i$ with
+predecessors $\{u_1, \ldots, u_k\}$ is evaluated as $f_{v_i}(u_1, \ldots, u_k)$,
+all predecessors having smaller index and thus already computed, at total cost
+$O(\abs{V} + \abs{E})$. For the \emph{backward pass}, the loss depends on an
+intermediate node $v$ only through its successors, so the multivariable chain
+rule gives the stated formula. We traverse the nodes in reverse topological
+order, initializing $\partial\mathcal{L}/\partial\mathcal{L} = 1$ and computing,
+for each $v_i$, $\partial\mathcal{L}/\partial v_i = \sum_{(v_i, u_j) \in E}
+(\partial\mathcal{L}/\partial u_j)(\partial u_j/\partial v_i)$, using gradients
+of successors already available. Each edge contributes once and each local
+derivative is $O(1)$, so the backward pass is $O(\abs{V} + \abs{E})$, and so is
+the whole algorithm.
+\end{proof}
+
+In practice modern frameworks implement \emph{automatic
+differentiation}~\citep{Neidinger2010IntroductionTA}: during the forward pass
+they build the computational graph dynamically, and during the backward pass they
+traverse it in reverse topological order applying the chain rule, freeing the
+user from computing derivatives by hand.
+
+\subsection{The vanishing gradient problem}
+\label{sec:found:vanishing}
+
+A direct consequence of the chain rule is the \emph{vanishing gradient problem}.
+By \Cref{thm:found:backprop}, the gradient of the loss with respect to the
+parameters of the first layers is proportional to a product of activation
+derivatives across the network,
+\[
+  \frac{\partial \mathcal{L}}{\partial \theta^{(1)}} \propto
+  \prod_{\ell=1}^L \sigma'(z^{(\ell)}).
+\]
+If each $\abs{\sigma'(z^{(\ell)})}$ is below $1$ (as with saturating functions
+like the sigmoid, where $\abs{\sigma'(z)} \le 0.25$), this product decreases
+exponentially with depth $L$, so the gradients of the first layers become
+numerically zero and those layers barely learn. This was a principal obstacle to
+training deep networks in the 1990s. The solution came with non-saturating
+activations such as ReLU, where $\sigma'(z) = 1$ for $z > 0$, letting gradients
+flow without attenuation (\Cref{def:found:nonsaturating}).
+
+\subsection{The universal approximation theorem}
+\label{sec:found:universal}
+
+The universal approximation theorem guarantees that any continuous function can
+be approximated arbitrarily well by a network with a single hidden layer. Its
+proof rests on tools from measure theory and functional analysis --- the notions
+of measure and $\sigma$-algebra underpinning the representation theorem of Riesz
+and the separation theorem of Hahn--Banach. To keep the focus on the result, we
+collect those prerequisites in the appendix (\Cref{ch:appendix}) and state here
+only what is needed.
+
+\begin{definition}[Sigmoidal function]
+\label{def:found:sigmoidal}
+A function $\phi : \R \to \R$ is \emph{sigmoidal} if it is continuous, bounded,
+and satisfies $\lim_{t\to-\infty}\phi(t) = 0$ and
+$\lim_{t\to+\infty}\phi(t) = 1$. Classical examples are the logistic function and
+a rescaled hyperbolic tangent.
+\end{definition}
+
+\begin{theorem}[Universal approximation; Cybenko, 1989]
+\label{thm:found:universal}
+Let $\phi$ be a sigmoidal function and $I_m = [0,1]^m$ the unit cube. The set of
+functions
+\[
+  F(x) = \sum_{i=1}^N v_i\, \phi(w_i^\top x + b_i), \qquad
+  N \in \mathbb{N},\ v_i, b_i \in \R,\ w_i \in \R^m,
+\]
+is dense in $C(I_m)$ in the uniform norm: for every $f \in C(I_m)$ and every
+$\epsilon > 0$ there are parameters with
+$\sup_{x \in I_m} \abs{F(x) - f(x)} < \epsilon$.
+\end{theorem}
+
+The restriction to $I_m$ is no real limitation: any compact $K \subset \R^m$ is
+bounded (Heine--Borel, \Cref{ch:appendix}) and an affine map carries the problem
+to $I_m$, so the result extends to $C(K)$. The theorem has been extended to any
+non-polynomial activation~\citep{leshno1993multilayer}, including ReLU, where a
+single hidden layer suffices with arbitrary width while bounded-width networks
+require sufficient depth~\citep{lu2017expressive,hanin2019universal}; to $L^p$
+norms~\citep{hornik1991approximation}; and to approximation-rate bounds on the
+number of neurons~\citep{barron1993universal}.
+
+\begin{proof}
+We follow \citet{cybenko1989} via functional-analytic duality. The strategy is
+indirect: rather than constructing the approximation, we show that no continuous
+function can escape being approximated. Were the networks not dense in $C(I_m)$,
+the Hahn--Banach corollary (\Cref{ch:appendix}) would furnish a nonzero
+continuous linear functional vanishing on all of them; by the Riesz
+representation theorem (\Cref{ch:appendix}) this is a nonzero finite signed
+measure invisible to all neurons. The heart of the proof is to show no such
+measure exists, i.e.\ that $\phi$ is \emph{discriminatory}.
+
+\emph{Step 1: discriminatory functions.} Call $\phi$ \emph{discriminatory} if,
+for every finite signed measure $\mu$ on $I_m$,
+\[
+  \int_{I_m} \phi(w^\top x + b)\, d\mu(x) = 0 \ \ \forall w, b
+  \implies \mu = 0.
+\]
+
+\emph{Step 2: sigmoidal functions are discriminatory.} Suppose $\mu$ satisfies
+the hypothesis. For $w, b$ and an auxiliary $\alpha$, set
+$\psi_\lambda(x) = \phi(\lambda(w^\top x + b) + \alpha)$. As $\lambda \to \infty$,
+$\psi_\lambda$ converges pointwise to $1$ on the open half-space
+$H^+_{w,b} = \{w^\top x + b > 0\}$, to $0$ on $\{w^\top x + b < 0\}$, and to
+$\phi(\alpha)$ on the hyperplane $H_{w,b} = \{w^\top x + b = 0\}$. Since
+$\abs{\psi_\lambda} \le \sup_t \abs{\phi(t)} < \infty$ uniformly and this bound is
+integrable over the compact $I_m$, the dominated convergence theorem
+(\Cref{ch:appendix}) gives
+\[
+  \int_{I_m}\psi_\lambda\, d\mu \to \mu(H^+_{w,b}) + \phi(\alpha)\,\mu(H_{w,b}).
+\]
+The left side is $0$ for all $\lambda$, so
+$\mu(H^+_{w,b}) + \phi(\alpha)\,\mu(H_{w,b}) = 0$ for all $\alpha$. This is affine
+in $\phi(\alpha)$, and since $\phi$ takes a continuous range of values, both
+$\mu(H_{w,b}) = 0$ and $\mu(H^+_{w,b}) = 0$. Thus $\mu$ vanishes on every open
+half-space. As the half-spaces generate the Borel $\sigma$-algebra and a finite
+signed measure is determined by its values on a generating class stable under
+intersection, $\mu = 0$.
+
+\emph{Step 3: density.} Let $\mathcal{S}$ be the set of functions
+$G(x) = \sum_i v_i \phi(w_i^\top x + b_i)$. By the Hahn--Banach corollary
+(\Cref{ch:appendix}), $\mathcal{S}$ is dense in $C(I_m)$ if and only if the only
+continuous linear functional vanishing on $\mathcal{S}$ is zero. Let $L$ be such
+a functional; by the Riesz representation theorem there is a finite signed
+measure $\mu$ with $L(h) = \int_{I_m} h\, d\mu$. Then $L(G) = 0$ for all $G$
+gives $\int_{I_m}\phi(w^\top x + b)\, d\mu = 0$ for all $w, b$, so by Step 2
+$\mu = 0$ and $L = 0$. Hence $\mathcal{S}$ is dense, which is the assertion.
+\end{proof}
+
+This guarantees that a single-hidden-layer network can approximate any continuous
+function arbitrarily well. It is, however, an \emph{existence} result, not a
+\emph{constructive} one: it does not say how to find the weights, the required
+number of neurons may be prohibitively large, and deep networks can represent
+complex functions far more efficiently (\Cref{sec:found:depth}).
+
+\subsection{Convergence theory}
+\label{sec:found:convergence}
+
+The universal approximation theorem guarantees that a weight configuration
+exists; gradient descent is the mechanism that searches for it. We now state the
+conditions under which this search converges. The proofs use a regularity
+property, $L$-smoothness, whose equivalent characterizations and the convexity
+inequality are recorded in \Cref{ch:appendix}.
+
+\begin{definition}[$L$-smoothness and convexity]
+\label{def:found:smooth}
+A differentiable $f : \R^n \to \R$ is \emph{$L$-smooth} if
+$\norm{\nabla f(x) - \nabla f(y)} \le L\norm{x - y}$ for all $x, y$. It is
+\emph{convex} if $f(\lambda x + (1-\lambda)y) \le \lambda f(x) + (1-\lambda)f(y)$
+for $\lambda \in [0,1]$; for differentiable $f$ this is equivalent to
+$f(y) \ge f(x) + \inner{\nabla f(x)}{y - x}$ for all $x, y$.
+\end{definition}
+
+\begin{theorem}[Convergence of gradient descent, convex case]
+\label{thm:found:gd-convex}
+Let $f$ be convex and $L$-smooth with global minimum $f^* = f(\theta^*)$.
+Gradient descent with learning rate $\eta = 1/L$ satisfies
+\[
+  f(\theta_T) - f^* \le \frac{L\norm{\theta_0 - \theta^*}^2}{2T},
+\]
+i.e.\ it converges at rate $O(1/T)$.
+\end{theorem}
+
+\begin{proof}
+The descent lemma from $L$-smoothness (\Cref{ch:appendix}) gives
+$f(y) \le f(x) + \inner{\nabla f(x)}{y - x} + \frac{L}{2}\norm{y - x}^2$. With
+$x = \theta_t$ and $y = \theta_{t+1} = \theta_t - \frac{1}{L}\nabla f(\theta_t)$,
+$f(\theta_{t+1}) \le f(\theta_t) - \frac{1}{2L}\norm{\nabla f(\theta_t)}^2$, so
+the iterates decrease. Expanding the distance to the optimum,
+\[
+  \norm{\theta_{t+1} - \theta^*}^2 = \norm{\theta_t - \theta^*}^2
+  - \tfrac{2}{L}\inner{\nabla f(\theta_t)}{\theta_t - \theta^*}
+  + \tfrac{1}{L^2}\norm{\nabla f(\theta_t)}^2.
+\]
+Convexity gives $\inner{\nabla f(\theta_t)}{\theta_t - \theta^*} \ge f(\theta_t)
+- f^*$, and the descent inequality gives
+$\norm{\nabla f(\theta_t)}^2 \le 2L(f(\theta_t) - f(\theta_{t+1}))$. Substituting,
+\[
+  f(\theta_{t+1}) - f^* \le \tfrac{L}{2}\bigl(\norm{\theta_t - \theta^*}^2
+  - \norm{\theta_{t+1} - \theta^*}^2\bigr).
+\]
+Summing over $t = 0, \ldots, T-1$ telescopes to
+$\sum_t (f(\theta_{t+1}) - f^*) \le \frac{L}{2}\norm{\theta_0 - \theta^*}^2$.
+Since $\{f(\theta_t)\}$ is decreasing, $T(f(\theta_T) - f^*) \le \sum_t
+(f(\theta_{t+1}) - f^*)$, giving the bound on dividing by $T$.
+\end{proof}
+
+\begin{theorem}[Convergence of SGD]
+\label{thm:found:sgd-convergence}
+Let $f$ be convex and $L$-smooth, and let $g_t$ be an unbiased gradient estimator
+with bounded variance, $\E[g_t] = \nabla f(\theta_t)$ and
+$\E[\norm{g_t - \nabla f(\theta_t)}^2] \le \sigma^2$, and bounded gradients
+$\norm{\nabla f(\theta_t)} \le G$. With $\eta_t = \eta_0/\sqrt{t}$,
+\[
+  \E[f(\bar\theta_T)] - f^* = O\!\left(\frac{(\sigma^2 + G^2)\log T}{\sqrt{T}}
+  + \frac{\norm{\theta_0 - \theta^*}^2}{\eta_0\sqrt{T}}\right),
+\]
+where $\bar\theta_T = \frac{1}{T}\sum_{t=1}^T \theta_t$.
+\end{theorem}
+
+\begin{proof}[Sketch]
+Following~\citet{bottou2018optimization}, write $g_t = \nabla f(\theta_t) +
+\xi_t$ with $\E[\xi_t \mid \theta_t] = 0$ and
+$\E[\norm{\xi_t}^2 \mid \theta_t] \le \sigma^2$. Taking conditional expectation
+of $\norm{\theta_{t+1} - \theta^*}^2 = \norm{\theta_t - \theta^*}^2 -
+2\eta_t \inner{g_t}{\theta_t - \theta^*} + \eta_t^2\norm{g_t}^2$ and using
+convexity gives
+$\E[\norm{\theta_{t+1} - \theta^*}^2 \mid \theta_t] \le \norm{\theta_t -
+\theta^*}^2 - 2\eta_t(f(\theta_t) - f^*) + \eta_t^2(\norm{\nabla f(\theta_t)}^2 +
+\sigma^2)$. Summing telescopes the distance terms; with $\eta_t = \eta_0/\sqrt{t}$
+and $\sum_t 1/t \le 1 + \log T$, and bounding the left side below by
+$\eta_T = \eta_0/\sqrt{T}$, we obtain
+$\frac{1}{T}\sum_t \E[f(\theta_t) - f^*] \le (\norm{\theta_0 - \theta^*}^2 +
+\eta_0^2(G^2 + \sigma^2)(1 + \log T))/(2\eta_0\sqrt{T})$. Jensen's inequality on
+$\bar\theta_T$ gives the claim.
+\end{proof}
+
+The $O(\log T/\sqrt{T})$ rate of SGD is slower than the $O(1/T)$ of deterministic
+gradient descent, but SGD processes far less data per iteration.
+
+\begin{theorem}[Convergence to stationary points, non-convex case]
+\label{thm:found:gd-nonconvex}
+Let $f$ be $L$-smooth (not necessarily convex) and bounded below by $f^*$. With
+$\eta \le 1/L$, gradient descent satisfies
+\[
+  \min_{t=0,\ldots,T-1} \norm{\nabla f(\theta_t)}^2 \le
+  \frac{2(f(\theta_0) - f^*)}{\eta T},
+\]
+i.e.\ it finds an $\epsilon$-stationary point in $O(1/\epsilon^2)$ iterations.
+\end{theorem}
+
+\begin{proof}
+The descent lemma gives $f(\theta_{t+1}) \le f(\theta_t) - \eta(1 -
+\frac{L\eta}{2})\norm{\nabla f(\theta_t)}^2$; with $\eta \le 1/L$ the factor is
+at least $\frac12$, so $f(\theta_{t+1}) \le f(\theta_t) -
+\frac{\eta}{2}\norm{\nabla f(\theta_t)}^2$. Summing over $t = 0, \ldots, T-1$
+telescopes to $\frac{\eta}{2}\sum_t \norm{\nabla f(\theta_t)}^2 \le f(\theta_0) -
+f^* $ (using $f(\theta_T) \ge f^*$). Since the minimum of a finite collection
+does not exceed its average, $\min_t \norm{\nabla f(\theta_t)}^2 \le
+\frac{1}{T}\sum_t \norm{\nabla f(\theta_t)}^2 \le 2(f(\theta_0) - f^*)/(\eta T)$.
+\end{proof}
+
+Neural network losses are typically non-convex; \Cref{thm:found:gd-nonconvex}
+guarantees convergence to stationary points, not global minima. In practice the
+overparametrization of modern networks creates many equivalent minima, the noise
+of SGD helps escape saddle points, and the minima found tend to generalize well.
+
+\subsection{Advanced optimizers}
+\label{sec:found:optimizers}
+
+Modern optimizers improve on plain SGD by incorporating historical gradient
+information~\citep{kingma2014adam,duchi2011adagrad}. Below $\odot$ denotes the
+Hadamard product and $\oslash$ elementwise division. \emph{SGD with
+momentum}~\citep{polyak1964methods} introduces a velocity
+$v_t = \beta v_{t-1} + \nabla_\theta\mathcal{L}(\theta_{t-1})$,
+$\theta_t = \theta_{t-1} - \eta v_t$, smoothing oscillations in high-curvature
+directions. \emph{Adagrad}~\citep{duchi2011adagrad} adapts the learning rate per
+parameter, $G_t = G_{t-1} + g_t \odot g_t$,
+$\theta_t = \theta_{t-1} - \eta\, g_t \oslash (\sqrt{G_t} + \epsilon)$, so
+historically large gradients receive smaller steps.
+\emph{RMSProp}~\citep{hinton2012rmsprop} replaces the monotone accumulator by an
+exponential moving average, $v_t = \beta v_{t-1} + (1-\beta)(g_t \odot g_t)$,
+preventing the denominator from growing without bound. \emph{Adam}~\citep{kingma2014adam}
+combines momentum with adaptive rates, maintaining estimates of the first and
+second moments with bias correction:
+\[
+  m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t, \quad
+  v_t = \beta_2 v_{t-1} + (1-\beta_2)(g_t \odot g_t),
+\]
+$\hat m_t = m_t/(1-\beta_1^t)$, $\hat v_t = v_t/(1-\beta_2^t)$,
+$\theta_t = \theta_{t-1} - \eta\, \hat m_t \oslash (\sqrt{\hat v_t} + \epsilon)$,
+with typical values $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon = 10^{-8}$.
+
+\section{Deep learning}
+\label{sec:found:deep}
+
+Interest in neural models began when Rosenblatt showed the perceptron could learn
+to classify patterns from data~\citep{rosenblatt1958perceptron}; Minsky and
+Papert then proved the simple perceptron can only represent linearly separable
+functions~\citep{minsky1969perceptrons}, prompting a long decline in interest.
+Backpropagation gave an efficient way to train multilayer networks, but for
+decades deep networks remained impractical due to the vanishing gradient problem
+(\Cref{sec:found:vanishing}). \emph{Deep learning} emerged as the convergence of
+several advances: initialization schemes that preserve activation variance across
+layers, non-saturating activations such as ReLU, regularization methods such as
+dropout, and specialized architectures that exploit the structure of the data ---
+for example, convolutional networks exploit spatial locality to require orders of
+magnitude fewer parameters than equivalent dense networks.
+
+Deeper networks have greater expressive power but require more data. A common
+remedy for scarce data is \emph{data augmentation}.
+
+\begin{definition}[Data augmentation]
+\label{def:found:augmentation}
+Let $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$ be a training set and $G$ a group of
+transformations acting on the input space $\mathcal{X}$ preserving labels, so the
+correct label of $g \cdot \mathbf{x}$ equals that of $\mathbf{x}$ for all
+$g \in G$. \emph{Data augmentation} replaces the dataset by
+$\{(g \cdot \mathbf{x}_i, y_i) : i, g \in G\}$.
+\end{definition}
+
+Augmentation acts as implicit regularization, forcing the model to learn
+representations invariant to $G$. As discussed in \Cref{ch:priors}, this strategy
+is inefficient compared with the equivariant architectures of geometric deep
+learning, which build the symmetries directly into their structure.
+
+\subsection{Advantages of depth}
+\label{sec:found:depth}
+
+Deep networks offer several fundamental advantages over wide shallow ones. The
+clearest is \emph{representation efficiency}: there exist functions exhibiting an
+exponential separation between deep and shallow networks. The parity function
+$f(x_1, \ldots, x_n) = \bigoplus_i x_i$ requires $O(2^n)$ neurons in a two-layer
+network but only $O(n)$ in one of $O(\log n)$ layers.
+
+\begin{theorem}[Exponential separation~\citep{telgarsky2016benefitsdepthneuralnetworks}]
+\label{thm:found:telgarsky}
+For every integer $k \ge 1$ there exist functions computable by networks of depth
+$\Theta(k^3)$ with $\Theta(1)$ neurons per layer that any network of depth
+$O(k)$ would need $\Omega(2^k)$ neurons to approximate with constant error.
+\end{theorem}
+
+\begin{proof}[Sketch]
+Define the triangle function with ReLU neurons,
+\[
+  \varphi(x) = 2\ReLU(x) - 4\ReLU(x - \tfrac12) + 2\ReLU(x - 1),
+\]
+a ``tent'' on $[0,1]$ peaking at $x = \tfrac12$. Let $\varphi_1 = \varphi$ and
+$\varphi_{k+1} = \varphi \circ \varphi_k$. Each composition doubles the number of
+oscillations: $\varphi_k$ has exactly $2^k$ oscillations on $[0,1]$, since
+$\varphi$ maps $[0,1] \to [0,1]$ and each arc generates two. Since each
+composition uses $O(1)$ extra neurons, $\varphi_k$ is computable by a network of
+depth $O(k)$ and constant width. A ReLU network with $p$ neurons produces a
+piecewise-linear function with at most $O(p^L)$ segments for depth $L$, so a
+depth-$O(k)$ network needs $\Omega(2^k)$ neurons to match $2^k$ oscillations.
+Refined segment-counting yields the $\Theta(k^3)$ versus $O(k)$ statement; see
+\citet{telgarsky2016benefitsdepthneuralnetworks}.
+\end{proof}
+
+Depth further enables \emph{hierarchical learning} along the natural
+compositional structure of many problems (pixels $\to$ edges $\to$ parts $\to$
+objects); \emph{feature reuse}, sharing computation across processing paths so
+that $m$ functions cost $O(n + m)$ parameters rather than $O(mn)$; and an
+implicit inductive bias towards simpler functions, which tends to generalize
+well.
+
+\subsection{Modern architectures}
+\label{sec:found:modern}
+
+Deep learning has produced specialized architectures, each exploiting a specific
+data structure. \emph{Feedforward} networks, built from dense layers, are the
+basic architecture with unidirectional flow $f(x) = f_L \circ \cdots \circ
+f_1(x)$. \emph{Convolutional} networks (\Cref{ch:grids}) exploit spatial locality
+and translational invariance through convolution, drastically reducing parameters
+via weight sharing and achieving translational equivariance. \emph{Recurrent}
+networks process sequences through a hidden state, with LSTM and GRU variants
+overcoming the vanishing gradient. \emph{Attention mechanisms} model long-range
+dependencies without recurrence by dynamically weighting the contributions of
+different parts of the input.
+
+\begin{definition}[Self-attention layer]
+\label{def:found:attention}
+Let $\{h_1, \ldots, h_n\} \subset \R^d$ be a sequence of input vectors. A
+\emph{self-attention} layer with key dimension $d_k$ uses three linear
+projections $Q, K, V \in \R^{d \times d_k}$ and computes
+\[
+  \mathrm{SelfAttention}(h_i) = \sum_{j=1}^n \alpha_{ij}\, V h_j, \qquad
+  \alpha_{ij} = \frac{\exp\bigl((Qh_i)^\top(Kh_j)/\sqrt{d_k}\bigr)}
+  {\sum_{m=1}^n \exp\bigl((Qh_i)^\top(Kh_m)/\sqrt{d_k}\bigr)},
+\]
+where the \emph{attention weights} $\alpha_{ij} \in (0,1)$ satisfy
+$\sum_j \alpha_{ij} = 1$.
+\end{definition}
+
+This formulation is invariant to permutations of the inputs and generalizes
+pooling and convolution; it is the basis of the \emph{transformer} architecture
+(\Cref{ch:graphs}). \emph{Graph neural networks} generalize neural operations to
+non-Euclidean data through message passing, a central theme of \Cref{ch:graphs};
+\emph{generative adversarial networks} and \emph{diffusion models} are generative
+architectures. Many of these reappear in later chapters as instances of a single
+geometric construction.
+
+With the neural foundations in place, we now develop the geometric language that
+geometric deep learning rests on: manifolds, groups and their representations,
+and homogeneous spaces.
+
+\section{Manifolds and tangent spaces}
+\label{sec:found:manifolds}
+
+A surface, a configuration space, or the set of rotations is not a vector space,
+yet each looks like flat Euclidean space when viewed closely enough. The notion
+of a manifold makes this precise, and the tangent space provides the
+linearization on which calculus --- and ultimately learning --- proceeds. We
+assume the standard topological prerequisites (recorded in \Cref{ch:appendix}): a
+\emph{topological space} is a set with a collection of open sets closed under
+arbitrary unions and finite intersections; it is \emph{Hausdorff} if distinct
+points have disjoint neighbourhoods; it is \emph{second countable} if its
+topology has a countable base; and a \emph{homeomorphism} is a continuous
+bijection with continuous inverse.
+
+\subsection{Topological and differentiable manifolds}
+\label{sec:found:diff-manifolds}
+
+\begin{definition}[Topological manifold]
+\label{def:found:topmanifold}
+A \emph{topological manifold} of dimension $m$ is a Hausdorff, second-countable
+space $\mathcal{M}$ that is \emph{locally Euclidean}: every point has an open
+neighbourhood $U$ homeomorphic, via a \emph{chart} $\phi : U \to V \subseteq
+\R^m$, to an open subset of $\R^m$.
+\end{definition}
+
+Intuitively a manifold is a space that locally looks like $\R^m$ even when its
+global shape is very different: the Earth's surface is curved yet looks flat to a
+pedestrian; a crumpled sheet of paper is locally two-dimensional; a robot arm's
+configuration space is non-Euclidean but locally coordinatized by joint angles.
+
+\begin{definition}[Atlas and charts]
+\label{def:found:atlas}
+An \emph{atlas} of dimension $m$ for $\mathcal{M}$ is a collection
+$\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}_{\alpha \in I}$ where
+$\{U_\alpha\}$ is an open cover and each $\phi_\alpha : U_\alpha \to V_\alpha
+\subseteq \R^m$ is a chart. The \emph{transition maps} $\phi_\beta \circ
+\phi_\alpha^{-1} : \phi_\alpha(U_\alpha \cap U_\beta) \to \phi_\beta(U_\alpha \cap
+U_\beta)$ describe how overlapping charts relate.
+\end{definition}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+\shade[ball color=gdlblue!18, opacity=0.85]
+  (-2.4,-0.9) .. controls (-1.6,1.2) and (1.0,1.6) .. (2.4,0.6)
+  .. controls (1.8,-1.2) and (-1.2,-1.7) .. (-2.4,-0.9);
+\draw[thick, gdlblue!55]
+  (-2.4,-0.9) .. controls (-1.6,1.2) and (1.0,1.6) .. (2.4,0.6)
+  .. controls (1.8,-1.2) and (-1.2,-1.7) .. (-2.4,-0.9);
+\node[text=gdlblue!60!black] at (-2.1,1.0) {$\mathcal{M}$};
+\draw[gdlgreen!60!black, thick] (-1.5,0.2) ellipse (0.8cm and 0.55cm);
+\node[font=\tiny, gdlgreen!50!black] at (-1.5,0.9) {$U_\alpha$};
+\draw[gdlorange!70, thick] (0.9,0.3) ellipse (0.8cm and 0.55cm);
+\node[font=\tiny, gdlorange!60!black] at (0.9,1.0) {$U_\beta$};
+\draw[fill=gdlgreen!10, draw=gdlgreen!55] (-4.6,-2.6) rectangle (-2.9,-1.2);
+\node[font=\tiny] at (-3.75,-1.0) {$V_\alpha \subseteq \R^m$};
+\draw[fill=gdlorange!10, draw=gdlorange!60] (2.9,-2.6) rectangle (4.6,-1.2);
+\node[font=\tiny] at (3.75,-1.0) {$V_\beta \subseteq \R^m$};
+\draw[->, gdlgreen!55!black, thick] (-1.7,-0.2) to[bend right=15] node[left, font=\tiny] {$\phi_\alpha$} (-3.6,-1.3);
+\draw[->, gdlorange!65, thick] (1.1,-0.1) to[bend left=15] node[right, font=\tiny] {$\phi_\beta$} (3.6,-1.3);
+\draw[<->, gdlpurple!70, thick] (-2.85,-1.9) -- node[above, font=\tiny] {$\phi_\beta\circ\phi_\alpha^{-1}$} (2.85,-1.9);
+\end{tikzpicture}
+\caption[Atlas and charts of a manifold]{An atlas
+$\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}$ of a manifold $\mathcal{M}$: each
+chart is a homeomorphism $\phi_\alpha : U_\alpha \to V_\alpha \subseteq \R^m$
+defining local coordinates, and the transition map connects overlapping
+charts.}
+\label{fig:found:atlas}
+\end{figure}
+
+\begin{definition}[Differentiable manifold]
+\label{def:found:diffmanifold}
+A function $f : U \subseteq \R^n \to \R^m$ is \emph{smooth} (of class
+$C^\infty$) if it has continuous partial derivatives of all orders. A topological
+manifold $\mathcal{M}$ is \emph{differentiable} (smooth) if it has an atlas all
+of whose transition maps are $C^\infty$. This is exactly the extra structure
+needed to do calculus on $\mathcal{M}$.
+\end{definition}
+
+\subsection{The tangent space}
+\label{sec:found:tangent}
+
+The central object is the tangent space, which captures the infinitesimal
+directions at a point. Two complementary constructions make it precise.
+
+\begin{definition}[Tangent space via curves]
+\label{def:found:tangent-curves}
+Let $\mathcal{M}$ be smooth and $p \in \mathcal{M}$. Two curves
+$\gamma_1, \gamma_2 : (-\epsilon,\epsilon) \to \mathcal{M}$ with
+$\gamma_1(0) = \gamma_2(0) = p$ are \emph{tangent at $p$} if, for some (hence
+every) chart $(U,\phi)$ around $p$, $(\phi\circ\gamma_1)'(0) =
+(\phi\circ\gamma_2)'(0)$. The \emph{tangent space} $T_p\mathcal{M}$ is the set of
+equivalence classes $[\gamma]$ of curves tangent at $p$.
+\end{definition}
+
+\begin{remark}[Vector-space structure]
+\label{rem:found:tangent-vector}
+The map $[\gamma] \mapsto (\phi\circ\gamma)'(0) \in \R^m$ is a bijection of
+$T_p\mathcal{M}$ with $\R^m$, transporting the vector-space structure of $\R^m$
+to $T_p\mathcal{M}$. This is independent of the chart: the chain rule applied to
+the transition map guarantees that the isomorphisms induced by two charts are
+compatible.
+\end{remark}
+
+\begin{definition}[Tangent space via derivations]
+\label{def:found:tangent-deriv}
+A \emph{derivation} at $p$ is a linear map $v : C^\infty(\mathcal{M}) \to \R$
+obeying the Leibniz rule $v(fg) = v(f)\,g(p) + f(p)\,v(g)$. The tangent space
+$T_p\mathcal{M}$ is the vector space of all derivations at $p$.
+\end{definition}
+
+The first construction reads a tangent vector as the initial velocity of a curve
+--- a direction of motion; the second reads it as a directional-derivative
+operator --- a direction of change of functions.
+
+\begin{lemma}[Coordinate decomposition of derivations]
+\label{lem:found:derivations}
+Let $\mathcal{M}$ be a smooth $m$-manifold, $p \in \mathcal{M}$, and $(U, \phi)$ a
+chart with $\phi(p) = 0$ and coordinate functions $x^1, \ldots, x^m$. Then
+derivations are local (if $f = g$ near $p$ then $v(f) = v(g)$), and every
+derivation $v$ at $p$ decomposes as
+\[
+  v = \sum_{j=1}^m v(x^j)\,\frac{\partial}{\partial x^j}\Big|_p,
+  \qquad \frac{\partial}{\partial x^j}\Big|_p(f) =
+  \frac{\partial(f\circ\phi^{-1})}{\partial x^j}\Big|_{\phi(p)},
+\]
+so $\dim T_p\mathcal{M} = m$.
+\end{lemma}
+
+\begin{proof}
+\emph{Locality.} Let $\chi$ be a smooth bump function with $\chi \equiv 1$ near
+$p$ and support in $U$. If $f = g$ on $U$ then $\chi(f-g) = 0$ on $\mathcal{M}$,
+so by Leibniz $0 = v(\chi(f-g)) = v(\chi)(f-g)(p) + \chi(p)v(f-g) = v(f-g)$, since
+$\chi(p) = 1$ and $(f-g)(p) = 0$.
+
+\emph{Decomposition.} First $v$ annihilates constants: $v(1) = v(1\cdot 1) =
+2v(1)$ gives $v(1) = 0$, hence $v(c) = 0$. Writing $\hat f = f\circ\phi^{-1}$, the
+fundamental theorem of calculus with integral remainder gives, on a convex
+neighbourhood of $0$,
+$\hat f(\mathbf{x}) = \hat f(0) + \sum_j x^j g_j(\mathbf{x})$ with $g_j$ smooth
+and $g_j(0) = \partial\hat f/\partial x^j(0)$. Composing with $\phi$ and using
+locality, $f = f(p) + \sum_j x^j (g_j\circ\phi)$ on $U$. Applying $v$, using that
+it annihilates constants, $x^j(p) = 0$, and Leibniz, $v(f) = \sum_j v(x^j)
+\partial(f\circ\phi^{-1})/\partial x^j|_0$. Since
+$\frac{\partial}{\partial x^j}|_p(x^k) = \delta_j^k$, the operators
+$\{\partial/\partial x^j|_p\}$ are independent and span, so the dimension is $m$
+\citep[Prop.~3.2]{lee2012introduction}.
+\end{proof}
+
+\begin{proposition}[Equivalence of the two constructions]
+\label{prop:found:tangent-equiv}
+The two definitions of tangent space are canonically isomorphic via
+$\Phi([\gamma])(f) = \frac{d}{dt}\big|_0 (f\circ\gamma)(t)$, the isomorphism
+being independent of coordinates.
+\end{proposition}
+
+\begin{proof}
+\emph{Well defined.} If $\gamma_1, \gamma_2$ are tangent at $p$, a chart
+$(U,\phi)$ with coordinates $x^j$ gives, by the chain rule,
+$(f\circ\gamma_i)'(0) = \sum_j \partial(f\circ\phi^{-1})/\partial x^j|_{\phi(p)}
+\cdot (x^j\circ\gamma_i)'(0)$; since the velocities agree, so do the derivatives.
+\emph{Derivation.} Linearity is immediate, and the product rule for
+$t \mapsto f(\gamma(t))$ gives Leibniz, $v_\gamma(fg) = v_\gamma(f)g(p) +
+f(p)v_\gamma(g)$. \emph{Injective.} If $\Phi([\gamma_1]) = \Phi([\gamma_2])$, then
+taking $f = x^j$ gives $(x^j\circ\gamma_1)'(0) = (x^j\circ\gamma_2)'(0)$ for all
+$j$, so $(\phi\circ\gamma_1)'(0) = (\phi\circ\gamma_2)'(0)$ and the curves are
+tangent. \emph{Surjective.} Given a derivation $v$, set $a^j = v(x^j)$ and
+$\gamma(t) = \phi^{-1}(t\mathbf{a})$; then $\Phi([\gamma]) = \sum_j v(x^j)
+\partial/\partial x^j|_p = v$ by \Cref{lem:found:derivations}.
+\end{proof}
+
+\begin{example}[Tangent space to the sphere]
+\label{ex:found:tangent-sphere}
+At the north pole $p = (0,0,1)$ of $S^2$, the curve
+$\gamma(t) = (\sin t, 0, \cos t)$ has $\gamma'(0) = (1,0,0)$. The tangent space
+$T_p S^2$ is the horizontal plane $\{(x,y,0)\}$, reflecting $\dim S^2 = 2$.
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+\shade[ball color=gdlblue!18, opacity=0.9]
+    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
+    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
+\draw[thick, gdlblue!55]
+    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
+    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
+\node[text=gdlblue!60!black, font=\small] at (-1.7,-1.5) {$\mathcal{M}$};
+\coordinate (p) at (0,0.35);
+\begin{scope}[on background layer]
+\fill[gdlorange!18, opacity=0.85]
+    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
+    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
+\draw[gdlorange!60]
+    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
+    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
+\end{scope}
+\node[text=gdlorange!60!black, font=\small] at (1.9,1.25) {$T_p\mathcal{M}$};
+\draw[thick, gdlpurple!75] (-1.4,-0.4) .. controls (-0.5,0.05) .. (p)
+    .. controls (0.5,0.65) .. (1.4,1.0);
+\node[gdlpurple!75, font=\tiny] at (1.55,1.05) {$\gamma_1$};
+\draw[thick, gdlgreen!60!black] (-0.5,-0.9) .. controls (-0.2,-0.25) .. (p)
+    .. controls (0.2,0.9) .. (0.45,1.4);
+\node[gdlgreen!60!black, font=\tiny] at (0.6,1.45) {$\gamma_2$};
+\draw[->, very thick, gdlpurple!75] (p) -- ++(0.95,0.45)
+    node[right, font=\tiny] {$\gamma_1'(0)$};
+\draw[->, very thick, gdlgreen!60!black] (p) -- ++(0.25,0.85)
+    node[above, font=\tiny] {$\gamma_2'(0)$};
+\fill[gdlred!80] (p) circle (2.2pt);
+\node[below right=0pt and 1pt of p, font=\small] {$p$};
+\end{tikzpicture}
+\caption[Tangent space]{The tangent space $T_p\mathcal{M}$ at a point $p$.
+Tangent vectors are the initial velocities $\gamma'(0)$ of curves through $p$;
+equivalently, directional-derivative operators on smooth functions.}
+\label{fig:found:tangent}
+\end{figure}
+
+A smooth map $F : \mathcal{M} \to \mathcal{N}$ acts on tangent vectors through its
+\emph{differential} (or pushforward) $dF_p : T_p\mathcal{M} \to
+T_{F(p)}\mathcal{N}$, defined on derivations by $dF_p(v)(g) = v(g\circ F)$; in
+local coordinates $dF_p$ is the Jacobian matrix. The map $F$ is an
+\emph{immersion} if $dF_p$ is injective everywhere
+($\rank dF_p = \dim\mathcal{M}$), a \emph{submersion} if it is surjective
+everywhere ($\rank dF_p = \dim\mathcal{N}$), and an \emph{embedding} if it is an
+injective immersion that is a homeomorphism onto its image. Immersion and
+submersion are dual notions; a submersion has each fibre $F^{-1}(q)$ a smooth
+submanifold of dimension $\dim\mathcal{M} - \dim\mathcal{N}$, a fact used for the
+matrix Lie groups of \Cref{sec:found:lie-groups}. If $\mathcal{M}$ is compact,
+every injective immersion into a Hausdorff space is automatically an embedding.
+
+\subsection{Cotangent space and differential forms}
+\label{sec:found:cotangent}
+
+The tangent space captures \emph{directions} at a point; its dual, the
+\emph{cotangent space}, captures how \emph{functions change} along those
+directions. This passage from vectors to covectors underlies the Riemannian
+metric, connections on bundles, and curvature developed in
+\Cref{ch:geodesics,ch:gauges}.
+
+\begin{definition}[Cotangent space and the differential]
+\label{def:found:cotangent}
+The \emph{cotangent space} $T_p^*\mathcal{M} = (T_p\mathcal{M})^*$ is the dual of
+the tangent space; its elements are \emph{covectors}, and $\dim T_p^*\mathcal{M}
+= m$. For $f \in C^\infty(\mathcal{M})$, the \emph{differential} $(df)_p \in
+T_p^*\mathcal{M}$ is $(df)_p(v) = v(f)$. In local coordinates $df = \sum_i
+\frac{\partial f}{\partial x^i}\, dx^i$, and the covectors $\{dx^1, \ldots,
+dx^m\}$ form the \emph{dual basis}, characterized by $dx^i(\partial/\partial
+x^j) = \delta^i_j$.
+\end{definition}
+
+The notation $dx^i$ denotes not an infinitesimal but a well-defined linear
+functional: the covector extracting the $i$-th component of a tangent vector. The
+\emph{tensor product} of covectors $\alpha, \beta \in T_p^*\mathcal{M}$ is the
+bilinear form $(\alpha \otimes \beta)(v, w) = \alpha(v)\beta(w)$; the Riemannian
+metric is written $g_p = \sum_{i,j} g_{ij}(p)\, dx^i \otimes dx^j$.
+
+\begin{definition}[Differential forms and the exterior product]
+\label{def:found:forms}
+A \emph{$1$-form} is a smooth assignment $\omega : p \mapsto \omega_p \in
+T_p^*\mathcal{M}$, written locally $\omega = \sum_i \omega_i(x)\, dx^i$; the space
+of $1$-forms is $\Omega^1(\mathcal{M})$. A \emph{$k$-form} assigns to each point
+an antisymmetric $(0,k)$-tensor; $\Omega^0(\mathcal{M}) = C^\infty(\mathcal{M})$
+and $\Omega^k = 0$ for $k > m$. The \emph{exterior product} $\wedge :
+\Omega^k \times \Omega^l \to \Omega^{k+l}$ is the normalized antisymmetrization
+of the tensor product; for $1$-forms,
+\[
+  (\alpha \wedge \beta)(v, w) = \alpha(v)\beta(w) - \alpha(w)\beta(v),
+\]
+so $dx^i \wedge dx^j = -dx^j \wedge dx^i$ and $dx^i \wedge dx^i = 0$. In general
+$\alpha \wedge \beta = (-1)^{kl}\beta \wedge \alpha$ (graded
+anticommutativity), and every $k$-form is $\omega = \sum_{i_1 < \cdots < i_k}
+\omega_{i_1\cdots i_k}(x)\, dx^{i_1} \wedge \cdots \wedge dx^{i_k}$.
+\end{definition}
+
+\begin{definition}[Exterior derivative]
+\label{def:found:exterior-deriv}
+The \emph{exterior derivative} is the unique linear operator
+$d : \Omega^k(\mathcal{M}) \to \Omega^{k+1}(\mathcal{M})$ that extends the
+differential on functions, satisfies the graded Leibniz rule $d(\alpha \wedge
+\beta) = d\alpha \wedge \beta + (-1)^k \alpha \wedge d\beta$ for $\alpha \in
+\Omega^k$, and is nilpotent, $d \circ d = 0$. Nilpotence yields the de Rham
+complex $0 \to \Omega^0 \xrightarrow{d} \Omega^1 \xrightarrow{d} \cdots
+\xrightarrow{d} \Omega^m \to 0$.
+\end{definition}
+
+\begin{example}[Forms on the sphere]
+\label{ex:found:forms-sphere}
+On $S^2$ with spherical coordinates $(\theta, \phi)$, the function
+$f = \cos\theta$ is a $0$-form, its differential $df = -\sin\theta\, d\theta$ is a
+$1$-form, and the area element $\sin\theta\, d\theta \wedge d\phi$ is the unique
+$2$-form up to smooth scalar multiples, since $\dim S^2 = 2$. The area form
+appears in spherical convolution, where signals on $S^2$ are integrated against
+it.
+\end{example}
+
+These constructions reappear concretely in the rest of the book: the Riemannian
+metric is a smooth field of tensor products of covectors; connections on
+principal bundles are Lie-algebra-valued $1$-forms; the volume form
+$\sqrt{\det(g_{ij})}\, dx^1 \wedge \cdots \wedge dx^m$ is the $m$-form that lets
+us integrate signals over manifolds; and the de Rham complex is the continuous
+counterpart of simplicial chains, connecting differential geometry with algebraic
+topology (\Cref{ch:geodesics,ch:gauges}).
 
 \section{Groups and group actions}
 \label{sec:found:groups}
 
 A symmetry is a transformation that leaves a quantity of interest unchanged. The
-collection of all such transformations is never arbitrary: the composition of
-two symmetries is again a symmetry, every symmetry can be undone, and doing
-nothing is a symmetry. These three facts are exactly the axioms of a group.
+collection of all such transformations is never arbitrary: the composition of two
+symmetries is a symmetry, every symmetry can be undone, and doing nothing is a
+symmetry. These three facts are exactly the axioms of a group.
 
 \begin{definition}[Group]
 \label{def:found:group}
-A \emph{group} is a set $\group$ equipped with a binary operation
-$\cdot : \group \times \group \to \group$ satisfying:
-\begin{enumerate}
-  \item \textbf{Associativity:} $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ for
-    all $a, b, c \in \group$.
-  \item \textbf{Identity:} there exists $e \in \group$ with
-    $e \cdot a = a \cdot e = a$ for all $a \in \group$.
-  \item \textbf{Inverses:} for each $a \in \group$ there exists $a^{-1} \in \group$
-    with $a \cdot a^{-1} = a^{-1} \cdot a = e$.
-\end{enumerate}
-The group is \emph{abelian} (or commutative) if $a \cdot b = b \cdot a$ for all
-$a, b$.
+A \emph{group} is a set $\group$ with a binary operation
+$\cdot : \group \times \group \to \group$ satisfying: (1) \emph{associativity},
+$(a \cdot b) \cdot c = a \cdot (b \cdot c)$; (2) \emph{identity}, there is
+$e \in \group$ with $e \cdot a = a \cdot e = a$; and (3) \emph{inverses}, each
+$a$ has $a^{-1}$ with $a \cdot a^{-1} = a^{-1} \cdot a = e$. The group is
+\emph{abelian} if $a \cdot b = b \cdot a$ for all $a, b$.
 \end{definition}
 
-Translations of an image form an abelian group: shifting by $(a,b)$ and then by
-$(c,d)$ gives the same result in either order. Rotations in three dimensions, by
-contrast, do not commute, and their group is non-abelian. A subset
-$H \subseteq \group$ that is itself a group under the inherited operation is a
-\emph{subgroup}, written $H \le \group$. A subgroup $H$ is \emph{normal}
-($H \triangleleft \group$) if $gHg^{-1} = H$ for every $g \in \group$; normality
-is precisely the condition that the cosets of $H$ inherit a group structure, as
-we revisit in \Cref{sec:found:homogeneous}.
+Translations of an image form an abelian group; rotations in three dimensions do
+not commute and their group is non-abelian. A subset $H \subseteq \group$ that is
+a group under the inherited operation is a \emph{subgroup}, written
+$H \le \group$; the subgroup criterion is that $H$ contains $e$, is closed under
+the operation, and contains inverses. A subgroup $H$ is \emph{normal}
+($H \triangleleft \group$) if $gHg^{-1} = H$ for every $g \in \group$.
 
-The bridge between two groups is a map that preserves their operations.
+The bridge between two groups is a map preserving their operations.
 
 \begin{definition}[Homomorphism]
 \label{def:found:homomorphism}
-A map $\phi : \group \to \mathcal{H}$ between groups is a \emph{homomorphism} if
-$\phi(g_1 g_2) = \phi(g_1)\phi(g_2)$ for all $g_1, g_2 \in \group$. A bijective
+A map $\phi : \group \to \mathcal{H}$ is a \emph{homomorphism} if
+$\phi(g_1 g_2) = \phi(g_1)\phi(g_2)$ for all $g_1, g_2$. A bijective
 homomorphism is an \emph{isomorphism}, written $\group \cong \mathcal{H}$. The
 \emph{kernel} $\ker(\phi) = \{g : \phi(g) = e_{\mathcal{H}}\}$ is always a normal
-subgroup, and the \emph{image} $\operatorname{Im}(\phi) = \{\phi(g) : g \in \group\}$
-is a subgroup of $\mathcal{H}$.
+subgroup, and the \emph{image} $\Img(\phi) = \{\phi(g) : g \in \group\}$ is a
+subgroup of $\mathcal{H}$.
 \end{definition}
 
-Isomorphic groups are algebraically indistinguishable: they differ only in the
+Isomorphic groups are algebraically indistinguishable, differing only in the
 names of their elements. Homomorphisms are the formal device through which
 abstract symmetries become computable transformations, and in
 \Cref{ch:priors,ch:groups} they are what makes equivariance implementable.
 
-Groups are abstract; data is concrete. To apply a group to images, graphs, or
-point clouds we must say how its elements transform the points of a set. This is
-the notion of a group action.
+To apply a group to images, graphs, or point clouds we must say how its elements
+transform the points of a set.
 
 \begin{definition}[Group action]
 \label{def:found:action}
 An \emph{action} of a group $\group$ on a set $X$ is a map
-$\group \times X \to X$, written $(g, x) \mapsto g \cdot x$, satisfying
-\[
-  (g_1 g_2) \cdot x = g_1 \cdot (g_2 \cdot x), \qquad e \cdot x = x
-\]
-for all $g_1, g_2 \in \group$ and $x \in X$.
+$\group \times X \to X$, $(g, x) \mapsto g \cdot x$, satisfying
+$(g_1 g_2) \cdot x = g_1 \cdot (g_2 \cdot x)$ and $e \cdot x = x$ for all
+$g_1, g_2 \in \group$ and $x \in X$.
 \end{definition}
 
-Every action is equivalent to a homomorphism into the symmetric group: the map
-$\tilde\rho(g)\colon x \mapsto g\cdot x$ is a bijection of $X$ (its inverse is
-$\tilde\rho(g^{-1})$), and $\tilde\rho : \group \to \operatorname{Sym}(X)$ is a
-homomorphism. Studying how $\group$ acts on $X$ is therefore the same as studying
-homomorphisms $\group \to \operatorname{Sym}(X)$. The actions relevant to this
-book are familiar:
+\begin{proposition}[Actions as homomorphisms]
+\label{prop:found:action-hom}
+Every action induces a homomorphism $\tilde\rho : \group \to \Sym(X)$,
+$\tilde\rho(g)(x) = g \cdot x$, into the group of bijections of $X$.
+\end{proposition}
+
+\begin{proof}
+Each $\tilde\rho(g)$ is a bijection with inverse $\tilde\rho(g^{-1})$, since
+$g^{-1}\cdot(g\cdot x) = (g^{-1}g)\cdot x = x$. And $\tilde\rho(g_1 g_2)(x) =
+(g_1 g_2)\cdot x = g_1\cdot(g_2\cdot x) = (\tilde\rho(g_1)\circ\tilde\rho(g_2))(x)$,
+so $\tilde\rho$ preserves the operation.
+\end{proof}
+
+Studying how $\group$ acts on $X$ is therefore the same as studying
+homomorphisms $\group \to \Sym(X)$. The actions relevant to this book are
+familiar.
 
 \begin{example}[Actions in deep learning]
 \label{ex:found:actions}
@@ -105,69 +1776,273 @@ book are familiar:
   \item Rotations $\SO(3)$ act on point clouds by matrix multiplication.
   \item Permutations $S_n$ act on graphs with $n$ nodes by relabelling.
 \end{itemize}
-These are the symmetry groups of grids, geometric data, and graphs
-respectively, and they organize \Cref{ch:grids,ch:groups,ch:graphs}.
+These are the symmetry groups of grids, geometric data, and graphs, organizing
+\Cref{ch:grids,ch:groups,ch:graphs}.
 \end{example}
 
-Many symmetry groups of interest are built from simpler ones. The Euclidean
-group of rigid motions, for instance, combines translations with rotations and
-reflections, but not as a plain product: a rotation reorients the translation
-that follows it. The \emph{semidirect product} $N \rtimes_\phi H$ captures this.
-Given a homomorphism $\phi : H \to \operatorname{Aut}(N)$ describing how $H$ acts
-on $N$, it is the set $N \times H$ with the product
+\subsection{Quotient groups and the first isomorphism theorem}
+\label{sec:found:quotients}
+
+When $H \triangleleft \group$ is normal, the left cosets $gH = \{gh : h \in H\}$
+partition $\group$ and inherit a group structure.
+
+\begin{definition}[Quotient group]
+\label{def:found:quotient}
+Let $H \triangleleft \group$. The \emph{quotient group} $\group/H$ is the set of
+left cosets $\{gH : g \in \group\}$ with operation
+$(g_1 H)(g_2 H) = (g_1 g_2) H$.
+\end{definition}
+
+\begin{proposition}[Well-definedness]
+\label{prop:found:quotient-welldef}
+The operation $(g_1 H)(g_2 H) = (g_1 g_2)H$ on $\group/H$ is well defined if and
+only if $H \triangleleft \group$.
+\end{proposition}
+
+\begin{proof}
+($\Leftarrow$) Suppose $H \triangleleft \group$ and $g_1' = g_1 h_1$,
+$g_2' = g_2 h_2$ with $h_i \in H$. Then $g_1'g_2' = g_1 g_2 (g_2^{-1}h_1 g_2)h_2$,
+and $g_2^{-1}h_1 g_2 \in H$ by normality, so $(g_1'g_2')H = (g_1 g_2)H$.
+($\Rightarrow$) If the operation is well defined, then for $g \in \group$,
+$h \in H$, $(ghg^{-1})H = (ghH)(g^{-1}H) = (gH)(g^{-1}H) = H$, so $ghg^{-1} \in H$,
+i.e.\ $H \triangleleft \group$.
+\end{proof}
+
+\begin{theorem}[First isomorphism theorem]
+\label{thm:found:first-iso}
+For any homomorphism $\phi : \group \to \mathcal{H}$,
+\[
+  \group / \ker(\phi) \;\cong\; \Img(\phi), \qquad
+  g\,\ker(\phi) \mapsto \phi(g).
+\]
+\end{theorem}
+
+\begin{proof}
+The map $\bar\phi(g\ker\phi) = \phi(g)$ is well defined: if $g_1\ker\phi =
+g_2\ker\phi$ then $g_1^{-1}g_2 \in \ker\phi$, so $\phi(g_1) = \phi(g_2)$. It is a
+homomorphism since $\bar\phi((g_1\ker\phi)(g_2\ker\phi)) = \phi(g_1 g_2) =
+\phi(g_1)\phi(g_2)$. It is injective: $\bar\phi(g\ker\phi) = e$ gives
+$g \in \ker\phi$, the identity coset. It is surjective onto $\Img(\phi)$ by
+definition.
+\end{proof}
+
+Quotients model the systematic reduction of symmetry in hierarchical
+architectures: a network on three-dimensional data may begin with full $\SE(3)$
+symmetry and reduce to $\SO(3)$ in deeper layers through a homomorphism whose
+kernel (the translations) is normal.
+
+Many symmetry groups are built from simpler ones. The Euclidean group combines
+translations with rotations and reflections, but not as a plain product: a
+rotation reorients the translation that follows it.
+
+\begin{definition}[Semidirect product]
+\label{def:found:semidirect}
+Given groups $N, H$ and a homomorphism $\phi : H \to \Aut(N)$, the
+\emph{semidirect product} $N \rtimes_\phi H$ is the set $N \times H$ with product
 \[
   (n_1, h_1)\cdot(n_2, h_2) = \bigl(n_1\,\phi(h_1)(n_2),\; h_1 h_2\bigr).
 \]
-The Euclidean group is $E(n) = \R^n \rtimes \Orth(n)$, with
-$(t_1, R_1)\cdot(t_2, R_2) = (t_1 + R_1 t_2,\, R_1 R_2)$: first rotate, then
-translate. Its orientation-preserving subgroup $SE(n) = \R^n \rtimes \SO(n)$ is
-the symmetry group of rigid three-dimensional data.
+\end{definition}
 
-\paragraph{Lie groups.}
-The symmetries above split into two kinds. Permutations form a \emph{discrete}
-group; rotations and translations form \emph{continuous} families. To do
-calculus on the continuous case --- to differentiate and optimize over
-transformations --- we require that the group also be a smooth manifold (a
-notion made precise in \Cref{sec:found:manifolds}).
+\begin{example}[Euclidean group]
+\label{ex:found:euclidean}
+The Euclidean group $E(n) = \R^n \rtimes \Orth(n)$ combines translations with
+$\Orth(n)$ via $\phi(R)(t) = Rt$, so
+$(t_1, R_1)\cdot(t_2, R_2) = (t_1 + R_1 t_2,\, R_1 R_2)$: first rotate, then
+translate. Its orientation-preserving subgroup $\SE(n) = \R^n \rtimes \SO(n)$ is
+the symmetry group of rigid three-dimensional data.
+\end{example}
+
+\subsection{Lie groups and Lie algebras}
+\label{sec:found:lie-groups}
+
+Permutations form a \emph{discrete} group; rotations and translations form
+\emph{continuous} families. To do calculus over the continuous case --- to
+differentiate and optimize over transformations --- we require the group to be a
+smooth manifold.
 
 \begin{definition}[Lie group]
 \label{def:found:liegroup}
 A \emph{Lie group} is a group $G$ that is also a smooth manifold and for which
-multiplication $(g,h) \mapsto gh$ and inversion $g \mapsto g^{-1}$ are smooth
-maps.
+multiplication $(g,h) \mapsto gh$ and inversion $g \mapsto g^{-1}$ are smooth. A
+\emph{smooth action} of $G$ on a manifold $M$ is an action $G \times M \to M$
+that is itself smooth.
 \end{definition}
 
-The most important Lie groups in this book are the matrix groups. The
-\emph{special orthogonal group}
-\[
-  \SO(n) = \{ R \in \R^{n\times n} : R^\top R = I_n,\ \det R = 1 \}
-\]
-of rotations is a compact Lie group of dimension $\tfrac{n(n-1)}{2}$; dropping
-the determinant condition gives the orthogonal group $\Orth(n)$, which also
-contains reflections. For $n=2$ a rotation is a single angle,
-$R_\theta = \left(\begin{smallmatrix}\cos\theta & -\sin\theta\\ \sin\theta &
-\cos\theta\end{smallmatrix}\right)$, so $\SO(2)$ is the circle; $\SO(3)$ has
-dimension three, the three axes of rotation.
+A Lie group is curved but linear to first order. Its tangent space at the
+identity, $\Lie{g} = T_e G$, carries an antisymmetric bilinear bracket making it
+a Lie algebra.
 
-A Lie group is curved, but it is linear to first order. Its tangent space at the
-identity, $\Lie{g} = T_e G$, carries an antisymmetric bilinear bracket
-$[\cdot,\cdot]$ (the \emph{Lie bracket}) making it a \emph{Lie algebra}: a vector
-space with a bracket that is bilinear, antisymmetric, and satisfies the Jacobi
-identity $[X,[Y,Z]] + [Y,[Z,X]] + [Z,[X,Y]] = 0$. The Lie algebra linearizes the
-group, and the passage back to the group is the \emph{exponential map}
-$\exp : \Lie{g} \to G$, which for matrix groups is the matrix exponential
-$\exp(A) = \sum_{k\ge 0} A^k/k!$. For $\SO(2)$, with
-$J = \left(\begin{smallmatrix}0 & -1\\ 1 & 0\end{smallmatrix}\right)$ spanning
-$\Lie{so}(2)$,
+\begin{definition}[Lie algebra]
+\label{def:found:liealgebra}
+A \emph{Lie bracket} on a vector space $\Lie{g}$ is a bilinear, antisymmetric map
+$[\cdot,\cdot] : \Lie{g} \times \Lie{g} \to \Lie{g}$ satisfying the Jacobi
+identity $[X,[Y,Z]] + [Y,[Z,X]] + [Z,[X,Y]] = 0$. A vector space with a Lie
+bracket is a \emph{Lie algebra}. Every Lie group $G$ carries the canonical Lie
+algebra $\Lie{g} = T_e G$ with the bracket of left-invariant vector fields.
+\end{definition}
+
+The passage back from the algebra to the group is the exponential map.
+
+\begin{definition}[Exponential map]
+\label{def:found:exp}
+The \emph{exponential map} $\exp : \Lie{g} \to G$ sends $X$ to $\gamma(1)$, where
+$\gamma$ is the unique one-parameter subgroup with $\gamma'(0) = X$. For matrix
+groups it is the matrix exponential $\exp(A) = \sum_{k\ge 0} A^k/k!$.
+\end{definition}
+
+\begin{example}[Exponential map for $\SO(2)$]
+\label{ex:found:exp-so2}
+The Lie algebra $\Lie{so}(2)$ is spanned by
+$J = \left(\begin{smallmatrix}0 & -1\\ 1 & 0\end{smallmatrix}\right)$, and
 \[
   \exp(\theta J) = \begin{pmatrix}\cos\theta & -\sin\theta\\
   \sin\theta & \cos\theta\end{pmatrix} = R_\theta,
 \]
 so the exponential turns an angle (an element of the algebra) into a rotation (an
-element of the group). This is the reason Lie algebras matter for the design of
-neural networks: optimization can be carried out in the flat vector space
-$\Lie{g}$ with ordinary gradients, and the resulting transformation applied in
-the group through $\exp$.
+element of the group).
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+\shade[ball color=gdlblue!14, opacity=0.55] (0,0) circle (1.7cm);
+\draw[gdlblue!55, thick] (0,0) circle (1.7cm);
+\node[gdlblue!60!black, font=\small] at (1.5,1.5) {$G$};
+\fill[gdlred!80] (0,-1.7) circle (1.6pt) node[below, font=\tiny] {$e$};
+\draw[fill=gdlorange!12, draw=gdlorange!60]
+  (-2.3,-1.7) -- (2.3,-1.7) -- (2.9,-0.7) -- (-1.7,-0.7) -- cycle;
+\node[gdlorange!60!black, font=\small] at (2.4,-1.05) {$\Lie{g} = T_e G$};
+\draw[->, very thick, gdlpurple!75] (0,-1.7) -- (1.3,-1.25)
+  node[midway, below, font=\tiny] {$X$};
+\draw[->, thick, gdlgreen!60!black]
+  (1.3,-1.25) .. controls (1.7,-0.6) and (1.7,0.2) .. (1.5,0.8)
+  node[right, font=\tiny] {$\exp(X)$};
+\fill[gdlgreen!60!black] (1.5,0.8) circle (1.4pt);
+\end{tikzpicture}
+\caption[Exponential map]{The exponential map $\exp : \Lie{g} \to G$ carries
+vectors of the Lie algebra (the tangent space at the identity $e$) to elements of
+the Lie group, connecting the linear structure of the algebra with the nonlinear
+structure of the group.}
+\label{fig:found:exp}
+\end{figure}
+
+This is why Lie algebras matter for network design: optimization can be carried
+out in the flat vector space $\Lie{g}$ with ordinary gradients, and the resulting
+transformation applied in the group through $\exp$.
+
+\subsection{Fundamental Lie groups}
+\label{sec:found:fundamental-groups}
+
+The dimension of a Lie group is its dimension as a manifold, equal to the
+dimension of its Lie algebra, $\dim G = \dim\Lie{g} = \dim T_e G$. Dimensions of
+matrix groups follow from the regular level set theorem (\Cref{ch:appendix}): if
+$F : \R^{n\times n} \to \R^k$ is smooth and $c$ is a regular value, then
+$F^{-1}(c)$ is a submanifold of dimension $n^2 - k$.
+
+\begin{definition}[Orthogonal and special orthogonal groups]
+\label{def:found:orthogonal}
+The \emph{orthogonal group} is $\Orth(n) = \{R \in \R^{n\times n} : R^\top R =
+I_n\}$, containing rotations ($\det R = +1$) and reflections ($\det R = -1$). The
+\emph{special orthogonal group} $\SO(n) = \{R \in \Orth(n) : \det R = 1\}$ of
+rotations is a compact Lie group of dimension $\frac{n(n-1)}{2}$.
+\end{definition}
+
+The dimension follows by applying the regular level set theorem to
+$F(R) = R^\top R - I_n$ valued in symmetric matrices: $dF_R(H) = H^\top R +
+R^\top H$ is surjective (take $H = \frac12 RS$ to hit any symmetric $S$), so
+$\dim\Orth(n) = n^2 - \frac{n(n+1)}{2} = \frac{n(n-1)}{2}$; the determinant
+condition is discrete and selects the identity component. As a check, the Lie
+algebra $\Lie{so}(n)$ of antisymmetric matrices has exactly $\binom{n}{2}$ free
+entries.
+
+\begin{example}[$\SO(2)$ and $\SO(3)$]
+\label{ex:found:so2-so3}
+A planar rotation is a single angle,
+$R_\theta = \left(\begin{smallmatrix}\cos\theta & -\sin\theta\\ \sin\theta &
+\cos\theta\end{smallmatrix}\right)$, so $\SO(2) \cong S^1$ is the circle, with
+$\Lie{so}(2)$ generated by $J$. The group $\SO(3)$ has dimension three; its Lie
+algebra $\Lie{so}(3)$ of antisymmetric $3\times 3$ matrices has basis
+$L_x, L_y, L_z$ with $[L_i, L_j] = \epsilon_{ijk} L_k$. The exponential has the
+closed form known as the Rodrigues formula: for $\boldsymbol{\omega} \in \R^3$
+with $\theta = \norm{\boldsymbol{\omega}}$,
+\[
+  \exp([\boldsymbol{\omega}]_\times) = I + \frac{\sin\theta}{\theta}
+  [\boldsymbol{\omega}]_\times + \frac{1-\cos\theta}{\theta^2}
+  [\boldsymbol{\omega}]_\times^2,
+\]
+where $[\boldsymbol{\omega}]_\times$ is the antisymmetric matrix of
+$\boldsymbol{\omega}$. The formula is efficient and free of the singularities of
+Euler angles, making it central to $\SE(3)$-equivariant networks on point
+clouds.
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+\begin{scope}[shift={(-3.2,0)}]
+  \draw[gdlgray!40] (0,0) circle (1.3cm);
+  \draw[->] (-1.7,0) -- (1.7,0) node[right, font=\tiny] {$x$};
+  \draw[->] (0,-1.7) -- (0,1.7) node[above, font=\tiny] {$y$};
+  \draw[->, very thick, gdlblue!70] (0,0) -- (1.3,0);
+  \draw[->, very thick, gdlred!70] (0,0) -- ({1.3*cos(50)},{1.3*sin(50)});
+  \draw[gdlpurple!70] (0.7,0) arc (0:50:0.7) ;
+  \node[gdlpurple!70, font=\tiny] at (0.95,0.35) {$\theta$};
+  \node[font=\small\bfseries] at (0,-2.1) {$\SO(2)$};
+\end{scope}
+\begin{scope}[shift={(2.6,0)}]
+  \draw[->] (-1.8,0) -- (1.8,0) node[right, font=\tiny] {$x$};
+  \draw[->] (0,-1.6) -- (0,1.9) node[above, font=\tiny] {$z$};
+  \draw[->] (1.0,0.6) -- (-1.1,-0.7) node[left, font=\tiny] {$y$};
+  \shade[ball color=gdlorange!20, opacity=0.6] (0,0) circle (1.3cm);
+  \draw[->, very thick, gdlblue!70] (0,0) -- (1.2,0.55);
+  \draw[->, thick, gdlgreen!60!black] (0,0) -- (0,1.5) node[above, font=\tiny] {$R_z$};
+  \draw[->, gdlpurple!70] (0.55,0.25) arc (24:80:0.6);
+  \node[font=\small\bfseries] at (0,-2.1) {$\SO(3)$};
+\end{scope}
+\end{tikzpicture}
+\caption[Rotations in the plane and in space]{Left: the group $\SO(2)$ of planar
+rotations $R_\theta$, topologically the circle $S^1$. Right: the group $\SO(3)$
+of spatial rotations; the elementary matrices $R_x, R_y, R_z$ rotate about the
+coordinate axes.}
+\label{fig:found:rotations}
+\end{figure}
+
+\begin{definition}[Euclidean groups]
+\label{def:found:euclidean-groups}
+The \emph{special Euclidean group} $\SE(n) = \R^n \rtimes \SO(n)$ of rigid
+motions (rotation and translation) and the \emph{Euclidean group}
+$E(n) = \R^n \rtimes \Orth(n)$ (also including reflections) are Lie groups of
+dimension $\frac{n(n+1)}{2}$.
+\end{definition}
+
+Elements of $\SE(3)$ are conveniently written in homogeneous coordinates as
+$\left(\begin{smallmatrix} R & t \\ 0 & 1\end{smallmatrix}\right)$ with
+$R \in \SO(3)$, $t \in \R^3$, acting on $x$ by $x \mapsto Rx + t$. The Lie algebra
+$\Lie{se}(3)$ has dimension $6$, with three rotation and three translation
+generators. In geometric deep learning $\SE(3)$ is essential for 3D point clouds
+and molecular data, where predictions must be invariant to rigid motions.
+
+\begin{definition}[Linear and unitary groups]
+\label{def:found:linear-unitary}
+The \emph{general linear group} $\GL(n,\R) = \{A : \det A \ne 0\}$ is a
+non-compact Lie group of dimension $n^2$; the \emph{special linear group}
+$\SL(n,\R) = \{A : \det A = 1\}$ has dimension $n^2 - 1$. The \emph{unitary group}
+$\U(n) = \{U \in \C^{n\times n} : U^\dagger U = I_n\}$ is compact of dimension
+$n^2$, and the \emph{special unitary group} $\SU(n) = \{U \in \U(n) : \det U =
+1\}$ has dimension $n^2 - 1$.
+\end{definition}
+
+The group $\GL(n,\R)$ is an open subset of $\R^{n^2}$, hence of dimension $n^2$;
+for $\SL(n,\R)$ the regular level set theorem with $F = \det$ gives $n^2 - 1$. A
+fundamental fact is the relation between $\SU(2)$ and $\SO(3)$: the adjoint action
+$\Ad_U(X) = UXU^\dagger$ of $\SU(2) \cong S^3$ on its Lie algebra $\Lie{su}(2)
+\cong \R^3$ defines a surjective homomorphism $\pi : \SU(2) \to \SO(3)$ with
+kernel $\{I, -I\} \cong \Z_2$, so by the first isomorphism theorem
+$\SO(3) \cong \SU(2)/\Z_2$: $\SU(2)$ is the double cover of $\SO(3)$, and
+$\Lie{su}(2) \cong \Lie{so}(3)$ as Lie algebras. This is the reason unit
+quaternions ($\cong \SU(2)$) give a singularity-free parametrization of 3D
+rotations.
 
 \section{Representations}
 \label{sec:found:representations}
@@ -181,18 +2056,34 @@ activations. The notion that makes a symmetry act linearly is a representation.
 A \emph{representation} of a group $\group$ on a vector space $V$ over a field
 $\mathbb{K}$ is a homomorphism $\rho : \group \to \GL(V)$, where $\GL(V)$ is the
 group of invertible linear maps on $V$. Equivalently, each $g$ is assigned an
-invertible matrix $\rho(g)$ so that $\rho(g_1 g_2) = \rho(g_1)\rho(g_2)$. For a
-Lie group we additionally require $\rho$ to be smooth.
+invertible matrix $\rho(g)$ with $\rho(g_1 g_2) = \rho(g_1)\rho(g_2)$. For a Lie
+group we additionally require $\rho$ to be smooth.
 \end{definition}
 
 Representations translate abstract symmetries into concrete linear operations on
-the channels of a network. A smooth representation of a Lie group differentiates
-to a representation of its Lie algebra, $d\rho : \Lie{g} \to \Lie{gl}(V)$ with
-$d\rho(X) = \frac{d}{dt}\big|_{0}\,\rho(\exp(tX))$, which preserves the bracket:
-$d\rho([X,Y]) = [d\rho(X), d\rho(Y)]$. This is again what lets us optimize in the
-linear algebra and act in the group.
+the channels of a network.
 
-The basic question of representation theory is how a representation decomposes.
+\begin{proposition}[Induced Lie-algebra representation]
+\label{prop:found:drho}
+A smooth representation $\rho : G \to \GL(V)$ of a Lie group induces a
+representation of its Lie algebra, $d\rho : \Lie{g} \to \Lie{gl}(V)$ with
+$d\rho(X) = \frac{d}{dt}\big|_0\, \rho(\exp(tX))$, which preserves the bracket:
+$d\rho([X,Y]) = [d\rho(X), d\rho(Y)]$.
+\end{proposition}
+
+\begin{proof}
+Since $\rho$ and $\exp$ are smooth, $t \mapsto \rho(\exp(tX))$ is a smooth curve
+in $\GL(V)$ and its derivative at $0$ lies in $\Lie{gl}(V) = T_{\mathrm{Id}}\GL(V)$.
+Linearity in $X$ follows from the Baker--Campbell--Hausdorff formula $\exp(t(X+Y))
+= \exp(tX)\exp(tY)\exp(O(t^2))$ on differentiating at $0$. For the bracket,
+$\exp(tX)\exp(tY)\exp(-tX)\exp(-tY) = \exp(t^2[X,Y] + O(t^3))$; applying the
+homomorphism $\rho$ and differentiating twice yields
+$d\rho([X,Y]) = d\rho(X)d\rho(Y) - d\rho(Y)d\rho(X) = [d\rho(X), d\rho(Y)]$. See
+\citep[Thm.~3.28]{Kirillov2008}.
+\end{proof}
+
+This is what lets us optimize in the linear algebra and act in the group. The
+basic question of representation theory is how a representation decomposes.
 
 \begin{definition}[Irreducible representation]
 \label{def:found:irreducible}
@@ -202,74 +2093,100 @@ $\rho(g)W \subseteq W$ for all $g$ are $\{0\}$ and $V$.
 \end{definition}
 
 Irreducible representations are the building blocks from which all others are
-assembled. For $\SO(2)$ the (complex) irreducibles are one-dimensional, indexed
-by $n \in \Z$:
+assembled. For $\SO(2)$ the complex irreducibles are one-dimensional, indexed by
+$n \in \Z$:
 \[
   \rho_n : \SO(2) \to \C^*, \qquad \rho_n(R_\theta) = e^{i n\theta}.
 \]
 Each $n$ is a \emph{frequency}, and these are exactly the basis functions of the
-classical Fourier series. The next theorem says that for compact groups every
-representation splits into irreducibles.
+classical Fourier series.
+
+\begin{definition}[Compact group and Haar measure]
+\label{def:found:haar}
+A Lie group $G$ is \emph{compact} if it is compact as a topological space (e.g.\
+$\SO(n)$, $\Orth(n)$, $\U(n)$, $\SU(n)$, and all finite groups). A compact group
+carries a unique invariant probability measure, the \emph{Haar measure} $\mu$,
+satisfying $\mu(gA) = \mu(Ag) = \mu(A)$ and $\mu(\group) = 1$.
+\end{definition}
+
+The Haar measure provides a canonical way to ``average over all symmetries.'' In
+geometric deep learning this averaging is exactly what underlies group
+convolution: the convolution integrates a filter against the signal using the
+Haar measure, and its invariance is what guarantees equivariance of the resulting
+operator~\citep{cohen2016group}.
 
 \begin{theorem}[Complete reducibility]
 \label{thm:found:decomposition}
 Every finite-dimensional representation of a compact group $\group$ decomposes
-as a direct sum of irreducible representations,
-$V = \bigoplus_i n_i V_i$, where each $V_i$ is irreducible and $n_i \in \mathbb{N}$
-is its multiplicity.
+as a direct sum of irreducibles, $V = \bigoplus_i n_i V_i$, where each $V_i$ is
+irreducible and $n_i \in \mathbb{N}$ is its multiplicity.
 \end{theorem}
 
-The proof rests on a single device: averaging over the group. Compact groups
-carry a unique invariant probability measure, the \emph{Haar measure} $\mu$,
-satisfying $\mu(gA) = \mu(Ag) = \mu(A)$ and $\mu(\group) = 1$. Given any inner
-product $\langle\cdot,\cdot\rangle_0$ on $V$, the average
-$\langle u, v\rangle = \int_\group \langle \rho(g)u, \rho(g)v\rangle_0\,d\mu(g)$
-is a $\group$-invariant inner product. With respect to it, the orthogonal
-complement of any invariant subspace is again invariant, so an invariant
-subspace can always be split off; induction on $\dim V$ finishes the argument.
-The Haar measure is also exactly the averaging that defines group convolution,
-and its invariance is what guarantees the equivariance of the resulting operator
---- the central fact behind the group-equivariant networks of
-\Cref{ch:groups}~\citep{cohen2016group}.
+\begin{proof}
+Given any inner product $\inner{\cdot}{\cdot}_0$ on $V$, the average
+$\inner{u}{v} = \int_\group \inner{\rho(g)u}{\rho(g)v}_0\, d\mu(g)$ is a
+$\group$-invariant inner product: positivity holds since $\rho(g)$ is invertible,
+and invariance follows from the change of variable $g' = gh$ and the invariance
+of $\mu$. With respect to it, if $W$ is an invariant subspace then so is $W^\perp$
+(for $v \in W^\perp$, $g \in \group$, $w \in W$: $\inner{\rho(g)v}{w} =
+\inner{v}{\rho(g^{-1})w} = 0$ since $\rho(g^{-1})w \in W$). Induction on
+$\dim V$: if $\rho$ is irreducible we are done; otherwise an invariant proper
+$W$ splits off $V = W \oplus W^\perp$ with both summands of smaller dimension,
+which by induction decompose.
+\end{proof}
 
 The maps between irreducibles are severely constrained, a fact known as Schur's
 lemma.
 
 \begin{lemma}[Schur]
 \label{lem:found:schur}
-Let $(\rho, V)$ and $(\sigma, W)$ be irreducible representations and let
-$T : V \to W$ satisfy $T\rho(g) = \sigma(g)T$ for all $g$ (an intertwiner).
-Then $T$ is either zero or an isomorphism. If moreover $V = W$ and the field is
-$\C$, then $T = \lambda\,\mathrm{Id}$ for some scalar $\lambda$.
+Let $(\rho, V)$ and $(\sigma, W)$ be irreducible and let $T : V \to W$ satisfy
+$T\rho(g) = \sigma(g)T$ for all $g$ (an intertwiner). Then $T$ is either zero or
+an isomorphism. If moreover $V = W$ and the field is $\C$, then $T =
+\lambda\,\mathrm{Id}$ for some scalar $\lambda$.
 \end{lemma}
 
 \begin{proof}
 The kernel of $T$ is invariant ($v \in \ker T \Rightarrow T\rho(g)v =
-\sigma(g)Tv = 0$), so by irreducibility of $\rho$ it is $\{0\}$ or $V$;
-likewise the image is invariant, so by irreducibility of $\sigma$ it is $\{0\}$
-or $W$. Hence $T = 0$ or $T$ is a bijection. For the second part, over $\C$ the
-map $T$ has an eigenvalue $\lambda$; then $T - \lambda\,\mathrm{Id}$ is an
-intertwiner with nontrivial kernel, so it vanishes.
+\sigma(g)Tv = 0$), so by irreducibility of $\rho$ it is $\{0\}$ or $V$; the image
+is invariant, so by irreducibility of $\sigma$ it is $\{0\}$ or $W$. Hence
+$T = 0$ or $T$ is a bijection. Over $\C$, $T$ has an eigenvalue $\lambda$; then
+$T - \lambda\,\mathrm{Id}$ is an intertwiner with nontrivial kernel, so it
+vanishes.
 \end{proof}
 
 Schur's lemma is the algebraic root of the parameter efficiency of equivariant
 networks: an equivariant linear layer between representations is forced to be
 block-diagonal in the irreducible decomposition, with each block proportional to
-the identity, so the number of free parameters is dictated by the symmetry
-rather than by the input size. This decomposition culminates, for compact Lie
-groups, in the Peter--Weyl theorem.
+the identity, so the number of free parameters is dictated by the symmetry rather
+than by the input size. The \emph{matrix coefficients} $\rho_{ij}(g) =
+\inner{e_i}{\rho(g)e_j}$ play the role of coordinate functions; the Schur
+orthogonality relations state that, for irreducible unitary representations,
+$\int_G \overline{\rho_{ij}(g)}\sigma_{kl}(g)\, d\mu(g) = \delta_{\rho\sigma}
+\delta_{ik}\delta_{jl}/d_\rho$, so the normalized matrix coefficients form an
+orthonormal system in $L^2(G)$. This decomposition culminates in the
+Peter--Weyl theorem.
 
 \begin{theorem}[Peter--Weyl]
 \label{thm:found:peterweyl}
-Let $\group$ be a compact Lie group. The space $L^2(\group)$ of square-integrable
-functions decomposes as
+Let $\group$ be a compact Lie group. The space $L^2(\group)$ decomposes as
 \[
   L^2(\group) = \bigoplus_{\lambda \in \widehat{\group}} d_\lambda\, V_\lambda,
 \]
 where $\widehat{\group}$ is the set of equivalence classes of irreducible
-representations, $V_\lambda$ is the space of the irreducible $\lambda$, and
-$d_\lambda = \dim V_\lambda$.
+representations, $V_\lambda$ is the space of $\lambda$, and $d_\lambda = \dim
+V_\lambda$.
 \end{theorem}
+
+\begin{proof}[Sketch]
+By the Schur orthogonality relations the normalized matrix coefficients
+$\{\sqrt{d_\lambda}\,\rho^\lambda_{ij}\}$ form an orthonormal system in
+$L^2(\group)$. Completeness follows because the representations of a compact
+group separate points, so by the Stone--Weierstrass theorem the matrix
+coefficients are dense in $C(\group)$, hence in $L^2(\group)$: any $f$ orthogonal
+to all of them makes the operator $T_f = \int_\group f(g)\rho^\lambda(g)\,d\mu(g)$
+vanish for every $\lambda$, forcing $f = 0$.
+\end{proof}
 
 The Peter--Weyl theorem is the generalization of the Fourier series to
 non-abelian groups: the matrix entries of the irreducibles play the role of the
@@ -279,8 +2196,11 @@ expansion $f(\theta) = \sum_n \hat f_n\,e^{in\theta}$. For network design it has
 three consequences, developed in \Cref{ch:groups}: the channels of an
 equivariant layer are indexed by irreducibles $\lambda$; the per-channel
 parameter count $d_\lambda^2$ is fixed by the group, independent of input
-resolution; and equivariant convolutions become pointwise multiplications in
-this generalized Fourier (spectral) domain.
+resolution; and equivariant convolutions become pointwise multiplications in this
+generalized Fourier (spectral) domain. Concretely, every $G$-equivariant linear
+operator $\Phi$ on $L^2(G)$ preserves the isotypic decomposition and acts on each
+block as $I_{d_\lambda} \otimes W_\lambda$ for a matrix $W_\lambda$, by Schur's
+lemma.
 
 \section{Homogeneous spaces and quotients}
 \label{sec:found:homogeneous}
@@ -292,57 +2212,27 @@ hidden structure: they are quotients $G/H$ of a Lie group by a closed subgroup.
 Recognizing a domain as such a quotient is the single most useful step in
 designing an equivariant architecture for it.
 
-We start with the algebraic construction. When $H \triangleleft \group$ is
-normal, the left cosets $g H = \{gh : h \in H\}$ partition $\group$ and inherit a
-group structure.
-
-\begin{definition}[Quotient group]
-\label{def:found:quotient}
-Let $H \triangleleft \group$. The \emph{quotient group} $\group/H$ is the set of
-left cosets $\{gH : g \in \group\}$ with the operation
-$(g_1 H)(g_2 H) = (g_1 g_2) H$.
-\end{definition}
-
-The operation is well defined precisely because $H$ is normal. The link between
-quotients and homomorphisms is the first isomorphism theorem: for any
-homomorphism $\phi : \group \to \mathcal{H}$,
-\[
-  \group / \ker(\phi) \;\cong\; \operatorname{Im}(\phi),
-\]
-via $g\,\ker(\phi) \mapsto \phi(g)$. Quotients model the systematic reduction of
-symmetry that occurs in hierarchical architectures: a network on
-three-dimensional data may begin with full $SE(3)$ symmetry and reduce to
-$\SO(3)$ in deeper layers through a homomorphism whose kernel (the translations)
-is a normal subgroup.
-
-For geometry we need two notions attached to an action: which points a given
-point can reach, and which group elements fix it.
-
 \begin{definition}[Orbit and stabilizer]
 \label{def:found:orbit}
 Let $\group$ act on a set $X$ and let $x \in X$. The \emph{orbit} of $x$ is
-$\Orb(x) = \{g \cdot x : g \in \group\}$, the set of points reachable from $x$.
-The \emph{stabilizer} of $x$ is $\Stab(x) = \{g \in \group : g \cdot x = x\}$,
-the subgroup fixing $x$.
+$\Orb(x) = \{g \cdot x : g \in \group\}$, the points reachable from $x$. The
+\emph{stabilizer} of $x$ is $\Stab(x) = \{g \in \group : g \cdot x = x\}$, the
+subgroup fixing $x$.
 \end{definition}
-
-The two notions are linked by the orbit--stabilizer theorem, which is the
-geometric heart of this section (\Cref{fig:found:orbit}).
 
 \begin{theorem}[Orbit--stabilizer]
 \label{thm:found:orbitstab}
-Let $\group$ act on $X$ and let $x \in X$. Then there is a natural bijection
+Let $\group$ act on $X$ and let $x \in X$. There is a natural bijection
 \[
   \group / \Stab(x) \;\cong\; \Orb(x), \qquad g\,\Stab(x) \mapsto g \cdot x.
 \]
 \end{theorem}
 
 \begin{proof}
-The map $\psi(g\,\Stab(x)) = g\cdot x$ is well defined: if
-$g\,\Stab(x) = h\,\Stab(x)$ then $h^{-1}g \in \Stab(x)$, so
-$g\cdot x = h\cdot((h^{-1}g)\cdot x) = h\cdot x$. It is injective by the same
-computation read backwards, and surjective because every point of $\Orb(x)$ is
-$g\cdot x$ for some $g$.
+The map $\psi(g\,\Stab(x)) = g\cdot x$ is well defined: if $g\,\Stab(x) =
+h\,\Stab(x)$ then $h^{-1}g \in \Stab(x)$, so $g\cdot x = h\cdot((h^{-1}g)\cdot x)
+= h\cdot x$. It is injective by the same computation read backwards, and
+surjective because every point of $\Orb(x)$ is $g\cdot x$ for some $g$.
 \end{proof}
 
 \begin{figure}[h]
@@ -351,16 +2241,13 @@ $g\cdot x$ for some $g$.
     >=Stealth,
     pt/.style={circle, fill=#1, minimum size=7pt, inner sep=0pt}
 ]
-% Group G with cosets
 \draw[thick, fill=gdlgreen!12, rounded corners] (-5.2,-1.6) rectangle (-3.4,2.1);
 \node[above, font=\small\bfseries, text=gdlgreen!60!black] at (-4.3,2.1) {Group $\group$};
 \foreach \y/\lab in {1.3/$g_1\Stab(x)$, 0.3/$g_2\Stab(x)$, -0.7/$\Stab(x)$} {
     \draw[thick, fill=gdlgreen!22, rounded corners=1pt] (-5.05,\y) rectangle (-3.55,\y-0.55);
     \node[font=\tiny] at (-4.3,\y-0.27) {\lab};
 }
-% Bijection arrow
 \draw[->, very thick, gdlred!75!black] (-3.2,0.4) -- node[above, font=\small] {$\cong$} (-1.2,0.4);
-% Space X with orbit
 \draw[thick, fill=gdlgray!12, rounded corners] (-1,-1.6) rectangle (4.6,2.6);
 \node[above, font=\small\bfseries, text=gdlgray!50!black] at (1.8,2.6) {Space $X$};
 \draw[gdlblue!60, thick, fill=gdlblue!12] (1.7,0.5) ellipse (1.9cm and 0.95cm);
@@ -376,33 +2263,32 @@ $g\cdot x$ for some $g$.
 \draw[->, thick, gdlgreen!55!black, loop above, looseness=6] (x) to node[above, font=\tiny] {$h\in\Stab(x)$} (x);
 \end{tikzpicture}
 \caption[Orbit--stabilizer theorem]{The orbit--stabilizer theorem. Each coset
-$g\,\Stab(x)$ of the stabilizer corresponds to exactly one point $g\cdot x$ of
-the orbit, giving the bijection $\group/\Stab(x) \cong \Orb(x)$.}
+$g\,\Stab(x)$ corresponds to exactly one point $g\cdot x$ of the orbit, giving the
+bijection $\group/\Stab(x) \cong \Orb(x)$.}
 \label{fig:found:orbit}
 \end{figure}
 
 When $\group$ is a Lie group acting transitively and $H$ is a closed subgroup,
-$G/H$ is itself a smooth manifold, called a \emph{homogeneous space}, on which
-$\group$ acts transitively by $g'\cdot(gH) = (g'g)H$. The orbit--stabilizer
-theorem says that any domain admitting a transitive group of symmetries is a
-homogeneous space: identify the symmetry group $\group$, fix a reference point,
-and the stabilizer $H$ of that point determines the domain as $G/H$.
+$G/H$ is a smooth manifold, a \emph{homogeneous space}, on which $\group$ acts
+transitively by $g'\cdot(gH) = (g'g)H$. The orbit--stabilizer theorem says that
+any domain admitting a transitive group of symmetries is a homogeneous space:
+identify the symmetry group $\group$, fix a reference point, and the stabilizer
+$H$ of that point determines the domain as $G/H$.
 
 \begin{example}[The sphere as $\SO(3)/\SO(2)$]
 \label{ex:found:sphere}
 Let $\SO(3)$ act on $S^2$ by rotation. The action is transitive: any unit vector
-can be rotated to any other. Fix the north pole $p = (0,0,1)^\top$; a rotation
-fixes $p$ exactly when its axis is the $z$-axis, and these rotations form a
-subgroup isomorphic to $\SO(2)$. Hence $\Stab(p) \cong \SO(2)$, and the
-orbit--stabilizer theorem gives
-\[
-  S^2 \;\cong\; \SO(3)/\SO(2).
-\]
-A signal $f : S^2 \to \R^C$ lifts to a function on $\SO(3)$ that is right-invariant
-under $\SO(2)$, namely $\tilde f(g) = f(g\cdot p)$. Consequently the natural
-equivariant convolution on the sphere is a correlation over the full group
-$\SO(3)$ rather than over a flat projection, which is the construction underlying
-spherical networks discussed in \Cref{ch:geodesics,ch:applications}.
+can be rotated to any other (complete each to a positively oriented orthonormal
+basis and rotate one basis to the other). Fix the north pole $p = (0,0,1)^\top$;
+a rotation fixes $p$ exactly when its axis is the $z$-axis, and these rotations
+form a subgroup isomorphic to $\SO(2)$. Hence $\Stab(p) \cong \SO(2)$, and the
+orbit--stabilizer theorem gives $S^2 \cong \SO(3)/\SO(2)$. More generally,
+$S^{n-1} \cong \SO(n)/\SO(n-1)$. A signal $f : S^2 \to \R^C$ lifts to a function
+on $\SO(3)$ that is right-invariant under $\SO(2)$, namely
+$\tilde f(g) = f(g\cdot p)$, so the natural equivariant convolution on the sphere
+is a correlation over the full group $\SO(3)$ rather than over a flat projection
+--- the construction underlying spherical networks of
+\Cref{ch:geodesics,ch:applications}.
 \end{example}
 
 This example illustrates a general recipe for geometric architectures: (1)
@@ -410,152 +2296,45 @@ identify the data domain $\Omega$; (2) determine the relevant symmetry group
 $\group$; (3) compute the stabilizer $H$ of a reference point; (4) recognize
 $\Omega \cong G/H$ by the orbit--stabilizer theorem; and (5) build the
 equivariant architecture using the harmonic analysis of $\group$
-(\Cref{thm:found:peterweyl}). Homogeneous spaces also enjoy convenient geometric
-properties: if $\group$ is connected then $G/H$ is connected, and $\group$ acts
-by isometries of any $\group$-invariant Riemannian metric on $G/H$. Crucially,
-on a homogeneous space an equivariant operator is completely determined by its
-behavior at the base point $o = eH$: since $\group$ acts transitively, the value
-of $\Phi f$ at any point $x = g\cdot o$ is fixed by equivariance, and a short
-computation shows that the only equivariant linear operators are generalized
-convolutions. This is the mathematical reason convolution is the canonical
-operation on symmetric domains, a thread we follow through
-\Cref{ch:grids,ch:groups,ch:graphs}.
+(\Cref{thm:found:peterweyl}). The same recipe identifies $\R^n \cong E(n)/\Orth(n)
+\cong \SE(n)/\SO(n)$ (the base case of classical convolutional networks), the
+real projective space $\mathbb{RP}^{n-1} \cong \Orth(n)/(\Orth(n-1) \times \Z_2)$,
+and the Grassmannian $Gr(k,n) \cong \Orth(n)/(\Orth(k) \times \Orth(n-k))$.
 
-\section{Manifolds and tangent spaces}
-\label{sec:found:manifolds}
+\begin{proposition}[Geometric properties of homogeneous spaces]
+\label{prop:found:homogeneous-props}
+Let $G/H$ be a homogeneous space. Then $G$ acts transitively on $G/H$; if $G$ is
+connected then $G/H$ is connected; and $G$ acts by isometries of any
+$G$-invariant Riemannian metric on $G/H$ (a metric $g$ with $g_p(u,v) =
+g_{\gamma\cdot p}(d\gamma_p u, d\gamma_p v)$ for all $\gamma \in G$).
+\end{proposition}
 
-The third strand of our language is the geometry of curved domains. A surface, a
-configuration space, or the set of rotations is not a vector space, yet each
-looks like flat Euclidean space when viewed closely enough. The notion of a
-manifold makes this precise, and the tangent space provides the linearization on
-which calculus --- and ultimately learning --- proceeds.
+\begin{proof}
+Transitivity: given $g_1 H, g_2 H$, take $g = g_2 g_1^{-1}$, so $g\cdot(g_1 H) =
+g_2 H$. Connectedness: the canonical projection $\pi : G \to G/H$ is continuous
+and surjective, so $G/H = \pi(G)$ is connected when $G$ is. Invariance of metric:
+$G$-invariance says exactly that each translation $L_\gamma : p \mapsto
+\gamma\cdot p$ satisfies $L_\gamma^* g = g$, i.e.\ is an isometry.
+\end{proof}
 
-We assume the standard topological prerequisites: a \emph{topological space} is a
-set with a distinguished collection of open sets closed under arbitrary unions
-and finite intersections; it is \emph{Hausdorff} if distinct points have disjoint
-open neighborhoods; and a \emph{homeomorphism} is a continuous bijection with
-continuous inverse, the notion of two spaces being ``topologically the same.''
+On a homogeneous space an equivariant operator is completely determined by its
+behaviour at the base point $o = eH$: since $\group$ acts transitively, the value
+of $\Phi f$ at any $x = g\cdot o$ is fixed by equivariance,
+$(\Phi f)(x) = \rho_2(g)(\Phi(L_{g^{-1}}f))(o)$. A short computation shows that
+the only equivariant linear operators on $L^2(G)$ are generalized convolutions:
+the kernel must satisfy $k(hg, hg') = k(g, g')$, so $k(g,g') = \kappa(g^{-1}g')$
+and $(\Phi f)(g) = \int_G \kappa(g^{-1}g')f(g')\,d\mu(g') = (\kappa * f)(g)$. This
+is the mathematical reason convolution is the canonical operation on symmetric
+domains, a thread we follow through \Cref{ch:grids,ch:groups,ch:graphs}. The
+choice of homogeneous space thus determines the symmetry group $G$ and stabilizer
+$H$, which in turn dictate the structure of the available equivariant
+representations.
 
-\begin{definition}[Topological manifold]
-\label{def:found:topmanifold}
-A \emph{topological manifold} of dimension $m$ is a Hausdorff, second-countable
-topological space $\mathcal{M}$ that is \emph{locally Euclidean}: every point has
-an open neighborhood $U$ homeomorphic, via a map $\phi : U \to V \subseteq \R^m$
-(a \emph{chart}), to an open subset of $\R^m$.
-\end{definition}
+\medskip
 
-Intuitively a manifold is a space that locally looks like $\R^m$ even when its
-global shape is very different: the Earth's surface is curved yet looks flat to a
-pedestrian; a wrinkled sheet of paper is locally two-dimensional; a robot arm's
-configuration space is non-Euclidean but locally coordinatized by joint angles.
-A collection of charts covering $\mathcal{M}$ is an \emph{atlas}
-$\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}$, and the \emph{transition maps}
-$\phi_\beta \circ \phi_\alpha^{-1}$ describe how overlapping charts relate. The
-manifold is \emph{differentiable} (smooth) if all transition maps are
-$C^\infty$; this is exactly the extra structure needed to do calculus on
-$\mathcal{M}$.
-
-The central object is the tangent space, which captures the infinitesimal
-directions at a point. Two complementary constructions, illustrated in
-\Cref{fig:found:tangent}, make it precise.
-
-\begin{definition}[Tangent space via curves]
-\label{def:found:tangent-curves}
-Let $\mathcal{M}$ be smooth and $p \in \mathcal{M}$. Two curves
-$\gamma_1, \gamma_2 : (-\epsilon,\epsilon) \to \mathcal{M}$ with
-$\gamma_1(0) = \gamma_2(0) = p$ are \emph{tangent at $p$} if, for some (hence
-every) chart $(U,\phi)$ around $p$,
-$(\phi\circ\gamma_1)'(0) = (\phi\circ\gamma_2)'(0)$. The \emph{tangent space}
-$T_p\mathcal{M}$ is the set of equivalence classes $[\gamma]$ of curves tangent
-at $p$.
-\end{definition}
-
-\begin{definition}[Tangent space via derivations]
-\label{def:found:tangent-deriv}
-A \emph{derivation} at $p$ is a linear map $v : C^\infty(\mathcal{M}) \to \R$
-obeying the Leibniz rule $v(fg) = v(f)\,g(p) + f(p)\,v(g)$. The tangent space
-$T_p\mathcal{M}$ is the vector space of all derivations at $p$.
-\end{definition}
-
-The first construction reads a tangent vector as the initial velocity of a curve
---- a direction of motion; the second reads it as a directional-derivative
-operator --- a direction of change of functions. The two are canonically
-isomorphic, the isomorphism sending $[\gamma]$ to the derivation
-$f \mapsto \frac{d}{dt}\big|_0 (f\circ\gamma)$. In a chart with coordinates
-$x^1,\dots,x^m$ the partial derivatives
-$\frac{\partial}{\partial x^j}\big|_p$ form a basis, so $T_p\mathcal{M}$ is a
-vector space of dimension $m = \dim\mathcal{M}$. We use curves for geometric
-intuition and derivations for algebraic manipulation.
-
-\begin{example}[Tangent space to the sphere]
-\label{ex:found:tangent-sphere}
-At the north pole $p = (0,0,1)$ of $S^2$, the curve
-$\gamma(t) = (\sin t, 0, \cos t)$ has $\gamma'(0) = (1,0,0)$. The tangent space
-$T_p S^2$ is the horizontal plane $\{(x,y,0)\}$, the plane tangent to the sphere
-at the pole. Its two-dimensionality reflects $\dim S^2 = 2$.
-\end{example}
-
-\begin{figure}[h]
-\centering
-\begin{tikzpicture}[>=Stealth, scale=1.0]
-% Surface
-\shade[ball color=gdlblue!18, opacity=0.9]
-    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
-    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
-\draw[thick, gdlblue!55]
-    (-2,-1.3) .. controls (-1,1) and (1,2) .. (2.2,0.6)
-    .. controls (1.6,-1) and (-1,-1.9) .. (-2,-1.3);
-\node[text=gdlblue!60!black, font=\small] at (-1.7,-1.5) {$\mathcal{M}$};
-% Point p
-\coordinate (p) at (0,0.35);
-% Tangent plane (parallelogram)
-\begin{scope}[on background layer]
-\fill[gdlorange!18, opacity=0.85]
-    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
-    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
-\draw[gdlorange!60]
-    ($(p)+(-1.7,-0.55)$) -- ($(p)+(1.7,0.35)$) --
-    ($(p)+(1.4,1.15)$) -- ($(p)+(-2.0,0.25)$) -- cycle;
-\end{scope}
-\node[text=gdlorange!60!black, font=\small] at (1.9,1.25) {$T_p\mathcal{M}$};
-% Curves through p
-\draw[thick, gdlpurple!75] (-1.4,-0.4) .. controls (-0.5,0.05) .. (p)
-    .. controls (0.5,0.65) .. (1.4,1.0);
-\node[gdlpurple!75, font=\tiny] at (1.55,1.05) {$\gamma_1$};
-\draw[thick, gdlgreen!60!black] (-0.5,-0.9) .. controls (-0.2,-0.25) .. (p)
-    .. controls (0.2,0.9) .. (0.45,1.4);
-\node[gdlgreen!60!black, font=\tiny] at (0.6,1.45) {$\gamma_2$};
-% Tangent vectors
-\draw[->, very thick, gdlpurple!75] (p) -- ++(0.95,0.45)
-    node[right, font=\tiny] {$\gamma_1'(0)$};
-\draw[->, very thick, gdlgreen!60!black] (p) -- ++(0.25,0.85)
-    node[above, font=\tiny] {$\gamma_2'(0)$};
-\fill[gdlred!80] (p) circle (2.2pt);
-\node[below right=0pt and 1pt of p, font=\small] {$p$};
-\end{tikzpicture}
-\caption[Tangent space]{The tangent space $T_p\mathcal{M}$ at a point $p$.
-Tangent vectors are the initial velocities $\gamma'(0)$ of curves through $p$;
-equivalently, directional-derivative operators on smooth functions. They form a
-vector space that approximates $\mathcal{M}$ linearly at $p$.}
-\label{fig:found:tangent}
-\end{figure}
-
-A smooth map $F : \mathcal{M} \to \mathcal{N}$ acts on tangent vectors through
-its \emph{differential} (or pushforward) $dF_p : T_p\mathcal{M} \to
-T_{F(p)}\mathcal{N}$, defined on derivations by $dF_p(v)(g) = v(g\circ F)$; in
-local coordinates $dF_p$ is the Jacobian matrix. The differential classifies
-maps by the behavior of its rank: $F$ is an \emph{immersion} if $dF_p$ is
-injective everywhere and a \emph{submersion} if it is surjective everywhere. An
-\emph{embedding} is an injective immersion that is a homeomorphism onto its
-image; intuitively, an embedded manifold sits inside the ambient space without
-self-intersections or kinks. These notions return in \Cref{ch:geodesics}, where
-a Riemannian metric on the tangent spaces turns a manifold into a space with
-distances and curvature, and in \Cref{ch:gauges}, where the absence of a
-canonical basis for $T_p\mathcal{M}$ leads to gauge symmetry.
-
-Connecting back to \Cref{sec:found:groups}: a Lie group is a manifold whose
-tangent space at the identity is its Lie algebra, and the exponential map is the
-canonical curve through the identity in each direction. The three threads of this
-chapter --- groups, representations, and manifolds --- thus meet in the Lie
-group, and together they furnish the vocabulary for the geometric priors of
-\Cref{ch:priors} and the architectures that follow.
+The three threads of this chapter --- groups, representations, and manifolds ---
+meet in the Lie group: a manifold whose tangent space at the identity is its Lie
+algebra, with the exponential map as the canonical curve through the identity in
+each direction. Together with the neural-network foundations of the first half,
+they furnish the complete vocabulary for the geometric priors of \Cref{ch:priors}
+and the architectures that follow.

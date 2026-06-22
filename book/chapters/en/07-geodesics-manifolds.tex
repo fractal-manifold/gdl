@@ -5,6 +5,7 @@
 \providecommand{\Log}{\operatorname{log}}
 \providecommand{\TpM}{T_p\mathcal{M}}
 \providecommand{\M}{\mathcal{M}}
+\providecommand{\N}{\mathbb{N}}
 
 \chapter{Geodesics: Learning on Manifolds}
 \label{ch:geodesics}
@@ -30,7 +31,8 @@ first endow smooth manifolds with metric structure
 (\Cref{sec:geo:intrinsic}), introduce the connection and curvature that measure
 the departure from flatness, define geodesics together with the exponential and
 logarithmic maps (\Cref{sec:geo:geodesics}), and then turn to learning:
-geodesic convolution (\Cref{sec:geo:convolution}) and spectral methods on
+geodesic convolution (\Cref{sec:geo:convolution}), the discretization of
+geodesics on graphs (\Cref{sec:geo:graphs}), and spectral methods on
 manifolds (\Cref{sec:geo:spectral}).
 
 \section{Intrinsic geometry}
@@ -610,6 +612,309 @@ variation, and exhibits large anatomical variability across subjects.
 Convolving intrinsically on the cortical surface, rather than on a volumetric or
 projected representation, respects the folding pattern and yields anatomically
 consistent features for tasks such as parcellation across large cohorts.
+
+\subsection{Hyperbolic geometry and attention}
+\label{subsec:geo:hyperbolic}
+
+Hyperbolic space deserves a closer look, because it is the manifold most often
+specialized in practice and because it ties geodesic learning to the attention
+mechanisms of \Cref{ch:graphs}. The defining feature, the $K = -1$ regime of
+\Cref{fig:geo:curvature}, is exponential volume growth: a geodesic ball of
+radius $r$ in $\mathbb{H}^n$ has volume of order $e^{(n-1)r}$, matching the
+combinatorial explosion of trees, whose node count grows exponentially with
+depth. Two equivalent models are used. In the \emph{hyperboloid (Lorentz)
+model} $\mathbb{H}^n = \{x \in \R^{n+1} : \inner{x}{x}_{\mathcal L} = -1,\,
+x_0 > 0\}$, where $\inner{x}{y}_{\mathcal L} = -x_0 y_0 + \sum_{i\ge 1} x_i y_i$
+is the Minkowski form; in the \emph{Poincar\'e ball} $\mathbb{D}^n$ of
+\Cref{ex:geo:metrics}, conformal to the Euclidean metric. The two are related by
+an isometric diffeomorphism, so one chooses whichever is computationally
+convenient.
+
+\begin{definition}[Hyperbolic distance]
+\label{def:geo:hyperbolic-distance}
+On the hyperboloid model the geodesic distance between $x, y \in \mathbb{H}^n$
+is
+\[
+  d_{\mathbb{H}}(x,y) = \operatorname{arccosh}\big(-\inner{x}{y}_{\mathcal L}\big),
+\]
+and on the Poincar\'e ball the equivalent expression is
+\[
+  d_{\mathbb{D}}(u,v) = \operatorname{arccosh}\!\left(
+    1 + 2\,\frac{\norm{u-v}^2}{(1 - \norm{u}^2)(1 - \norm{v}^2)}\right).
+\]
+It is a metric, is symmetric, satisfies the triangle inequality, and is
+invariant under the isometry group $\mathrm{SO}^+(1,n)$.
+\end{definition}
+
+The Poincar\'e ball also supports algebraic analogues of the linear operations,
+the \emph{M\"obius operations}: the M\"obius sum
+$u \oplus v$ generalizing vector addition, the M\"obius scalar product
+$r \otimes u = \tanh\!\big(r\,\tanh^{-1}\norm{u}\big)\,u/\norm{u}$, and the
+hyperbolic exponential map
+$\exp^{\mathbb{H}}_x(v) = x \oplus \tanh\!\big(\tfrac{1}{2}\lambda_x\norm{v}\big)
+\,v/\norm{v}$ with conformal factor $\lambda_x = 2/(1-\norm{x}^2)$. These are
+the Poincar\'e-ball instances of the M\"obius operation and the exponential map
+referenced in \Cref{subsec:geo:specific}.
+
+\begin{theorem}[Low-distortion tree embedding]
+\label{thm:geo:tree-embedding}
+Every finite tree $T$ admits an embedding into the hyperbolic plane
+$\mathbb{H}^2$ with arbitrarily small distortion: for every $\varepsilon > 0$
+there is a map $f \colon V(T) \to \mathbb{H}^2$ with
+\[
+  d_T(u,v) \le d_{\mathbb{H}}(f(u), f(v)) \le (1+\varepsilon)\, d_T(u,v)
+  \qquad \text{for all } u, v \in V(T),
+\]
+where $d_T$ is the tree (graph geodesic) distance~\citep{sarkar2011low}. In
+contrast, embedding a complete binary tree on $n$ vertices into $\R^d$ with
+bounded distortion requires $d = \Omega(\log n)$.
+\end{theorem}
+
+The construction places the root at the origin and, at each internal node,
+distributes the children evenly on a hyperbolic circle centred at the parent;
+since the perimeter of a hyperbolic circle of radius $r$ grows like
+$2\pi\sinh r \sim \pi e^r$, there is always room to separate the branches
+without distortion. The polynomial volume growth $\Theta(r^d)$ of $\R^d$
+forbids this in low dimension, which is exactly why hierarchical data ---
+WordNet, taxonomies, knowledge graphs --- are embedded in the Poincar\'e ball,
+with the norm $\norm{f(e)}$ encoding the depth of an entity in the hierarchy
+(\Cref{fig:geo:hyperbolic}).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+% Poincare disc boundary
+\draw[thick, gdlpurple!55] (0,0) circle (2.6cm);
+\fill[gdlpurple!6] (0,0) circle (2.6cm);
+\node[gdlpurple!60!black, font=\small] at (-2.0,-2.3) {$\mathbb{D}^2$};
+% root
+\coordinate (r) at (0,0);
+\fill[gdlred!80] (r) circle (2.5pt);
+\node[above, font=\footnotesize] at (r) {root};
+% level 1
+\foreach \a in {90,210,330}{
+  \coordinate (c\a) at ({1.2*cos(\a)},{1.2*sin(\a)});
+  \draw[gdlblue!55, thick] (r) -- (c\a);
+  \fill[gdlblue!70] (c\a) circle (2pt);
+}
+% level 2 around each level-1 node (pushed toward boundary)
+\foreach \a in {90,210,330}{
+  \foreach \d in {-28,28}{
+    \coordinate (l\a\d) at ({2.25*cos(\a+\d)},{2.25*sin(\a+\d)});
+    \draw[gdlgreen!55] (c\a) -- (l\a\d);
+    \fill[gdlgreen!70] (l\a\d) circle (1.6pt);
+  }
+}
+\node[font=\footnotesize, text width=4.0cm, align=left] at (4.7,0) {
+  exponential volume\\ growth $\Rightarrow$ branches\\ separate without\\
+  distortion (\Cref{thm:geo:tree-embedding})};
+\end{tikzpicture}
+\caption[Hyperbolic tree embedding]{A hierarchy embedded in the Poincar\'e disc
+$\mathbb{D}^2$. The root sits at the centre and successive levels are pushed
+toward the boundary; the exponential growth of hyperbolic volume gives room to
+separate the branches with vanishing distortion, impossible in a Euclidean
+space of fixed dimension.}
+\label{fig:geo:hyperbolic}
+\end{figure}
+
+When the data are hyperbolic, the attention mechanism itself can be moved into
+$\mathbb{H}^n$. \emph{Hyperbolic attention
+networks}~\citep{gulcehre2019hyperbolic} compute attention weights from
+hyperbolic distance,
+\[
+  \alpha_{ij} \;\propto\; \exp\!\big({-}\beta\, d_{\mathbb{H}}(q_i, k_j)\big),
+\]
+and aggregate the values with a hyperbolic mean --- either the Einstein midpoint
+in the Klein model or the \emph{Fr\'echet mean}
+$\operatorname*{arg\,min}_{x \in \mathbb{H}^d} \sum_i \alpha_{ij}\,
+d_{\mathbb{H}}^2(x, v_j)$, computed by a few Riemannian gradient steps using the
+hyperbolic $\exp$ and $\log$ maps. Because $d_{\mathbb{H}}$ is invariant under
+$\mathrm{SO}^+(1,n)$ (\Cref{def:geo:hyperbolic-distance}), the attention weights
+are invariant and the Fr\'echet-mean aggregation is equivariant under
+hyperbolic isometries, so the whole layer respects the isometry group of the
+data space --- the same equivariance principle of \Cref{ch:priors} that governs
+the spectral filters below. A symmetric construction on the sphere $S^2$, using
+the spherical distance $d_{S^2}(x,y) = \arccos\inner{x}{y}$ in place of
+$d_{\mathbb{H}}$, gives spherical attention for directional and omnidirectional
+data, and parallel transport (\Cref{subsec:geo:specific}) supplies the
+transport-based attention that moves queries and keys into a common tangent
+space before comparing them.
+
+\section{Geodesics on graphs}
+\label{sec:geo:graphs}
+
+Shortest paths in graphs are the natural discretization of continuous geodesics,
+and they make precise the link, anticipated in \Cref{ch:graphs}, between the
+combinatorial distance on a proximity graph and the intrinsic distance on the
+manifold it samples.
+
+\begin{definition}[Graph geodesic distance]
+\label{def:geo:graph-distance}
+For a graph $G = (V, E)$, the \emph{discrete geodesic distance} between vertices
+$u, v \in V$ is the minimum number of edges in a path joining them,
+\[
+  d_G(u,v) = \min\{ k : \exists\, u = v_0, v_1, \dots, v_k = v
+    \text{ with } (v_i, v_{i+1}) \in E\}.
+\]
+On a weighted graph one replaces the edge count by the sum of edge weights along
+the path.
+\end{definition}
+
+\begin{definition}[Geodesic neighbourhood graph]
+\label{def:geo:graph-ball}
+Given $G = (V, E)$ and a radius $r \in \N$, the \emph{$r$-geodesic
+neighbourhood} of a vertex $v$ is
+\[
+  B_r(v) = \{ u \in V : d_G(v, u) \le r\},
+\]
+the discrete analogue of a geodesic ball on a manifold.
+\end{definition}
+
+When a graph $G_n$ is built by sampling $n$ points of a manifold $\M$ and
+joining nearby points, two complementary convergences hold under appropriate
+scaling. The normalized graph Laplacian converges to the Laplace--Beltrami
+operator (the \emph{spectral} convergence already used in \Cref{ch:graphs} to
+justify intrinsic Fourier analysis), and the shortest-path distance converges to
+the geodesic distance (a \emph{metric} convergence, which we prove now). Together
+they certify that a sufficiently dense graph approximates the manifold both
+locally and globally.
+
+\begin{theorem}[Convergence of shortest-path to geodesic distance]
+\label{thm:geo:graph-convergence}
+Let $(\M, g)$ be a compact connected Riemannian manifold of dimension $d$ with
+bounded sectional curvature, embedded in $\R^N$. Let
+$X_n = \{x_1, \dots, x_n\}$ be sampled i.i.d.\ from a density $p$ with
+$p(x) \ge p_{\min} > 0$. Build the graph $G_n = (X_n, E_n)$ with edge
+$(x_i,x_j) \in E_n$ iff $\norm{x_i - x_j} \le \varepsilon_n$ and weight
+$w_{ij} = \norm{x_i - x_j}$. If $\varepsilon_n \to 0$ and
+$n\varepsilon_n^d / \log n \to \infty$, then with high probability
+\[
+  \sup_{x_i, x_j \in X_n}
+    \big| d_{G_n}(x_i, x_j) - d_g(x_i, x_j)\big| \to 0
+  \qquad (n \to \infty).
+\]
+\end{theorem}
+
+\begin{proof}
+We follow~\citet{bernstein2000graph} in five steps.
+
+\textbf{Step 1: Local metric comparison.} Let $\abs{K} \le \kappa$ bound the
+sectional curvature. For $x, y \in \M$ with $d_g(x,y) \le \varepsilon$ the
+ambient Euclidean distance and the geodesic distance satisfy
+\begin{equation}
+\label{eq:geo:local-comparison}
+  d_g(x,y)\big(1 - C_\kappa \varepsilon^2\big) \le \norm{x - y} \le d_g(x,y),
+\end{equation}
+with $C_\kappa > 0$ depending only on $\kappa$ and $d$. The upper bound is
+immediate: the straight segment in $\R^N$ is no longer than the geodesic. For
+the lower bound, work in the normal coordinates centred at $x$ of
+\Cref{rem:geo:gauge}: by the metric
+expansion $g_{ij}(z) = \delta_{ij} - \tfrac13 R_{ikjl}(x)z^k z^l +
+O(\norm{z}^3)$ and $\abs{R_{ikjl}} \le C\kappa$, the length of the minimizing
+geodesic is $d_g(x,y) \le \norm{x-y}(1 + C'_\kappa \varepsilon^2)$, which
+inverts to the lower bound.
+
+\textbf{Step 2: Probabilistic covering.} Define the covering radius
+$r_n = \max_{q \in \M} \min_{x_i} d_g(q, x_i)$. We claim that, under
+$n\varepsilon_n^d/\log n \to \infty$, with high probability
+\begin{equation}
+\label{eq:geo:covering}
+  r_n = O\!\Big(\big(\tfrac{\log n}{n}\big)^{1/d}\Big) = o(\varepsilon_n).
+\end{equation}
+Since geodesic balls have volume $\operatorname{Vol}(B_g(q,\delta)) \ge
+c_d\,\delta^d$ for small $\delta$, and $p \ge p_{\min}$, the probability that no
+sample lands in $B_g(q,\delta)$ is at most
+$\exp(-n\,p_{\min}\,c_d\,\delta^d)$. A $\delta$-net of $\M$ has $O(\delta^{-d})$
+balls, so a union bound gives
+$\Pr[r_n > \delta] \le O(\delta^{-d})\exp(-n\,p_{\min}\,c_d\,\delta^d)$.
+Choosing $\delta = C(\log n / n)^{1/d}$ with $C$ large makes this tend to $0$,
+and the scaling hypothesis yields $r_n = o(\varepsilon_n)$.
+
+\textbf{Step 3: Lower bound on $d_{G_n}$.} For an optimal graph path
+$x_i = z_0, \dots, z_L = x_j$, every edge has
+$\norm{z_l - z_{l+1}} \le \varepsilon_n$, so by Step~1
+$\norm{z_l - z_{l+1}} \ge d_g(z_l, z_{l+1})(1 - C_\kappa \varepsilon_n^2)$.
+Summing and applying the triangle inequality for $d_g$
+(\Cref{prop:geo:dg-metric}),
+\begin{equation}
+\label{eq:geo:lower-dGn}
+  d_{G_n}(x_i, x_j) \ge (1 - C_\kappa \varepsilon_n^2)\, d_g(x_i, x_j).
+\end{equation}
+
+\textbf{Step 4: Upper bound on $d_{G_n}$.} Let $\gamma$ be the minimizing
+geodesic from $x_i$ to $x_j$, parametrized by arc length, and sample points
+$p_0 = x_i, p_1, \dots$ at spacing $h = \varepsilon_n/3$. By Step~2,
+$r_n < \varepsilon_n/6$ for large $n$, so each $p_l$ has a sample $z_l$ with
+$d_g(z_l, p_l) \le r_n$ (take $z_0 = x_i$, last $= x_j$). Consecutive samples
+satisfy $\norm{z_l - z_{l+1}} \le d_g(z_l, z_{l+1}) \le 2r_n + h < \varepsilon_n$,
+so $(z_l, z_{l+1}) \in E_n$, and
+\begin{equation}
+\label{eq:geo:upper-dGn}
+  d_{G_n}(x_i, x_j) \le \sum_l d_g(z_l, z_{l+1})
+    \le \big(\tfrac{L_\gamma}{h} + 1\big)(h + 2r_n)
+    = d_g(x_i, x_j) + O\!\Big(d_g(x_i,x_j)\tfrac{r_n}{\varepsilon_n}\Big)
+      + O(\varepsilon_n).
+\end{equation}
+
+\textbf{Step 5: Uniform convergence.} Combining
+\eqref{eq:geo:lower-dGn}--\eqref{eq:geo:upper-dGn},
+\[
+  \big| d_{G_n}(x_i,x_j) - d_g(x_i,x_j)\big|
+    \le d_g(x_i,x_j)\, O\!\Big(\max\big(\varepsilon_n^2, \tfrac{r_n}{\varepsilon_n}\big)\Big)
+      + O(\varepsilon_n).
+\]
+Since $\M$ is compact, $d_g \le \operatorname{diam}(\M) < \infty$, and both
+$\varepsilon_n \to 0$ and $r_n/\varepsilon_n \to 0$ by \eqref{eq:geo:covering},
+so the supremum over all pairs tends to $0$.
+\end{proof}
+
+\begin{remark}[Two complementary convergences]
+\label{rem:geo:two-convergences}
+The metric convergence above and the spectral convergence of \Cref{ch:graphs}
+are complementary, not equivalent. The spectral statement
+(graph Laplacian $\to \Delta_\M$) captures the local differential structure ---
+diffusion, curvature, eigenfunctions --- and needs the denser scaling
+$n\varepsilon^{d+2} \to \infty$ (more neighbours are required to estimate second
+derivatives of the heat kernel); the metric statement
+(shortest paths $\to d_g$) captures the global geometry and needs only the
+weaker connectivity-and-covering scaling
+$n\varepsilon_n^d/\log n \to \infty$. Together they justify treating a
+sufficiently dense graph as a faithful proxy for the manifold.
+\end{remark}
+
+\begin{example}[Numerical approximation on $S^2$]
+\label{ex:geo:sphere-numerical}
+On the unit sphere the geodesic distance is $d_g(p,q) = \arccos\inner{p}{q}$
+(\Cref{ex:geo:sphere-distance}). Take $p = (1,0,0)$ and $q = (0,1,0)$, so
+$d_g(p,q) = \pi/2 \approx 1.571$. Sampling $n$ points uniformly on $S^2$ and
+connecting those within Euclidean distance $\varepsilon$, the shortest-path
+distance $d_{G_n}(p,q)$ approaches $\pi/2$ as the sampling is refined:
+\begin{center}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+$n$ (points) & $\varepsilon$ & $d_{G_n}(p, q)$ \\
+\midrule
+$100$ & $0.5$ & $1.62$ \\
+$500$ & $0.3$ & $1.59$ \\
+$2000$ & $0.2$ & $1.575$ \\
+$10000$ & $0.1$ & $1.572$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+The convergence to $d_g = \pi/2$ illustrates \Cref{thm:geo:graph-convergence}:
+the discrete distance overestimates the geodesic for coarse graphs (the path
+zig-zags between samples) and tightens as $n$ grows and $\varepsilon$ shrinks at
+the prescribed rate.
+\end{example}
+
+These convergences have direct consequences for architecture design. Positional
+encodings built from shortest-path distances (as in graph transformers)
+approximate intrinsic geodesic distances when the graph densely samples a
+manifold; diffusion-based message passing captures information at scale
+$O(\varepsilon)$, while geodesic distance enables long-range, geometry-aware
+attention; and the scaling $\varepsilon_n \sim (n/\log n)^{-1/d}$ prescribes how
+fast the connectivity radius must shrink to preserve both connectivity and local
+geometry.
 
 \section{Spectral methods on manifolds}
 \label{sec:geo:spectral}

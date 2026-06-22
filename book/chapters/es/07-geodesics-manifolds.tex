@@ -5,6 +5,7 @@
 \providecommand{\Log}{\operatorname{log}}
 \providecommand{\TpM}{T_p\mathcal{M}}
 \providecommand{\M}{\mathcal{M}}
+\providecommand{\N}{\mathbb{N}}
 
 \chapter{Geod\'esicas: Aprendizaje en Variedades}
 \label{ch:geodesics}
@@ -32,7 +33,8 @@ dotamos primero a las variedades diferenciables de estructura m\'etrica
 (\Cref{sec:geo:intrinsic}), introducimos la conexi\'on y la curvatura que miden
 la desviaci\'on respecto al caso plano, definimos las geod\'esicas junto con los
 mapas exponencial y logar\'itmico (\Cref{sec:geo:geodesics}) y luego pasamos al
-aprendizaje: la convoluci\'on geod\'esica (\Cref{sec:geo:convolution}) y los
+aprendizaje: la convoluci\'on geod\'esica (\Cref{sec:geo:convolution}), la
+discretizaci\'on de las geod\'esicas en grafos (\Cref{sec:geo:graphs}) y los
 m\'etodos espectrales en variedades (\Cref{sec:geo:spectral}).
 
 \section{Geometr\'ia intr\'inseca}
@@ -636,6 +638,318 @@ sujetos. Convolucionar de forma intr\'inseca sobre la superficie cortical, en
 lugar de sobre una representaci\'on volum\'etrica o proyectada, respeta el
 patr\'on de plegamiento y produce caracter\'isticas anat\'omicamente
 consistentes para tareas como la parcelaci\'on en grandes cohortes.
+
+\subsection{Geometr\'ia hiperb\'olica y atenci\'on}
+\label{subsec:geo:hyperbolic}
+
+El espacio hiperb\'olico merece una mirada m\'as detenida, porque es la variedad
+que m\'as a menudo se especializa en la pr\'actica y porque conecta el
+aprendizaje geod\'esico con los mecanismos de atenci\'on del \Cref{ch:graphs}.
+Su rasgo definitorio, el r\'egimen $K = -1$ de \Cref{fig:geo:curvature}, es el
+crecimiento exponencial del volumen: una bola geod\'esica de radio $r$ en
+$\mathbb{H}^n$ tiene volumen de orden $e^{(n-1)r}$, que iguala la explosi\'on
+combinatoria de los \'arboles, cuyo n\'umero de nodos crece exponencialmente con
+la profundidad. Se usan dos modelos equivalentes. En el \emph{modelo del
+hiperboloide (de Lorentz)} $\mathbb{H}^n = \{x \in \R^{n+1} :
+\inner{x}{x}_{\mathcal L} = -1,\, x_0 > 0\}$, donde
+$\inner{x}{y}_{\mathcal L} = -x_0 y_0 + \sum_{i\ge 1} x_i y_i$ es la forma de
+Minkowski; en la \emph{bola de Poincar\'e} $\mathbb{D}^n$ de
+\Cref{ex:geo:metrics}, conforme a la m\'etrica euclidiana. Ambos se relacionan
+por un difeomorfismo isom\'etrico, de modo que se elige el m\'as conveniente para
+el c\'omputo.
+
+\begin{definition}[Distancia hiperb\'olica]
+\label{def:geo:hyperbolic-distance}
+En el modelo del hiperboloide, la distancia geod\'esica entre
+$x, y \in \mathbb{H}^n$ es
+\[
+  d_{\mathbb{H}}(x,y) = \operatorname{arccosh}\big(-\inner{x}{y}_{\mathcal L}\big),
+\]
+y en la bola de Poincar\'e la expresi\'on equivalente es
+\[
+  d_{\mathbb{D}}(u,v) = \operatorname{arccosh}\!\left(
+    1 + 2\,\frac{\norm{u-v}^2}{(1 - \norm{u}^2)(1 - \norm{v}^2)}\right).
+\]
+Es una m\'etrica, es sim\'etrica, satisface la desigualdad triangular y es
+invariante bajo el grupo de isometr\'ias $\mathrm{SO}^+(1,n)$.
+\end{definition}
+
+La bola de Poincar\'e admite tambi\'en an\'alogos algebraicos de las operaciones
+lineales, las \emph{operaciones de M\"obius}: la suma de M\"obius
+$u \oplus v$ que generaliza la suma de vectores, el producto escalar de M\"obius
+$r \otimes u = \tanh\!\big(r\,\tanh^{-1}\norm{u}\big)\,u/\norm{u}$ y el mapa
+exponencial hiperb\'olico
+$\exp^{\mathbb{H}}_x(v) = x \oplus \tanh\!\big(\tfrac{1}{2}\lambda_x\norm{v}\big)
+\,v/\norm{v}$ con factor conforme $\lambda_x = 2/(1-\norm{x}^2)$. Estas son las
+instancias en la bola de Poincar\'e de la operaci\'on de M\"obius y del mapa
+exponencial referidos en \Cref{subsec:geo:specific}.
+
+\begin{theorem}[Embebido de \'arboles con baja distorsi\'on]
+\label{thm:geo:tree-embedding}
+Todo \'arbol finito $T$ admite un embebido en el plano hiperb\'olico
+$\mathbb{H}^2$ con distorsi\'on arbitrariamente peque\~na: para todo
+$\varepsilon > 0$ existe una aplicaci\'on $f \colon V(T) \to \mathbb{H}^2$ con
+\[
+  d_T(u,v) \le d_{\mathbb{H}}(f(u), f(v)) \le (1+\varepsilon)\, d_T(u,v)
+  \qquad \text{para todo } u, v \in V(T),
+\]
+donde $d_T$ es la distancia en el \'arbol (geod\'esica de grafo)~\citep{sarkar2011low}.
+En contraste, embeber un \'arbol binario completo de $n$ v\'ertices en $\R^d$ con
+distorsi\'on acotada exige $d = \Omega(\log n)$.
+\end{theorem}
+
+La construcci\'on coloca la ra\'iz en el origen y, en cada nodo interno,
+distribuye los hijos uniformemente sobre un c\'irculo hiperb\'olico centrado en
+el padre; como el per\'imetro de un c\'irculo hiperb\'olico de radio $r$ crece
+como $2\pi\sinh r \sim \pi e^r$, siempre hay sitio para separar las ramas sin
+distorsi\'on. El crecimiento polin\'omico del volumen $\Theta(r^d)$ de $\R^d$ lo
+impide en dimensi\'on baja, que es justo la raz\'on por la que los datos
+jer\'arquicos --- WordNet, taxonom\'ias, grafos de conocimiento --- se embeben en
+la bola de Poincar\'e, con la norma $\norm{f(e)}$ codificando la profundidad de
+una entidad en la jerarqu\'ia (\Cref{fig:geo:hyperbolic}).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+% Borde del disco de Poincar\'e
+\draw[thick, gdlpurple!55] (0,0) circle (2.6cm);
+\fill[gdlpurple!6] (0,0) circle (2.6cm);
+\node[gdlpurple!60!black, font=\small] at (-2.0,-2.3) {$\mathbb{D}^2$};
+% ra\'iz
+\coordinate (r) at (0,0);
+\fill[gdlred!80] (r) circle (2.5pt);
+\node[above, font=\footnotesize] at (r) {ra\'iz};
+% nivel 1
+\foreach \a in {90,210,330}{
+  \coordinate (c\a) at ({1.2*cos(\a)},{1.2*sin(\a)});
+  \draw[gdlblue!55, thick] (r) -- (c\a);
+  \fill[gdlblue!70] (c\a) circle (2pt);
+}
+% nivel 2 alrededor de cada nodo de nivel 1 (empujado hacia el borde)
+\foreach \a in {90,210,330}{
+  \foreach \d in {-28,28}{
+    \coordinate (l\a\d) at ({2.25*cos(\a+\d)},{2.25*sin(\a+\d)});
+    \draw[gdlgreen!55] (c\a) -- (l\a\d);
+    \fill[gdlgreen!70] (l\a\d) circle (1.6pt);
+  }
+}
+\node[font=\footnotesize, text width=4.0cm, align=left] at (4.7,0) {
+  crecimiento exponencial\\ del volumen $\Rightarrow$ las ramas\\ se separan sin\\
+  distorsi\'on (\Cref{thm:geo:tree-embedding})};
+\end{tikzpicture}
+\caption[Embebido hiperb\'olico de \'arboles]{Una jerarqu\'ia embebida en el
+disco de Poincar\'e $\mathbb{D}^2$. La ra\'iz se sit\'ua en el centro y los
+niveles sucesivos se empujan hacia el borde; el crecimiento exponencial del
+volumen hiperb\'olico da espacio para separar las ramas con distorsi\'on
+evanescente, algo imposible en un espacio euclidiano de dimensi\'on fija.}
+\label{fig:geo:hyperbolic}
+\end{figure}
+
+Cuando los datos son hiperb\'olicos, el propio mecanismo de atenci\'on puede
+trasladarse a $\mathbb{H}^n$. Las \emph{redes de atenci\'on
+hiperb\'olica}~\citep{gulcehre2019hyperbolic} calculan los pesos de atenci\'on a
+partir de la distancia hiperb\'olica,
+\[
+  \alpha_{ij} \;\propto\; \exp\!\big({-}\beta\, d_{\mathbb{H}}(q_i, k_j)\big),
+\]
+y agregan los valores con una media hiperb\'olica --- el punto medio de Einstein
+en el modelo de Klein o la \emph{media de Fr\'echet}
+$\operatorname*{arg\,min}_{x \in \mathbb{H}^d} \sum_i \alpha_{ij}\,
+d_{\mathbb{H}}^2(x, v_j)$, calculada con unos pocos pasos de gradiente
+riemanniano usando los mapas hiperb\'olicos $\exp$ y $\log$. Como
+$d_{\mathbb{H}}$ es invariante bajo $\mathrm{SO}^+(1,n)$
+(\Cref{def:geo:hyperbolic-distance}), los pesos de atenci\'on son invariantes y
+la agregaci\'on por media de Fr\'echet es equivariante bajo las isometr\'ias
+hiperb\'olicas, de modo que toda la capa respeta el grupo de isometr\'ias del
+espacio de datos --- el mismo principio de equivarianza del \Cref{ch:priors} que
+gobierna los filtros espectrales de m\'as abajo. Una construcci\'on sim\'etrica
+en la esfera $S^2$, usando la distancia esf\'erica
+$d_{S^2}(x,y) = \arccos\inner{x}{y}$ en lugar de $d_{\mathbb{H}}$, da la
+atenci\'on esf\'erica para datos direccionales y omnidireccionales, y el
+transporte paralelo (\Cref{subsec:geo:specific}) proporciona la atenci\'on por
+transporte que lleva consultas y claves a un espacio tangente com\'un antes de
+compararlas.
+
+\section{Geod\'esicas en grafos}
+\label{sec:geo:graphs}
+
+Los caminos m\'as cortos en grafos son la discretizaci\'on natural de las
+geod\'esicas continuas, y precisan el v\'inculo, anticipado en \Cref{ch:graphs},
+entre la distancia combinatoria sobre un grafo de proximidad y la distancia
+intr\'inseca sobre la variedad que muestrea.
+
+\begin{definition}[Distancia geod\'esica en grafos]
+\label{def:geo:graph-distance}
+Para un grafo $G = (V, E)$, la \emph{distancia geod\'esica discreta} entre
+v\'ertices $u, v \in V$ es el n\'umero m\'inimo de aristas en un camino que los
+une,
+\[
+  d_G(u,v) = \min\{ k : \exists\, u = v_0, v_1, \dots, v_k = v
+    \text{ con } (v_i, v_{i+1}) \in E\}.
+\]
+En un grafo ponderado se reemplaza el conteo de aristas por la suma de los pesos
+a lo largo del camino.
+\end{definition}
+
+\begin{definition}[Grafo de vecindad geod\'esico]
+\label{def:geo:graph-ball}
+Dados $G = (V, E)$ y un radio $r \in \N$, el \emph{$r$-vecindario geod\'esico} de
+un v\'ertice $v$ es
+\[
+  B_r(v) = \{ u \in V : d_G(v, u) \le r\},
+\]
+el an\'alogo discreto de una bola geod\'esica en una variedad.
+\end{definition}
+
+Cuando un grafo $G_n$ se construye muestreando $n$ puntos de una variedad $\M$ y
+uniendo puntos cercanos, se cumplen dos convergencias complementarias bajo un
+escalamiento apropiado. El laplaciano de grafo normalizado converge al operador
+de Laplace--Beltrami (la convergencia \emph{espectral} ya usada en
+\Cref{ch:graphs} para justificar el an\'alisis de Fourier intr\'inseco), y la
+distancia de camino m\'as corto converge a la distancia geod\'esica (una
+convergencia \emph{m\'etrica}, que demostramos ahora). Juntas certifican que un
+grafo suficientemente denso aproxima la variedad tanto local como globalmente.
+
+\begin{theorem}[Convergencia de la distancia de camino m\'as corto a la geod\'esica]
+\label{thm:geo:graph-convergence}
+Sea $(\M, g)$ una variedad riemanniana compacta y conexa de dimensi\'on $d$ con
+curvatura seccional acotada, embebida en $\R^N$. Sea
+$X_n = \{x_1, \dots, x_n\}$ muestreado i.i.d.\ de una densidad $p$ con
+$p(x) \ge p_{\min} > 0$. Constr\'uyase el grafo $G_n = (X_n, E_n)$ con arista
+$(x_i,x_j) \in E_n$ si y solo si $\norm{x_i - x_j} \le \varepsilon_n$ y peso
+$w_{ij} = \norm{x_i - x_j}$. Si $\varepsilon_n \to 0$ y
+$n\varepsilon_n^d / \log n \to \infty$, entonces con alta probabilidad
+\[
+  \sup_{x_i, x_j \in X_n}
+    \big| d_{G_n}(x_i, x_j) - d_g(x_i, x_j)\big| \to 0
+  \qquad (n \to \infty).
+\]
+\end{theorem}
+
+\begin{proof}
+Seguimos a~\citet{bernstein2000graph} en cinco pasos.
+
+\textbf{Paso 1: Comparaci\'on m\'etrica local.} Sea $\abs{K} \le \kappa$ la cota
+de curvatura seccional. Para $x, y \in \M$ con $d_g(x,y) \le \varepsilon$, la
+distancia euclidiana ambiente y la geod\'esica satisfacen
+\begin{equation}
+\label{eq:geo:local-comparison}
+  d_g(x,y)\big(1 - C_\kappa \varepsilon^2\big) \le \norm{x - y} \le d_g(x,y),
+\end{equation}
+con $C_\kappa > 0$ dependiente solo de $\kappa$ y $d$. La cota superior es
+inmediata: el segmento recto en $\R^N$ no es m\'as largo que la geod\'esica. Para
+la cota inferior, trabajamos en las coordenadas normales centradas en $x$ de
+\Cref{rem:geo:gauge}: por la expansi\'on de la m\'etrica
+$g_{ij}(z) = \delta_{ij} - \tfrac13 R_{ikjl}(x)z^k z^l + O(\norm{z}^3)$ y
+$\abs{R_{ikjl}} \le C\kappa$, la longitud de la geod\'esica minimizante es
+$d_g(x,y) \le \norm{x-y}(1 + C'_\kappa \varepsilon^2)$, que se invierte a la cota
+inferior.
+
+\textbf{Paso 2: Recubrimiento probabil\'istico.} Definimos el radio de
+recubrimiento $r_n = \max_{q \in \M} \min_{x_i} d_g(q, x_i)$. Afirmamos que, bajo
+$n\varepsilon_n^d/\log n \to \infty$, con alta probabilidad
+\begin{equation}
+\label{eq:geo:covering}
+  r_n = O\!\Big(\big(\tfrac{\log n}{n}\big)^{1/d}\Big) = o(\varepsilon_n).
+\end{equation}
+Como las bolas geod\'esicas tienen volumen
+$\operatorname{Vol}(B_g(q,\delta)) \ge c_d\,\delta^d$ para $\delta$ peque\~no, y
+$p \ge p_{\min}$, la probabilidad de que ning\'un punto caiga en
+$B_g(q,\delta)$ es a lo sumo $\exp(-n\,p_{\min}\,c_d\,\delta^d)$. Una
+$\delta$-red de $\M$ tiene $O(\delta^{-d})$ bolas, luego una cota de uni\'on da
+$\Pr[r_n > \delta] \le O(\delta^{-d})\exp(-n\,p_{\min}\,c_d\,\delta^d)$.
+Eligiendo $\delta = C(\log n / n)^{1/d}$ con $C$ grande, esto tiende a $0$, y la
+hip\'otesis de escalamiento da $r_n = o(\varepsilon_n)$.
+
+\textbf{Paso 3: Cota inferior de $d_{G_n}$.} Para un camino \'optimo del grafo
+$x_i = z_0, \dots, z_L = x_j$, cada arista cumple
+$\norm{z_l - z_{l+1}} \le \varepsilon_n$, luego por el Paso~1
+$\norm{z_l - z_{l+1}} \ge d_g(z_l, z_{l+1})(1 - C_\kappa \varepsilon_n^2)$.
+Sumando y aplicando la desigualdad triangular de $d_g$
+(\Cref{prop:geo:dg-metric}),
+\begin{equation}
+\label{eq:geo:lower-dGn}
+  d_{G_n}(x_i, x_j) \ge (1 - C_\kappa \varepsilon_n^2)\, d_g(x_i, x_j).
+\end{equation}
+
+\textbf{Paso 4: Cota superior de $d_{G_n}$.} Sea $\gamma$ la geod\'esica
+minimizante de $x_i$ a $x_j$, parametrizada por longitud de arco, y muestreamos
+puntos $p_0 = x_i, p_1, \dots$ con paso $h = \varepsilon_n/3$. Por el Paso~2,
+$r_n < \varepsilon_n/6$ para $n$ grande, luego cada $p_l$ tiene una muestra $z_l$
+con $d_g(z_l, p_l) \le r_n$ (tomando $z_0 = x_i$, \'ultima $= x_j$). Las muestras
+consecutivas cumplen
+$\norm{z_l - z_{l+1}} \le d_g(z_l, z_{l+1}) \le 2r_n + h < \varepsilon_n$, luego
+$(z_l, z_{l+1}) \in E_n$, y
+\begin{equation}
+\label{eq:geo:upper-dGn}
+  d_{G_n}(x_i, x_j) \le \sum_l d_g(z_l, z_{l+1})
+    \le \big(\tfrac{L_\gamma}{h} + 1\big)(h + 2r_n)
+    = d_g(x_i, x_j) + O\!\Big(d_g(x_i,x_j)\tfrac{r_n}{\varepsilon_n}\Big)
+      + O(\varepsilon_n).
+\end{equation}
+
+\textbf{Paso 5: Convergencia uniforme.} Combinando
+\eqref{eq:geo:lower-dGn}--\eqref{eq:geo:upper-dGn},
+\[
+  \big| d_{G_n}(x_i,x_j) - d_g(x_i,x_j)\big|
+    \le d_g(x_i,x_j)\, O\!\Big(\max\big(\varepsilon_n^2, \tfrac{r_n}{\varepsilon_n}\big)\Big)
+      + O(\varepsilon_n).
+\]
+Como $\M$ es compacta, $d_g \le \operatorname{diam}(\M) < \infty$, y tanto
+$\varepsilon_n \to 0$ como $r_n/\varepsilon_n \to 0$ por \eqref{eq:geo:covering},
+de modo que el supremo sobre todos los pares tiende a $0$.
+\end{proof}
+
+\begin{remark}[Dos convergencias complementarias]
+\label{rem:geo:two-convergences}
+La convergencia m\'etrica anterior y la convergencia espectral del
+\Cref{ch:graphs} son complementarias, no equivalentes. El enunciado espectral
+(laplaciano de grafo $\to \Delta_\M$) captura la estructura diferencial local
+--- difusi\'on, curvatura, autofunciones --- y requiere el escalamiento m\'as
+denso $n\varepsilon^{d+2} \to \infty$ (se necesitan m\'as vecinos para estimar
+las segundas derivadas del n\'ucleo del calor); el enunciado m\'etrico
+(caminos m\'as cortos $\to d_g$) captura la geometr\'ia global y solo necesita el
+escalamiento m\'as d\'ebil de conectividad y cobertura
+$n\varepsilon_n^d/\log n \to \infty$. Juntos justifican tratar un grafo
+suficientemente denso como un sustituto fiel de la variedad.
+\end{remark}
+
+\begin{example}[Aproximaci\'on num\'erica en $S^2$]
+\label{ex:geo:sphere-numerical}
+En la esfera unitaria la distancia geod\'esica es
+$d_g(p,q) = \arccos\inner{p}{q}$ (\Cref{ex:geo:sphere-distance}). Tomemos
+$p = (1,0,0)$ y $q = (0,1,0)$, de modo que $d_g(p,q) = \pi/2 \approx 1.571$.
+Muestreando $n$ puntos uniformemente en $S^2$ y conectando los que est\'an a
+distancia euclidiana menor que $\varepsilon$, la distancia de camino m\'as corto
+$d_{G_n}(p,q)$ se aproxima a $\pi/2$ al refinar el muestreo:
+\begin{center}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+$n$ (puntos) & $\varepsilon$ & $d_{G_n}(p, q)$ \\
+\midrule
+$100$ & $0.5$ & $1.62$ \\
+$500$ & $0.3$ & $1.59$ \\
+$2000$ & $0.2$ & $1.575$ \\
+$10000$ & $0.1$ & $1.572$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+La convergencia a $d_g = \pi/2$ ilustra \Cref{thm:geo:graph-convergence}: la
+distancia discreta sobreestima la geod\'esica en grafos groseros (el camino
+zigzaguea entre muestras) y se ajusta al crecer $n$ y reducirse $\varepsilon$ al
+ritmo prescrito.
+\end{example}
+
+Estas convergencias tienen consecuencias directas para el dise\~no de
+arquitecturas. Las codificaciones posicionales construidas a partir de distancias
+de camino m\'as corto (como en los \emph{transformers} de grafos) aproximan
+distancias geod\'esicas intr\'insecas cuando el grafo muestrea densamente una
+variedad; el paso de mensajes basado en difusi\'on captura informaci\'on a escala
+$O(\varepsilon)$, mientras que la distancia geod\'esica habilita una atenci\'on de
+largo alcance consciente de la geometr\'ia; y el escalamiento
+$\varepsilon_n \sim (n/\log n)^{-1/d}$ prescribe con qu\'e rapidez debe reducirse
+el radio de conectividad para preservar a la vez la conectividad y la geometr\'ia
+local.
 
 \section{M\'etodos espectrales en variedades}
 \label{sec:geo:spectral}

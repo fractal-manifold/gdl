@@ -3,83 +3,189 @@
 
 \providecommand{\conv}{*}
 \providecommand{\Ft}{\mathcal{F}}
+\providecommand{\sinc}{\operatorname{sinc}}
+\providecommand{\tr}{\operatorname{tr}}
+\providecommand{\diag}{\operatorname{diag}}
+\providecommand{\supp}{\operatorname{supp}}
 
-The first of the five Gs is also the most familiar. A \emph{grid} is the
-regular Euclidean domain underlying images, audio signals, and video: a set of
-points $\Z^d$ on which data is sampled at evenly spaced locations. The natural
-symmetry of such a domain is \emph{translation}: shifting the sampling lattice
-by an integer vector maps the grid onto itself. Convolutional neural networks
-(CNNs), the architectures that ignited the deep-learning revolution
-(\Cref{ch:introduction}), are precisely the layers that respect this symmetry.
-This chapter takes the blueprint of \Cref{ch:priors} --- turn a symmetry into an
-architecture --- and instantiates it on the grid, recovering convolution as the
-unique translation-equivariant linear map and then assembling the full machinery
-of pooling, downsampling, and scale separation that makes deep CNNs work. We
-close with a spectral reading of convolution through Fourier analysis, which
-both explains what convolutional filters do and foreshadows the spectral
-methods on graphs and manifolds of later chapters.
+Convolutional neural networks (CNNs) are the paradigmatic case of equivariant
+neural architectures, where the underlying mathematical structure dictates both
+their capabilities and their limitations. This chapter develops the mathematical
+foundations of convolutional equivariance: from its historical and empirical
+origins to its rigorous formalization, and the spectral perspective that
+emerges when convolution is read through the lens of harmonic analysis. We
+start from classical CNNs, whose success in computer vision is explained
+mathematically by translation equivariance, but whose restriction to this single
+group of symmetries is also their fundamental limitation. Once these limitations
+are made precise and the connection with harmonic analysis is established, the
+Fourier perspective both explains what convolutional filters do and foreshadows
+the spectral methods on groups, graphs, and manifolds developed in later
+chapters. This progression from an initial restriction towards full generality
+is exactly the one predicted by the unifying framework of
+\Cref{ch:foundations,ch:priors}: CNNs were identified there as instances of the
+message-passing framework over regular grids, and this chapter develops in depth
+the mathematical foundations of that connection.
 
-\section{Translation symmetry}
-\label{sec:grids:translation}
+\section{Classical convolutional neural networks}
+\label{sec:grids:classical}
 
-Convolutional networks originate in classical pattern recognition. The idea is
-disarmingly simple: to detect a feature in an image --- a horizontal edge, a
-vertical edge, a corner --- slide a small \emph{kernel} over the image and, at
-each position, measure how strongly the local patch matches the kernel. The
-breakthrough of LeCun's early work~\citep{lecun1989} was to stop hand-designing
-these kernels and instead \emph{learn} them from data; stacking many such
-layers lets a network build up from simple strokes to abstract objects, a
-hierarchy that culminated in AlexNet's decisive ImageNet
-victory~\citep{krizhevsky2012alexnet}.
+CNNs arise in the context of automatic pattern recognition in images. Their
+origin dates to the late 1980s and early 1990s, when Yann LeCun demonstrated
+their potential for handwritten digit recognition~\citep{lecun1989}.
+
+The idea of convolutional networks is born from the techniques used to detect
+patterns in images. The technique was relatively simple: a convolution with a
+kernel designed to detect a specific pattern in the image --- for example, a
+kernel that detects horizontal, vertical, or diagonal edges. Mathematically,
+this translates into the following operation, where $I$ is the image and $K$ is
+the kernel:
+\begin{equation}
+  (I \conv K)(x,y) = \sum_{u=-k}^{k}\sum_{v=-k}^{k} I(x+u,\, y+v)\, K(u,v).
+  \label{eq:grids:convolution2d}
+\end{equation}
+Strictly speaking, this operation is a \emph{cross-correlation}, not a
+convolution, since the mathematical convolution uses $I(x-u,\,y-v)\,K(u,v)$
+(see \Cref{def:grids:discrete-conv}). In the deep-learning literature, however,
+it is conventional to call it ``convolution'': because the kernel weights are
+learned, the difference between convolution and cross-correlation is immaterial
+--- the learned kernel is simply reflected. We follow this standard convention
+throughout.
+
+A classical example illustrates the kind of kernels that were hand-designed for
+image processing.
 
 \begin{example}[The Sobel kernels]
 \label{ex:grids:sobel}
-A textbook hand-designed edge detector is the pair of \emph{Sobel kernels},
-discrete approximations of the partial derivatives of the image intensity
-$I(x,y)$:
+The \textbf{Sobel kernels} detect horizontal and vertical edges through
+approximations of the partial derivatives.
+
+\textbf{Horizontal Sobel} (detects vertical edges):
 \[
-K_x = \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix},
-\qquad
-K_y = \begin{pmatrix} -1 & -2 & -1 \\ 0 & 0 & 0 \\ 1 & 2 & 1 \end{pmatrix},
+K_x = \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix}.
 \]
-approximating $\partial I/\partial x$ and $\partial I/\partial y$, with edge
-strength $\norm{\nabla I} \approx \sqrt{(I \conv K_x)^2 + (I \conv K_y)^2}$.
-The kernels reveal a recurring theme: edge detectors are \emph{antisymmetric}
-along the detection direction and sum to zero (removing the constant
-component), while smoothing kernels are \emph{symmetric}. These algebraic
-symmetries mirror the geometric transformations each kernel responds to.
+
+\textbf{Vertical Sobel} (detects horizontal edges):
+\[
+K_y = \begin{pmatrix} -1 & -2 & -1 \\ 0 & 0 & 0 \\ 1 & 2 & 1 \end{pmatrix}.
+\]
+These kernels approximate the partial derivatives $\partial I/\partial x$ and
+$\partial I/\partial y$ respectively, where $I(x,y)$ denotes the image
+intensity. The gradient magnitude is computed as
+\[
+  \norm{\nabla I} \approx \sqrt{(I \conv K_x)^2 + (I \conv K_y)^2}.
+\]
 \end{example}
 
-The defining property a learned convolutional layer must possess is
-\emph{translation equivariance}: if the input is shifted, the output shifts in
-exactly the same way. A feature should be recognized regardless of where it
-appears in the image, and its response should move with it. Formally, the group
-acting on grid data is the group of integer translations $\Z^d$, acting on a
-signal $f \colon \Z^d \to \R$ by
-\[
-  (T_b f)(x) = f(x - b), \qquad b \in \Z^d .
-\]
-This is the simplest non-trivial instance of the equivariance principle of
-\Cref{ch:priors}: among all conceivable linear maps from signals to signals,
-demanding commutation with every $T_b$ collapses the design space to a single
-family --- convolutions.
+Kernels such as the Sobel ones exhibit revealing symmetry properties: edge
+detectors are \emph{antisymmetric} along the detection direction and sum to zero
+(removing constant components), whereas smoothing kernels are \emph{symmetric}.
+These symmetries directly reflect the geometric transformations that each kernel
+detects.
 
-\section{Convolution as an equivariant linear map}
-\label{sec:grids:convolution}
+The difficulty with hand-designed kernels was finding the specific one for each
+pattern to be detected; moreover, such patterns had to be simple. LeCun's
+proposed solution was to use a neural network to \emph{learn} the kernels. This
+idea can be taken one step further: rather than learning kernels only for simple
+patterns, one can detect more complex patterns by applying kernels to the
+outputs of other kernels. That is, a series of kernels is learned in the first
+layer of the network, and one keeps stacking layers of kernels on top of the
+previous ones to detect ever more complex patterns. The early layers learn
+simple strokes such as horizontal and vertical lines, but each subsequent layer
+learns more abstract concepts --- such as cubes or rectangles --- and so on,
+until the network is able to recognize complex objects such as a cat or a dog.
 
-We begin with the operation itself. In deep-learning practice the layer applied
-to an image is
+The explosion of convolutional networks and deep learning took place in 2012,
+when AlexNet won the ImageNet competition by a significant
+margin~\citep{krizhevsky2012alexnet}. The three factors necessary for the
+success of deep learning came together: a large dataset, a neural-network
+architecture using deep-learning techniques, and the processing power of
+graphics processing units (GPUs).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    layerconv/.style={draw=gdlblue!60, fill=gdlblue!12, minimum height=1.7cm,
+      rounded corners=1pt, font=\scriptsize, align=center, inner sep=2pt},
+    layerfc/.style={draw=gdlgreen!60, fill=gdlgreen!12, minimum width=0.45cm,
+      minimum height=1.7cm, rounded corners=1pt, font=\scriptsize, align=center},
+    lbl/.style={font=\scriptsize, text=gdlgray!75!black, align=center},
+    arrow/.style={-{Stealth[length=4pt]}, gdlgray!70, thick},
+]
+\node[layerconv, minimum width=1.1cm] (c1) at (0,0) {Conv\\$11{\times}11$};
+\node[layerconv, minimum width=0.95cm, right=0.35cm of c1] (c2) {Conv\\$5{\times}5$};
+\node[layerconv, minimum width=0.8cm, right=0.35cm of c2] (c3) {Conv\\$3{\times}3$};
+\node[layerconv, minimum width=0.7cm, right=0.3cm of c3] (c4) {Conv\\$3{\times}3$};
+\node[layerconv, minimum width=0.6cm, right=0.3cm of c4] (c5) {Conv\\$3{\times}3$};
+\node[layerfc, right=0.6cm of c5] (f1) {FC};
+\node[layerfc, right=0.25cm of f1] (f2) {FC};
+\node[layerfc, fill=gdlorange!18, draw=gdlorange!60, right=0.25cm of f2] (f3) {FC};
+\node[lbl, below=0.15cm of c1] {input\\$224{\times}224$};
+\node[lbl, below=0.15cm of c3] {5 convolutional layers\\(with max pooling)};
+\node[lbl, below=0.15cm of f2] {3 fully connected\\layers};
+\node[lbl, right=0.2cm of f3, anchor=west] {1000-way\\softmax};
+\foreach \a/\b in {c1/c2,c2/c3,c3/c4,c4/c5,c5/f1,f1/f2,f2/f3}
+  \draw[arrow] (\a) -- (\b);
+\end{tikzpicture}
+\caption[The AlexNet architecture]{The AlexNet architecture: a convolutional
+network with 8 layers (5 convolutional and 3 fully connected) that reached a
+top-5 error of $15.3\%$ on ImageNet ILSVRC-2012, a significant improvement over
+the $26.2\%$ of the second-best model.}
+\label{fig:grids:alexnet}
+\end{figure}
+
+From the mathematical viewpoint, the central architectural principle of CNNs is
+\emph{weight sharing}: the same kernels are applied at every spatial position,
+which is precisely the realization of translation equivariance as an inductive
+bias. The local connectivity of each kernel, combined with the hierarchical
+composition of layers (from simple edges to abstract representations), allows the
+network to progressively build representations of increasing complexity.
+However, the restriction to the group of translations is also the fundamental
+limitation of these architectures, motivating the geometric extensions developed
+in later chapters.
+
+Convolutions can be applied not only to images but extrapolated to any
+dimension. For time series we apply one-dimensional convolutions, and for 3D
+volumes we apply three-dimensional convolutions. The formulation is analogous:
 \begin{equation}
-  (I \conv K)(x,y) = \sum_{u=-k}^{k}\sum_{v=-k}^{k} I(x+u,\, y+v)\, K(u,v),
-  \label{eq:grids:crosscorr}
+  (I \conv K)(x) = \sum_{u=-k}^{k} I(x+u)\, K(u),
+  \label{eq:grids:convolution1d}
 \end{equation}
-which, strictly speaking, is a \emph{cross-correlation} rather than a
-convolution: the mathematical convolution carries a sign flip,
-$I(x-u,\,y-v)$. Because the kernel weights are learned, the distinction is
-immaterial --- the network simply learns the reflected kernel --- and we follow
-the universal convention of calling \Cref{eq:grids:crosscorr} a convolution.
-The same recipe extends to any dimension: a one-dimensional version processes
-audio and time series, a three-dimensional version processes volumes and video.
+\begin{equation}
+  (I \conv K)(x,y,z) = \sum_{u=-k}^{k}\sum_{v=-k}^{k}\sum_{w=-k}^{k}
+    I(x+u,\, y+v,\, z+w)\, K(u,v,w).
+  \label{eq:grids:convolution3d}
+\end{equation}
+
+\subsection{Mathematical foundations and limitations of classical CNNs}
+\label{sec:grids:foundations-limits}
+
+\paragraph{Convolution as an equivariant operation.}
+The fundamental property that makes CNNs successful is their equivariance to
+translations: when the input is translated, the output is translated in the same
+way. This property, which we explore through a simple example, is the basis of
+their efficiency in image processing.
+
+\begin{example}[Translation equivariance in one dimension]
+\label{ex:grids:equiv-1d}
+Consider a one-dimensional signal $f \colon \Z \to \R$ and a kernel
+$K = [-1, 0, 1]$ (edge detector). The translation action by $\tau \in \Z$ is
+given by $(T_\tau f)(n) = f(n - \tau)$.
+
+Let $f = [1, 2, 1, 0, 0]$ and $\tau = 1$. Using
+\Cref{eq:grids:convolution1d} with zero-extension outside the domain,
+\begin{align}
+T_1 f &= [0, 1, 2, 1, 0] && \text{(shifted signal)}, \\
+f \conv K &= [2, 0, -2, -1, 0] && \text{(original convolution)}, \\
+(T_1 f) \conv K &= [1, 2, 0, -2, -1] && \text{(convolution of shifted signal)}, \\
+T_1(f \conv K) &= [1, 2, 0, -2, -1] && \text{(shift of convolution)}.
+\end{align}
+We observe that $(T_1 f) \conv K = T_1(f \conv K)$, verifying equivariance.
+\end{example}
+
+This equivariance property is fundamental for understanding both the strengths
+and the limitations of CNNs. The formal notions of equivariance and their
+generalization to other transformation groups are developed in detail in
+\Cref{ch:priors}.
 
 \begin{figure}[t]
 \centering
@@ -148,26 +254,21 @@ audio and time series, a three-dimensional version processes volumes and video.
   (\arcsrcx,\arcsrcy) to[out=40,in=140] (\arctgtx,\arctgty);
 \end{tikzpicture}
 \caption[The 2D convolution operation]{The two-dimensional convolution
-operation. A $3 \times 3$ kernel $\mathbf{W}$ slides over the input
-$\mathbf{X}$, and at each position the local inner product
-$\sum_{u,v} X(x+u,y+v)\,W(u,v)$ produces one entry of the output activation map
-$(\mathbf{X} \star \mathbf{W})$. The highlighted output cell equals
-$1{\cdot}1 + 0{\cdot}0 + 2{\cdot}({-}1) + 2{\cdot}1 + 1{\cdot}0 + 0{\cdot}({-}1)
-+ 0{\cdot}1 + 3{\cdot}0 + 1{\cdot}({-}1) = 0$.}
+operation: a $3 \times 3$ kernel $\mathbf{W}$ slides over the input image
+$\mathbf{X}$, computing the local inner product at each position to produce the
+output activation map $(\mathbf{X} \star \mathbf{W})$.}
 \label{fig:grids:conv}
 \end{figure}
-
-For the theory it is cleaner to work with the genuine convolution on the full
-domain, which we now define.
 
 \begin{definition}[Discrete convolution]
 \label{def:grids:discrete-conv}
 For functions $f, g \colon \Z^d \to \R$, the \emph{discrete convolution} is
 \[
-  (f \conv g)(x) = \sum_{a \in \Z^d} f(a)\, g(x - a) .
+  (f \conv g)(x) = \sum_{a \in \Z^d} f(a)\, g(x - a),
 \]
-When $f$ has finite support, as for a digital image, the sum reduces to the
-finitely many points where $f(a) \neq 0$.
+where the sum ranges over all points $a$ of the domain $\Z^d$. In practice, if
+$f$ has finite support (as for a digital image), the sum reduces to the indices
+where $f(a) \neq 0$.
 \end{definition}
 
 \begin{definition}[Continuous convolution]
@@ -176,17 +277,20 @@ For functions $f, g \colon \R^d \to \R$, the \emph{continuous convolution} is
 \[
   (f \conv g)(x) = \int_{\R^d} f(a)\, g(x - a)\, \mathrm{d}a,
 \]
-well defined when $f, g \in L^1(\R^d)$ or under compact-support assumptions.
+where the integral is taken with respect to the Lebesgue measure over all of
+$\R^d$, and exists when $f, g \in L^1(\R^d)$ or under compact-support
+conditions.
 \end{definition}
 
-The discrete version is a Riemann-sum discretization of the continuous one; in
-digital image processing we use the discrete form, while continuous signals and
-theoretical analysis use the integral. Convolution carries a rich algebraic
-structure that underlies everything that follows.
+The discrete convolution can be seen as a discretization of the continuous one,
+where the integral is approximated by a Riemann sum. In the context of digital
+image processing we work with the discrete version, while analogue signals and
+theoretical analysis use the continuous version.
 
 \begin{proposition}[Algebraic properties of convolution]
 \label{prop:grids:algebra}
-For finitely supported $f, g, h \colon \Z^d \to \R$:
+The discrete convolution satisfies the following properties for finitely
+supported functions $f, g, h \colon \Z^d \to \R$:
 \begin{enumerate}
   \item \textbf{Commutativity:} $f \conv g = g \conv f$.
   \item \textbf{Associativity:} $(f \conv g) \conv h = f \conv (g \conv h)$.
@@ -197,12 +301,35 @@ For finitely supported $f, g, h \colon \Z^d \to \R$:
 \end{proposition}
 
 \begin{proof}
-Commutativity follows from the substitution $b = x - a$, which turns
-$\sum_a f(a)g(x-a)$ into $\sum_b f(x-b)g(b)$. Associativity follows by expanding
-both sides, exchanging the order of summation (a discrete Fubini), and
-substituting $c = b - a$. Distributivity is immediate from the linearity of the
-sum. The identity holds because $\delta(x-a)$ is non-zero only at $a = x$, so
-$\sum_a f(a)\delta(x-a) = f(x)$.
+\textbf{(1) Commutativity.} Through the change of variable $b = x - a$,
+\[
+  (f \conv g)(x) = \sum_{a \in \Z^d} f(a)\,g(x - a)
+   = \sum_{b \in \Z^d} f(x - b)\,g(b) = (g \conv f)(x).
+\]
+
+\textbf{(2) Associativity.} By direct application of the definition and
+exchanging the order of summation (discrete Fubini),
+\begin{align}
+((f \conv g) \conv h)(x)
+  &= \sum_{b} (f \conv g)(b)\,h(x - b)
+   = \sum_{b} \Big[\sum_{a} f(a)\,g(b - a)\Big] h(x - b) \nonumber \\
+  &= \sum_{a} f(a) \sum_{b} g(b - a)\,h(x - b).
+\end{align}
+With the change $c = b - a$,
+\[
+  = \sum_{a} f(a) \sum_{c} g(c)\,h(x - a - c)
+   = \sum_{a} f(a)\,(g \conv h)(x - a) = (f \conv (g \conv h))(x).
+\]
+
+\textbf{(3) Distributivity.} By linearity of the sum,
+\[
+  (f \conv (g + h))(x) = \sum_{a} f(a)\,(g + h)(x - a)
+   = (f \conv g)(x) + (f \conv h)(x).
+\]
+
+\textbf{(4) Identity.} The Kronecker delta satisfies $\delta(a) = 1$ if $a = 0$
+and $\delta(a) = 0$ otherwise, so $(f \conv \delta)(x) = \sum_a f(a)\,\delta(x-a)
+= f(x)$, since $\delta(x - a) \neq 0$ only when $a = x$.
 \end{proof}
 
 These properties have direct architectural consequences. Associativity means
@@ -213,223 +340,1177 @@ result, however, is the link to symmetry.
 
 \begin{theorem}[Translation equivariance of convolution]
 \label{thm:grids:equivariance}
-Convolution is equivariant to the group of translations $\Z^d$: for every
-$b \in \Z^d$,
+Convolution is equivariant to the group of translations $T = \Z^d$:
 \[
   T_b(f \conv g) = (T_b f) \conv g = f \conv (T_b g),
 \]
-where $(T_b f)(x) = f(x-b)$.
+where $(T_b f)(x) = f(x-b)$ is translation by $b$.
 \end{theorem}
 
 \begin{proof}
-For the first equality, substitute $a' = a - b$:
-\[
-  \big[(T_b f) \conv g\big](x) = \sum_a f(a-b)\,g(x-a)
-   = \sum_{a'} f(a')\,g\big((x-b)-a'\big) = (f \conv g)(x-b).
-\]
-For the second, $(f\conv g)(x-b) = \sum_a f(a)\,g\big((x-a)-b\big)
-= \sum_a f(a)\,(T_b g)(x-a) = \big[f \conv (T_b g)\big](x)$.
+For the first equality, with the index change $a' = a - b$,
+\begin{align}
+\big[(T_b f) \conv g\big](x)
+  &= \sum_a (T_b f)(a)\, g(x - a) = \sum_a f(a - b)\, g(x - a) \nonumber \\
+  &= \sum_{a'} f(a')\, g(x - a' - b) = (f \conv g)(x - b)
+   = \big[T_b(f \conv g)\big](x).
+\end{align}
+For the second equality,
+\begin{align}
+\big[T_b(f \conv g)\big](x)
+  &= (f \conv g)(x - b) = \sum_a f(a)\, g\big((x - b) - a\big) \nonumber \\
+  &= \sum_a f(a)\, g\big((x - a) - b\big) = \sum_a f(a)\,(T_b g)(x - a)
+   = \big[f \conv (T_b g)\big](x).
+\end{align}
 \end{proof}
 
-A small numerical instance makes the theorem tangible.
+Translation equivariance implies that the kernel weights must be shared
+spatially, which drastically reduces the number of parameters compared with a
+fully connected network. This fundamental property is generalized to broader
+groups in \Cref{ch:groups}.
 
-\begin{example}[Equivariance in one dimension]
-\label{ex:grids:equiv-1d}
-Take the edge-detecting kernel $K = [-1, 0, 1]$ and the signal
-$f = [1, 2, 1, 0, 0]$, with zero-padding outside the domain. Convolving gives
-$f \conv K = [2, 0, -2, -1, 0]$. Shifting first, $T_1 f = [0, 1, 2, 1, 0]$, then
-convolving yields $(T_1 f) \conv K = [1, 2, 0, -2, -1]$, which is exactly
-$T_1(f \conv K)$. Shift then filter, or filter then shift: the result is the
-same.
+\paragraph{The converse: convolution is forced by equivariance.}
+What makes convolution \emph{the} grid layer rather than merely \emph{a} grid
+layer is that any linear map between signals on $\Z^d$ that commutes with all
+translations is necessarily a convolution. A linear translation-equivariant
+operator $\Phi$ is determined by its response to the unit impulse $\delta$; call
+that response $w = \Phi\delta$. Any signal decomposes as
+$f = \sum_a f(a)\, T_a \delta$, and by linearity and equivariance
+$\Phi f = \sum_a f(a)\, T_a w = f \conv w$. Thus equivariance to translation does
+not merely permit convolution --- it forces it. This is the blueprint of
+\Cref{ch:priors} realized in its purest form.
+
+\paragraph{Limitations of classical CNNs.}
+The strength of the CNN inductive bias is also its boundary.
+
+\begin{example}[Lack of rotational equivariance]
+\label{ex:grids:no-rotation}
+Consider an image of the digit ``6'' and its $180^\circ$ rotation, which looks
+like a ``9''. A standard CNN must learn these transformations from data through
+data augmentation, rather than incorporating them structurally. If $R_{90}$
+denotes a rotation by $90^\circ$, then
+\[
+  f\big(R_{90}(\text{image})\big) \neq R_{90}\big(f(\text{image})\big).
+\]
+This illustrates how standard CNNs are equivariant only to translations, not to
+other geometric transformations.
 \end{example}
 
-The converse is what makes convolution \emph{the} grid layer rather than merely
-\emph{a} grid layer: any linear map between signals on $\Z^d$ that commutes with
-all translations is necessarily a convolution. The reasoning is short. A linear
-translation-equivariant operator $\Phi$ is determined by its response to the
-unit impulse $\delta$; call that response $w = \Phi\delta$. Any signal
-decomposes as $f = \sum_a f(a)\, T_a \delta$, and by linearity and equivariance
-$\Phi f = \sum_a f(a)\, T_a w = f \conv w$. Thus equivariance to translation does
-not merely \emph{permit} convolution --- it \emph{forces} it. This is the
-blueprint of \Cref{ch:priors} realized in its purest form, and it explains the
-architectural hallmark of CNNs.
+Although CNNs have revolutionized computer vision, their design exhibits
+fundamental limitations that restrict their applicability. These limitations,
+which arise directly from their restriction to translation equivariance, can be
+classified into four main categories:
+\begin{enumerate}
+  \item \textbf{Symmetry limitations.} They are equivariant only to discrete
+    translations $\Z^d$, requiring data augmentation for transformations such as
+    rotations, reflections, or scalings. This is inefficient both
+    computationally and statistically.
+  \item \textbf{Topological limitations.} Designed for regular Euclidean grids,
+    they are inadequate for data with non-trivial topologies such as graphs,
+    point clouds, Riemannian manifolds, or simplicial complexes.
+  \item \textbf{Locality limitations.} Their reliance on local structures means
+    that global relationships require many layers to be captured, limiting
+    efficiency in domains where long-range dependencies are critical.
+  \item \textbf{Receptive-field limitations.} The linear growth of the receptive
+    field with depth requires deep architectures to capture global patterns,
+    introducing vanishing-gradient problems and computational inefficiency.
+\end{enumerate}
 
-\paragraph{Weight sharing and locality.}
-\Cref{thm:grids:equivariance} has a concrete reading: the same kernel
-$w$ is applied at every spatial position. This \emph{weight sharing} is the
-algebraic face of equivariance. Compared with a fully connected layer, which
-would learn an independent weight for every pair of input and output locations,
-a convolution shares one small kernel across the whole image, slashing the
-parameter count from quadratic in the number of pixels to the constant size of
-the kernel. Restricting the kernel to a small window adds \emph{locality}:
-each output depends only on a local neighbourhood. Stacking such layers grows
-the \emph{receptive field} progressively, so that early layers capture simple
-strokes and deeper layers compose them into increasingly abstract structures.
+These systematic limitations have motivated the geometric extensions that form
+the core of the remaining Gs. Each extension addresses specific subsets of these
+limitations through the controlled generalization of the preserved symmetries:
+group-equivariant networks (\Cref{ch:groups}) generalize equivariance from
+translations to finite and continuous groups such as $D_4$, $SO(2)$, and
+$SO(3)$, addressing the symmetry limitations; graph neural networks
+(\Cref{ch:graphs}) overcome the topological limitations through generalization
+to irregular relational domains; convolutions on manifolds
+(\Cref{ch:geodesics}) extend to curved surfaces; and gauge convolutions
+(\Cref{ch:gauges}) introduce equivariance to local gauge transformations on
+fibre bundles, the most abstract generalization. This systematic progression
+from restricted equivariance towards full generality is the central narrative of
+Part II and exemplifies the principles of geometric deep learning in action.
 
-\paragraph{The limits of translation.}
-The strength of the CNN inductive bias is also its boundary. A standard
-convolutional network is equivariant to translations and nothing more. Rotate
-the digit ``6'' by $180^\circ$ and it becomes a ``9''; a CNN has no built-in way
-to relate the two and must learn rotated variants through data augmentation. In
-general $f(R\,x) \neq R\, f(x)$ for a rotation $R$. Removing this restriction ---
-enlarging the symmetry group beyond translation to include rotations and
-reflections, and eventually abandoning the global grid altogether --- is the
-thread that runs through the remaining Gs: group-equivariant networks
-(\Cref{ch:groups}), graphs (\Cref{ch:graphs}), manifolds (\Cref{ch:geodesics}),
-and gauges (\Cref{ch:gauges}).
+\section{Harmonic analysis and spectral convolutions}
+\label{sec:grids:harmonic}
 
-\section{Pooling, downsampling, and scale separation}
-\label{sec:grids:pooling}
+While the geometric extensions of CNNs address the limitations of symmetry,
+topology, and locality through the direct generalization of convolutional
+operations, harmonic analysis provides a dual and complementary perspective that
+reveals the deep mathematical structure underlying all these architectures. This
+section develops the theoretical framework connecting classical convolutions
+with their spectral generalizations, from the foundations of Fourier analysis to
+modern applications on irregular domains.
 
-Convolution alone is not enough to build a deep recognition system. A second
-ingredient is needed: a way to coarsen the grid as information ascends the
-network, so that local features detected at fine resolution are aggregated into
-global features at coarse resolution. This is the role of \emph{pooling} and
-\emph{downsampling}.
+The spatial--spectral duality is one of the most fundamental principles in
+applied mathematics: while convolution operations are naturally carried out in
+the spatial domain, their algebraic structure is best understood in the
+frequency domain. The convolution theorem,
+$\Ft[f \conv g] = \Ft[f] \cdot \Ft[g]$, reveals that the complex convolution
+operation in space reduces to a simple pointwise multiplication in frequency.
+This perspective not only provides computational advantages through algorithms
+such as the Fast Fourier Transform (FFT), but also offers deep insights into
+what features neural networks learn and how more efficient architectures may be
+designed.
 
-A pooling operation partitions the grid into small blocks --- typically
-$2 \times 2$ --- and replaces each block by a single summary value: the maximum
-(\emph{max pooling}) or the average (\emph{average pooling}) of its entries.
-The output lives on a grid of half the side length, so the spatial resolution
-drops by a factor of four while the receptive field of each subsequent kernel,
-measured in original pixels, doubles. Strided convolution achieves the same
-coarsening within the convolution itself by evaluating the output only at every
-$s$-th position.
+In the context of geometric deep learning, harmonic analysis acquires
+fundamental importance by providing the mathematical tools needed to generalize
+convolutions to non-Euclidean domains. The representation theory of groups,
+developed within the framework of harmonic analysis (\Cref{ch:foundations}),
+allows the design of convolutional layers that automatically preserve the
+specific symmetries of the data domain. Likewise, the spectral analysis of
+graphs through the Laplacian provides the theoretical basis for spectral graph
+networks (\Cref{ch:graphs}), while wavelets offer natural hierarchical
+representations aligned with modern deep architectures.
 
-Pooling is \emph{translation invariant at the block scale}: shifting the input
-by less than the block size leaves the pooled output (approximately) unchanged.
-This is exactly the local robustness one wants from a feature detector --- the
-precise pixel where an edge sits should not matter, only that an edge is present
-nearby --- and it complements the global equivariance of convolution. Stacking
-convolution, nonlinearity, and pooling produces the canonical CNN block, and
-repeating it builds the multiscale pyramid in which early layers see fine local
-detail and later layers see coarse global structure.
+\subsection{Foundations of Fourier analysis}
+\label{sec:grids:fourier-foundations}
 
-\paragraph{Scale separation.}
-The deeper justification for this architecture is the geometric prior of
-\emph{scale separation}. Natural signals are approximately compositional: a
-complex pattern is built from simpler patterns at finer scales, and the
-interactions across very different scales are weak. Faces are made of eyes and
-mouths, which are made of edges and textures, which are made of local intensity
-changes. A function with this structure can be approximated by composing
-\emph{local} operators (convolutions) with \emph{coarsening} operators
-(pooling), avoiding the exponential cost of modelling all long-range
-interactions at once. Translation symmetry and scale separation together ---
-weight sharing across positions, hierarchical coarsening across scales ---
-constitute the two geometric priors that make convolutional networks both
-statistically efficient and computationally tractable. They are the grid-domain
-specialization of the general blueprint, and they recur, suitably generalized,
-in every later chapter.
+Fourier analysis is one of the most powerful mathematical tools for the study of
+periodic phenomena and frequency analysis. Its application in the context of
+convolutional neural networks enables a deep understanding of the spectral
+properties of filters and convolutional operations.
 
-\section{A spectral view: harmonic analysis of convolution}
-\label{sec:grids:spectral}
-
-There is a second, dual way to understand convolution, and it will become the
-organizing principle for convolution on graphs and manifolds. The idea is to
-move from the spatial domain to the \emph{frequency} domain via the Fourier
-transform.
-
-\begin{definition}[Fourier transform]
+\begin{definition}[Continuous Fourier transform]
 \label{def:grids:fourier}
-For $f \colon \R^d \to \C$ integrable, the \emph{Fourier transform} is
+Let $f \colon \R^d \to \C$ be an integrable function. The \emph{Fourier
+transform} of $f$ is defined as
 \[
-  \Ft[f](\omega) = \hat{f}(\omega) = \int_{\R^d} f(x)\, e^{-2\pi i\, \omega \cdot x}\, \mathrm{d}x,
-  \qquad \omega \in \R^d,
+  \Ft[f](\omega) = \hat{f}(\omega)
+   = \int_{\R^d} f(x)\, e^{-2\pi i\, \omega \cdot x}\, \mathrm{d}x,
 \]
-with inverse $f(x) = \int_{\R^d} \hat{f}(\omega)\, e^{2\pi i\, \omega \cdot x}\, \mathrm{d}\omega$,
-valid (for instance) when $f, \hat{f} \in L^1(\R^d)$.
+where $\omega \in \R^d$ is the frequency variable and
+$\omega \cdot x = \sum_{j=1}^d \omega_j x_j$ is the Euclidean inner product.
 \end{definition}
+
+\paragraph{Existence conditions.}
+The Fourier transform is well defined for functions in $L^1(\R^d)$ (absolutely
+integrable functions). For functions in $L^2(\R^d)$, the transform is defined as
+a mean-square limit.
+
+\begin{definition}[Inverse Fourier transform]
+\label{def:grids:fourier-inverse}
+If $\hat{f} \in L^1(\R^d)$, the \emph{inverse Fourier transform} is defined as
+\[
+  \Ft^{-1}[\hat{f}](x) = f(x)
+   = \int_{\R^d} \hat{f}(\omega)\, e^{2\pi i\, \omega \cdot x}\, \mathrm{d}\omega.
+\]
+\end{definition}
+
+\begin{theorem}[Fourier inversion theorem]
+\label{thm:grids:inversion}
+If $f, \hat{f} \in L^1(\R^d)$, then
+\[
+  f(x) = \Ft^{-1}[\Ft[f]](x)
+   = \int_{\R^d} \hat{f}(\omega)\, e^{2\pi i\, \omega \cdot x}\, \mathrm{d}\omega
+\]
+for almost every $x \in \R^d$. For the proof, see \citep[Theorem~8.26]{Folland1999}.
+\end{theorem}
 
 The complex exponentials $e^{2\pi i\,\omega\cdot x}$ are exactly the
 \emph{eigenfunctions} of translation: shifting the argument multiplies the
 exponential by a phase. This is what makes Fourier analysis the natural language
-of translation symmetry --- and it foreshadows the central role of the Laplacian
+of translation symmetry, and it foreshadows the central role of the Laplacian
 eigenbasis on graphs (\Cref{ch:graphs}), which plays the same part on irregular
-domains. The payoff is the convolution theorem.
+domains.
 
-\begin{theorem}[Convolution theorem]
-\label{thm:grids:conv-theorem}
-For suitable $f, g \colon \R^d \to \C$,
+\begin{definition}[Convolution on $\R^d$]
+\label{def:grids:convolucion-continua}
+For functions $f, g \colon \R^d \to \C$, the \emph{convolution} is defined as
 \[
-  \Ft[f \conv g] = \Ft[f] \cdot \Ft[g] .
+  (f \conv g)(x) = \int_{\R^d} f(y)\, g(x - y)\, \mathrm{d}y
+   = \int_{\R^d} f(x - y)\, g(y)\, \mathrm{d}y,
 \]
-Convolution in the spatial domain is pointwise multiplication in the frequency
-domain.
-\end{theorem}
+when the integral converges.
+\end{definition}
 
-The theorem turns the global, sliding operation of convolution into an
-independent rescaling of each frequency component. Three consequences matter
-here. First, it is the basis of fast convolution: via the Fast Fourier
-Transform (FFT), a convolution that costs $O(N^2)$ directly can be computed in
-$O(N \log N)$ by transforming, multiplying, and transforming back. Second, it
-gives a clean interpretation of what a filter \emph{does}: a kernel acts as a
-\emph{frequency mask}, amplifying some frequencies and attenuating others.
-Third, it exposes the meaning of the hand-designed kernels of
-\Cref{ex:grids:sobel}. A smoothing (Gaussian) kernel has a Fourier transform
-concentrated near $\omega = 0$, so it is a \emph{low-pass} filter that suppresses
-fine detail; a Sobel or Laplacian edge detector has a transform that vanishes at
-$\omega = 0$ and grows with $\norm{\omega}$, so it is a \emph{high-pass} filter
-that responds to rapid intensity changes. Learning a kernel is thus learning a
-frequency response.
+\paragraph{Concrete examples of Fourier transforms.}
+The following examples illustrate the fundamental properties of the Fourier
+transform in contexts relevant to the analysis of CNNs.
 
-\begin{example}[Dual localization]
-\label{ex:grids:gaussian-pair}
-The Gaussian is its own Fourier transform up to rescaling:
-$\Ft[e^{-\alpha x^2}](\omega) = \sqrt{\pi/\alpha}\; e^{-\pi^2 \omega^2/\alpha}$.
-A \emph{narrow} Gaussian in space (small spatial extent, large $\alpha$) has a
-\emph{wide} transform in frequency, and vice versa. This space--frequency
-trade-off is the uncertainty principle, and it has a direct architectural
-meaning: a filter cannot be simultaneously sharply localized in space and
-sharply selective in frequency. CNNs resolve the tension across depth, using
-small local kernels at fine scales and, through pooling, effectively larger and
-more frequency-selective kernels at coarse scales.
+\begin{example}[Transform of the Gaussian function]
+\label{ex:grids:fourier-gaussian}
+For the Gaussian function $f(x) = e^{-\alpha x^2}$ with $\alpha > 0$,
+\[
+  \Ft[e^{-\alpha x^2}](\omega) = \sqrt{\frac{\pi}{\alpha}}\; e^{-\pi^2 \omega^2/\alpha}.
+\]
+Notable properties: the transform of a Gaussian is another Gaussian; there is a
+dual localization (a narrow function corresponds to a wide transform); it
+minimizes the time--frequency uncertainty principle; and it is fundamental in
+smoothing filters for CNNs.
 \end{example}
 
-The spectral viewpoint also clarifies the relationship between the two halves of
-this chapter. Convolution is the translation-equivariant operator in the spatial
-domain; in the spectral domain it is the operator \emph{diagonalized} by the
-Fourier basis. Both descriptions say the same thing about the grid, but the
-spectral one survives the loss of the grid. On a graph there is no notion of
-``sliding a kernel'', yet there is a Laplacian whose eigenvectors generalize the
-Fourier basis, and one can define convolution as multiplication in that basis.
-This is the bridge from grids to graphs that \Cref{ch:graphs} develops in full,
-and it shows that the humble convolutional layer is the first instance of a
-construction reaching across all five Gs.
+\begin{example}[Transform of the step function]
+\label{ex:grids:fourier-step}
+For the unit step function $\mathbf{1}_{[0,1]}(x)$,
+\[
+  \Ft[\mathbf{1}_{[0,1]}](\omega)
+   = \frac{e^{-2\pi i \omega} - 1}{-2\pi i \omega}
+   = \frac{\sin(\pi\omega)}{\pi\omega}\, e^{-\pi i \omega}.
+\]
+This represents averaging filters (constant kernels); the sinc function in
+frequency indicates low-pass behaviour, and the oscillations in frequency are
+due to discontinuities in the spatial domain.
+\end{example}
 
-\section{Case study: CNNs for images and audio}
-\label{sec:grids:case-study}
+\begin{example}[Transform of the sinc function]
+\label{ex:grids:fourier-sinc}
+For the sinc function $f(x) = \dfrac{\sin(\pi x)}{\pi x}$,
+\[
+  \Ft[\sinc(x)](\omega) = \mathbf{1}_{[-1/2,\,1/2]}(\omega).
+\]
+This step $\leftrightarrow$ sinc duality is fundamental: an ideal low-pass
+filter in frequency corresponds to a sinc response in space; it is impossible to
+implement exactly (infinite support); and it inspires the design of approximate
+filters in spectral CNNs.
+\end{example}
 
-It is worth seeing how the pieces assemble in the architectures that defined the
-field. AlexNet~\citep{krizhevsky2012alexnet}, the network that won the 2012
-ImageNet competition and reduced its top-5 error from $26.2\%$ to $15.3\%$,
-is a stack of eight learned layers: five convolutional layers interleaved with
-max pooling, followed by three fully connected layers and a final classifier.
-The early convolutional layers, operating on the full-resolution image, learn
-oriented edge and colour detectors strikingly reminiscent of the hand-designed
-Sobel kernels of \Cref{ex:grids:sobel}; successive pooling stages coarsen the
-grid so that deeper layers, with larger effective receptive fields, respond to
-textures, parts, and finally whole objects. The translation equivariance of the
-convolutions guarantees that an object is recognized wherever it appears, and
-the pooling provides the local robustness to small shifts. The success rested on
-the three factors highlighted in \Cref{ch:introduction}: large labelled
-datasets, GPU compute, and an architecture --- the convolutional stack --- whose
-inductive bias matches the geometry of images.
+\begin{example}[Transform of the Dirac delta]
+\label{ex:grids:fourier-delta}
+For the delta distribution $\delta(x)$,
+\[
+  \Ft[\delta](\omega) = 1 \quad \text{and} \quad \Ft[1](\omega) = \delta(\omega).
+\]
+A spatial delta has a flat spectrum (all frequencies present); a spatial
+constant is a frequency impulse (zero frequency only). This embodies the
+localization principle in the spectral analysis of filters.
+\end{example}
 
-The same construction transfers to audio with a change of dimension. A waveform
-or its spectrogram is a one- or two-dimensional grid with translation symmetry
-along the time axis: a sound event should be detected regardless of when it
-occurs. One-dimensional convolutions over the raw waveform, or two-dimensional
-convolutions over the time--frequency spectrogram, share weights across time
-exactly as image convolutions share weights across space, with pooling
-aggregating local acoustic features into longer-range structure. The spectral
-view of \Cref{sec:grids:spectral} is especially natural here, since the
-spectrogram is itself a frequency representation and convolutional filters act as
-learned band-pass detectors on it.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[scale=0.85]
+\node[font=\bfseries, text=gdlblue!70!black] at (3.2, 1.0) {Fourier transform pairs};
+% Row 1: Gaussian <-> Gaussian
+\begin{scope}[shift={(0, -1.2)}]
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (-1.7, 0) -- (1.9, 0)
+    node[right, font=\tiny, text=gdlgray!70!black] {$t$};
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (0, -0.2) -- (0, 1.6);
+  \draw[gdlblue!70, thick] plot[smooth, domain=-1.6:1.6, samples=40] (\x, {1.3*exp(-\x*\x)});
+  \node[font=\tiny, text=gdlblue!70!black] at (1.1, 1.2) {$e^{-t^2}$};
+  \node[font=\tiny\itshape, text=gdlgray!70!black, anchor=north] at (0, -0.4) {Gaussian};
+\end{scope}
+\draw[-{Stealth[length=5pt]}, gdlpurple!70, double, double distance=1pt]
+  (2.4, -0.7) -- (3.6, -0.7) node[midway, above, font=\tiny, text=gdlpurple!70!black] {$\Ft$};
+\begin{scope}[shift={(6, -1.2)}]
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (-1.7, 0) -- (1.9, 0)
+    node[right, font=\tiny, text=gdlgray!70!black] {$\omega$};
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (0, -0.2) -- (0, 1.6);
+  \draw[gdlblue!70, thick] plot[smooth, domain=-1.6:1.6, samples=40] (\x, {1.3*exp(-\x*\x)});
+  \node[font=\tiny, text=gdlblue!70!black] at (1.1, 1.2) {$e^{-\omega^2}$};
+  \node[font=\tiny\itshape, text=gdlgray!70!black, anchor=north] at (0, -0.4) {Gaussian};
+\end{scope}
+% Row 2: Rect <-> Sinc
+\begin{scope}[shift={(0, -3.4)}]
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (-1.7, 0) -- (1.9, 0)
+    node[right, font=\tiny, text=gdlgray!70!black] {$t$};
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (0, -0.2) -- (0, 1.6);
+  \draw[gdlorange!70, thick] (-1.6,0) -- (-0.7,0) -- (-0.7,1.1) -- (0.7,1.1) -- (0.7,0) -- (1.6,0);
+  \node[font=\tiny, text=gdlorange!70!black] at (0, 1.4) {$\operatorname{rect}(t)$};
+  \node[font=\tiny\itshape, text=gdlgray!70!black, anchor=north] at (0, -0.4) {Rectangular};
+\end{scope}
+\draw[-{Stealth[length=5pt]}, gdlpurple!70, double, double distance=1pt]
+  (2.4, -2.9) -- (3.6, -2.9) node[midway, above, font=\tiny, text=gdlpurple!70!black] {$\Ft$};
+\begin{scope}[shift={(6, -3.4)}]
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (-1.7, 0) -- (1.9, 0)
+    node[right, font=\tiny, text=gdlgray!70!black] {$\omega$};
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (0, -0.4) -- (0, 1.6);
+  \draw[gdlorange!70, thick] plot[smooth, domain=-1.6:-0.05, samples=40] (\x, {1.1*sin(180*\x)/(\x*3.14159)});
+  \draw[gdlorange!70, thick] plot[smooth, domain=0.05:1.6, samples=40] (\x, {1.1*sin(180*\x)/(\x*3.14159)});
+  \fill[gdlorange!70] (0,1.1) circle (1pt);
+  \node[font=\tiny, text=gdlorange!70!black] at (1.15, 1.2) {$\operatorname{sinc}(\omega)$};
+  \node[font=\tiny\itshape, text=gdlgray!70!black, anchor=north] at (0, -0.55) {Sinc};
+\end{scope}
+% Row 3: Delta <-> Constant
+\begin{scope}[shift={(0, -5.6)}]
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (-1.7, 0) -- (1.9, 0)
+    node[right, font=\tiny, text=gdlgray!70!black] {$t$};
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (0, -0.2) -- (0, 1.6);
+  \draw[gdlred!70, very thick, -{Stealth[length=4pt]}] (0,0) -- (0,1.3);
+  \node[font=\tiny, text=gdlred!70!black, anchor=west] at (0.1, 1.3) {$\delta(t)$};
+  \node[font=\tiny\itshape, text=gdlgray!70!black, anchor=north] at (0, -0.4) {Delta};
+\end{scope}
+\draw[-{Stealth[length=5pt]}, gdlpurple!70, double, double distance=1pt]
+  (2.4, -5.1) -- (3.6, -5.1) node[midway, above, font=\tiny, text=gdlpurple!70!black] {$\Ft$};
+\begin{scope}[shift={(6, -5.6)}]
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (-1.7, 0) -- (1.9, 0)
+    node[right, font=\tiny, text=gdlgray!70!black] {$\omega$};
+  \draw[-{Stealth[length=4pt]}, gdlgray!60] (0, -0.2) -- (0, 1.6);
+  \draw[gdlred!70, thick] (-1.6, 0.9) -- (1.6, 0.9);
+  \node[font=\tiny, text=gdlred!70!black, anchor=south west] at (1.0, 1.0) {$1$};
+  \node[font=\tiny\itshape, text=gdlgray!70!black, anchor=north] at (0, -0.4) {Constant};
+\end{scope}
+\node[font=\scriptsize, text=gdlpurple!70!black, anchor=north] at (3.2, -7.0)
+  {Localization in $t$ $\longleftrightarrow$ delocalization in $\omega$
+   \quad (uncertainty principle)};
+\end{tikzpicture}
+\caption[Fourier transform pairs]{Fourier transform pairs: correspondence
+between signals in the time domain ($t$) and their representations in the
+frequency domain ($\omega$). The localization--delocalization duality that
+underlies the uncertainty principle is apparent.}
+\label{fig:grids:fourier-pairs}
+\end{figure}
+
+The space--frequency duality of these pairs has a direct architectural meaning.
+Gaussians are the basis for Gabor wavelets (time--frequency analysis); step
+functions are related to Haar wavelets (edge features); and sinc functions
+underlie Daubechies wavelets (perfect reconstruction). The ability to analyse
+multiple scales simultaneously makes wavelets especially attractive for
+hierarchical CNN architectures, as developed in
+\Cref{sec:grids:wavelets}.
+
+\subsection{Fundamental properties of harmonic analysis}
+\label{sec:grids:harmonic-properties}
+
+\begin{theorem}[Convolution theorem in the Fourier domain]
+\label{thm:grids:conv-theorem}
+For functions $f, g \colon \R^d \to \C$,
+\[
+  \Ft[f \conv g] = \Ft[f] \cdot \Ft[g],
+\]
+where $\Ft$ denotes the Fourier transform.
+\end{theorem}
+
+\begin{proof}
+Let $f, g \in L^1(\R^d)$. Applying Fubini's theorem,
+\begin{align}
+\Ft[f \conv g](\omega)
+  &= \int_{\R^d} (f \conv g)(x)\, e^{-2\pi i\omega \cdot x}\, \mathrm{d}x \nonumber \\
+  &= \int_{\R^d} \Big[\int_{\R^d} f(y)\,g(x-y)\, \mathrm{d}y\Big]
+       e^{-2\pi i\omega \cdot x}\, \mathrm{d}x \nonumber \\
+  &= \int_{\R^d} f(y) \Big[\int_{\R^d} g(x-y)\, e^{-2\pi i\omega \cdot x}\, \mathrm{d}x\Big] \mathrm{d}y \nonumber \\
+  &= \int_{\R^d} f(y)\, e^{-2\pi i\omega \cdot y}\, \Ft[g](\omega)\, \mathrm{d}y
+   = \Ft[f](\omega) \cdot \Ft[g](\omega),
+\end{align}
+where in the third step we used the change of variable $z = x - y$ and the
+definition of $\Ft[g]$.
+\end{proof}
+
+The theorem turns the global sliding operation of convolution into an
+independent rescaling of each frequency component. It gives a clean
+interpretation of what a filter does: a kernel acts as a frequency mask,
+amplifying some frequencies and attenuating others. It exposes the meaning of
+the hand-designed kernels of \Cref{ex:grids:sobel}: a smoothing (Gaussian)
+kernel is a low-pass filter, while a Sobel or Laplacian edge detector is a
+high-pass filter. Learning a kernel is thus learning a frequency response.
+
+\begin{corollary}[Computational efficiency via the FFT]
+\label{cor:grids:fft}
+The convolution can be computed in $O(n \log n)$ using
+\[
+  f \conv g = \Ft^{-1}[\Ft[f] \cdot \Ft[g]].
+\]
+\end{corollary}
+
+\begin{proof}
+By the convolution theorem, $\Ft[f \conv g] = \Ft[f] \cdot \Ft[g]$, hence
+$f \conv g = \Ft^{-1}[\Ft[f] \cdot \Ft[g]]$. For discrete signals of length $n$,
+the FFT computes $\Ft[f]$ and $\Ft[g]$ each in $O(n \log n)$ operations, the
+pointwise multiplication $\Ft[f] \cdot \Ft[g]$ requires $O(n)$ operations, and
+the inverse transform $\Ft^{-1}$ has the same cost $O(n \log n)$. The total cost
+is $O(n \log n)$, compared with the $O(n^2)$ of the direct computation.
+\end{proof}
+
+\begin{theorem}[Plancherel identity]
+\label{thm:grids:plancherel}
+For functions $f, g \in L^2(\R^d)$, the Fourier transform preserves the inner
+product:
+\[
+  \inner{f}{g}_{L^2} = \inner{\hat{f}}{\hat{g}}_{L^2}.
+\]
+In particular, $\norm{\hat{f}}_{L^2} = \norm{f}_{L^2}$ (isometry). See
+\citep[Theorem~8.29]{Folland1999}.
+\end{theorem}
+
+The Plancherel identity guarantees that operations in the frequency domain
+preserve the energy of signals, which is fundamental for the numerical stability
+of spectral algorithms in CNNs.
+
+\begin{definition}[Discrete Fourier transform]
+\label{def:grids:dft}
+For a finite sequence $\{x_n\}_{n=0}^{N-1}$, the \emph{discrete Fourier
+transform} (DFT) is defined as
+\[
+  X_k = \sum_{n=0}^{N-1} x_n\, e^{-2\pi i kn/N}, \qquad k = 0, 1, \ldots, N-1.
+\]
+\end{definition}
+
+\begin{definition}[Fast Fourier transform]
+\label{def:grids:fft}
+The \emph{fast Fourier transform} (FFT) algorithm computes the DFT in time
+$O(N \log N)$ instead of $O(N^2)$ through recursive factorization:
+\[
+  X_k = \sum_{n=0}^{N/2-1} x_{2n}\, e^{-2\pi i kn/(N/2)}
+   + e^{-2\pi i k/N} \sum_{n=0}^{N/2-1} x_{2n+1}\, e^{-2\pi i kn/(N/2)}.
+\]
+\end{definition}
+
+\begin{theorem}[Nyquist--Shannon sampling theorem]
+\label{thm:grids:nyquist}
+Let $f \colon \R \to \C$ be a band-limited function with $\hat{f}(\omega) = 0$
+for $\abs{\omega} > W$. Then $f$ is completely determined by its samples at
+intervals of $1/(2W)$:
+\[
+  f(t) = \sum_{n=-\infty}^{\infty} f\!\Big(\frac{n}{2W}\Big)
+    \sinc\!\Big(2W\Big(t - \frac{n}{2W}\Big)\Big),
+\]
+where $\sinc(x) = \sin(\pi x)/(\pi x)$. This fundamental result was established
+by \citet{Shannon1948}.
+\end{theorem}
+
+\paragraph{Nyquist frequency and aliasing.}
+The Nyquist frequency $f_N = W$ is the maximum frequency that can be represented
+without aliasing. In CNNs, subsampling (pooling) can introduce aliasing if
+appropriate anti-aliasing filters are not applied.
+
+\begin{definition}[Fourier series]
+\label{def:grids:fourier-series}
+For a periodic function $f \colon \R \to \C$ with period $T$, the Fourier series
+is
+\[
+  f(t) = \sum_{n=-\infty}^{\infty} c_n\, e^{2\pi i n t/T},
+\]
+where the coefficients are $c_n = \dfrac{1}{T} \int_0^T f(t)\, e^{-2\pi i n t/T}\, \mathrm{d}t$.
+\end{definition}
+
+\begin{definition}[Short-time Fourier transform]
+\label{def:grids:stft}
+To analyse non-stationary signals, the \emph{short-time Fourier transform}
+(STFT) is defined as
+\[
+  \mathrm{STFT}_f(t, \omega)
+   = \int_{-\infty}^{\infty} f(\tau)\, w(\tau - t)\, e^{-2\pi i \omega \tau}\, \mathrm{d}\tau,
+\]
+where $w$ is a window function (typically Gaussian or Hann).
+\end{definition}
+
+\paragraph{Time--frequency uncertainty principle.}
+The STFT is subject to the uncertainty principle,
+$\Delta t \cdot \Delta \omega \geq \frac{1}{4\pi}$, which implies a fundamental
+trade-off between temporal and frequency resolution.
+
+\begin{example}[Fast convolution via FFT: complexity analysis]
+\label{ex:grids:fft-complexity}
+Consider the convolution of an image $f \in \R^{N \times N}$ with a kernel
+$g \in \R^{K \times K}$. The direct method,
+\[
+  (f \conv g)[i,j] = \sum_{u=0}^{K-1} \sum_{v=0}^{K-1} f[i-u,\, j-v] \cdot g[u,v],
+\]
+has complexity $O(N^2 K^2)$. The spectral method computes
+$\hat{f} = \mathrm{FFT2D}(f)$ and $\hat{g} = \mathrm{FFT2D}(\mathrm{pad}(g,N))$,
+each in $O(N^2 \log N)$, then $\hat{h} = \hat{f} \odot \hat{g}$ in $O(N^2)$, and
+finally $h = \mathrm{IFFT2D}(\hat{h})$ in $O(N^2 \log N)$, for a total of
+$O(N^2 \log N)$. The spectral method is more efficient when $K > O(\log N)$.
+\end{example}
+
+\subsection{Harmonic analysis on groups}
+\label{sec:grids:harmonic-groups}
+
+Harmonic analysis on groups generalizes the classical Fourier transform to more
+general spaces with group structure, providing the mathematical tools
+fundamental to geometric convolutions in neural networks. The full theory of
+group representations --- the definition of a representation, irreducible
+representations, and the Peter--Weyl theorem --- is developed in
+\Cref{ch:foundations}. Here we briefly recall the specific harmonic-analysis
+tools we use for CNNs.
+
+We recall that the \emph{Haar measure} of a locally compact group $G$ is the
+unique Borel measure (up to a constant) invariant under left translations:
+$\mu(gE) = \mu(E)$ for all $g \in G$. Haar's theorem guarantees that the Haar
+measure exists and is unique up to a multiplicative constant. For finite groups,
+the Haar measure is the counting measure.
+
+The \emph{character} of a representation $\rho \colon G \to GL(\C^d)$ is the
+function $\chi(g) = \tr(\rho(g))$, and the irreducible characters satisfy the
+orthogonality relation $\frac{1}{\abs{G}} \sum_{g \in G} \chi_i(g)
+\overline{\chi_j(g)} = \delta_{ij}$. From these tools the Fourier transform on
+finite groups is defined: for $f \colon G \to \C$ and an irreducible
+representation $\rho_i$ of dimension $d_i$,
+\begin{equation}
+  \hat{f}(\rho_i) = \sum_{g\in G} f(g)\,\rho_i(g) \in \C^{d_i \times d_i},
+  \label{eq:grids:fourier-finite-group}
+\end{equation}
+with inversion $f(g) = \frac{1}{\abs{G}} \sum_i d_i\, \tr\big(\hat{f}(\rho_i)\,
+\rho_i(g^{-1})\big)$. The fundamental result for CNNs is the \textbf{convolution
+theorem}: the Fourier transform converts group convolution into a matrix
+product,
+\begin{equation}
+  \widehat{f \conv_G h}(\rho_i) = \hat{f}(\rho_i)\, \hat{h}(\rho_i),
+  \label{eq:grids:conv-fourier-groups}
+\end{equation}
+generalizing the classical DFT result.
+
+\begin{example}[Cyclic group $\Z_n$]
+\label{ex:grids:cyclic-group}
+For the cyclic group of order $n$, the irreducible representations are
+one-dimensional:
+\[
+  \rho_k(j) = e^{-2\pi i jk/n}, \qquad k = 0, 1, \ldots, n-1.
+\]
+The Fourier transform reduces to the classical DFT,
+$\hat{f}(k) = \sum_{j=0}^{n-1} f(j)\, e^{-2\pi i jk/n}$.
+\end{example}
+
+\begin{example}[Dihedral group $D_n$]
+\label{ex:grids:dihedral-group}
+For the dihedral group of order $2n$ (symmetries of an $n$-gon), the
+representations include trivial representations ($\rho(g) = 1$ for all $g$), sign
+representations ($\rho(r^j) = 1$, $\rho(sr^j) = -1$), and two-dimensional
+representations for the combined rotations and reflections.
+\end{example}
+
+\begin{definition}[Fourier transform on compact groups]
+\label{def:grids:fourier-compact}
+For a compact group $G$ and a function $f \in L^2(G)$, the Fourier transform is
+defined through the Peter--Weyl theorem:
+\[
+  f = \sum_{\lambda \in \widehat{G}} d_\lambda\, \tr\big(\hat{f}(\lambda)\, U^\lambda\big),
+\]
+where $\widehat{G}$ indexes the irreducible representations.
+\end{definition}
+
+\begin{definition}[Circular harmonics on $SO(2)$]
+\label{def:grids:circular-harmonics}
+For the group of planar rotations $SO(2) \cong S^1$, the irreducible
+representations are $U^n(\theta) = e^{in\theta}$, $n \in \Z$. A function
+$f \colon S^1 \to \C$ expands as
+$f(\theta) = \sum_{n=-\infty}^{\infty} c_n\, e^{in\theta}$.
+\end{definition}
+
+\begin{definition}[Spherical harmonics on $SO(3)$]
+\label{def:grids:spherical-harmonics}
+For the group of three-dimensional rotations $SO(3)$, functions on the sphere
+$S^2$ expand in spherical harmonics:
+\[
+  f(\theta, \phi) = \sum_{l=0}^{\infty} \sum_{m=-l}^{l} c_{lm}\, Y_l^m(\theta, \phi),
+\]
+where $Y_l^m$ are the spherical harmonics of degree $l$ and order $m$.
+\end{definition}
+
+The Peter--Weyl theorem (\Cref{ch:foundations}) provides the theoretical basis
+for the decomposition into channels in group-equivariant CNNs, the design of
+equivariant filters on spheres, and the efficient parametrization of
+convolutions on Lie groups --- topics developed in detail in \Cref{ch:groups}.
+
+\subsection{Spectral analysis on graphs}
+\label{sec:grids:spectral-graphs}
+
+Spectral analysis on graphs extends the ideas of Fourier analysis to irregular
+domains, providing the mathematical basis for spectral convolutions on graph
+neural networks. The theoretical foundations of the graph Laplacian, including
+its definition and spectral properties, are developed in \Cref{ch:graphs}; here
+we summarize only the consequences needed to relate grid convolution to its
+spectral generalization. For the Laplacian matrix $L = D - A$ and its normalized
+variant $\mathcal{L} = D^{-1/2} L\, D^{-1/2}$, we assume familiarity with the
+spectral decomposition.
+
+\begin{theorem}[Spectral theorem for the Laplacian]
+\label{thm:grids:spectral-laplacian}
+Let $L$ be the Laplacian matrix of a connected graph. Then:
+\begin{enumerate}
+  \item The eigenvalues satisfy $0 = \lambda_0 < \lambda_1 \leq \lambda_2 \leq
+    \cdots \leq \lambda_{n-1}$.
+  \item The eigenvector associated with $\lambda_0 = 0$ is
+    $\phi_0 = \frac{1}{\sqrt{n}} \mathbf{1}$.
+  \item The eigenvectors $\{\phi_k\}_{k=0}^{n-1}$ form an orthonormal basis of
+    $\R^n$.
+  \item The multiplicity of $\lambda_0$ equals the number of connected
+    components.
+\end{enumerate}
+For the proof, see \citep[Chapters~1--2]{Chung1997} and \Cref{ch:graphs}.
+\end{theorem}
+
+The graph Fourier transform (\Cref{ch:graphs}) projects signals onto the
+eigenvectors of the Laplacian: $\hat{f}(\lambda_k) = \inner{\mathbf{f}}{\phi_k}$,
+with matrix form $\hat{f} = U^T f$. From this transform the spectral
+convolutions are defined.
+
+\begin{definition}[Spectral convolution on graphs]
+\label{def:grids:spectral-conv-graphs}
+For a function $f \colon V \to \R$ and a spectral filter
+$g \colon \R_+ \to \R$,
+\[
+  (g \star f)(v_i) = \sum_{k=0}^{n-1} g(\lambda_k)\, \hat{f}(\lambda_k)\, \phi_k(v_i).
+\]
+In matrix form, $g \star f = \Phi\, g(\Lambda)\, \Phi^T f$, where
+$\Phi = [\phi_0, \ldots, \phi_{n-1}]$ and
+$\Lambda = \diag(\lambda_0, \ldots, \lambda_{n-1})$.
+\end{definition}
+
+\begin{theorem}[Frequency interpretation]
+\label{thm:grids:freq-interp-graphs}
+The eigenvalues of the Laplacian admit a frequency interpretation: low
+frequencies ($\lambda_k$ small) correspond to eigenvectors that vary smoothly
+over the graph, high frequencies ($\lambda_k$ large) correspond to eigenvectors
+that oscillate rapidly between adjacent vertices, and low-pass filters satisfy
+$g(\lambda) \approx 1$ for small $\lambda$ and $g(\lambda) \approx 0$ for large
+$\lambda$.
+\end{theorem}
+
+\begin{proof}
+The interpretation is justified through the Rayleigh quotient. For a signal
+$\mathbf{f} \in \R^n$ over the graph, the total variation is
+$\mathbf{f}^T L \mathbf{f} = \sum_{(i,j) \in E} w_{ij}(f_i - f_j)^2$. The
+$k$-th eigenvector $\phi_k$ minimizes this total variation subject to
+orthogonality with the previous eigenvectors:
+$\lambda_k = \min_{\mathbf{f} \perp \phi_0, \ldots, \phi_{k-1}}
+\frac{\mathbf{f}^T L \mathbf{f}}{\mathbf{f}^T \mathbf{f}}$. Thus eigenvectors
+with small eigenvalues minimize the variation between adjacent nodes (smooth,
+low-frequency variation), while large eigenvalues correspond to eigenvectors
+with high variation (rapid oscillations, high frequency).
+\end{proof}
+
+To make spectral convolutions computationally efficient, filters are
+approximated by polynomials, avoiding the explicit diagonalization of the
+Laplacian. Using Chebyshev polynomials $T_k$ on the interval $[-1, 1]$, a filter
+is written as $g(\tilde{\lambda}) = \sum_{k=0}^K \theta_k\, T_k(\tilde{\lambda})$
+with $\tilde{\lambda} = 2\lambda/\lambda_{\max} - 1$, and the action $g(L)f$ is
+computed in $O(K\abs{E})$ through the recurrence
+$\bar{x}_k = 2\tilde{L}\bar{x}_{k-1} - \bar{x}_{k-2}$, without diagonalizing $L$.
+These spectral methods on graphs are developed fully in \Cref{ch:graphs}; here
+they serve to show that grid convolution is the regular special case of a
+construction that survives the loss of the grid.
+
+\subsection{Wavelet bases and multiresolution analysis}
+\label{sec:grids:wavelets}
+
+Wavelets provide an alternative to the Fourier transform that permits
+simultaneous time--frequency analysis, overcoming the limitations of the
+uncertainty principle. Their application in neural networks offers natural
+hierarchical representations.
+
+\begin{definition}[Mother wavelet]
+\label{def:grids:mother-wavelet}
+A function $\psi \in L^2(\R)$ is a \emph{mother wavelet} if it satisfies the
+admissibility condition
+\[
+  C_\psi = \int_{-\infty}^{\infty} \frac{\abs{\hat{\psi}(\omega)}^2}{\abs{\omega}}\, \mathrm{d}\omega < \infty,
+\]
+where $\hat{\psi}$ is the Fourier transform of $\psi$.
+\end{definition}
+
+The condition $C_\psi < \infty$ implies that $\hat{\psi}(0) = 0$, which means
+$\int_{-\infty}^{\infty} \psi(t)\, \mathrm{d}t = 0$. This guarantees that
+wavelets have zero mean and provide local analysis.
+
+\begin{definition}[Continuous wavelet transform]
+\label{def:grids:cwt}
+For a function $f \in L^2(\R)$ and a mother wavelet $\psi$, the \emph{continuous
+wavelet transform} is defined as
+\[
+  W_f(a, b) = \frac{1}{\sqrt{\abs{a}}} \int_{-\infty}^{\infty} f(t)\,
+    \psi^*\!\Big(\frac{t-b}{a}\Big)\, \mathrm{d}t,
+\]
+where $a \in \R\setminus\{0\}$ is the scale parameter and $b \in \R$ is the
+translation parameter.
+\end{definition}
+
+\begin{theorem}[Wavelet reconstruction formula]
+\label{thm:grids:wavelet-reconstruction}
+If $\psi$ satisfies the admissibility condition, then
+\[
+  f(t) = \frac{1}{C_\psi} \int_{-\infty}^{\infty} \int_{-\infty}^{\infty}
+    W_f(a, b)\, \psi_{a,b}(t)\, \frac{\mathrm{d}a\, \mathrm{d}b}{a^2},
+\]
+where $\psi_{a,b}(t) = \frac{1}{\sqrt{\abs{a}}}\, \psi\big(\frac{t-b}{a}\big)$.
+See \Cref{ch:appendix} for the complete proof.
+\end{theorem}
+
+\begin{definition}[Multiresolution analysis]
+\label{def:grids:mra}
+A \emph{multiresolution analysis} (MRA) of $L^2(\R)$ is a sequence of closed
+subspaces $\{V_j\}_{j \in \Z}$ satisfying:
+\begin{enumerate}
+  \item \textbf{Inclusion:} $\cdots \subset V_{-1} \subset V_0 \subset V_1 \subset \cdots$.
+  \item \textbf{Density:} $\overline{\bigcup_{j \in \Z} V_j} = L^2(\R)$.
+  \item \textbf{Separation:} $\bigcap_{j \in \Z} V_j = \{0\}$.
+  \item \textbf{Scaling:} $f(x) \in V_j \Leftrightarrow f(2x) \in V_{j+1}$.
+  \item \textbf{Translation:} $f(x) \in V_0 \Rightarrow f(x-k) \in V_0$ for $k \in \Z$.
+  \item \textbf{Riesz basis:} there exists $\phi \in V_0$ such that
+    $\{\phi(x-k)\}_{k \in \Z}$ is a Riesz basis of $V_0$.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Scaling function]
+\label{def:grids:scaling-function}
+The function $\phi$ in condition~6 of the MRA is called the \emph{scaling
+function} or \emph{father wavelet}. It satisfies the refinement equation
+\[
+  \phi(x) = \sqrt{2} \sum_{k \in \Z} h_k\, \phi(2x - k),
+\]
+where $\{h_k\}$ are the scaling coefficients.
+\end{definition}
+
+\begin{definition}[Orthogonal wavelet]
+\label{def:grids:orthogonal-wavelet}
+Given an MRA with scaling function $\phi$, the associated \emph{orthogonal
+wavelet} is defined as
+\[
+  \psi(x) = \sqrt{2} \sum_{k \in \Z} g_k\, \phi(2x - k),
+\]
+where $g_k = (-1)^k h_{1-k}$ are related to the scaling coefficients.
+\end{definition}
+
+\begin{theorem}[Wavelet decomposition]
+\label{thm:grids:wavelet-decomposition}
+Every function $f \in L^2(\R)$ can be decomposed as
+\[
+  f(x) = \sum_{k \in \Z} c_{J,k}\, \phi_{J,k}(x)
+   + \sum_{j=J}^{\infty} \sum_{k \in \Z} d_{j,k}\, \psi_{j,k}(x),
+\]
+where $\phi_{j,k}(x) = 2^{j/2} \phi(2^j x - k)$ and
+$\psi_{j,k}(x) = 2^{j/2} \psi(2^j x - k)$. See \Cref{ch:appendix} for the proof.
+\end{theorem}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  >=Stealth, scale=0.9, transform shape,
+  filter/.style={draw=#1!70, fill=#1!15, minimum width=0.9cm, minimum height=0.65cm,
+    font=\small, rounded corners=2pt, inner sep=2pt},
+  downsample/.style={draw=gdlgray!70, fill=gdlgray!15, minimum width=0.65cm,
+    minimum height=0.65cm, font=\small, rounded corners=2pt, inner sep=2pt},
+  coeff/.style={draw=#1!60, fill=#1!15, minimum width=1.5cm, minimum height=0.65cm,
+    font=\small, rounded corners=3pt, inner sep=3pt},
+  arrowline/.style={->, gdlgray!80, thick},
+]
+\def\rowsep{2.4}
+\def\collow{-1.6}
+\def\colhigh{3.8}
+\node[draw=gdlgray!60, fill=gdlgray!10, minimum width=2.6cm, minimum height=1.0cm,
+      rounded corners=3pt] (fbox) at (1.1, 0) {};
+\begin{scope}
+  \clip ([xshift=3pt, yshift=3pt]fbox.south west) rectangle ([xshift=-3pt, yshift=-3pt]fbox.north east);
+  \draw[gdlred!70, line width=1.0pt]
+    plot[domain=-1.15:1.15, samples=100, smooth]
+    ({1.1 + \x}, {0.3*sin(4*\x r) + 0.13*sin(11*\x r) + 0.09*cos(18*\x r)});
+\end{scope}
+\node[above=2pt of fbox, font=\bfseries\small] {Signal $f \in V_J$};
+\def\lva{-2.3}
+\draw[arrowline] (fbox.south) -- ++(0, -0.3) coordinate (splitA);
+\draw[gdlgray!80, thick] (splitA) -| (\collow, {\lva + 0.55});
+\draw[arrowline] (\collow, {\lva + 0.55}) -- (\collow, {\lva + 0.33});
+\draw[gdlgray!80, thick] (splitA) -| (\colhigh, {\lva + 0.55});
+\draw[arrowline] (\colhigh, {\lva + 0.55}) -- (\colhigh, {\lva + 0.33});
+\node[filter=gdlblue] (hA) at (\collow, \lva) {$h$};
+\node[above=1pt of hA, font=\scriptsize, text=gdlblue!70!black] {low-pass};
+\node[downsample, right=0.3cm of hA] (dsA) {$\downarrow\!2$};
+\draw[arrowline] (hA) -- (dsA);
+\node[coeff=gdlblue, right=0.45cm of dsA] (cJ1) {$c_{J-1,k}$};
+\draw[arrowline] (dsA) -- (cJ1);
+\node[below=2pt of cJ1, font=\scriptsize, text=gdlblue!70!black] {$\in V_{J-1}$};
+\node[filter=gdlorange] (gA) at (\colhigh, \lva) {$g$};
+\node[above=1pt of gA, font=\scriptsize, text=gdlorange!70!black] {high-pass};
+\node[downsample, right=0.3cm of gA] (dsAgA) {$\downarrow\!2$};
+\draw[arrowline] (gA) -- (dsAgA);
+\node[coeff=gdlorange, right=0.45cm of dsAgA] (dJ1) {$d_{J-1,k}$};
+\draw[arrowline] (dsAgA) -- (dJ1);
+\node[below=2pt of dJ1, font=\scriptsize, text=gdlorange!70!black] {$\in W_{J-1}$};
+\pgfmathsetmacro{\lvb}{\lva - \rowsep}
+\draw[arrowline] (cJ1.south) -- ++(0, -0.5) coordinate (splitB);
+\draw[gdlgray!80, thick] (splitB) -| (\collow, {\lvb + 0.55});
+\draw[arrowline] (\collow, {\lvb + 0.55}) -- (\collow, {\lvb + 0.33});
+\draw[gdlgray!80, thick] (splitB) -| (\colhigh, {\lvb + 0.55});
+\draw[arrowline] (\colhigh, {\lvb + 0.55}) -- (\colhigh, {\lvb + 0.33});
+\node[filter=gdlblue] (hB) at (\collow, \lvb) {$h$};
+\node[downsample, right=0.3cm of hB] (dsB) {$\downarrow\!2$};
+\draw[arrowline] (hB) -- (dsB);
+\node[coeff=gdlblue, right=0.45cm of dsB] (cJ2) {$c_{J-2,k}$};
+\draw[arrowline] (dsB) -- (cJ2);
+\node[below=2pt of cJ2, font=\scriptsize, text=gdlblue!70!black] {$\in V_{J-2}$};
+\node[filter=gdlorange] (gB) at (\colhigh, \lvb) {$g$};
+\node[downsample, right=0.3cm of gB] (dsBgB) {$\downarrow\!2$};
+\draw[arrowline] (gB) -- (dsBgB);
+\node[coeff=gdlorange, right=0.45cm of dsBgB] (dJ2) {$d_{J-2,k}$};
+\draw[arrowline] (dsBgB) -- (dJ2);
+\node[below=2pt of dJ2, font=\scriptsize, text=gdlorange!70!black] {$\in W_{J-2}$};
+\def\eqx{8.8}
+\node[font=\small, text=gdlpurple!70!black, anchor=west] (eq1) at (\eqx, \lva)
+  {$V_{J} = V_{J-1} \oplus W_{J-1}$};
+\node[font=\small, text=gdlpurple!70!black, anchor=west] (eq2) at (\eqx, \lvb)
+  {$V_{J-1} = V_{J-2} \oplus W_{J-2}$};
+\def\arrowx{-3.6}
+\draw[gdlgreen!70, thick, ->] (\arrowx, {\lva + 0.5}) -- (\arrowx, {\lvb - 0.5});
+\node[font=\scriptsize, text=gdlgreen!70!black, anchor=east] at ({\arrowx - 0.1}, \lva) {fine};
+\node[font=\scriptsize, text=gdlgreen!70!black, anchor=east] at ({\arrowx - 0.1}, \lvb) {coarse};
+\pgfmathsetmacro{\nesty}{\lvb - 1.2}
+\node[font=\small, text=gdlblue!70!black, fill=white, inner sep=3pt,
+      rounded corners=2pt, draw=gdlblue!30] at (2.0, \nesty)
+  {$\cdots \subset V_{J-2} \subset V_{J-1} \subset V_J \subset \cdots \subset L^2(\R)$};
+\end{tikzpicture}
+\caption[Wavelet multiresolution decomposition]{Wavelet multiresolution
+decomposition: a signal is iteratively decomposed through low-pass ($h$) and
+high-pass ($g$) filters followed by subsampling ($\downarrow 2$), separating the
+approximation ($c_{j,k}$) and detail ($d_{j,k}$) components at multiple scales.}
+\label{fig:grids:wavelet-mra}
+\end{figure}
+
+\begin{example}[Haar wavelets]
+\label{ex:grids:haar}
+The Haar wavelets are the simplest:
+\[
+\phi(x) = \begin{cases} 1 & 0 \leq x < 1, \\ 0 & \text{otherwise}, \end{cases}
+\qquad
+\psi(x) = \begin{cases} 1 & 0 \leq x < 1/2, \\ -1 & 1/2 \leq x < 1, \\ 0 & \text{otherwise}. \end{cases}
+\]
+\end{example}
+
+\begin{example}[Daubechies wavelets]
+\label{ex:grids:daubechies}
+The Daubechies wavelets $D_N$ have compact support $[0, 2N-1]$ and $N$ vanishing
+moments:
+\[
+  \int_{-\infty}^{\infty} x^k\, \psi(x)\, \mathrm{d}x = 0, \qquad k = 0, 1, \ldots, N-1.
+\]
+\end{example}
+
+\begin{definition}[Spectral wavelets on graphs]
+\label{def:grids:graph-wavelets}
+For a graph with Laplacian $L$ and eigenvectors $\{\phi_k\}$, the spectral
+wavelets are defined as
+\[
+  \psi_{s,i} = \sum_{k=0}^{n-1} g(s\lambda_k)\, \phi_k(i)\, \phi_k,
+\]
+where $g$ is a mother wavelet function and $s$ is the scale parameter. A common
+choice is $g(x) = x\, e^{-x}$, which provides both spectral and spatial
+localization on the graph.
+\end{definition}
+
+Wavelets offer specific advantages for neural networks: multiresolution analysis
+that is natural for hierarchical architectures; better localization than Fourier
+for local features; sparse representations of natural signals; and approximate
+translation invariance depending on the wavelet type.
+
+\begin{definition}[Morlet wavelet]
+\label{def:grids:morlet}
+The \emph{Morlet wavelet} is a Gaussian-modulated wave:
+\[
+  \psi_{\omega_0}(t) = c_\sigma\, \pi^{-1/4}\, e^{i\omega_0 t}\, e^{-t^2/2},
+\]
+where $\omega_0 \geq 5$ is the central frequency and $c_\sigma$ is a
+normalization constant. Its Fourier transform is
+$\hat{\psi}_{\omega_0}(\omega) = c_\sigma\, \pi^{-1/4}\, e^{-(\omega - \omega_0)^2/2}$,
+a Gaussian centred at $\omega_0$.
+\end{definition}
+
+\begin{remark}[Optimal time--frequency resolution]
+\label{rem:grids:morlet-resolution}
+The Morlet wavelet attains equality in the Heisenberg--Gabor uncertainty
+principle, $\Delta t \cdot \Delta \omega = \frac{1}{2}$, making it the wavelet
+with the best simultaneous resolution in time and frequency. At scale $a$, the
+wavelet $\psi_{a,b}(t) = a^{-1/2}\psi((t-b)/a)$ has temporal resolution
+$\Delta t \propto a$ and frequency resolution $\Delta \omega \propto 1/a$,
+exactly implementing the property of adaptive multiresolution.
+\end{remark}
+
+The deepest connection between wavelets and CNNs is established through Mallat's
+\emph{scattering transform}~\citep{Mallat2012scattering}, which shows that the
+first layers of a CNN can be understood as a bank of wavelet filters with a
+modulus nonlinearity.
+
+\begin{definition}[Scattering transform]
+\label{def:grids:scattering}
+Let $\psi$ be a mother wavelet and $\phi$ a scaling (low-pass) function. The
+\emph{scattering operator} of order $m$ is defined recursively:
+\begin{align}
+S_0 f &= f \star \phi_J, \nonumber \\
+S_1 f &= \{\,\abs{f \star \psi_{j_1}} \star \phi_J\,\}_{j_1}, \nonumber \\
+S_m f &= \{\,\abs{\cdots\abs{f \star \psi_{j_1}} \star \psi_{j_2}\cdots \star \psi_{j_m}} \star \phi_J\,\}_{j_1 < j_2 < \cdots < j_m},
+\end{align}
+where $\psi_j(t) = 2^{-j}\psi(2^{-j}t)$ are the dilated wavelets and $\phi_J$ is
+the scaling function at the coarsest resolution.
+\end{definition}
+
+\begin{proposition}[Properties of the scattering transform]
+\label{prop:grids:scattering}
+The scattering operator $Sf = (S_0 f, S_1 f, S_2 f, \ldots)$ satisfies:
+\begin{enumerate}
+  \item \textbf{Translation invariance:} $S[\tau_c f] = S[f]$ for every
+    translation $\tau_c f(t) = f(t - c)$.
+  \item \textbf{Lipschitz stability to deformations:} for every diffeomorphism
+    $\tau$ near the identity,
+    $\norm{Sf - S(f \circ \tau)} \leq C\norm{\nabla \tau}_\infty \norm{f}$.
+  \item \textbf{Energy conservation:} $\sum_{m=0}^{\infty} \norm{S_m f}^2 = \norm{f}^2$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) Translation commutes with convolution:
+$\tau_c f \star \psi_j = \tau_c(f \star \psi_j)$. The modulus preserves this
+translation: $\abs{\tau_c(f \star \psi_j)} = \tau_c\abs{f \star \psi_j}$.
+Finally, convolution with $\phi_J$ (low-pass at scale $2^J$) averages over
+translations smaller than $2^J$, removing the dependence on $c$.
+
+(2) Since $\psi_j$ has frequency support concentrated at $\abs{\omega} \sim 2^j$,
+the convolution $f \star \psi_j$ is sensitive to variations of $f$ at scale
+$2^{-j}$. A deformation $\tau$ with $\norm{\nabla \tau}_\infty \leq \epsilon$
+shifts frequencies by at most $\epsilon \cdot 2^j$, which is small compared with
+the bandwidth $2^j$ of the filter, producing an error proportional to $\epsilon$.
+
+(3) This follows from the Parseval identity for wavelets:
+$\norm{f}^2 = \norm{f \star \phi_J}^2 + \sum_j \norm{f \star \psi_j}^2$. Applying
+this iteratively to the coefficients $\abs{f \star \psi_j}$ and using that the
+modulus preserves the $L^2$ norm yields total energy conservation.
+\end{proof}
+
+\begin{remark}[Scattering as a CNN with fixed weights]
+\label{rem:grids:scattering-cnn}
+The scattering transform architecture is isomorphic to a CNN with the following
+correspondences: predefined (not learned) wavelets $\psi_j$ play the role of
+convolutional kernels; the modulus $\abs{\cdot}$ plays the role of ReLU;
+convolution with $\phi_J$ plays the role of average pooling; and the scattering
+order $m$ plays the role of the number of layers. The key difference is that the
+scattering transform has theoretical guarantees of stability and invariance,
+whereas trained CNNs learn them implicitly.
+\end{remark}
+
+\subsection{Spectral convolutions in CNNs}
+\label{sec:grids:spectral-cnns}
+
+Spectral convolutions in CNNs exploit the properties of the frequency domain to
+implement convolution operations efficiently, especially for large kernels or in
+applications with specific geometric structure.
+
+\begin{definition}[Parametrized spectral filter]
+\label{def:grids:spectral-filter}
+A \emph{parametrized spectral filter} is a function
+$h_\theta \colon \R_+ \to \R$ where $\theta \in \R^p$ are trainable parameters.
+The filter acts on the frequency spectrum through
+\[
+  h_\theta(\lambda) = \sum_{k=0}^{K-1} \theta_k\, \phi_k(\lambda),
+\]
+where $\{\phi_k\}$ is a basis of functions (polynomials, wavelets, etc.).
+\end{definition}
+
+\begin{definition}[Spectral convolutional layer]
+\label{def:grids:spectral-layer}
+A spectral convolutional layer transforms an input signal $x \in \R^n$ through
+\[
+  y = \sigma(h_\theta \star x + b),
+\]
+where $h_\theta \star x = \Ft^{-1}[h_\theta(\cdot) \cdot \Ft[x]]$ is the
+spectral convolution, $\sigma$ is the activation function, and $b$ is the bias
+term.
+\end{definition}
+
+\begin{theorem}[Spatial--spectral equivalence]
+\label{thm:grids:spatial-spectral}
+For domains with regular structure (grids, tori), spatial and spectral
+convolutions are mathematically equivalent:
+\[
+  (f \conv g)(x) = \Ft^{-1}[\Ft[f] \cdot \Ft[g]](x).
+\]
+They differ, however, in computational complexity (spatial $O(n \cdot k^2)$ vs
+spectral $O(n \log n)$), in localization (spatial is local, spectral is global),
+and in interpretability (spatial is geometric, spectral is frequency-based).
+\end{theorem}
+
+\begin{proof}
+The equivalence follows from the convolution theorem for the Fourier transform.
+For functions $f, g \in L^1(\R^d)$ (or their discrete analogues on $\Z^d$), the
+Fourier transform satisfies $\Ft[f \conv g] = \Ft[f] \cdot \Ft[g]$. Applying
+$\Ft^{-1}$ to both sides yields the stated identity. The complexity differences
+are: direct spatial convolution performs $O(n \cdot k^2)$ operations (sweeping
+$n$ positions applying a kernel of size $k \times k$), while spectral
+convolution via the FFT requires $O(n \log n)$ for the forward transform, $O(n)$
+for the pointwise multiplication, and $O(n \log n)$ for the inverse transform,
+totalling $O(n \log n)$. Localization differs because a finite spatial kernel of
+size $k$ corresponds to a spectral filter of full support, and vice versa.
+\end{proof}
+
+\paragraph{Practical implementation of spectral CNNs.}
+For an input $x \in \R^{H \times W}$ and parametrized filter $h_\theta$, the
+spectral forward pass computes $\hat{x} = \mathrm{FFT2D}(x)$, applies the filter
+$\hat{y} = h_\theta(\omega) \odot \hat{x}$ (pointwise product), inverts
+$y = \mathrm{IFFT2D}(\hat{y})$, and activates $z = \sigma(y + b)$. To avoid edge
+effects, circular padding or zero-padding is used; FFT/IFFT may accumulate
+floating-point errors; and both spatial and spectral representations must be
+stored.
+
+\begin{definition}[Transfer function of a linear CNN]
+\label{def:grids:transfer-function}
+For a linear CNN (without nonlinear activations) with $L$ layers, the global
+transfer function in the frequency domain is
+$H(\omega) = \prod_{l=1}^L H_l(\omega)$, where $H_l(\omega)$ is the frequency
+response of layer $l$. This factorization is valid only in the absence of
+nonlinearities between layers.
+\end{definition}
+
+\begin{theorem}[Computational complexity]
+\label{thm:grids:complexity}
+For a 2D convolution of size $n \times n$ with a $k \times k$ kernel, direct
+convolution costs $O(n^2 k^2)$, spectral convolution costs $O(n^2 \log n)$, and
+the spectral method is more efficient when $k > O(\log n)$.
+\end{theorem}
+
+\begin{proof}
+Direct 2D convolution computes, for each of the $n^2$ image positions, a sum of
+$k^2$ products, giving $O(n^2 k^2)$ operations. Spectral convolution requires:
+(i) 2D FFT of the image, $O(n^2 \log n)$; (ii) 2D FFT of the kernel (with
+zero-padding), $O(n^2 \log n)$; (iii) pointwise multiplication in frequency,
+$O(n^2)$; (iv) 2D IFFT, $O(n^2 \log n)$. The total is $O(n^2 \log n)$. The
+break-even point is obtained by equating $n^2 k^2 = n^2 \log n$, that is,
+$k^2 = \log n$, so spectral convolution is preferable when
+$k > O(\sqrt{\log n})$.
+\end{proof}
+
+\begin{example}[Practical efficiency analysis]
+\label{ex:grids:efficiency}
+For a $512 \times 512$ image and a $k \times k$ kernel: with $k = 3$, direct
+$\sim 2.3 \times 10^6$ ops vs spectral $\sim 2.6 \times 10^6$ ops; with $k = 15$,
+direct $\sim 5.9 \times 10^7$ vs spectral $\sim 2.6 \times 10^6$; with $k = 51$,
+direct $\sim 6.8 \times 10^8$ vs spectral $\sim 2.6 \times 10^6$. The spectral
+cost is essentially constant in $k$.
+\end{example}
+
+\begin{theorem}[Spectral universal approximation]
+\label{thm:grids:spectral-universal}
+Let $\mathcal{G} = (V, E)$ be a finite graph with Laplacian $L$ and spectrum
+contained in $[0, \lambda_{\max}]$. For any continuous spectral filter
+$h \colon [0, \lambda_{\max}] \to \R$ and $\epsilon > 0$, there exists a
+polynomial filter $p(\lambda) = \sum_{k=0}^{K} \theta_k\, T_k(\tilde{\lambda})$
+of sufficiently large degree $K$ such that
+$\norm{h(\lambda) - p(\lambda)}_{\infty, [0, \lambda_{\max}]} < \epsilon$.
+Consequently, the filtered signal satisfies $\norm{h(L)f - p(L)f} \leq
+\epsilon \norm{f}$ for every signal $f$ on the graph.
+\end{theorem}
+
+\begin{proof}[Sketch]
+The spectral interval $[0, \lambda_{\max}]$ is compact, so the result is a
+direct consequence of the Weierstrass approximation theorem: every continuous
+function on a compact interval can be uniformly approximated by polynomials. The
+bound on the filtered signal follows from $\norm{h(L)f - p(L)f} =
+\norm{(h-p)(L)f} \leq \norm{h - p}_\infty \norm{f}$, since the eigenvalues of
+$(h-p)(L)$ are bounded by $\norm{h-p}_\infty$.
+\end{proof}
+
+The main limitations of spectral convolutions are their non-locality (spectral
+filters affect the signal globally), the requirement of domains with FFT
+structure (regular grids), difficulties with non-periodic boundary conditions,
+and reduced interpretability compared with spatial convolution.
+
+\subsection{Frequency interpretation of classical CNNs}
+\label{sec:grids:freq-interpretation}
+
+The frequency analysis of traditional CNNs reveals deep insights into what
+features they learn and how they process visual information.
+
+\begin{definition}[Frequency response of a kernel]
+\label{def:grids:freq-response}
+For a convolutional kernel $K \in \R^{k \times k}$, its frequency response is
+\[
+  H(\omega_x, \omega_y) = \sum_{i=0}^{k-1} \sum_{j=0}^{k-1} K[i,j]\,
+    e^{-2\pi i(\omega_x i + \omega_y j)}.
+\]
+\end{definition}
+
+\begin{example}[Analysis of common kernels]
+\label{ex:grids:common-kernels}
+The Sobel edge detector $K_{\text{Sobel}} = \begin{psmallmatrix} -1 & 0 & 1 \\
+-2 & 0 & 2 \\ -1 & 0 & 1 \end{psmallmatrix}$ has a high-pass frequency response
+with a maximum at medium horizontal frequencies. The Gaussian filter
+$K_{\text{Gauss}}[i,j] = \frac{1}{2\pi\sigma^2}
+e^{-\frac{(i-c)^2 + (j-c)^2}{2\sigma^2}}$ has a low-pass response with a smooth
+cutoff determined by $\sigma$. The Laplacian
+$K_{\text{Lap}} = \begin{psmallmatrix} 0 & -1 & 0 \\ -1 & 4 & -1 \\ 0 & -1 & 0
+\end{psmallmatrix}$ has an isotropic high-pass response.
+\end{example}
+
+\begin{remark}[Spectral evolution during training]
+\label{rem:grids:spectral-evolution}
+Empirical observations show that, during the training of a CNN, the spectral
+distribution of the filters evolves following a characteristic pattern: early
+layers learn low-pass filters and edge detectors (high frequencies);
+intermediate layers learn band-pass filters for specific textures; and deep
+layers learn complex filters that are less spectrally interpretable. This
+behaviour has been documented experimentally across multiple architectures,
+although it lacks a general formal proof. Related empirical studies show that
+CNNs exhibit a bias towards low frequencies: they learn low-frequency components
+first and require more iterations to capture high-frequency detail.
+\end{remark}
+
+The spectral methods of this section find direct applications in domains where
+the frequency structure of the data is fundamental: medical image reconstruction
+(MRI, computed tomography), scientific signal processing (astronomy,
+seismology), and neural-network compression through spectral pruning. The focus
+of this book, however, is on the mathematical foundation of these methods.
+
+\subsection{Limitations and synthesis}
+\label{sec:grids:spectral-limits}
+
+The classical spectral convolutions of this section require a regular structure
+(uniform grids for an efficient FFT), periodic boundary conditions or adequate
+padding, and a fixed size --- consequently restricting them to regular Euclidean
+domains. They also exhibit a trade-off between localization and efficiency, as
+summarized in \Cref{tab:grids:methods}: spatial convolution offers excellent
+localization but only moderate efficiency, while spectral convolution offers
+excellent efficiency at the cost of localization; polynomial approximations and
+wavelets occupy intermediate positions.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of convolutional methods.}
+\label{tab:grids:methods}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Method} & \textbf{Localization} & \textbf{Efficiency} & \textbf{Interpretability} \\
+\midrule
+Spatial convolution     & Excellent & Medium    & High   \\
+Spectral convolution    & Poor      & Excellent & Medium \\
+Polynomial approximation & Good     & Good      & Medium \\
+Wavelets                & Excellent & Medium    & High   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Further limitations of spectral methods are numerical instability (accumulation
+of errors over multiple FFT/IFFT, aliasing in subsampling without anti-aliasing
+filters, floating-point precision especially on GPUs), reduced interpretability
+(spectral filters are less visually intuitive and their relation to geometric
+features is indirect), and the absence of spectral transferability between
+domains: a filter $h(\lambda)$ learned on the spectrum
+$\{\lambda_k^{(1)}\}$ of one domain has no canonical interpretation on the
+spectrum $\{\lambda_k^{(2)}\}$ of another unless a natural correspondence between
+eigenvalues exists. This last limitation motivates the use of polynomial
+approximations such as Chebyshev filters, which define the filter as a function
+of the operator $h(L)$ rather than acting on individual eigenvalues.
+
+\begin{proposition}[Fundamental localization--globality trade-off]
+\label{prop:grids:loc-global}
+Let $h(\lambda)$ be a spectral filter supported on
+$[\lambda_{\min}, \lambda_{\max}]$ and let
+$K(x,y) = \sum_k h(\lambda_k)\, \phi_k(x)\,\phi_k(y)$ be its associated spatial
+kernel. Then
+\[
+  \supp_{\mathrm{freq}}(h) \cdot \supp_{\mathrm{spatial}}(K) \geq C > 0,
+\]
+where $C$ depends only on the dimension of the domain. In particular, a filter
+perfectly localized in frequency ($h = \delta_{\lambda_k}$) is completely
+delocalized in space ($K(x,y) = \phi_k(x)\phi_k(y)$, global support).
+\end{proposition}
+
+\begin{proof}
+This is a direct consequence of the uncertainty principle for the spectral
+transform: the concentration of a function and of its spectral representation
+cannot both be made arbitrarily small. For the case $h = \delta_{\lambda_k}$,
+the kernel reduces to $K(x,y) = \phi_k(x)\phi_k(y)$, which is non-zero almost
+everywhere on the domain (since the eigenvectors of the Laplacian vanish only on
+a set of measure zero). The general case follows by a duality argument analogous
+to the classical Heisenberg principle.
+\end{proof}
+
+Harmonic analysis thus provides a unifying framework that connects classical
+CNNs (Fourier analysis on regular grids), spectral graph networks (spectral
+analysis on graphs), geometric CNNs (harmonic analysis on groups and manifolds),
+and transformers (attention as adaptive convolution). This perspective reveals
+that many seemingly different architectures share deep mathematical foundations.
 
 These examples make the chapter's thesis concrete. Convolutional networks are
 not an ad hoc engineering trick but the canonical realization of a single
-principle --- respect the translation symmetry of the grid --- combined with the
-scale-separation prior that licenses hierarchical coarsening. Holding the
-principle fixed and enlarging the symmetry group is precisely the programme of
-the chapters that follow, beginning in \Cref{ch:groups} with networks
-equivariant to rotations and reflections.
+principle --- respect the translation symmetry of the grid --- read in two dual
+languages: the spatial language of weight sharing and the spectral language of
+the Fourier basis. The spatial description is local and geometric; the spectral
+description is the one that \emph{survives the loss of the grid}, since on a
+graph there is no notion of sliding a kernel, yet there is a Laplacian whose
+eigenvectors generalize the Fourier basis. Holding the principle fixed and
+enlarging the symmetry group --- or abandoning the grid altogether --- is
+precisely the programme of the chapters that follow, beginning in
+\Cref{ch:groups} with networks equivariant to rotations and reflections.

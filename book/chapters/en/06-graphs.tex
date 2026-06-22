@@ -4,6 +4,11 @@
 \providecommand{\Nbr}{\mathcal{N}}
 \providecommand{\HASH}{\operatorname{HASH}}
 \providecommand{\WL}{\textsc{wl}}
+\providecommand{\Hess}{\operatorname{Hess}}
+\providecommand{\dive}{\operatorname{div}}
+\providecommand{\grad}{\operatorname{grad}}
+\providecommand{\im}{\operatorname{im}}
+\providecommand{\rank}{\operatorname{rank}}
 
 \chapter{Graphs: Graph Neural Networks}
 \label{ch:graphs}
@@ -18,251 +23,349 @@ collection of entities tied together by pairwise relations, in which different
 nodes have different numbers of neighbours and there is no canonical ordering of
 those neighbours. The natural domain for such data is a \emph{graph}.
 
-This chapter develops the third of the five Gs. We begin with the symmetry that
-governs graphs --- \emph{permutation invariance} --- and show how it forces a
-local, neighbourhood-based computation. That computation, \emph{message
-passing}, turns out to be the single mechanism that unifies the architectures of
-the previous chapters: a convolutional network is message passing on a grid,
-self-attention is message passing on a complete graph, and a graph neural
-network is message passing on an arbitrary graph. We then examine the two
-classical lineages of graph convolution --- \emph{spectral} methods, built on
-the graph Laplacian and a graph Fourier transform, and \emph{spatial} methods,
-built directly on neighbourhoods --- and show how the polynomial approximation of
-spectral filters bridges them. Finally we confront the question of how
-\emph{expressive} these models are, exposing the fundamental limits set by the
-Weisfeiler--Leman hierarchy and the companion pathologies of oversmoothing and
-oversquashing.
+Graphs occupy a privileged position in geometric deep learning because they are
+the bridge between the discrete world in which neural networks operate and the
+continuous geometries (curved surfaces, three-dimensional Euclidean space, the
+terrestrial sphere) in which much real data lives. Through \emph{proximity
+graphs}, a continuous manifold is approximated by a finite set of points joined
+by edges that encode neighbourhood relations, preserving essential topological
+and spectral properties. This has two consequences. On the one hand it justifies,
+theoretically, the use of graph neural networks for data that naturally lives on
+manifolds (molecules, 3D point clouds, climate data). On the other it sets a
+fundamental limit: any geometric information of the continuous structure that the
+discretization fails to capture is inaccessible to graph-based architectures.
 
-\section{Permutation symmetry}
-\label{sec:graphs:permutation}
+This chapter develops the third of the five Gs. We begin by viewing graphs as
+\emph{discretizations of geometry} --- weighted graphs, $\epsilon$-neighbourhood
+graphs, grids and triangulated surfaces as special cases, and the simplicial
+machinery that underlies them. We then study the \emph{topological geometry} of
+graphs --- connectivity, cycles, trees, and above all the graph Laplacian, the
+discrete counterpart of the Laplace--Beltrami operator (\Cref{ch:geodesics}). A
+section on \emph{topological deep learning} lifts message passing from nodes to
+simplices through the boundary operator and the Hodge Laplacian. We make precise
+the sense in which a graph \emph{converges} to a manifold, and we develop the
+\emph{spectral analysis} of graphs --- the graph Fourier transform and spectral
+filters. We then turn to the symmetry that governs graphs ---
+\emph{permutation invariance} --- and the local computation it forces:
+\emph{message passing}, the single mechanism that unifies the architectures of
+the previous chapters. A convolutional network is message passing on a grid,
+self-attention is message passing on a complete graph, and a graph neural
+network is message passing on an arbitrary graph; we prove the first
+identification with a worked numerical example. Finally we confront the question
+of how \emph{expressive} these models are, exposing the fundamental limits set by
+the Weisfeiler--Leman hierarchy and the companion pathologies of oversmoothing
+and oversquashing.
+
+\section{Graphs as discretizations of manifolds}
+\label{sec:graphs:discretization}
 
 A graph $G = (V, E)$ consists of a finite set of vertices (nodes)
 $V = \{1, \dots, n\}$ and a set of edges $E \subseteq V \times V$. We attach to
 each node a feature vector and collect them into a matrix
-$X \in \R^{n \times d}$ whose $i$-th row $x_i \in \R^d$ describes node $i$. The
-connectivity is encoded by an adjacency matrix; for weighted graphs the weights
-record metric or relational information.
+$X \in \R^{n \times d}$ whose $i$-th row $x_i \in \R^d$ describes node $i$. To
+encode metric or relational information we equip the edges with weights.
 
-\begin{definition}[Weighted graph and adjacency matrix]
+\begin{definition}[Weighted graph]
 \label{def:graphs:weighted}
-A \emph{weighted graph} is a triple $G = (V, E, W)$ with a weight function
-$W \colon E \to \R$. Its \emph{adjacency matrix} $A \in \R^{n \times n}$ has
-entries $A_{ij} = W_{ij}$ if $(i,j) \in E$ and $A_{ij} = 0$ otherwise; for
-unweighted graphs $A_{ij} \in \{0,1\}$. The graph is undirected when
-$A = A^\top$. The \emph{neighbourhood} of a node $v$ is
-$\Nbr(v) = \{u \in V : (v,u) \in E\}$, and its \emph{degree} is
-$\deg(v) = \sum_{u} A_{vu}$.
+A \emph{weighted graph} is a graph $G = (V, E)$ equipped with a weight function
+$w \colon E \to \R$ assigning a numerical value to each edge. When the graph is
+undirected we require $w(u,v) = w(v,u)$.
 \end{definition}
 
-The decisive feature of this representation is that it carries an arbitrary
-artefact: the labelling of the nodes. Nothing intrinsic distinguishes ``node 1''
-from ``node 7''; renumbering the atoms of a molecule does not change the
-molecule. A permutation of the node labels is a symmetry of the data, and any
-model we build must respect it. A permutation acts simultaneously on the rows of
-$X$ and on both axes of $A$.
-
-\begin{definition}[Permutation action]
-\label{def:graphs:permutation-action}
-Let $\group_n$ be the symmetric group of permutations of $\{1, \dots, n\}$,
-represented by permutation matrices $P \in \R^{n \times n}$ (one entry $1$ per
-row and column, zero elsewhere). A permutation $P$ acts on node features and on
-the adjacency matrix by
-\[
-  X \mapsto P X, \qquad A \mapsto P A P^\top .
-\]
+\begin{definition}[Neighbourhood]
+\label{def:graphs:neighbourhood}
+For a vertex $v \in V$, the \emph{neighbourhood} of $v$ is
+$\Nbr(v) = \{u \in V : (v,u) \in E\}$, the set of all vertices directly connected
+to $v$ by an edge. Its \emph{degree} is $\deg(v) = \abs{\Nbr(v)}$ (or, for
+weighted graphs, $\deg(v) = \sum_{u} w(v,u)$).
 \end{definition}
 
-We want a node-level computation $F(X, A)$ to commute with relabelling, and a
-graph-level computation $f(X, A)$ to ignore relabelling entirely. These are the
-two faces of symmetry introduced in \Cref{ch:priors}, specialized to
-$\group_n$.
+The discrete approximation of a manifold $\mathcal{M}$ is built from a finite
+sample of points together with a connectivity rule based on distances.
 
-\begin{definition}[Permutation equivariance and invariance]
-\label{def:graphs:equiv-inv}
-A node-wise function $F \colon \R^{n \times d} \times \R^{n \times n} \to
-\R^{n \times d'}$ is \emph{permutation equivariant} if
-\[
-  F(P X, P A P^\top) = P\, F(X, A)
-  \qquad \text{for all } P \in \group_n .
-\]
-A graph-wise function $f \colon \R^{n \times d} \times \R^{n \times n} \to
-\R^{d'}$ is \emph{permutation invariant} if
-$f(P X, P A P^\top) = f(X, A)$ for all $P \in \group_n$.
+\begin{definition}[Neighbourhood graph]
+\label{def:graphs:epsilon}
+Given a set of points $\{x_i\}_{i=1}^n$ on a manifold $\mathcal{M}$, the
+\emph{$\epsilon$-neighbourhood graph} $G = (V, E)$ has
+\begin{itemize}
+  \item $V = \{x_1, \dots, x_n\}$ (the vertices are the sampled points),
+  \item $(x_i, x_j) \in E$ whenever $d_{\mathcal{M}}(x_i, x_j) < \epsilon$ for a
+        threshold $\epsilon > 0$,
+\end{itemize}
+where $d_{\mathcal{M}}$ denotes the geodesic distance on $\mathcal{M}$
+(\Cref{ch:geodesics}).
 \end{definition}
 
-These conditions parallel the equivariance and invariance demanded of
-convolutional and group-equivariant layers, but the relevant group is now the
-discrete, finite symmetric group rather than translations or rotations. The
-blueprint of \Cref{ch:priors} applies verbatim: stack equivariant layers, which
-compose into an equivariant map, and append an invariant readout (a permutation-
-invariant pooling such as sum or mean over nodes) only at the end, when a single
-graph-level prediction is required.
-
-The constraint is severe. The only linear maps on node features that are
-permutation equivariant for \emph{every} graph are spanned by two operators: the
-identity (each node transforms itself) and the all-ones aggregation (each node
-sums the features of all nodes). To obtain a richer, structure-aware family we
-must let the aggregation respect the edges: each node may combine its own
-feature with an aggregate of its neighbours' features, where the aggregate is
-itself invariant to the order in which neighbours are listed. This single
-observation --- aggregate over a neighbourhood with a permutation-invariant
-operator, then update --- is the seed of every graph neural network, and we turn
-to it next.
-
-\section{Message passing}
-\label{sec:graphs:message-passing}
-
-A graph neural network is built by repeating a local, permutation-equivariant
-update in which every node refreshes its state from the states of its
-neighbours. \citet{gilmer2017neural} crystallized this idea into the
-\emph{message passing} framework, which has since become the lingua franca of
-learning on graphs.
-
-\begin{definition}[Message passing neural network]
-\label{def:graphs:mpnn}
-A \emph{message passing neural network} (MPNN) operates on a graph
-$G = (V, E)$ with node features $\{h_v^{(\ell)}\}$ and optional edge features
-$\{e_{vu}\}$. Layer $\ell$ updates each node in two phases:
-\begin{align}
-  m_v^{(\ell+1)} &= \bigoplus_{u \in \Nbr(v)}
-      M_\ell\!\left(h_v^{(\ell)}, h_u^{(\ell)}, e_{vu}\right)
-      && \text{(message and aggregation)}, \\
-  h_v^{(\ell+1)} &= U_\ell\!\left(h_v^{(\ell)}, m_v^{(\ell+1)}\right)
-      && \text{(update)},
-\end{align}
-where $M_\ell$ is a learnable message function, $U_\ell$ a learnable update
-function, and $\bigoplus$ a permutation-invariant aggregator (sum, mean, or
-maximum).
-\end{definition}
-
-The aggregator is the load-bearing component: because $\bigoplus$ does not depend
-on the order of its arguments, the layer is permutation equivariant in the sense
-of \Cref{def:graphs:equiv-inv}, whatever the message and update functions. After
-$\ell$ layers each node has gathered information from its $\ell$-hop
-neighbourhood, exactly as stacking convolutional layers grows the receptive
-field. A graph-level prediction is produced by a final invariant pooling,
-$h_G = \bigoplus_{v \in V} h_v^{(L)}$, followed by a standard predictor.
-
-\Cref{fig:graphs:message-passing} depicts the three phases for a single node.
+This simple construction has profound consequences: if the points $\{x_i\}$ are
+sufficiently dense in $\mathcal{M}$ and the radius $\epsilon$ is chosen
+appropriately, the resulting graph $G$ captures fundamental topological and
+geometric properties of the original manifold. \Cref{fig:graphs:epsilon}
+illustrates the construction.
 
 \begin{figure}[h]
 \centering
-\begin{tikzpicture}[>=Stealth, font=\small,
-    centernode/.style={circle, draw=gdlred!70, fill=gdlred!20,
-        minimum size=22pt, inner sep=0pt, font=\small\bfseries, line width=1.2pt},
-    neighnode/.style={circle, draw=gdlblue!60, fill=gdlblue!20,
-        minimum size=20pt, inner sep=0pt, font=\small}]
-% Panel labels
-\node[font=\bfseries, text=gdlorange!70!black] at (1.5, 4.3) {1. Message};
-\node[font=\bfseries, text=gdlpurple!70!black] at (6.6, 4.3) {2. Aggregate};
-\node[font=\bfseries, text=gdlgreen!70!black] at (10.6, 4.3) {3. Update};
-% --- Panel 1: messages ---
-\begin{scope}
-  \node[centernode] (vi) at (1.5, 2.0) {$v$};
-  \node[neighnode] (v1) at (0.0, 3.5) {$u_1$};
-  \node[neighnode] (v2) at (3.0, 3.5) {$u_2$};
-  \node[neighnode] (v3) at (3.1, 1.0) {$u_3$};
-  \node[neighnode] (v4) at (0.0, 0.5) {$u_4$};
-  \foreach \n in {v1,v2,v3,v4}
-    \draw[->, line width=1.4pt, gdlorange!70, shorten >=5pt, shorten <=5pt] (\n) -- (vi);
-  \node[font=\footnotesize, text=gdlorange!70!black, anchor=north, align=center] at (1.5, -0.2)
-    {$m_{u\to v}=M_\ell(h_v,h_u,e_{vu})$};
+\begin{tikzpicture}[font=\small,
+    pnode/.style={circle, fill=gdlblue!70, inner sep=0pt, minimum size=4pt}]
+% --- left: sampled points on a manifold ---
+\begin{scope}[shift={(0,0)}]
+  \begin{scope}[on background layer]
+    \fill[gdlorange!12, rounded corners=3pt] (-1.6,-1.6) rectangle (1.6,1.6);
+  \end{scope}
+  \foreach \a/\r in {15/1.2, 55/1.35, 95/1.15, 140/1.3, 185/1.25, 225/1.1,
+                     265/1.35, 305/1.2, 345/1.3, 35/0.6, 130/0.7, 250/0.55,
+                     320/0.65, 200/0.4}
+    \fill[gdlblue!70] (\a:\r) circle (2.2pt);
+  \node[font=\bfseries, text=gdlorange!70!black] at (0,-2.0) {Sampled points};
 \end{scope}
-\draw[->, line width=1.6pt, gdlgray!70] (4.2, 2.0) -- (5.0, 2.0);
-% --- Panel 2: aggregation ---
-\begin{scope}[shift={(5.2,0)}]
-  \node[circle, draw=gdlpurple!70, fill=gdlpurple!15, minimum size=38pt,
-        inner sep=0pt, line width=1.2pt, font=\large] (agg) at (1.4, 2.0) {$\bigoplus$};
-  \node[font=\footnotesize, text=gdlpurple!70!black, anchor=north, align=center] at (1.4, 0.2)
-    {$m_v=\bigoplus_{u\in\Nbr(v)} m_{u\to v}$};
+% --- right: epsilon graph ---
+\begin{scope}[shift={(5,0)}]
+  \begin{scope}[on background layer]
+    \fill[gdlgreen!10, rounded corners=3pt] (-1.6,-1.6) rectangle (1.6,1.6);
+  \end{scope}
+  \foreach \i/\a/\r in {1/15/1.2, 2/55/1.35, 3/95/1.15, 4/140/1.3, 5/185/1.25,
+                        6/225/1.1, 7/265/1.35, 8/305/1.2, 9/345/1.3, 10/35/0.6,
+                        11/130/0.7, 12/250/0.55, 13/320/0.65, 14/200/0.4}
+    \coordinate (p\i) at (\a:\r);
+  \foreach \a/\b in {1/2,2/3,3/4,4/5,5/6,6/7,7/8,8/9,9/1,1/10,2/10,3/11,4/11,
+                     6/12,7/12,8/13,9/13,5/14,6/14}
+    \draw[gdlgreen!55, thick] (p\a) -- (p\b);
+  \foreach \i in {1,...,14} \fill[gdlblue!70] (p\i) circle (2.2pt);
+  \node[font=\bfseries, text=gdlgreen!70!black] at (0,-2.0) {$\epsilon$-graph};
 \end{scope}
-\draw[->, line width=1.6pt, gdlgray!70] (8.2, 2.0) -- (9.0, 2.0);
-% --- Panel 3: update ---
-\begin{scope}[shift={(9.2,0)}]
-  \node[centernode, minimum size=26pt] (vu) at (1.4, 2.0) {$v$};
-  \node[font=\footnotesize, text=gdlgreen!70!black, anchor=north, align=center] at (1.4, 0.6)
-    {$h_v'=U_\ell(h_v,m_v)$};
-\end{scope}
+\draw[->, line width=1.4pt, gdlgray!70] (1.9,0) -- (3.1,0)
+  node[midway, above, font=\scriptsize]{$d_{\mathcal{M}}<\epsilon$};
 \end{tikzpicture}
-\caption[Message passing on a graph]{The three phases of a message passing
-layer for a single node $v$. Each neighbour $u$ emits a message $m_{u\to v}$;
-the messages are combined by a permutation-invariant aggregator $\bigoplus$;
-the node state is refreshed by the update function $U_\ell$.}
-\label{fig:graphs:message-passing}
+\caption[$\epsilon$-neighbourhood graph]{Construction of an
+$\epsilon$-neighbourhood graph. Points sampled from a manifold (left) are
+connected whenever their distance is below $\epsilon$, forming a graph that
+approximates the local structure of the original manifold (right).}
+\label{fig:graphs:epsilon}
 \end{figure}
 
-\paragraph{Convolutional, attentional, and general flavours.}
-Within this framework, the choice of message function defines a spectrum of
-expressivity and cost~\citep{bronstein2021geometric}. In the
-\emph{convolutional} flavour the message is a fixed, structure-determined
-weighting of the neighbour, $M_\ell(h_v, h_u) = c_{vu}\, \psi(h_u)$ with scalar
-coefficients $c_{vu}$ depending only on the graph (e.g.\ degrees); this is the
-form taken by the graph convolutional network of \citet{kipf2017semi}. In the
-\emph{attentional} flavour the coefficient is learned from the endpoints,
-$c_{vu} = a(h_v, h_u)$, as in the graph attention network of
-\citet{velickovic2017graph}. In the fully \emph{general} flavour the message is
-an arbitrary learnable function of both endpoints, as in
-\Cref{def:graphs:mpnn}. Cost and flexibility increase along this spectrum.
+\paragraph{Regular grids as a special case.}
+The regular grids on which traditional convolutional networks operate are
+particular instances of this general construction.
 
-\paragraph{A unifying mechanism.}
-The power of message passing is that it subsumes the architectures of the
-preceding chapters. We make this precise as a sequence of identifications;
-\Cref{ch:grids} treated the convolutional case in detail.
+\begin{example}[2D image as a regular graph]
+\label{ex:graphs:image-grid}
+A digital image of size $H \times W$ may be regarded as a graph $G = (V, E)$ with
+\begin{itemize}
+  \item $V = \{(i,j) : 1 \le i \le H, \ 1 \le j \le W\}$ (pixels),
+  \item $(i,j) \sim (i',j')$ whenever $\abs{i-i'} + \abs{j-j'} = 1$
+        (4-neighbour connectivity).
+\end{itemize}
+This graph is a \emph{uniform discretization} of the continuous domain
+$[0,1]\times[0,1]$ with the Euclidean metric. The regularity of the grid
+translates into special properties: every interior node has degree exactly $4$;
+the graph possesses a discrete translation symmetry; and the graph geodesic
+distance approximates the $L^1$ distance in the continuous domain.
+\end{example}
 
-\begin{proposition}[Convolution is message passing on a grid]
-\label{prop:graphs:cnn-mpnn}
-A convolutional layer on the grid $\Z^d$ with kernel $\{W_\delta\}_{\delta \in
-\mathcal{K}}$ is an MPNN whose graph is the grid with neighbourhood
-$\Nbr(v) = \{u : v - u \in \mathcal{K}\}$, message
-$M(h_v, h_u) = W_{v-u}\, h_u$, sum aggregation, and update
-$U(h_v, m_v) = \sigma(m_v + b)$.
-\end{proposition}
+\begin{example}[Triangulated 3D surface as an irregular graph]
+\label{ex:graphs:triangulated}
+Consider a three-dimensional surface $\mathcal{S} \subset \R^3$ (for instance, a
+3D model of an object). A \emph{triangulation} of $\mathcal{S}$ produces a graph
+$G = (V, E)$ whose vertices $V$ are the triangulation vertices and whose edges
+$E$ are the triangle edges. Unlike regular grids: node degrees are
+\emph{heterogeneous} (typically between $4$ and $8$ for well-formed meshes);
+there is no global translation symmetry; and the local curvature of $\mathcal{S}$
+is reflected in the vertex density and graph irregularity. This construction is
+fundamental in computer graphics, physical simulation and 3D shape analysis.
+Since $\mathcal{S}$ is a surface (a compact 2-manifold), the existence of such a
+triangulation is guaranteed by Radó's theorem (\Cref{thm:graphs:rado}). Graph
+neural networks on these triangulations must respect \emph{gauge equivariance}
+(\Cref{ch:gauges}): predictions cannot depend on the specific orientation of the
+mesh or on the chosen parametrization.
+\end{example}
 
-\begin{proof}
-The discrete convolution computes
-$h_v^{(\ell+1)} = \sigma\!\big(\sum_{\delta \in \mathcal{K}} W_\delta\,
-h_{v-\delta}^{(\ell)} + b\big)$. Substituting $u = v - \delta$ turns the sum
-over kernel offsets into a sum over grid neighbours,
-$\sigma\!\big(\sum_{u \in \Nbr(v)} W_{v-u}\, h_u^{(\ell)} + b\big)$, which is
-exactly the MPNN update with the stated message, aggregation, and update.
-\end{proof}
+\paragraph{Simplices, triangulations and simplicial complexes.}
+To formalize triangulations and their generalizations we need the fundamental
+building blocks of combinatorial topology.
 
-The crucial difference between a convolution and a general graph layer is the
-\emph{weight sharing} $W_{v-u}$: the message weight depends only on the relative
-position $v-u$, which is meaningful solely on a domain with translation
-structure. On a grid this enforces translation equivariance and collapses the
-parameter count from $O(n^2)$ to $O(\abs{\mathcal{K}})$. On an arbitrary graph
-there is no notion of relative position, so the message weight must instead be a
-function of the node features (attention) or of structural invariants such as
-degree (convolution). Analogously, self-attention is message passing on the
-complete graph $K_n$ with content-dependent coefficients
-$\alpha_{ij} = \operatorname{softmax}_j\big((Q h_i)^\top (K h_j)/\sqrt{d_k}\big)$
-and the identity update --- the attentional flavour above, applied to an
-all-to-all topology. Thus a fully connected layer, a convolution, a transformer,
-and a graph network differ only in the graph topology and in how the message
-weight is determined; they are instances of one geometric construction.
+\begin{definition}[$k$-simplex]
+\label{def:graphs:simplex}
+A \emph{$k$-simplex} $\sigma$ is the convex hull (the set of all convex
+combinations) of $k+1$ affinely independent points $v_0, v_1, \dots, v_k$ in
+$\R^n$:
+\[
+  \sigma = [v_0, v_1, \dots, v_k]
+    = \Big\{ \textstyle\sum_{i=0}^k t_i v_i : \sum_{i=0}^k t_i = 1,\ t_i \ge 0 \Big\}.
+\]
+The points $v_i$ are its \emph{vertices} and $k$ is its \emph{dimension}. A
+$0$-simplex is a point, a $1$-simplex an edge, a $2$-simplex a triangle, a
+$3$-simplex a tetrahedron, and so on.
+\end{definition}
 
-\section{Spectral vs.\ spatial methods}
-\label{sec:graphs:spectral-spatial}
+\begin{definition}[Face of a simplex]
+\label{def:graphs:face}
+A \emph{face} of dimension $j < k$ of the $k$-simplex
+$\sigma = [v_0, \dots, v_k]$ is any simplex spanned by a subset of $j+1$
+vertices, $\tau = [v_{i_0}, \dots, v_{i_j}]$ with
+$\{i_0, \dots, i_j\} \subseteq \{0, \dots, k\}$. We write $\tau \le \sigma$ when
+$\tau$ is a face of $\sigma$.
+\end{definition}
 
-Message passing is a \emph{spatial} prescription: it acts directly on
-neighbourhoods. There is a complementary \emph{spectral} viewpoint that defines
-convolution on a graph through an analogue of the Fourier transform. The two
-viewpoints meet, and understanding their relationship clarifies both the design
-space and the connection to classical signal processing.
+\begin{definition}[Simplicial complex]
+\label{def:graphs:complex}
+A \emph{simplicial complex} $\mathcal{K}$ is a finite collection of simplices
+such that
+\begin{enumerate}
+  \item if $\sigma \in \mathcal{K}$ and $\tau \le \sigma$, then
+        $\tau \in \mathcal{K}$ (closed under faces),
+  \item if $\sigma, \tau \in \mathcal{K}$, then $\sigma \cap \tau$ is a face of
+        both (well-defined intersection).
+\end{enumerate}
+The \emph{$1$-skeleton} of $\mathcal{K}$ is the graph $G = (V, E)$ formed by the
+$0$-simplices (vertices) and $1$-simplices (edges).
+\end{definition}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small]
+% --- top row: individual simplices ---
+\node[font=\bfseries] at (-5, 3.8) {$0$-simplex};
+\node[font=\bfseries] at (-1.5, 3.8) {$1$-simplex};
+\node[font=\bfseries] at (2, 3.8) {$2$-simplex};
+\node[font=\bfseries] at (6, 3.8) {$3$-simplex};
+\fill[gdlblue!70] (-5, 2.5) circle (3pt);
+\node[below, font=\scriptsize] at (-5, 2.3) {$v_0$};
+\fill[gdlblue!70] (-2.3, 2.5) circle (3pt);
+\fill[gdlblue!70] (-0.7, 2.5) circle (3pt);
+\draw[thick, gdlblue!60] (-2.3, 2.5) -- (-0.7, 2.5);
+\coordinate (t0) at (1, 2.2); \coordinate (t1) at (3, 2.2);
+\coordinate (t2) at (2, 3.4);
+\fill[gdlorange!30] (t0) -- (t1) -- (t2) -- cycle;
+\draw[thick, gdlorange!70] (t0) -- (t1) -- (t2) -- cycle;
+\foreach \p in {t0,t1,t2} \fill[gdlblue!70] (\p) circle (3pt);
+\coordinate (s0) at (5, 2.1); \coordinate (s1) at (7, 2.1);
+\coordinate (s2) at (6.4, 3.5); \coordinate (s3) at (5.8, 2.9);
+\fill[gdlred!15, opacity=0.5] (s0) -- (s1) -- (s3) -- cycle;
+\fill[gdlred!18, opacity=0.5] (s0) -- (s2) -- (s3) -- cycle;
+\fill[gdlred!25, opacity=0.6] (s0) -- (s1) -- (s2) -- cycle;
+\fill[gdlred!20, opacity=0.6] (s1) -- (s2) -- (s3) -- cycle;
+\draw[thick, gdlred!50] (s0) -- (s1) -- (s2) -- cycle;
+\draw[thick, gdlred!50] (s0) -- (s3); \draw[thick, gdlred!50] (s1) -- (s3);
+\draw[thick, gdlred!50] (s2) -- (s3);
+\foreach \p in {s0,s1,s2,s3} \fill[gdlblue!70] (\p) circle (3pt);
+% --- separator ---
+\draw[dashed, gdlgray!50] (-6.5, 1.2) -- (8, 1.2);
+\node[font=\bfseries] at (0.5, 0.7) {Simplicial complex $\mathcal{K}$};
+% --- bottom row: assembled complex ---
+\coordinate (a) at (-2, -1.5); \coordinate (b) at (0, -0.5);
+\coordinate (c) at (-1, -3); \coordinate (d) at (1.5, -2.5);
+\coordinate (e) at (3, -0.8); \coordinate (f) at (3.5, -2.8);
+\coordinate (g) at (-3.5, -2.8);
+\fill[gdlorange!25] (a) -- (b) -- (c) -- cycle;
+\fill[gdlorange!20] (b) -- (c) -- (d) -- cycle;
+\fill[gdlorange!30] (b) -- (d) -- (e) -- cycle;
+\draw[thick, gdlblue!60] (a)--(b) (b)--(c) (a)--(c) (c)--(d) (b)--(d)
+  (b)--(e) (d)--(e) (d)--(f) (a)--(g) (c)--(g);
+\foreach \p in {a,b,c,d,e,f,g} \fill[gdlblue!70] (\p) circle (3.5pt);
+\node[anchor=west, font=\scriptsize] at (5, -0.9) {$\bullet$\; $0$-simplices};
+\node[anchor=west, font=\scriptsize, text=gdlblue!60] at (5, -1.5)
+  {\rule{0.5cm}{1.5pt}\; $1$-simplices (edges)};
+\node[anchor=west, font=\scriptsize] at (5, -2.1)
+  {\tikz\fill[gdlorange!25](0,0)rectangle(0.35,0.25);\; $2$-simplices (faces)};
+\node[anchor=west, font=\scriptsize] at (5, -2.7) {$1$-skeleton $=G(V,E)$};
+\end{tikzpicture}
+\caption[Simplices and a simplicial complex]{Top: simplices of increasing
+dimension --- a $0$-simplex (point), a $1$-simplex (edge), a $2$-simplex (filled
+triangle) and a $3$-simplex (tetrahedron). Bottom: a simplicial complex
+$\mathcal{K}$ assembled from simplices, whose $1$-skeleton forms the underlying
+graph $G = (V, E)$.}
+\label{fig:graphs:complex}
+\end{figure}
+
+\begin{definition}[Triangulation]
+\label{def:graphs:triangulation}
+A \emph{triangulation} of a compact topological manifold $M$ is a pair
+$(\mathcal{K}, h)$ where $\mathcal{K}$ is a simplicial complex and
+$h \colon \abs{\mathcal{K}} \to M$ is a homeomorphism from the
+\emph{geometric realization} $\abs{\mathcal{K}}$ (the union of the simplices of
+$\mathcal{K}$ with the induced topology) onto $M$.
+\end{definition}
+
+\begin{theorem}[Radó]
+\label{thm:graphs:rado}
+Every compact topological $2$-manifold admits a triangulation.
+\end{theorem}
+
+This classical result, due to \citet{rado1925aufgabe}, guarantees that every
+compact surface can be decomposed into triangles compatibly with its topology ---
+fundamental both for the Gauss--Bonnet theorem and for geometric deep learning on
+triangulated meshes (a proof sketch appears in \Cref{ch:appendix}). Triangulability
+depends crucially on dimension: in dimension $3$ it was extended by
+\citet{moise1977geometric}, but in dimension $\ge 4$ there exist non-triangulable
+manifolds. Simplicial complexes capture higher-order topological information ---
+not only pairwise connectivity but also cycles, holes and higher-dimensional
+components --- which motivates \emph{topological deep learning}
+(\Cref{sec:graphs:tdl}).
+
+\section{The topological geometry of graphs}
+\label{sec:graphs:topology}
+
+Graphs carry a rich topological and spectral structure that lets us define
+discrete analogues of continuous geometric concepts. This section develops the
+\emph{calculus on graphs}: combinatorial connectivity, discrete differential
+operators and their spectral properties.
+
+\subsection{Basic topological properties}
+\label{sec:graphs:basic-topology}
+
+\begin{definition}[Path in a graph]
+\label{def:graphs:path}
+A \emph{path} from $u$ to $v$ in a graph $G = (V, E)$ is a sequence of vertices
+$u = v_0, v_1, \dots, v_k = v$ with $(v_{i-1}, v_i) \in E$ for all
+$i = 1, \dots, k$. The integer $k$ is the \emph{length} of the path.
+\end{definition}
+
+\begin{definition}[Connected graph and components]
+\label{def:graphs:connected}
+A graph $G = (V, E)$ is \emph{connected} if for every pair of vertices
+$u, v \in V$ there is a path from $u$ to $v$. A \emph{connected component} is a
+maximal connected subgraph of $G$.
+\end{definition}
+
+\begin{definition}[Cycle]
+\label{def:graphs:cycle}
+A \emph{cycle} in $G = (V, E)$ is a closed path $v_0, v_1, \dots, v_k = v_0$ with
+$k \ge 3$ and no repetition of intermediate vertices.
+\end{definition}
+
+\begin{definition}[Tree]
+\label{def:graphs:tree}
+A \emph{tree} is a connected graph with no cycles.
+\end{definition}
+
+These combinatorial properties encode fundamental aspects of the topology of the
+discretized space. For instance, the number of connected components equals the
+\emph{Betti number} $\beta_0$ of the underlying manifold, while the fundamental
+cycles relate to $\beta_1$ (\Cref{sec:graphs:tdl}).
 
 \subsection{The graph Laplacian}
 \label{sec:graphs:laplacian}
 
-The central operator of graph signal processing is the Laplacian, the discrete
-counterpart of the Laplace--Beltrami operator on a manifold
-(\Cref{ch:geodesics}).
+The central operator of graph analysis is the \emph{Laplacian}, the discrete
+counterpart of the Laplace--Beltrami operator on a manifold (\Cref{ch:geodesics}).
+The labelling of the nodes carried by the matrices below is, however, an
+arbitrary artefact: nothing intrinsic distinguishes ``node $1$'' from ``node
+$7$''. We return to this symmetry in \Cref{sec:graphs:permutation}.
+
+\begin{definition}[Adjacency and degree matrices]
+\label{def:graphs:adjacency}
+For an undirected weighted graph $G = (V, E, W)$ with $n = \abs{V}$ vertices, the
+\emph{adjacency matrix} $A \in \R^{n \times n}$ has $A_{ij} = W_{ij}$ if
+$(i,j) \in E$ and $A_{ij} = 0$ otherwise; for unweighted graphs
+$A_{ij} \in \{0,1\}$. The \emph{degree matrix} is the diagonal matrix
+$D \in \R^{n \times n}$ with $D_{ii} = \deg(i) = \sum_j A_{ij}$. The graph is
+undirected when $A = A^\top$.
+\end{definition}
 
 \begin{definition}[Graph Laplacian]
 \label{def:graphs:laplacian}
-For an undirected weighted graph with adjacency matrix $A$ and degree matrix
-$D = \operatorname{diag}(\deg(1), \dots, \deg(n))$, the (combinatorial)
-\emph{Laplacian} is $L = D - A$, and the \emph{normalized Laplacian} is
+The (combinatorial) \emph{Laplacian} of a graph with adjacency matrix $A$ and
+degree matrix $D$ is $L = D - A$, and the \emph{normalized Laplacian} (assuming
+$D_{ii} > 0$) is
 \[
   \Lap = D^{-1/2} L\, D^{-1/2} = I - D^{-1/2} A\, D^{-1/2}.
 \]
@@ -273,7 +376,6 @@ $D = \operatorname{diag}(\deg(1), \dots, \deg(n))$, the (combinatorial)
 \begin{tikzpicture}[font=\small,
     gnode/.style={circle, draw=gdlblue!70, fill=gdlblue!20, minimum size=20pt,
         inner sep=0pt, font=\small\bfseries}]
-% small graph
 \node[gnode] (1) at (0,1.6) {1};
 \node[gnode] (2) at (1.6,2.2) {2};
 \node[gnode] (3) at (2.2,0.6) {3};
@@ -293,67 +395,578 @@ adjacency, $L_{ij} = -W_{ij}$ for $(i,j) \in E$.}
 \label{fig:graphs:laplacian}
 \end{figure}
 
-The Laplacian is a discrete differential operator: acting on a node signal
-$f \colon V \to \R$,
-\[
-  (L f)(i) = \sum_{j \sim i} W_{ij}\,\big(f(i) - f(j)\big),
-\]
-the difference between $f(i)$ and a weighted average of its neighbours --- the
-discrete analogue of $-\Delta f = -\operatorname{div}\operatorname{grad} f$. Its
-algebraic and spectral properties are summarized below.
+\begin{definition}[Positive semidefinite matrix]
+\label{def:graphs:psd}
+A symmetric matrix $B \in \R^{n \times n}$ is \emph{positive semidefinite}
+(written $B \succeq 0$) if $x^\top B\, x \ge 0$ for all $x \in \R^n$, and
+\emph{positive definite} ($B \succ 0$) if the inequality is strict for all
+$x \neq 0$. By the spectral theorem, $B \succeq 0$ if and only if all its
+eigenvalues are nonnegative.
+\end{definition}
 
-\begin{proposition}[Properties of the Laplacian]
-\label{prop:graphs:laplacian-props}
-The Laplacian $L = D - A$ of an undirected weighted graph is symmetric and
-positive semidefinite, with
-\[
-  f^\top L f = \tfrac12 \sum_{(i,j) \in E} W_{ij}\,\big(f(i) - f(j)\big)^2 \ge 0 .
-\]
-Consequently its eigenvalues are real and nonnegative,
-$0 = \lambda_1 \le \lambda_2 \le \cdots \le \lambda_n$, the constant vector
-$\mathbf{1}$ is an eigenvector for $\lambda_1 = 0$, and the multiplicity of the
-eigenvalue $0$ equals the number of connected components of $G$.
+\begin{proposition}[Algebraic properties of the Laplacian]
+\label{prop:graphs:laplacian-algebra}
+The Laplacian $L = D - A$ of an undirected weighted graph satisfies:
+\begin{enumerate}
+  \item \textbf{Symmetry}: $L = L^\top$.
+  \item \textbf{Rows sum to zero}: $L \mathbf{1} = \mathbf{0}$.
+  \item \textbf{Positive semidefiniteness}: for all $x \in \R^n$,
+        \[
+          x^\top L\, x = \tfrac12 \sum_{(i,j) \in E} W_{ij}\,(x_i - x_j)^2 \ge 0 .
+        \]
+  \item \textbf{Discrete operator}: for functions $f \colon V \to \R$,
+        \[
+          (L f)(i) = \sum_{j \sim i} W_{ij}\,\big(f(i) - f(j)\big).
+        \]
+\end{enumerate}
 \end{proposition}
 
 \begin{proof}
-Symmetry is immediate since $D$ is diagonal and $A = A^\top$. For the quadratic
-form, $f^\top L f = \sum_i \deg(i) f(i)^2 - \sum_{i,j} A_{ij} f(i) f(j) =
-\tfrac12 \sum_{i,j} A_{ij}(f(i)-f(j))^2$, manifestly nonnegative; hence $L \succeq
-0$ and all $\lambda_i \ge 0$. Since every row of $L$ sums to zero,
-$L \mathbf{1} = 0$, so $\lambda_1 = 0$. Finally $f^\top L f = 0$ forces
-$f(i) = f(j)$ on every edge, i.e.\ $f$ is constant on each connected component;
-the space of such $f$ has dimension equal to the number of components.
+\textbf{(1)} $D$ is diagonal and $A = A^\top$ (undirected graph), so $L = D - A$
+is symmetric. \textbf{(2)} The $i$-th row of $L$ has diagonal entry
+$\deg(i) = \sum_j A_{ij}$ and off-diagonal entries $-A_{ij}$, so
+$\sum_j L_{ij} = \deg(i) - \sum_j A_{ij} = 0$. \textbf{(3)} Expanding,
+\begin{align*}
+  x^\top L\, x = x^\top D\, x - x^\top A\, x
+    &= \sum_i D_{ii} x_i^2 - \sum_{i,j} A_{ij} x_i x_j \\
+    &= \sum_i x_i^2 \sum_j A_{ij} - \sum_{i,j} A_{ij} x_i x_j
+    = \tfrac12 \sum_{i,j} A_{ij}(x_i - x_j)^2 ,
+\end{align*}
+manifestly nonnegative. \textbf{(4)}
+$(Lf)(i) = (Df)(i) - (Af)(i) = \sum_j A_{ij} f(i) - \sum_j A_{ij} f(j)
+= \sum_{j \sim i} W_{ij}(f(i) - f(j))$.
 \end{proof}
 
-The quadratic form $f^\top L f$ measures the \emph{smoothness} of $f$ over the
-graph: it is small when $f$ varies little across edges and large when $f$ changes
-abruptly. This is the discrete \emph{Dirichlet energy}, and it will reappear when
-we analyse oversmoothing.
+\begin{proposition}[Spectral properties of the Laplacian]
+\label{prop:graphs:laplacian-props}
+Let $L$ be the Laplacian of an undirected graph with $n$ vertices. Then:
+\begin{enumerate}
+  \item the eigenvalues are real and satisfy
+        $0 = \lambda_1 \le \lambda_2 \le \cdots \le \lambda_n$, with the constant
+        vector $\mathbf{1}$ an eigenvector for $\lambda_1 = 0$;
+  \item the multiplicity of the eigenvalue $0$ equals the number of connected
+        components of $G$.
+\end{enumerate}
+\end{proposition}
 
-\subsection{The graph Fourier transform and spectral filters}
+\begin{proof}
+By \Cref{prop:graphs:laplacian-algebra}, $L$ is symmetric and positive
+semidefinite, so its eigenvalues are real and nonnegative; since
+$L \mathbf{1} = \mathbf{0}$, we have $\lambda_1 = 0$ with eigenvector
+$\mathbf{1}$. For (2), $L x = \mathbf{0}$ iff $x^\top L\, x = 0$, which by the
+quadratic form forces $(x_i - x_j)^2 = 0$ on every edge, i.e.\ $x$ is constant on
+each connected component; the space of such $x$ has dimension equal to the number
+of components.
+\end{proof}
+
+The quadratic form $x^\top L\, x$ measures the \emph{smoothness} of $x$ over the
+graph: it is small when $x$ varies little across edges and large when $x$ changes
+abruptly. This is the discrete \emph{Dirichlet energy}, and it reappears when we
+analyse oversmoothing (\Cref{sec:graphs:oversmoothing}).
+
+\paragraph{Connection with differential geometry.}
+The graph Laplacian $L$ is the discrete analogue of the Laplace--Beltrami
+operator $\Delta_{\mathcal{M}}$ on a Riemannian manifold (\Cref{ch:geodesics}),
+which acts on smooth functions $f \colon \mathcal{M} \to \R$ by
+$\Delta_{\mathcal{M}} f = \dive(\grad f)$. The analogy is precise: on a continuous
+manifold $\Delta_{\mathcal{M}} f$ measures the divergence of the gradient, while
+on a discrete graph $(L f)(i) = \sum_{j \sim i} (f(i) - f(j))$ measures the
+difference between $f(i)$ and the average of its neighbours. Both generalize the
+Euclidean Laplacian $\nabla^2 f$ to non-Euclidean domains. We make the limiting
+correspondence rigorous in \Cref{sec:graphs:convergence}.
+
+\section{Topological deep learning}
+\label{sec:graphs:tdl}
+
+The Laplacian $L = D - A$ acts exclusively on node signals ($0$-chains). Yet the
+simplicial complexes of \Cref{def:graphs:complex} carry a far richer algebraic
+structure: signals defined on edges, triangles and higher-order simplices. To
+quantify it we import the tools of algebraic topology.
+
+\begin{definition}[Chains]
+\label{def:graphs:chains}
+Let $\mathcal{K}$ be a simplicial complex. A \emph{$k$-chain} is a formal linear
+combination of $k$-simplices with coefficients in a field (typically $\R$ or
+$\Z_2$):
+\[
+  C_k(\mathcal{K}) = \Big\{ \textstyle\sum_i \alpha_i \sigma_i^{(k)}
+    : \alpha_i \in \R,\ \sigma_i^{(k)} \in \mathcal{K} \text{ a $k$-simplex} \Big\}.
+\]
+\end{definition}
+
+\begin{definition}[Boundary operator]
+\label{def:graphs:boundary}
+The \emph{boundary operator}
+$\partial_k \colon C_k(\mathcal{K}) \to C_{k-1}(\mathcal{K})$ is defined on an
+oriented $k$-simplex $[v_0, v_1, \dots, v_k]$ by
+\[
+  \partial_k [v_0, v_1, \dots, v_k]
+    = \sum_{i=0}^{k} (-1)^i\, [v_0, \dots, \widehat{v_i}, \dots, v_k],
+\]
+where $\widehat{v_i}$ denotes omission of the vertex $v_i$.
+\end{definition}
+
+\begin{proposition}[Fundamental property of the boundary]
+\label{prop:graphs:boundary-squared}
+The boundary operator satisfies $\partial_{k-1} \circ \partial_k = 0$ for all
+$k$: the boundary of a boundary is empty.
+\end{proposition}
+
+\begin{proof}
+It suffices to verify the identity on an oriented $k$-simplex
+$[v_0, \dots, v_k]$:
+\[
+  \partial_{k-1}\big(\partial_k [v_0, \dots, v_k]\big)
+    = \sum_{i=0}^{k} (-1)^i \sum_{j \neq i} (-1)^{j'}
+      [v_0, \dots, \widehat{v_i}, \dots, \widehat{v_j}, \dots, v_k],
+\]
+where $j' = j$ if $j < i$ and $j' = j-1$ if $j > i$. Each codimension-$2$ face
+obtained by omitting two vertices $v_i, v_j$ with $i < j$ appears exactly twice:
+once with sign $(-1)^{i+j}$ (omitting $v_i$ first, then $v_j$) and once with sign
+$(-1)^{i+j-1}$ (omitting $v_j$ first). Since
+$(-1)^{i+j} + (-1)^{i+j-1} = 0$, all terms cancel.
+\end{proof}
+
+\begin{definition}[Homology groups]
+\label{def:graphs:homology}
+The \emph{homology groups} of a simplicial complex $\mathcal{K}$ are
+\[
+  H_k(\mathcal{K}) = \ker(\partial_k) / \im(\partial_{k+1})
+    = Z_k(\mathcal{K}) / B_k(\mathcal{K}),
+\]
+where $Z_k = \ker(\partial_k)$ are the \emph{$k$-cycles} (chains with no
+boundary) and $B_k = \im(\partial_{k+1})$ are the \emph{$k$-boundaries} (chains
+that are the boundary of something).
+\end{definition}
+
+\begin{definition}[Betti numbers]
+\label{def:graphs:betti}
+The \emph{$k$-th Betti number} of $\mathcal{K}$ is $\beta_k = \dim H_k(\mathcal{K})$,
+which counts: $\beta_0$, the number of connected components; $\beta_1$, the
+number of independent ``holes'' or cycles; $\beta_2$, the number of
+three-dimensional cavities.
+\end{definition}
+
+\begin{example}[Betti numbers of surfaces]
+\label{ex:graphs:betti}
+For the sphere $S^2$: $\beta_0 = 1$ (connected), $\beta_1 = 0$ (no holes),
+$\beta_2 = 1$ (one cavity). For the torus $T^2$: $\beta_0 = 1$, $\beta_1 = 2$
+(two independent cycles), $\beta_2 = 1$. For the Klein bottle: $\beta_0 = 1$,
+$\beta_1 = 1$ (over $\Z_2$).
+\end{example}
+
+Topological deep learning extends message passing (\Cref{def:graphs:mpnn}) and
+graph analysis to these higher-order structures through the \emph{Hodge
+Laplacian}, which generalizes $L$ to arbitrary $k$-chains.
+
+\subsection{The Hodge Laplacian}
+\label{sec:graphs:hodge}
+
+The boundary operator and the identity $\partial_{k-1} \circ \partial_k = 0$ give
+the \emph{chain complex}
+\[
+  \cdots \xrightarrow{\partial_{k+2}} C_{k+1}(\mathcal{K})
+    \xrightarrow{\partial_{k+1}} C_k(\mathcal{K})
+    \xrightarrow{\partial_k} C_{k-1}(\mathcal{K})
+    \xrightarrow{\partial_{k-1}} \cdots .
+\]
+
+\begin{definition}[Coboundary operator]
+\label{def:graphs:coboundary}
+Equip each chain space $C_k(\mathcal{K})$ with the standard inner product in
+which the oriented $k$-simplices form an orthonormal basis. The
+\emph{coboundary operator}
+$\partial_k^\top \colon C_{k-1}(\mathcal{K}) \to C_k(\mathcal{K})$ is the formal
+adjoint of $\partial_k$, the unique linear operator with
+$\inner{\partial_k^\top c}{\sigma} = \inner{c}{\partial_k \sigma}$ for all
+$c \in C_{k-1}$, $\sigma \in C_k$. Combinatorially, for a $(k{-}1)$-simplex
+$\tau$ it aggregates all $k$-simplices containing $\tau$ as a face, with the
+inherited incidence signs. Transposing
+$\partial_k \circ \partial_{k+1} = 0$ gives
+$\partial_{k+1}^\top \circ \partial_k^\top = 0$.
+\end{definition}
+
+\begin{definition}[Hodge Laplacian]
+\label{def:graphs:hodge}
+For a finite simplicial complex $\mathcal{K}$ with boundary operators
+$\partial_k$, the \emph{Hodge Laplacian of order $k$} is the operator
+$L_k \colon C_k(\mathcal{K}) \to C_k(\mathcal{K})$,
+\[
+  L_k = \underbrace{\partial_k^\top \partial_k}_{L_k^{\mathrm{down}}}
+      + \underbrace{\partial_{k+1} \partial_{k+1}^\top}_{L_k^{\mathrm{up}}},
+\]
+where $L_k^{\mathrm{down}}$ captures \emph{lower} adjacency (two $k$-simplices are
+adjacent if they share a $(k{-}1)$-face) and $L_k^{\mathrm{up}}$ captures
+\emph{upper} adjacency (two $k$-simplices are adjacent if they belong to a common
+$(k{+}1)$-simplex).
+\end{definition}
+
+\begin{proposition}[Properties of the Hodge Laplacian]
+\label{prop:graphs:hodge-props}
+The Hodge Laplacian $L_k$ satisfies:
+\begin{enumerate}
+  \item \textbf{Symmetry and positive semidefiniteness}: $L_k$ is symmetric and
+        $\inner{x}{L_k x} = \norm{\partial_k x}^2 + \norm{\partial_{k+1}^\top x}^2
+        \ge 0$ for every $k$-chain $x$.
+  \item \textbf{Recovery of the graph Laplacian}: for $k = 0$, with
+        $\partial_0 = 0$ by convention, $L_0 = \partial_1 \partial_1^\top$
+        coincides with $L = D - A$ of \Cref{def:graphs:laplacian}.
+  \item \textbf{Connection with homology}: $\ker(L_k) \cong H_k(\mathcal{K})$,
+        i.e.\ the harmonic $k$-chains correspond to the $k$-th homology group.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\textbf{(1)} $L_k$ is a sum of Gram matrices, hence symmetric; and
+$\inner{x}{L_k x} = \inner{x}{\partial_k^\top \partial_k x}
++ \inner{x}{\partial_{k+1}\partial_{k+1}^\top x}
+= \norm{\partial_k x}^2 + \norm{\partial_{k+1}^\top x}^2 \ge 0$.
+\textbf{(2)} For $k = 0$, $C_{-1}(\mathcal{K})$ is trivial so $\partial_0 = 0$
+and $L_0 = \partial_1 \partial_1^\top$. If $\partial_1$ is the oriented incidence
+matrix, then $\partial_1 \partial_1^\top$ has $(i,j)$ entry $\deg(i)$ when
+$i = j$, $-1$ when $(i,j) \in E$, and $0$ otherwise; that is,
+$\partial_1 \partial_1^\top = D - A = L$. \textbf{(3)} By (1), $L_k x = 0$ iff
+$\partial_k x = 0$ and $\partial_{k+1}^\top x = 0$ simultaneously: the first says
+$x \in Z_k$, the second that $x \perp \im(\partial_{k+1})$. Thus $x$ is a cycle
+orthogonal to all boundaries, and the class $[x] \in Z_k / B_k = H_k(\mathcal{K})$
+gives the isomorphism $\ker(L_k) \cong H_k(\mathcal{K})$.
+\end{proof}
+
+The central result of discrete Hodge theory provides an orthogonal decomposition
+of the chain space that generalizes graph Fourier analysis.
+
+\begin{theorem}[Hodge decomposition]
+\label{thm:graphs:hodge-decomp}
+For a finite simplicial complex $\mathcal{K}$, the space of $k$-chains admits the
+orthogonal decomposition
+\[
+  C_k(\mathcal{K})
+    = \underbrace{\im(\partial_{k+1})}_{\text{boundaries (``gradients'')}}
+    \oplus \underbrace{\ker(L_k)}_{\text{harmonics}}
+    \oplus \underbrace{\im(\partial_k^\top)}_{\text{coboundaries (``curls'')}} .
+\]
+The three components capture complementary aspects of a simplicial signal:
+boundaries represent irrotational flow, harmonics encode the global topology
+($H_k$), and coboundaries represent pure circulation.
+\end{theorem}
+
+\begin{proof}
+\textbf{Mutual orthogonality.} For $x = \partial_{k+1} a \in \im(\partial_{k+1})$
+and $y = \partial_k^\top b \in \im(\partial_k^\top)$, using
+$\partial_k \partial_{k+1} = 0$,
+$\inner{x}{y} = \inner{\partial_{k+1} a}{\partial_k^\top b}
+= \inner{\partial_k \partial_{k+1} a}{b} = 0$. For $z \in \ker(L_k)$ we have
+$\partial_k z = 0$ and $\partial_{k+1}^\top z = 0$, hence
+$\inner{z}{\partial_{k+1} a} = \inner{\partial_{k+1}^\top z}{a} = 0$ and
+$\inner{z}{\partial_k^\top b} = \inner{\partial_k z}{b} = 0$.
+\textbf{Completeness.} In finite dimension it suffices to show
+$(V_1 \oplus V_2)^\perp = V_3$ with $V_1 = \im(\partial_{k+1})$,
+$V_2 = \im(\partial_k^\top)$, $V_3 = \ker(L_k)$. If
+$w \perp V_1$ and $w \perp V_2$, then $\partial_{k+1}^\top w = 0$ and
+$\partial_k w = 0$, so
+$L_k w = \partial_k^\top \partial_k w + \partial_{k+1}\partial_{k+1}^\top w = 0$,
+i.e.\ $w \in V_3$.
+\end{proof}
+
+\begin{example}[Hodge Laplacian $L_1$ of a triangular complex]
+\label{ex:graphs:hodge-L1}
+Consider a complex $\mathcal{K}$ with vertices $\{a, b, c, d\}$, edges
+$e_1 = [a,b]$, $e_2 = [b,c]$, $e_3 = [a,c]$, $e_4 = [c,d]$, and one $2$-simplex
+$\sigma = [a,b,c]$. From $\partial_2[a,b,c] = e_2 - e_3 + e_1$,
+\[
+  \partial_2 = \begin{pmatrix} 1 \\ 1 \\ -1 \\ 0 \end{pmatrix}, \qquad
+  \partial_1 = \begin{pmatrix}
+    -1 & 0 & -1 & 0 \\ 1 & -1 & 0 & 0 \\ 0 & 1 & 1 & -1 \\ 0 & 0 & 0 & 1
+  \end{pmatrix},
+\]
+and one verifies $\partial_1 \partial_2 = 0$. Then
+\[
+  L_1^{\mathrm{down}} = \partial_1^\top \partial_1 = \begin{pmatrix}
+    2 & -1 & 1 & 0 \\ -1 & 2 & 1 & -1 \\ 1 & 1 & 2 & -1 \\ 0 & -1 & -1 & 2
+  \end{pmatrix}, \quad
+  L_1^{\mathrm{up}} = \partial_2 \partial_2^\top = \begin{pmatrix}
+    1 & 1 & -1 & 0 \\ 1 & 1 & -1 & 0 \\ -1 & -1 & 1 & 0 \\ 0 & 0 & 0 & 0
+  \end{pmatrix}.
+\]
+Here $L_1^{\mathrm{down}}$ connects edges sharing a vertex (lower adjacency),
+while $L_1^{\mathrm{up}}$ connects edges coexisting in $\sigma$ (upper
+adjacency). The edge $e_4$, belonging to no triangle, has a zero row and column
+in $L_1^{\mathrm{up}}$.
+\end{example}
+
+\subsection{Simplicial message passing}
+\label{sec:graphs:simplicial-mp}
+
+The decomposition $L_k = L_k^{\mathrm{down}} + L_k^{\mathrm{up}}$ reveals that
+each $k$-simplex receives information from two geometrically distinct sources:
+its $(k{-}1)$-faces (lower adjacency) and the $(k{+}1)$-simplices that contain it
+(upper adjacency). This dual structure motivates a natural generalization of
+graph message passing to simplicial complexes: a target $k$-simplex $\sigma$
+updates its state from lower messages $m^{\downarrow}$ (from its boundary), upper
+messages $m^{\uparrow}$ (from its coboundary), and horizontal messages
+$m^{\leftrightarrow}$ (from adjacent simplices of the same dimension), as
+illustrated in \Cref{fig:graphs:simplicial-mp}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    msg/.style={line width=1.6pt, -{Stealth[length=6pt, width=4pt]}}]
+\coordinate (A) at (0, 0); \coordinate (B) at (4.3, 0);
+\coordinate (C) at (2.15, 3.0);
+\coordinate (Dd) at (-3.0, 1.0); \coordinate (Ee) at (-2.6, -1.7);
+\coordinate (Ff) at (7.3, 1.0);
+\fill[gdlorange!15] (A) -- (B) -- (C) -- cycle;
+\draw[gdlorange!40, line width=0.8pt] (A) -- (B) -- (C) -- cycle;
+\node[gdlorange!70!black] at (2.15, 1.35) {$\tau^2$};
+\draw[gdlgray!50, line width=1pt] (A) -- (C); \draw[gdlgray!50, line width=1pt] (B) -- (C);
+\draw[gdlpurple!30, line width=2pt] (A) -- (Dd);
+\draw[gdlpurple!30, line width=2pt] (A) -- (Ee);
+\draw[gdlpurple!30, line width=2pt] (B) -- (Ff);
+\draw[gdlred!70, line width=3.5pt] (A) -- (B);
+\node[gdlred!80!black, font=\bfseries] at (2.15, -0.5) {$\sigma^1$ (target)};
+\foreach \v in {A,B,C,Dd,Ee,Ff} {\fill[gdlblue!60] (\v) circle (4pt);
+  \draw[gdlblue!80] (\v) circle (4pt);}
+% lower (green) from vertices
+\draw[msg, gdlgreen!70] ($(A)+(-0.3,-1.6)$) to[bend right=25] ($(A)+(0.45,-0.22)$);
+\draw[msg, gdlgreen!70] ($(B)+(0.3,-1.6)$) to[bend left=25] ($(B)+(-0.45,-0.22)$);
+\node[gdlgreen!70!black, font=\scriptsize, fill=white, fill opacity=0.85,
+  text opacity=1, inner sep=2pt] at (2.15, -1.6) {$m^{\downarrow}$ (boundary)};
+% upper (orange) from triangle
+\draw[msg, gdlorange!70] (2.15, 2.4) -- (2.15, 0.28);
+\node[gdlorange!70!black, font=\scriptsize, anchor=south west] at (2.6, 1.95)
+  {$m^{\uparrow}$ (coboundary)};
+% horizontal (purple)
+\draw[msg, gdlpurple!70] ($(A)!0.5!(Dd)$) to[bend right=20] ($(A)+(0.55,0.3)$);
+\draw[msg, gdlpurple!70] ($(A)!0.5!(Ee)$) to[bend left=20] ($(A)+(0.55,-0.3)$);
+\draw[msg, gdlpurple!70] ($(B)!0.5!(Ff)$) to[bend left=20] ($(B)+(-0.55,0.3)$);
+\node[gdlpurple!70!black, font=\scriptsize, anchor=east, fill=white,
+  fill opacity=0.85, text opacity=1, inner sep=2pt] at (-3.1, 0)
+  {$m^{\leftrightarrow}$ (adjacency)};
+\end{tikzpicture}
+\caption[Simplicial message passing]{Message passing on a simplicial complex for
+a target edge $\sigma^1$ (red). Lower messages $m^{\downarrow}$ arrive from its
+boundary vertices; upper messages $m^{\uparrow}$ from the coboundary triangle
+$\tau^2$ containing it; horizontal messages $m^{\leftrightarrow}$ from adjacent
+edges sharing a vertex.}
+\label{fig:graphs:simplicial-mp}
+\end{figure}
+
+\paragraph{Architectural variants and extensions.}
+The topological deep learning framework admits several specializations:
+\emph{topological convolutions} (spectral filters on the Hodge Laplacian,
+parametrized by polynomials of $L_k$); \emph{simplicial attention}, which weights
+simplicial messages by orientation and topological relevance; \emph{cell
+complexes}, generalizing simplicial complexes to cells of arbitrary shape;
+\emph{simplicial diffusion}, extending the heat equation to $L_k$; and
+higher-order attention networks combining multi-head attention with simplicial
+topology. These are developed further in \Cref{ch:gauges,ch:applications}.
+
+\section{Convergence of graphs to manifolds}
+\label{sec:graphs:convergence}
+
+The question that ties graph theory to differential geometry is: under what
+conditions does a discrete graph faithfully approximate a continuous manifold?
+The following theorem --- one of the central results of manifold learning ---
+combines tools from differential geometry, random graph theory and asymptotic
+analysis to give a rigorous answer.
+
+\begin{theorem}[Convergence of graphs to manifolds]
+\label{thm:graphs:convergence}
+Let $(\mathcal{M}, g)$ be a compact Riemannian manifold of dimension $d$ embedded
+in $\R^N$, and let $\{x_1, \dots, x_n\}$ be points sampled on $\mathcal{M}$
+according to a density $p(x) \ge p_{\min} > 0$. Build a graph $G_n$ with weights
+$W_{ij} = k_\epsilon(\norm{x_i - x_j})$ where
+$k_\epsilon(t) = \epsilon^{-d}\, k(t/\epsilon)$ and $k \colon \R_+ \to \R_+$ is a
+smooth, compactly supported radial kernel. Then, under the scaling conditions
+$\epsilon = \epsilon_n \to 0$ and $n\epsilon^{d+2} \to \infty$, the
+density-normalized graph Laplacian converges to the weighted Laplace--Beltrami
+operator:
+\[
+  \lim_{n \to \infty} \frac{1}{p(x_i)\, \epsilon^2}\, L_n f(x_i)
+    = \Delta_{\mathcal{M}} f(x_i)
+      + \inner{\nabla \log p(x_i)}{\nabla f(x_i)},
+\]
+in probability, uniformly for $f \in C^2(\mathcal{M})$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+We outline the seven steps combining differential geometry, functional analysis
+and probability.
+
+\textbf{Step 1 (Normalization).} Define
+$L_n f(x_i) = \frac{1}{n\epsilon^d} \sum_{j} k_\epsilon(\norm{x_i - x_j})
+[f(x_j) - f(x_i)]$; the factor $n\epsilon^d$ represents the expected local
+neighbourhood volume.
+
+\textbf{Step 2 (Normal coordinates).} Work in geodesic normal coordinates
+centred at $x_i$, where $g_{jk}(y) = \delta_{jk} + O(\norm{y}^2)$, so the
+manifold is locally approximated by its tangent space
+$T_{x_i}\mathcal{M} \cong \R^d$. For nearby $x_j$ write
+$x_j = \exp_{x_i}(\epsilon v_j)$ with $v_j \in T_{x_i}\mathcal{M}$.
+
+\textbf{Step 3 (Taylor expansion).}
+$f(x_j) - f(x_i) = \epsilon \inner{\nabla f(x_i)}{v_j}
++ \tfrac{\epsilon^2}{2} \Hess_f(x_i)(v_j, v_j) + O(\epsilon^3)$.
+
+\textbf{Steps 4--5 (Asymptotic average).} Substituting and applying the strong
+law of large numbers, $\frac1n \sum_j F(x_j) \to \int_{\mathcal{M}} F\, p\, dV_g$,
+and changing variables $y = \exp_{x_i}(\epsilon v)$ while expanding the density
+$p(\exp_{x_i}(\epsilon v)) = p(x_i) + \epsilon \inner{\nabla p(x_i)}{v} + O(\epsilon^2)$.
+
+\textbf{Step 6 (First-order term).} The term
+$p(x_i) \int k(\norm{v}) \inner{\nabla f}{v}\, dv = 0$ vanishes by radial
+symmetry, but the cross term of order $\epsilon$ survives: using
+$\int k(\norm{v}) v_\alpha v_\beta\, dv = \frac1d \big(\int k(\norm{v})\norm{v}^2 dv\big)
+\delta_{\alpha\beta}$, it contributes proportionally to
+$\inner{\nabla f(x_i)}{\nabla p(x_i)}$.
+
+\textbf{Step 7 (Second-order term).} Using
+$\tr(\Hess_f) = \Delta_{\mathcal{M}} f$ and radial symmetry, the second-order term
+gives $\frac{p(x_i)}{2d}\big(\int k(\norm{v})\norm{v}^2 dv\big)
+\Delta_{\mathcal{M}} f(x_i)$. Choosing $k$ so that
+$\int_{\R^d} k(\norm{v})\norm{v}^2 dv = 2d$ and combining Steps 6--7,
+\[
+  \lim_{n\to\infty} \frac{1}{\epsilon^2} L_n f(x_i)
+    = p(x_i)\Delta_{\mathcal{M}} f(x_i) + \inner{\nabla p(x_i)}{\nabla f(x_i)} ,
+\]
+and dividing by $p(x_i)$ with $\nabla p / p = \nabla \log p$ yields the claim.
+\end{proof}
+
+The term $\inner{\nabla \log p}{\nabla f}$ reflects the influence of nonuniform
+sampling and can be removed by more sophisticated Laplacian constructions
+\citep{coifman2006diffusion, hein2007graph}. Convergence requires
+$\epsilon \to 0$ (vanishing local radius) yet $n\epsilon^{d+2} \to \infty$
+(enough points per neighbourhood); the optimal rate is
+$\epsilon \sim (\log n / n)^{1/(d+2+\alpha)}$ for small $\alpha > 0$, balancing
+approximation bias against sampling variance.
+
+\begin{remark}[Convergence rates and scaling regimes]
+\label{rem:graphs:convergence-rates}
+The quality of convergence depends critically on the relation between $n$ and
+$\epsilon$. Three regimes arise: \emph{underconnected} ($n\epsilon^d \to 0$), the
+graph is disconnected and there is no convergence; \emph{optimal}
+($n\epsilon^d \sim \log n$), convergence at rate
+$O(\epsilon^2 + 1/\sqrt{n\epsilon^d})$; and \emph{overconnected}
+($n\epsilon^d \to \infty$ too fast), convergence but with loss of locality. For
+$n = 10\,000$ points uniform on $S^2$ ($d=2$), the error in the first nontrivial
+eigenvalue is $\approx 15\%$ for $\epsilon = 0.05$ (underconnected),
+$\approx 2\%$ for $\epsilon = 0.15$ (optimal), and $\approx 5\%$ for
+$\epsilon = 0.40$ (overconnected). The optimal
+$\epsilon^* \approx (\log n / n)^{1/4} \approx 0.14$ matches the theory.
+\end{remark}
+
+This result has profound consequences for geometric deep learning. It gives a
+\emph{theoretical justification} for graph neural networks on manifold-valued
+data; it \emph{guides graph construction} (how to choose $\epsilon$ as a function
+of $n$ and the intrinsic dimension $d$); it exposes \emph{fundamental
+limitations} (finite data yields only approximations, and the smooth geometry
+between sampled points is lost); and it explains a \emph{computational trade-off}
+--- graphs are the practical middle ground between Euclidean representations
+(which ignore geometry) and continuous manifolds (elegant but intractable).
+Spectral graph networks such as ChebNet and the graph convolutional network
+inherit geometric properties of the continuous domain precisely because they
+approximate spectral filters of the Laplacian.
+
+\section{Spectral analysis on graphs}
+\label{sec:graphs:spectral}
+
+Spectral graph analysis extends classical Fourier analysis to the discrete
+domain (the harmonic-analysis foundations are developed in \Cref{ch:grids}). The
+eigenvectors of the Laplacian form an orthogonal basis analogous to the sinusoids
+of Euclidean Fourier analysis, letting us decompose functions into
+``frequencies'' over the graph.
+
+\subsection{The graph Fourier transform}
 \label{sec:graphs:gft}
 
 Because $\Lap$ is symmetric it admits an orthonormal eigendecomposition
 $\Lap = U \Lambda U^\top$ with $\Lambda = \operatorname{diag}(\lambda_1, \dots,
-\lambda_n)$ and $U = [u_1, \dots, u_n]$. The eigenvectors play the role of the
-complex exponentials of classical Fourier analysis (see \Cref{ch:grids}): the
-eigenvalue $\lambda_i$ is a notion of \emph{frequency}, with small eigenvalues
-corresponding to smooth, slowly varying eigenvectors and large eigenvalues to
-rapidly oscillating ones, as the Rayleigh quotient
-$\lambda_i = u_i^\top \Lap\, u_i$ and \Cref{prop:graphs:laplacian-props} make
-precise.
+\lambda_n)$, $0 = \lambda_1 \le \lambda_2 \le \cdots \le \lambda_n \le 2$, and
+$U = [u_1, \dots, u_n]$ orthonormal.
 
 \begin{definition}[Graph Fourier transform]
 \label{def:graphs:gft}
-The \emph{graph Fourier transform} of a signal $f \in \R^n$ is
-$\hat f = U^\top f$, with inverse $f = U \hat f = \sum_{i} \hat f_i\, u_i$. The
-coefficient $\hat f_i = \inner{f}{u_i}$ is the amplitude of $f$ at frequency
-$\lambda_i$.
+The \emph{graph Fourier transform} of a signal $f \colon V \to \R$ (viewed as
+$f \in \R^n$) is $\hat f = U^\top f \in \R^n$, with inverse
+$f = U \hat f = \sum_i \hat f_i\, u_i$. The coefficient
+$\hat f_i = \inner{f}{u_i}$ is the amplitude of $f$ at frequency $\lambda_i$.
 \end{definition}
+
+The eigenvectors $u_i$ play the role of the complex exponentials
+$e^{2\pi \imath \omega \cdot x}$, and the eigenvalues $\lambda_i$ the role of the
+frequencies $\omega$. \Cref{fig:graphs:eigenvectors} illustrates how small
+eigenvalues correspond to smooth (low-frequency) eigenvectors and large
+eigenvalues to oscillating (high-frequency) ones.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[font=\small]
+\foreach \k/\lab/\xs in {0/{$\lambda$ small}/0, 1/{$\lambda$ medium}/4.6,
+                         2/{$\lambda$ large}/9.2}{
+  \begin{scope}[shift={(\xs,0)}]
+    \begin{scope}[on background layer]
+      \fill[gdlgray!8, rounded corners=2pt] (-0.4,-0.4) rectangle (3.4,2.7);
+    \end{scope}
+    \foreach \i in {0,1,2,3} \foreach \j in {0,1,2}
+      \coordinate (n\k-\i-\j) at (\i,\j);
+    \foreach \i in {0,1,2,3} \foreach \j in {0,1,2}{
+      \pgfmathsetmacro{\val}{ifthenelse(\k==0, 0.6,
+        ifthenelse(\k==1, 0.6*cos(180*\i), 0.6*cos(180*\i)*cos(180*\j)))}
+      \pgfmathsetmacro{\cc}{50*\val+50}
+      \ifdim\val pt>0pt
+        \fill[gdlblue!\cc] (\i,\j) circle (5pt);
+      \else
+        \pgfmathsetmacro{\dd}{-100*\val}
+        \fill[gdlred!\dd] (\i,\j) circle (5pt);
+      \fi
+      \draw[gdlgray!50] (\i,\j) circle (5pt);
+    }
+    \node[font=\scriptsize\bfseries] at (1.5,-0.85) {\lab};
+  \end{scope}
+}
+\end{tikzpicture}
+\caption[Laplacian eigenvectors]{Laplacian eigenvectors on a grid graph. Small
+eigenvalues correspond to smooth functions (low frequency, nodes vary little
+between neighbours); large eigenvalues correspond to oscillatory functions (high
+frequency, sign changes between adjacent nodes). Blue and red denote the sign of
+the eigenvector entry.}
+\label{fig:graphs:eigenvectors}
+\end{figure}
+
+\begin{theorem}[Frequency interpretation of eigenvectors]
+\label{thm:graphs:frequency}
+The Laplacian eigenvectors $\{u_i\}$ satisfy:
+\begin{enumerate}
+  \item \textbf{Small eigenvalues $\Leftrightarrow$ smooth functions}: if
+        $\Lap u_i = \lambda_i u_i$ with $\lambda_i$ small, then
+        $u_i^\top \Lap\, u_i = \lambda_i$ is small, which forces $u_i$ to vary
+        smoothly across edges.
+  \item \textbf{Large eigenvalues $\Leftrightarrow$ oscillatory functions}: if
+        $\lambda_i \approx 2$, then $u_i$ oscillates rapidly, changing sign
+        between adjacent nodes.
+  \item \textbf{Analogy with frequencies}: $\lambda_i$ plays the role of
+        ``frequency squared'', $\lambda_i \sim \omega_i^2$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textbf{(1)} For the normalized Laplacian,
+$u_i^\top \Lap\, u_i = \tfrac12 \sum_{(j,k)\in E} W_{jk}
+\big(u_i(j)/\sqrt{d_j} - u_i(k)/\sqrt{d_k}\big)^2$; if $\lambda_i$ is small this
+sum is small, requiring $u_i$ to vary little across edges.
+\textbf{(2)} Since $\lambda_{\max} \le 2$, values near $2$ are attained when
+$u_i$ changes sign frequently between neighbours, maximizing
+$(u_i(j) - u_i(k))^2$. \textbf{(3)} The Euclidean Laplacian has eigenfunctions
+$e^{\imath \omega \cdot x}$ with eigenvalues $-\omega^2$; with the sign
+convention, $\lambda \sim \omega^2$.
+\end{proof}
+
+\subsection{Spectral filters}
+\label{sec:graphs:filters}
 
 By analogy with the classical convolution theorem --- convolution in space is
 multiplication in frequency --- one defines convolution on a graph as
-multiplication of the Fourier coefficients by a filter.
+multiplication of Fourier coefficients by a filter.
 
 \begin{definition}[Spectral graph filter]
 \label{def:graphs:spectral-filter}
@@ -368,52 +981,487 @@ on a signal $f$ by
 
 This is the foundation of \emph{spectral} graph networks~\citep%
 {bruna2014spectralnetworkslocallyconnected}, which learn the transfer function
-$g_\theta(\lambda)$ directly. Attractive as it is, the naive spectral approach
-has three drawbacks. First, it requires the full eigendecomposition of $\Lap$, an
-$O(n^3)$ computation. Second, a freely parametrized $g_\theta(\lambda)$ uses
-$O(n)$ parameters and is not localized in space. Third --- and most
-fundamentally --- the eigenbasis $U$ is tied to one graph, so a filter learned on
-one graph does not transfer to another, breaking the inductive setting in which
-graphs vary from example to example.
+$g_\theta(\lambda)$ directly. The analogy with continuous harmonic analysis is
+exact in the limit: $\Delta_{\mathcal{M}}$ corresponds to $L$, its eigenfunctions
+$\Delta_{\mathcal{M}}\phi_i = \lambda_i \phi_i$ to the eigenvectors
+$L u_i = \lambda_i u_i$, the manifold Fourier transform to $\hat f = U^\top f$,
+and smooth (resp.\ oscillatory) functions to small (resp.\ large) eigenvalues.
 
-\subsection{Polynomial filters: the bridge to spatial methods}
+Attractive as it is, the naive spectral approach has three drawbacks. First, it
+requires the full eigendecomposition of $\Lap$, an $O(n^3)$ computation. Second,
+a freely parametrized $g_\theta(\lambda)$ uses $O(n)$ parameters and is not
+localized in space. Third --- and most fundamentally --- the eigenbasis $U$ is
+tied to one graph, so a filter learned on one graph does not transfer to another,
+breaking the inductive setting in which graphs vary from example to example. The
+polynomial filters of \Cref{sec:graphs:cheb} remove all three drawbacks at once;
+before that, we develop the spatial viewpoint that they meet.
+
+\section{Permutation symmetry}
+\label{sec:graphs:permutation}
+
+The matrix representation of a graph carries an arbitrary artefact: the labelling
+of the nodes. Renumbering the atoms of a molecule does not change the molecule. A
+permutation of the node labels is therefore a symmetry of the data, and any model
+we build must respect it. A permutation acts simultaneously on the rows of $X$
+and on both axes of $A$.
+
+\begin{definition}[Permutation action]
+\label{def:graphs:permutation-action}
+Let $\group_n$ be the symmetric group of permutations of $\{1, \dots, n\}$,
+represented by permutation matrices $P \in \R^{n \times n}$ (one entry $1$ per
+row and column, zero elsewhere). A permutation $P$ acts on node features and on
+the adjacency matrix by
+\[
+  X \mapsto P X, \qquad A \mapsto P A P^\top .
+\]
+\end{definition}
+
+We want a node-level computation $F(X, A)$ to commute with relabelling, and a
+graph-level computation $f(X, A)$ to ignore relabelling entirely. These are the
+two faces of symmetry from \Cref{ch:priors}, specialized to $\group_n$.
+
+\begin{definition}[Permutation equivariance and invariance]
+\label{def:graphs:equiv-inv}
+A node-wise function $F \colon \R^{n \times d} \times \R^{n \times n} \to
+\R^{n \times d'}$ is \emph{permutation equivariant} if
+$F(P X, P A P^\top) = P\, F(X, A)$ for all $P \in \group_n$. A graph-wise
+function $f \colon \R^{n \times d} \times \R^{n \times n} \to \R^{d'}$ is
+\emph{permutation invariant} if $f(P X, P A P^\top) = f(X, A)$ for all
+$P \in \group_n$.
+\end{definition}
+
+These conditions parallel the equivariance and invariance demanded of
+convolutional and group-equivariant layers, but the relevant group is now the
+discrete, finite symmetric group rather than translations or rotations. The
+blueprint of \Cref{ch:priors} applies verbatim: stack equivariant layers, which
+compose into an equivariant map, and append an invariant readout (a
+permutation-invariant pooling such as sum or mean over nodes) only at the end,
+when a single graph-level prediction is required.
+
+The constraint is severe. The only linear maps on node features that are
+permutation equivariant for \emph{every} graph are spanned by two operators: the
+identity (each node transforms itself) and the all-ones aggregation (each node
+sums the features of all nodes). To obtain a richer, structure-aware family we
+must let the aggregation respect the edges: each node may combine its own feature
+with an aggregate of its neighbours' features, where the aggregate is itself
+invariant to the order in which neighbours are listed. This single observation
+--- aggregate over a neighbourhood with a permutation-invariant operator, then
+update --- is the seed of every graph neural network, and we turn to it next.
+
+\section{Message passing}
+\label{sec:graphs:message-passing}
+
+A graph neural network is built by repeating a local, permutation-equivariant
+update in which every node refreshes its state from the states of its neighbours.
+\citet{gilmer2017neural} crystallized this idea into the \emph{message passing}
+framework, which has since become the lingua franca of learning on graphs.
+
+\begin{definition}[Message passing neural network]
+\label{def:graphs:mpnn}
+A \emph{message passing neural network} (MPNN) operates on a graph $G = (V, E)$
+with node features $\{h_v^{(\ell)}\}$ and optional edge features $\{e_{vu}\}$.
+Layer $\ell$ updates each node in two phases:
+\begin{align}
+  m_v^{(\ell+1)} &= \bigoplus_{u \in \Nbr(v)}
+      M_\ell\!\left(h_v^{(\ell)}, h_u^{(\ell)}, e_{vu}\right)
+      && \text{(message and aggregation)}, \\
+  h_v^{(\ell+1)} &= U_\ell\!\left(h_v^{(\ell)}, m_v^{(\ell+1)}\right)
+      && \text{(update)},
+\end{align}
+where $M_\ell$ is a learnable message function, $U_\ell$ a learnable update
+function, and $\bigoplus$ a permutation-invariant aggregator (sum, mean, or
+maximum).
+\end{definition}
+
+The aggregator is the load-bearing component: because $\bigoplus$ does not depend
+on the order of its arguments, the layer is permutation equivariant in the sense
+of \Cref{def:graphs:equiv-inv}, whatever the message and update functions. After
+$\ell$ layers each node has gathered information from its $\ell$-hop
+neighbourhood, exactly as stacking convolutional layers grows the receptive
+field. A graph-level prediction is produced by a final invariant pooling,
+$h_G = \bigoplus_{v \in V} h_v^{(L)}$, followed by a standard predictor.
+\Cref{fig:graphs:message-passing} depicts the three phases for a single node.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    centernode/.style={circle, draw=gdlred!70, fill=gdlred!20,
+        minimum size=22pt, inner sep=0pt, font=\small\bfseries, line width=1.2pt},
+    neighnode/.style={circle, draw=gdlblue!60, fill=gdlblue!20,
+        minimum size=20pt, inner sep=0pt, font=\small}]
+\node[font=\bfseries, text=gdlorange!70!black] at (1.5, 4.3) {1. Message};
+\node[font=\bfseries, text=gdlpurple!70!black] at (6.6, 4.3) {2. Aggregate};
+\node[font=\bfseries, text=gdlgreen!70!black] at (10.6, 4.3) {3. Update};
+\begin{scope}
+  \node[centernode] (vi) at (1.5, 2.0) {$v$};
+  \node[neighnode] (v1) at (0.0, 3.5) {$u_1$};
+  \node[neighnode] (v2) at (3.0, 3.5) {$u_2$};
+  \node[neighnode] (v3) at (3.1, 1.0) {$u_3$};
+  \node[neighnode] (v4) at (0.0, 0.5) {$u_4$};
+  \foreach \n in {v1,v2,v3,v4}
+    \draw[->, line width=1.4pt, gdlorange!70, shorten >=5pt, shorten <=5pt] (\n) -- (vi);
+  \node[font=\footnotesize, text=gdlorange!70!black, anchor=north, align=center] at (1.5, -0.2)
+    {$m_{u\to v}=M_\ell(h_v,h_u,e_{vu})$};
+\end{scope}
+\draw[->, line width=1.6pt, gdlgray!70] (4.2, 2.0) -- (5.0, 2.0);
+\begin{scope}[shift={(5.2,0)}]
+  \node[circle, draw=gdlpurple!70, fill=gdlpurple!15, minimum size=38pt,
+        inner sep=0pt, line width=1.2pt, font=\large] (agg) at (1.4, 2.0) {$\bigoplus$};
+  \node[font=\footnotesize, text=gdlpurple!70!black, anchor=north, align=center] at (1.4, 0.2)
+    {$m_v=\bigoplus_{u\in\Nbr(v)} m_{u\to v}$};
+\end{scope}
+\draw[->, line width=1.6pt, gdlgray!70] (8.2, 2.0) -- (9.0, 2.0);
+\begin{scope}[shift={(9.2,0)}]
+  \node[centernode, minimum size=26pt] (vu) at (1.4, 2.0) {$v$};
+  \node[font=\footnotesize, text=gdlgreen!70!black, anchor=north, align=center] at (1.4, 0.6)
+    {$h_v'=U_\ell(h_v,m_v)$};
+\end{scope}
+\end{tikzpicture}
+\caption[Message passing on a graph]{The three phases of a message passing layer
+for a single node $v$. Each neighbour $u$ emits a message $m_{u\to v}$; the
+messages are combined by a permutation-invariant aggregator $\bigoplus$; the node
+state is refreshed by the update function $U_\ell$.}
+\label{fig:graphs:message-passing}
+\end{figure}
+
+\paragraph{Convolutional, attentional, and general flavours.}
+Within this framework, the choice of message function defines a spectrum of
+expressivity and cost~\citep{bronstein2021geometric}. In the
+\emph{convolutional} flavour the message is a fixed, structure-determined
+weighting of the neighbour, $M_\ell(h_v, h_u) = c_{vu}\, \psi(h_u)$ with scalar
+coefficients $c_{vu}$ depending only on the graph (e.g.\ degrees); this is the
+form taken by the graph convolutional network of \citet{kipf2017semi}. In the
+\emph{attentional} flavour the coefficient is learned from the endpoints,
+$c_{vu} = a(h_v, h_u)$, as in the graph attention network of
+\citet{velickovic2017graph} (\Cref{sec:graphs:gat}). In the fully \emph{general}
+flavour the message is an arbitrary learnable function of both endpoints, as in
+\Cref{def:graphs:mpnn}. Cost and flexibility increase along this spectrum.
+
+\subsection{Convolution as message passing on a grid}
+\label{sec:graphs:cnn-mpnn}
+
+The power of message passing is that it subsumes the architectures of the
+preceding chapters. \Cref{ch:grids} treated the convolutional case in detail; we
+make the identification precise here.
+
+\begin{theorem}[A CNN is a special case of a GNN]
+\label{thm:graphs:cnn-gnn}
+A 2D convolutional network is exactly equivalent to a graph neural network whose
+graph is the regular grid $G = (\Z^2 \cap \Omega, E)$, whose vertices are the
+pixels $(i,j)$, whose edges encode $4$- or $8$-neighbour connectivity, and whose
+weights are shared according to relative position (the kernel). Concretely, with
+the message $M_\ell(h_v, h_u) = W_{v-u}\, h_u$, sum aggregation
+$m_v = \sum_{u \in \Nbr(v)} M_\ell$ and update
+$U_\ell(h_v, m_v) = \sigma(m_v + b)$, the node states of the GNN equal the
+activations of the CNN at every layer.
+\end{theorem}
+
+\begin{proof}
+By induction on depth. \emph{Base case:} $h_v^{(0)} = x_{i,j} = y_{i,j}^{(0)}$ by
+construction, where $v = (i,j)$. \emph{Inductive step:} assume
+$h_v^{(\ell)} = y_{i,j}^{(\ell)}$. The CNN output at $(i,j)$ in layer $\ell+1$ is
+\[
+  y_{i,j}^{(\ell+1)}
+    = \sigma\!\Big(\sum_{(u,v)\in\mathcal{K}} K_{u,v}\, y_{i+u,j+v}^{(\ell)} + b\Big)
+    = \sigma\!\Big(\sum_{(i',j')\in\Nbr(i,j)} K_{i'-i,j'-j}\, y_{i',j'}^{(\ell)} + b\Big),
+\]
+substituting $(i',j') = (i+u, j+v)$. The GNN update gives the same expression
+with $W_{v-u} = K_{i'-i,j'-j}$, equal to the CNN by the inductive hypothesis, so
+$h_v^{(\ell+1)} = y_{i,j}^{(\ell+1)}$.
+\end{proof}
+
+The crucial difference between a convolution and a general graph layer is the
+\emph{weight sharing} $W_{v-u}$: the message weight depends only on the relative
+position $v-u$, which is meaningful solely on a domain with translation
+structure. On a grid this enforces translation equivariance and collapses the
+parameter count from $O(n^2)$ to $O(\abs{\mathcal{K}})$. On an arbitrary graph
+there is no notion of relative position, so the message weight must instead be a
+function of the node features (attention) or of structural invariants such as
+degree (convolution).
+
+\begin{example}[Numerical verification: the $3\times3$ Sobel kernel]
+\label{ex:graphs:sobel}
+Consider the horizontal Sobel kernel and a $3 \times 3$ image,
+\[
+  K = \begin{bmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{bmatrix},
+  \qquad
+  I = \begin{bmatrix} 0 & 1 & 2 \\ 0 & 1 & 2 \\ 0 & 1 & 2 \end{bmatrix}.
+\]
+\textbf{CNN method.} The convolution at the central pixel $(1,1)$ gives
+\[
+  y_{1,1} = (-1)(0) + (1)(2) + (-2)(0) + (2)(2) + (-1)(0) + (1)(2) = 8 .
+\]
+\textbf{GNN method.} Building the grid graph with $v_{1,1}$ connected to its
+eight neighbours, the aggregated message is
+\[
+  m_{1,1} = \sum_{u} K_{v-u}\, h_u
+    = (-1)(0) + (1)(2) + (-2)(0) + (2)(2) + (-1)(0) + (1)(2) = 8 .
+\]
+Both methods produce the identical result $y_{1,1} = 8$, verifying the
+equivalence of \Cref{thm:graphs:cnn-gnn}.
+\end{example}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    pix/.style={circle, draw=gdlblue!60, fill=gdlblue!15, minimum size=16pt,
+        inner sep=0pt, font=\scriptsize},
+    cpix/.style={circle, draw=gdlred!70, fill=gdlred!20, minimum size=18pt,
+        inner sep=0pt, font=\scriptsize\bfseries}]
+\node[font=\bfseries, text=gdlorange!70!black] at (1,3.5) {Convolution};
+\node[font=\bfseries, text=gdlgreen!70!black] at (8,3.5) {Message passing};
+% left: 3x3 grid + kernel
+\foreach \i in {0,1,2} \foreach \j in {0,1,2}{
+  \ifnum\i=1 \ifnum\j=1 \node[cpix] (g\i\j) at (\j,2-\i){}; \else
+    \node[pix] (g\i\j) at (\j,2-\i){}; \fi
+  \else \node[pix] (g\i\j) at (\j,2-\i){}; \fi}
+\foreach \i in {0,1,2} \draw[gdlgray!50] (g\i0)--(g\i1)--(g\i2);
+\foreach \j in {0,1,2} \draw[gdlgray!50] (g0\j)--(g1\j)--(g2\j);
+\draw[gdlgray!50] (g00)--(g11)--(g22) (g02)--(g11)--(g20);
+\node[font=\scriptsize] at (1,-0.7) {$3\times3$ neighbourhood};
+\draw[->, line width=1.4pt, gdlgray!70] (3,1) -- (4.6,1)
+  node[midway,above,font=\scriptsize]{$=$};
+% right: central node with messages
+\node[cpix, minimum size=22pt] (cc) at (8,1) {$v$};
+\foreach \a in {45,90,135,180,225,270,315,0}{
+  \node[pix] (m\a) at ($(8,1)+(\a:1.4)$){};
+  \draw[->, gdlgreen!70, line width=1pt, shorten >=3pt, shorten <=3pt] (m\a)--(cc);}
+\node[font=\scriptsize, anchor=north, align=center] at (8,-0.5)
+  {$m_v=\sum_{u\in\Nbr(v)} W_{v-u} h_u$};
+\end{tikzpicture}
+\caption[Convolution as message passing]{Convolution equals message passing on a
+regular grid: the three phases (message, aggregation, update) coincide exactly
+with the convolutional operation when the graph is a regular grid.}
+\label{fig:graphs:conv-mp}
+\end{figure}
+
+For a $H \times W$ image with $C$ channels and a $k \times k$ kernel, a standard
+CNN costs $O(HW k^2 C)$ while a grid GNN costs $O(\abs{E}\, C) = O(4HW\, C)$ for
+$4$-connectivity; the two coincide when $k$ is small. The GNN viewpoint reveals
+that complexity depends on $\abs{E}$, not on kernel size, giving a unified lens
+for analysing efficiency across topologies. Analogously, self-attention is
+message passing on the complete graph $K_n$ with content-dependent coefficients
+$\alpha_{ij} = \operatorname{softmax}_j\big((Q h_i)^\top (K h_j)/\sqrt{d_k}\big)$
+and identity update --- the attentional flavour applied to an all-to-all
+topology. Thus a fully connected layer, a convolution, a transformer, and a graph
+network differ only in the graph topology and in how the message weight is
+determined; they are instances of one geometric construction.
+
+\subsection{From spectral CNNs to spectral GNNs}
 \label{sec:graphs:cheb}
 
-All three drawbacks are removed at once by restricting the transfer function to a
-\emph{polynomial} of the Laplacian. If $g_\theta(\lambda) = \sum_{k=0}^{K}
-\theta_k\, \lambda^k$, then $g_\theta \star f = \big(\sum_k \theta_k \Lap^k\big)
-f$, and the eigenvectors cancel out: no eigendecomposition is needed. Moreover
-$\Lap^k$ connects only nodes within graph distance $k$, so a degree-$K$
-polynomial filter is exactly $K$-localized --- it is, by construction, a spatial
-operation. This is the precise sense in which the spectral and spatial views
-coincide.
+The spectral viewpoint provides the formal bridge between traditional CNNs and
+graph networks, showing both to be special cases of the same principle.
 
-\citet{defferrard2017convolutionalneuralnetworksgraphs} make this practical with
-\emph{ChebNet}, which expands the filter in Chebyshev polynomials $T_k$ on the
-rescaled spectrum $\tilde\Lap = 2\Lap/\lambda_{\max} - I$:
-\[
-  g_\theta \star f
-    = \sum_{k=0}^{K} \theta_k\, T_k(\tilde\Lap)\, f .
-\]
-The Chebyshev recurrence $T_k(x) = 2x\,T_{k-1}(x) - T_{k-2}(x)$ lets one compute
-$T_k(\tilde\Lap) f$ by repeated sparse matrix--vector products, at total cost
-$O(K \abs{E})$ and with only $K+1$ parameters, none of which depend on the
-eigenbasis. The graph convolutional network of \citet{kipf2017semi} is the
-first-order case $K = 1$ with a single shared parameter and a renormalization of
-the adjacency matrix, giving the layer
+\begin{theorem}[Fundamental CNN--GNN connection]
+\label{thm:graphs:cnn-spectral}
+Every CNN can be represented exactly as a spectral GNN over a regular grid: the
+graph $G = (V, E)$ represents the pixel structure, connectivity $E$ is given by
+spatial neighbourhood, and the spectral filters correspond to convolutional
+kernels via the discrete Fourier transform.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+For an $n \times n$ grid the Laplacian has entries $4$ on the diagonal, $-1$ for
+$\abs{i-i'}+\abs{j-j'} = 1$, and $0$ otherwise. Its eigenvectors are exactly the
+two-dimensional discrete Fourier functions
+$\phi_{k,\ell}(i,j) = \frac1n e^{2\pi\imath(ki+\ell j)/n}$. Hence spatial
+convolution $f \star g$ corresponds exactly to spectral multiplication
+$\hat f \odot \hat g$ in the graph frequency domain.
+\end{proof}
+
+All three drawbacks of naive spectral filtering are removed by restricting the
+transfer function to a \emph{polynomial} of the Laplacian. If
+$g_\theta(\lambda) = \sum_{k=0}^K \theta_k \lambda^k$, then
+$g_\theta \star f = (\sum_k \theta_k \Lap^k) f$ and the eigenvectors cancel out:
+no eigendecomposition is needed. Moreover $\Lap^k$ connects only nodes within
+graph distance $k$, so a degree-$K$ polynomial filter is exactly $K$-localized.
+This is the precise sense in which the spectral and spatial views coincide.
+
+\begin{definition}[ChebNet: Chebyshev convolution]
+\label{def:graphs:chebnet}
+A spectral filter approximated by Chebyshev polynomials of order $K$ is
+$g_\theta(\Lambda) = \sum_{k=0}^K \theta_k T_k(\tilde\Lambda)$, where $T_k$ are
+the Chebyshev polynomials of the first kind and
+$\tilde\Lambda = 2\Lambda/\lambda_{\max} - I$ is the rescaled Laplacian
+\citep{defferrard2017convolutionalneuralnetworksgraphs}.
+\end{definition}
+
+\begin{theorem}[Localization of Chebyshev filters]
+\label{thm:graphs:cheb-local}
+A Chebyshev filter of order $K$ is strictly $K$-localized: the response at node
+$i$ depends only on nodes at graph distance at most $K$ from $i$.
+\end{theorem}
+
+\begin{proof}
+The Chebyshev recurrence is
+$T_k(\tilde\Lap) = 2\tilde\Lap\, T_{k-1}(\tilde\Lap) - T_{k-2}(\tilde\Lap)$. Since
+$\tilde\Lap_{ij} \neq 0$ only for adjacent $i, j$, multiplication by $\tilde\Lap$
+extends the support of a signal by exactly one hop. Thus $T_1(\tilde\Lap) f$
+depends on neighbours at distance $\le 1$, and by induction $T_k(\tilde\Lap) f$
+at node $i$ depends only on nodes at distance $\le k$. As
+$g_\theta(\tilde\Lap) = \sum_{k=0}^K \theta_k T_k(\tilde\Lap)$, the response
+depends on nodes at distance $\le K$.
+\end{proof}
+
+The recurrence lets one compute $g_\theta(\tilde\Lap) f$ by repeated sparse
+matrix--vector products, at total cost $O(K\abs{E})$ and with only $K+1$
+parameters, none depending on the eigenbasis. The graph convolutional network of
+\citet{kipf2017semi} is the first-order case $K = 1$ with a single shared
+parameter and a renormalization of the adjacency matrix, giving
 $H^{(\ell+1)} = \sigma\!\big(\hat D^{-1/2} \hat A\, \hat D^{-1/2} H^{(\ell)}
 W^{(\ell)}\big)$ with $\hat A = A + I$. This is plainly a message passing layer
 (\Cref{def:graphs:mpnn}) with degree-normalized aggregation, closing the circle:
 the spectral construction, made local and parameter-efficient, \emph{is} spatial
 message passing.
 
+\paragraph{A hierarchy of generalization.}
+The equivalences above place neural architectures in a single hierarchy of
+increasing generality:
+\[
+  \text{Perceptron} \subset \text{MLP} \subset \text{CNN (grid)}
+    \subset \text{spectral CNN} \subset \text{spectral GNN}
+    \subset \text{spatial GNN} \subset \text{general MPNN},
+\]
+each inclusion relaxing one architectural restriction (the spatial locality of
+the kernel, then the regular grid, then the fixed graph), at the cost of greater
+expressive power, more parameters, and increased overfitting risk. CNNs and GNNs
+share three architectural principles --- locality (aggregation from local
+neighbourhoods), weight sharing (parameters independent of position), and
+hierarchical composition (multi-scale representations via pooling or graph
+coarsening) --- which is why techniques such as pooling, dropout, batch
+normalization and skip connections transfer freely between them.
+
+\section{Graph attention networks}
+\label{sec:graphs:gat}
+
+The attentional flavour of message passing deserves separate treatment. Graph
+attention networks (GAT) sit at the intersection of spectral graph theory and
+adaptive attention: where spectral methods require a costly eigendecomposition,
+GATs achieve comparable expressive power through learnable attention coefficients
+that implicitly capture graph structure and long-range dependencies. Attention is
+message passing in which the aggregation weights are computed from the node
+features themselves --- and, applied to the complete graph, it recovers the
+self-attention of \Cref{ch:grids}.
+
+\begin{definition}[GAT attention mechanism]
+\label{def:graphs:gat}
+For a node $i$ with neighbourhood $\Nbr(i)$, the GAT
+mechanism~\citep{velickovic2017graph} computes:
+\begin{align}
+  z_i &= W h_i, \qquad z_j = W h_j
+    && \text{(shared linear projection),} \\
+  e_{ij} &= a^\top [z_i \,\|\, z_j]
+    && \text{(attention coefficients),} \\
+  \alpha_{ij} &= \frac{\exp\!\big(\operatorname{LeakyReLU}(e_{ij})\big)}
+       {\sum_{k \in \Nbr(i) \cup \{i\}} \exp\!\big(\operatorname{LeakyReLU}(e_{ik})\big)}
+    && \text{(masked softmax),} \\
+  h_i' &= \sigma\!\Big(\sum_{j \in \Nbr(i) \cup \{i\}} \alpha_{ij}\, z_j\Big)
+    && \text{(weighted aggregation),}
+\end{align}
+where $W \in \R^{d' \times d}$ is a shared weight matrix, $a \in \R^{2d'}$ a
+learnable attention vector, and $\|$ denotes concatenation.
+\end{definition}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small,
+    targetnode/.style={circle, draw=gdlred!70, fill=gdlred!20, minimum size=26pt,
+        inner sep=0pt, font=\small\bfseries, line width=1.4pt},
+    neighnode/.style={circle, draw=gdlblue!60, fill=gdlblue!20, minimum size=20pt,
+        inner sep=0pt, font=\small},
+    nonneigh/.style={circle, draw=gdlgray!40, fill=gdlgray!15, minimum size=18pt,
+        inner sep=0pt, font=\small, text=gdlgray!70!black}]
+\node[targetnode] (vi) at (0,0) {$v_i$};
+\node[neighnode] (v1) at (-2.2,1.6) {$v_1$};
+\node[neighnode] (v2) at (0,2.4) {$v_2$};
+\node[neighnode] (v3) at (2.2,1.3) {$v_3$};
+\node[neighnode] (v4) at (-2.0,-1.3) {$v_4$};
+\node[nonneigh] (v5) at (2.4,-1.5) {$v_5$};
+\node[nonneigh] (v6) at (-3.3,0.2) {$v_6$};
+\draw[gdlgray!40, thin] (v1)--(v6) (v4)--(v6) (v3)--(v5) (v1)--(v2)
+  (vi)--(v1) (vi)--(v2) (vi)--(v3) (vi)--(v4) (v5)--(v3);
+\draw[-{Stealth[length=6pt]}, line width=3pt, gdlorange, opacity=0.9,
+  shorten >=7pt, shorten <=6pt] (v2)--(vi);
+\draw[-{Stealth[length=5pt]}, line width=2pt, gdlorange, opacity=0.75,
+  shorten >=7pt, shorten <=6pt] (v1)--(vi);
+\draw[-{Stealth[length=5pt]}, line width=1.4pt, gdlorange, opacity=0.6,
+  shorten >=7pt, shorten <=6pt] (v3)--(vi);
+\draw[-{Stealth[length=4pt]}, line width=0.8pt, gdlorange, opacity=0.45,
+  shorten >=7pt, shorten <=6pt] (v4)--(vi);
+\node[font=\scriptsize, text=gdlorange!70!black] at (-0.7,1.4) {$\alpha_{2i}=0.42$};
+\node[font=\scriptsize, text=gdlorange!70!black] at (-1.7,0.5) {$\alpha_{1i}=0.28$};
+\node[font=\scriptsize, text=gdlorange!70!black] at (1.5,0.5) {$\alpha_{3i}=0.19$};
+\node[font=\scriptsize, text=gdlorange!70!black] at (-1.5,-0.7) {$\alpha_{4i}=0.11$};
+\node[rounded corners=4pt, draw=gdlorange!60, fill=gdlorange!8, line width=1pt,
+  inner sep=7pt, font=\footnotesize, text=gdlorange!70!black, anchor=north west,
+  align=left] at (3.4,1.0)
+  {\textbf{Attention coefficients:}\\[3pt]
+   $e_{ij}=\operatorname{LeakyReLU}(a^\top[Wh_i\,\|\,Wh_j])$\\[4pt]
+   $\alpha_{ij}=\operatorname{softmax}_j(e_{ij})$\\[4pt]
+   $h_i'=\sigma\big(\sum_{j\in\Nbr(i)}\alpha_{ij}Wh_j\big)$};
+\node[font=\scriptsize\bfseries, text=gdlgray!70!black, anchor=west]
+  at (-3.3,-2.4) {Arrow width $\propto$ attention weight};
+\end{tikzpicture}
+\caption[GAT attention mechanism]{The graph attention mechanism. The central
+node (red) computes attention coefficients $\alpha_{ij}$ with each neighbour
+(blue). Arrow thickness reflects the magnitude of the attention weights: the
+network learns to assign different importance to each neighbour based on node
+features.}
+\label{fig:graphs:gat}
+\end{figure}
+
+\begin{proposition}[Expressive power of GAT]
+\label{prop:graphs:gat}
+Standard graph attention networks are bounded in expressive power by the $1$-\WL{}
+test (\Cref{thm:graphs:wl-mpnn}). In particular: GAT cannot distinguish pairs of
+non-isomorphic graphs that $1$-\WL{} cannot; unlike a graph convolutional network
+with fixed weights, GAT can learn \emph{anisotropic}, adaptive aggregation
+functions through its attention coefficients; and GAT is permutation equivariant
+by construction.
+\end{proposition}
+
+\begin{proof}
+GAT is an instance of the MPNN framework with attention-weighted aggregation over
+the $1$-hop neighbourhood, so by \Cref{thm:graphs:wl-mpnn} it is bounded by
+$1$-\WL. Permutation equivariance follows because the coefficients $\alpha_{ij}$
+depend only on $(h_i, h_j)$ and the aggregation
+$\sum_{j \in \Nbr(i)} \alpha_{ij} z_j$ is symmetric in the order of the
+neighbours.
+\end{proof}
+
+To improve stability and expressive capacity, GATs employ \emph{multi-head
+attention}: $h$ independent attention mechanisms, each with its own parameters
+$W^{(k)}, a^{(k)}$, run in parallel and are combined by averaging,
+$h_i' = \sigma\big(\tfrac1h \sum_{k=1}^h \sum_{j \in \Nbr(i)} \alpha_{ij}^{(k)}
+W^{(k)} h_j\big)$, or by concatenation. Multiple heads reduce gradient variance,
+let different heads specialize in different relational patterns, and enlarge the
+representable function class.
+
+\paragraph{Spectral positional encoding.}
+A fundamental limitation of GAT (and of message passing generally) is its
+inability to distinguish structurally equivalent nodes. \emph{Spectral positional
+encoding} resolves this by attaching to each node a signature drawn from the
+Laplacian eigenvectors. With $L = U\Lambda U^\top$, the encoding of node $i$ is
+$\operatorname{PE}_i = [u_{i,1}, \dots, u_{i,k}] \in \R^k$, where $u_{i,j}$ is the
+$i$-th entry of the $j$-th smallest nontrivial eigenvector
+(\Cref{def:graphs:gft}). One may further define \emph{spectral distances} for
+attention between distant nodes --- the diffusion distance
+$d_D^2(i,j) = \sum_{k\ge2} e^{-2t\lambda_k}(u_{i,k} - u_{j,k})^2$, the Green
+function $G(i,j) = \sum_{k\ge2} u_{i,k} u_{j,k}/\lambda_k$, and the biharmonic
+distance $d_B^2(i,j) = \sum_{k\ge2}(u_{i,k} - u_{j,k})^2/\lambda_k^2$. Spectral
+graph transformers~\citep{kreuzer2021spectral} combine such learnable positional
+encodings with full attention, giving every pair of nodes a direct connection and
+thereby resolving the oversquashing pathology (\Cref{sec:graphs:oversquashing})
+at $O(1)$ information distance.
+
 \section{Expressivity and the Weisfeiler--Leman hierarchy}
 \label{sec:graphs:wl}
 
 Having a unifying mechanism invites a sharp question: how powerful is it? Can a
 message passing network tell any two non-isomorphic graphs apart? The answer is
-no, and the precise limit is given by a classical combinatorial algorithm from
-graph isomorphism testing.
+no, and the precise limit is a classical combinatorial algorithm from graph
+isomorphism testing, originally proposed in 1968~\citep{weisfeiler1968reduction}.
 
 \subsection{The Weisfeiler--Leman test}
 \label{sec:graphs:wl-test}
@@ -421,17 +1469,16 @@ graph isomorphism testing.
 \begin{definition}[1-Weisfeiler--Leman test]
 \label{def:graphs:wl}
 Given a graph $G = (V, E)$, the \emph{$1$-Weisfeiler--Leman} ($1$-\WL) algorithm
-assigns colours to nodes and refines them iteratively. Initialize
-$c^{(0)}(v)$ identically for all nodes (or from node labels, if present). At each
-step,
+assigns colours to nodes and refines them iteratively. Initialize $c^{(0)}(v)$
+identically for all nodes (or from node labels, if present). At each step,
 \[
   c^{(t+1)}(v) = \HASH\!\Big(c^{(t)}(v),\,
       \{\!\{\, c^{(t)}(u) : u \in \Nbr(v) \,\}\!\}\Big),
 \]
 where $\{\!\{\cdot\}\!\}$ is a multiset and $\HASH$ is an injective map sending
 each distinct (colour, neighbour-multiset) pair to a fresh colour. The refinement
-stabilizes in at most $n$ steps; two graphs are \emph{$\WL$-equivalent} when the
-final multisets of colours (the colour histograms) coincide.
+stabilizes in at most $n$ steps; two graphs are \emph{$\WL$-equivalent}
+($G_1 \equiv_{\WL} G_2$) when the final colour histograms coincide.
 \end{definition}
 
 The structural resemblance between the refinement step and a message passing
@@ -444,7 +1491,6 @@ its own features and the aggregate of its neighbours' messages.
 \centering
 \begin{tikzpicture}[>=Stealth, font=\small,
     wlnode/.style={circle, draw, thick, minimum size=6mm, inner sep=0pt}]
-% macro-like repeated edges
 \foreach \dx in {0,5.0,10.0}{
   \begin{scope}[shift={(\dx,0)}]
     \coordinate (n1) at (0,1.6);\coordinate (n2) at (1.8,1.6);
@@ -454,21 +1500,18 @@ its own features and the aggregate of its neighbours' messages.
        (n3)--(n5) (n4)--(n5) (n1)--(n6) (n2)--(n6) (n3)--(n6) (n4)--(n6);
   \end{scope}
 }
-% stage a: uniform
 \begin{scope}
   \node at (0.9,2.6) {\bfseries (a) $c^{(0)}$};
   \foreach \p/\x/\y in {1/0/1.6,2/1.8/1.6,3/1.8/0,4/0/0,5/0.9/-1.1,6/0.9/0.8}
     \node[wlnode, fill=gdlgray!40] at (\x,\y) {};
 \end{scope}
 \draw[->, very thick, gdlgray!50] (2.7,0.6) -- node[above,font=\scriptsize]{HASH} (4.3,0.6);
-% stage b: by degree
 \begin{scope}[shift={(5.0,0)}]
   \node at (0.9,2.6) {\bfseries (b) $c^{(1)}$};
   \foreach \p/\x/\y/\c in {1/0/1.6/{gdlblue!50},2/1.8/1.6/{gdlblue!50},3/1.8/0/{gdlred!50},4/0/0/{gdlred!50},5/0.9/-1.1/{gdlgreen!50},6/0.9/0.8/{gdlred!50}}
     \node[wlnode, fill=\c] at (\x,\y) {};
 \end{scope}
 \draw[->, very thick, gdlgray!50] (7.7,0.6) -- node[above,font=\scriptsize]{HASH} (9.3,0.6);
-% stage c: refined
 \begin{scope}[shift={(10.0,0)}]
   \node at (0.9,2.6) {\bfseries (c) $c^{(2)}$};
   \foreach \p/\x/\y/\c in {1/0/1.6/{gdlblue!50},2/1.8/1.6/{gdlblue!50},3/1.8/0/{gdlyellow!60},4/0/0/{gdlyellow!60},5/0.9/-1.1/{gdlgreen!50},6/0.9/0.8/{gdlred!50}}
@@ -495,14 +1538,14 @@ achieved by using injective aggregation and update functions.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-For the upper bound, observe that an MPNN layer computes node states from the
-node's own state and the multiset of neighbour states, the same information
-$1$-\WL{} uses; by induction on layers, $\WL$-equivalent graphs are mapped to
-equal representations. For tightness, one builds a message and update that
-realize an injective hash. Sum aggregation over a countable feature space,
-followed by a multilayer perceptron, is injective on multisets by the universal
-approximation theorem for set functions~\citep{zaheer2017deepsets}, so the MPNN
-can reproduce each refinement step exactly.
+For the upper bound, an MPNN layer computes node states from the node's own state
+and the multiset of neighbour states --- the same information $1$-\WL{} uses; by
+induction on layers, $\WL$-equivalent graphs map to equal representations. For
+tightness, one builds a message and update realizing an injective hash: sum
+aggregation over a countable feature space followed by a multilayer perceptron is
+injective on multisets by the universal approximation theorem for set
+functions~\citep{zaheer2017deepsets}, so the MPNN reproduces each refinement step
+exactly.
 \end{proof}
 
 \begin{example}[Two graphs $1$-\WL{} cannot separate]
@@ -510,40 +1553,55 @@ can reproduce each refinement step exactly.
 Let $G_1$ be the six-cycle $C_6$ and $G_2$ the disjoint union of two triangles
 $K_3 \sqcup K_3$. Both have six nodes, six edges, and every node of degree $2$.
 Under $1$-\WL{} all nodes start with one colour, see the multiset
-$\{\!\{1,1\}\!\}$, and stabilize to a single colour; the histograms are identical,
-so $G_1 \equiv_{\WL} G_2$. Yet the graphs are not isomorphic: $C_6$ is connected
-while $K_3 \sqcup K_3$ has two components. A standard MPNN therefore cannot tell
-a hexagonal ring from a pair of triangles, an instructive failure when global
-connectivity matters --- for example, distinguishing certain structural isomers
-in chemistry.
+$\{\!\{1,1\}\!\}$, and stabilize to a single colour; the histograms are identical
+($\mathbf{h}(G_1) = \mathbf{h}(G_2) = (6)$), so $G_1 \equiv_{\WL} G_2$. Yet the
+graphs are not isomorphic: $C_6$ is connected while $K_3 \sqcup K_3$ has two
+components. A standard MPNN therefore cannot tell a hexagonal ring from a pair of
+triangles, an instructive failure when global connectivity matters --- for
+example, distinguishing certain structural isomers in chemistry.
 \end{example}
 
 \subsection{Oversmoothing}
 \label{sec:graphs:oversmoothing}
 
 \Cref{thm:graphs:wl-mpnn} bounds what a network can distinguish but says nothing
-about what happens as we stack many layers. Empirically, deep MPNNs degrade:
-node representations converge to a common value and lose all discriminative
-power. This is \emph{oversmoothing}~\citep{li2018deeper}, and it has a clean
-spectral explanation through the Dirichlet energy.
+about what happens as we stack many layers. Empirically, deep MPNNs degrade: node
+representations converge to a common value and lose all discriminative power.
+This is \emph{oversmoothing}~\citep{li2018deeper}, and it has a clean spectral
+explanation through the Dirichlet energy.
 
 \begin{definition}[Dirichlet energy]
 \label{def:graphs:dirichlet}
 For node features $H \in \R^{n \times d}$ the \emph{Dirichlet energy} is
 \[
   E(H) = \tr(H^\top L\, H)
-       = \sum_{(i,j) \in E} W_{ij}\,\norm{h_i - h_j}^2 ,
+       = \sum_{c=1}^d \sum_{(i,j) \in E} W_{ij}\,(h_{ic} - h_{jc})^2 ,
 \]
 which vanishes iff $H$ is constant on each connected component.
 \end{definition}
 
-A linear, mean-aggregating message passing step is a step of graph diffusion: if
+\begin{proposition}[Linear MPNN as discrete diffusion]
+\label{prop:graphs:diffusion}
+A linear, mean-aggregating message passing step
 $h_v^{(\ell+1)} = (1-\alpha) h_v^{(\ell)} + \alpha \sum_{u \in \Nbr(v)}
-h_u^{(\ell)}/\deg(v)$, then in matrix form $H^{(\ell+1)} = (I - \alpha
-\tilde L)\, H^{(\ell)}$ with the random-walk Laplacian $\tilde L = D^{-1} L$.
+h_u^{(\ell)}/\deg(v)$ with $\alpha \in (0,1]$ is, in matrix form,
+$H^{(\ell+1)} = (I - \alpha \tilde L)\, H^{(\ell)}$, with the random-walk
+Laplacian $\tilde L = D^{-1} L = I - D^{-1} A$, which shares its spectrum with the
+symmetric normalized Laplacian.
+\end{proposition}
+
+\begin{proof}
+For each node,
+$h_v^{(\ell+1)} = h_v^{(\ell)} - \alpha\big(h_v^{(\ell)}
+- \sum_{u \sim v} h_u^{(\ell)}/\deg(v)\big)
+= h_v^{(\ell)} - \alpha (D^{-1} L\, H^{(\ell)})_v
+= (I - \alpha\tilde L\, H^{(\ell)})_v$, using
+$(D^{-1} A H)_v = \sum_{u \sim v} h_u/\deg(v)$.
+\end{proof}
+
 This is the explicit Euler discretization of the heat equation
 $\partial_t H = -\alpha \tilde L H$ on the graph, and iterating it smooths the
-signal.
+signal: $H^{(\ell)} = (I - \alpha\tilde L)^\ell H^{(0)}$.
 
 \begin{theorem}[Exponential oversmoothing]
 \label{thm:graphs:oversmoothing}
@@ -557,23 +1615,30 @@ so $E(H^{(\ell)}) \to 0$ exponentially: all node representations collapse to a
 common vector.
 \end{theorem}
 
-\begin{proof}[Proof sketch]
-Pass to the symmetric normalized Laplacian $L_{\mathrm{sym}}$, which shares its
-spectrum with $\tilde L$, and expand the features in its eigenbasis. The
-diffusion operator scales the coefficient of $u_k$ by $(1 - \alpha\lambda_k)$, so
-after $\ell$ steps the energy is
-$\sum_{k \ge 2} \lambda_k (1-\alpha\lambda_k)^{2\ell} \abs{\hat f_k}^2$ (the
-$k=1$ term vanishes since $\lambda_1 = 0$). Because $\alpha < 1/\lambda_n$, every
-factor satisfies $\abs{1-\alpha\lambda_k} \le 1 - \alpha\lambda_2$ for $k \ge 2$,
-which yields the bound.
+\begin{proof}
+Let $\{u_k\}$ be the orthonormal eigenbasis of
+$L_{\mathrm{sym}} = D^{-1/2} L\, D^{-1/2}$ with eigenvalues $\lambda_k$, and set
+$f_c = D^{1/2} h_c$ for each column of $H$, so that
+$h_c^\top L\, h_c = f_c^\top L_{\mathrm{sym}} f_c$. The diffusion operator
+satisfies $D^{1/2}(I - \alpha\tilde L)D^{-1/2} = I - \alpha L_{\mathrm{sym}}$,
+scaling the coefficient of $u_k$ by $(1 - \alpha\lambda_k)$. Hence
+\[
+  E(H^{(\ell)}) = \sum_c \sum_{k \ge 2}
+    \lambda_k (1-\alpha\lambda_k)^{2\ell} \abs{\hat f_{c,k}}^2
+\]
+(the $k=1$ term vanishes since $\lambda_1 = 0$). Since $\alpha < 1/\lambda_n$,
+$\abs{1-\alpha\lambda_k} \le 1 - \alpha\lambda_2$ for all $k \ge 2$, which yields
+the bound; as $0 < \alpha\lambda_2 < 1$, the factor decays exponentially.
 \end{proof}
 
 The rate is governed by the \emph{spectral gap} $\lambda_2$: well-connected
-graphs (large $\lambda_2$, such as expanders) homogenize fastest. This is the
+graphs (large $\lambda_2$, such as expanders) homogenize fastest, while poorly
+connected graphs ($\lambda_2 \approx 0$) preserve diversity longer. This is the
 discrete shadow of heat diffusion on a Riemannian manifold, where the spectral
 gap of the Laplace--Beltrami operator controls the mixing rate. Residual
-connections, normalization, and sheaf-based diffusion~\citep{bodnar2022neural}
-are among the remedies.
+connections, layer normalization, and sheaf-based diffusion~\citep{bodnar2022neural}
+--- which replaces scalar diffusion by diffusion in sheaves, letting each edge
+transport information in a different vector space --- are among the remedies.
 
 \subsection{Oversquashing and higher-order tests}
 \label{sec:graphs:oversquashing}
@@ -581,25 +1646,64 @@ are among the remedies.
 If oversmoothing is the loss of high-frequency signal as depth grows, the
 complementary failure is \emph{oversquashing}: the inability to propagate
 information across long distances, because the messages from an exponentially
-growing $\ell$-hop neighbourhood must be compressed into a fixed-size vector. The
-sensitivity of a node to a distant input,
-$\norm{\partial h_v^{(\ell)} / \partial h_u^{(0)}}$, is bounded by
-$(c_M c_U)^\ell\, [\hat A^\ell]_{vu}$ with $\hat A = D^{-1} A$ and message and
-update Lipschitz constants $c_M, c_U$; through topological bottlenecks the entry
-$[\hat A^\ell]_{vu}$ decays sharply. \citet{topping2022understanding} tie these
-bottlenecks to negative discrete Ricci curvature on edges and propose graph
-\emph{rewiring} to alleviate them --- a clean instance of differential geometry
-prescribing a cure for a learning pathology, paralleling how negative sectional
-curvature makes geodesics diverge (\Cref{ch:geodesics}).
+growing $\ell$-hop neighbourhood must be compressed into a fixed-size vector.
+
+\begin{definition}[Jacobian sensitivity]
+\label{def:graphs:sensitivity}
+The \emph{sensitivity} of node $v$ to node $u$ after $\ell$ layers is
+$S_{vu}^{(\ell)} = \norm{\partial h_v^{(\ell)} / \partial h_u^{(0)}}$, the
+operator norm of the Jacobian $\partial h_v^{(\ell)} / \partial h_u^{(0)} \in
+\R^{d \times d}$. If $S_{vu}^{(\ell)} \approx 0$, node $v$ is essentially
+insensitive to the input of node $u$.
+\end{definition}
+
+\begin{proposition}[Exponential decay of sensitivity]
+\label{prop:graphs:oversquashing}
+For an MPNN with message and update functions Lipschitz with constants
+$c_M, c_U$ and $\hat A = D^{-1} A$ the random-walk transition matrix,
+\[
+  S_{vu}^{(\ell)} \le (c_U c_M)^\ell\, [\hat A^\ell]_{vu}.
+\]
+In particular, if the graph distance $d_G(v,u) > \ell$, then
+$[\hat A^\ell]_{vu} = 0$ and the sensitivity is exactly zero.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+By induction on $\ell$. For $\ell = 1$ and $v \neq u$, the chain rule gives
+$\partial h_v^{(1)} / \partial h_u^{(0)}
+= (\partial U / \partial m_v)(\partial m_v / \partial h_u^{(0)})$, nonzero only if
+$u \in \Nbr(v)$, where the Lipschitz constant contributes $c_M$ and the degree
+normalization the factor $1/\deg(v) = [\hat A]_{vu}$; hence
+$S_{vu}^{(1)} \le c_U c_M [\hat A]_{vu}$. For the inductive step, the multivariate
+chain rule over $w \in \Nbr(v) \cup \{v\}$ together with the inductive hypothesis
+produces the matrix product $\hat A^{\ell+1}$, recording all length-$(\ell+1)$
+paths from $u$ to $v$.
+\end{proof}
+
+The bound shows that the graph topology, encoded in $\hat A^\ell$, is the
+determining factor. \citet{topping2022understanding} tie these bottlenecks to
+negative discrete (Ollivier) Ricci curvature on edges: edges with negative Ricci
+curvature are bottlenecks where $[\hat A^\ell]_{vu}$ decays sharply. This is the
+discrete version of the Jacobi equation in Riemannian geometry (\Cref{ch:geodesics}):
+negative sectional curvature makes geodesics diverge, reducing the volume of
+information that can propagate. They propose graph \emph{rewiring} via Ricci flow,
+adding edges in negatively curved regions to alleviate the bottlenecks --- a clean
+instance of differential geometry prescribing a cure for a learning pathology.
 
 Finally, the $1$-\WL{} barrier can be raised by climbing a hierarchy of more
 powerful tests.
 
 \begin{definition}[$k$-Weisfeiler--Leman test]
 \label{def:graphs:k-wl}
-The \emph{$k$-\WL} test colours $k$-tuples of nodes rather than single nodes,
-refining each tuple's colour from the colours of all tuples obtained by replacing
-one of its entries by an arbitrary node~\citep{morris2019weisfeiler}.
+The \emph{$k$-\WL} test colours $k$-tuples of nodes
+$\bar v = (v_1, \dots, v_k) \in V^k$, refining each tuple's colour from the
+colours of all tuples obtained by replacing one of its entries by an arbitrary
+node~\citep{morris2019weisfeiler}:
+\[
+  c^{(t+1)}(\bar v) = \HASH\!\Big(c^{(t)}(\bar v),\,
+    \{\!\{\, (c^{(t)}(\bar v[w/1]), \dots, c^{(t)}(\bar v[w/k])) : w \in V \,\}\!\}\Big),
+\]
+where $\bar v[w/i]$ replaces the $i$-th component of $\bar v$ by $w$.
 \end{definition}
 
 \begin{proposition}[Strict $k$-\WL{} hierarchy]
@@ -609,22 +1713,22 @@ The tests form a strictly increasing hierarchy in distinguishing power,
   1\text{-}\WL \subsetneq 2\text{-}\WL \subsetneq 3\text{-}\WL \subsetneq \cdots,
 \]
 each level distinguishing graphs the previous cannot, at a cost of $O(n^k)$
-memory per iteration.
+memory per iteration ($O(n^k \log n)$ time).
 \end{proposition}
 
 The exponential cost of $k$-\WL{} motivates cheaper ways past the $1$-\WL{}
-ceiling: structural and positional encodings (for instance Laplacian
-eigenvectors from \Cref{def:graphs:gft}) that break node symmetries, spectral
-graph transformers~\citep{kreuzer2021spectral}, and message passing on
-higher-order topological domains (simplicial and cell complexes), pursued in
-\Cref{ch:gauges,ch:applications}.
+ceiling: structural and positional encodings (for instance Laplacian eigenvectors
+from \Cref{def:graphs:gft}) that break node symmetries, spectral graph
+transformers~\citep{kreuzer2021spectral}, and message passing on higher-order
+topological domains (simplicial and cell complexes, \Cref{sec:graphs:tdl}),
+pursued further in \Cref{ch:gauges,ch:applications}.
 
 \medskip
 The three limitations --- oversmoothing, oversquashing, and the $\WL$ barrier ---
 are facets of one fact: message passing is fundamentally \emph{local}, moving
-information one hop per layer. Too many layers destroy the signal; too few
-prevent long-range communication; and purely local computation cannot see certain
-global patterns. The geometric tools developed here --- spectral analysis,
-discrete curvature, higher-order topology --- do not merely diagnose these limits
-but prescribe concrete remedies, exemplifying the thesis of this book that
-geometry is the organizing principle of effective architectures.
+information one hop per layer. Too many layers destroy the signal; too few prevent
+long-range communication; and purely local computation cannot see certain global
+patterns. The geometric tools developed here --- spectral analysis, discrete
+curvature, higher-order topology --- do not merely diagnose these limits but
+prescribe concrete remedies, exemplifying the thesis of this book that geometry is
+the organizing principle of effective architectures.

@@ -2,6 +2,11 @@
 \providecommand{\SE}{\mathrm{SE}}
 \providecommand{\Eucl}{\mathrm{E}}
 \providecommand{\Hyp}{\mathbb{H}}
+\providecommand{\Attn}{\operatorname{Attention}}
+\providecommand{\softmax}{\operatorname{softmax}}
+\providecommand{\Concat}{\operatorname{Concat}}
+\providecommand{\sigm}{\sigma}
+\providecommand{\Lc}{\mathcal{L}}
 
 \chapter{Applications}
 \label{ch:applications}
@@ -15,108 +20,619 @@ machinery of the ``5~Gs'' becomes concrete in real problems, and why the
 geometric viewpoint translates into measurable gains in accuracy, data
 efficiency, and physical consistency.
 
-We organize the survey around three families of data. \emph{Computer vision}
-ranges from regular pixel grids to unstructured three-dimensional point clouds,
-exercising the grid, group, and gauge themes. \emph{Molecules and physical
-systems} are the showcase of $\Eucl(3)$ and $\SE(3)$ equivariance, where
-respecting the symmetries of physics is not a refinement but a requirement.
-\emph{Recommender systems and social networks} are relational by nature and
-rely on permutation invariance and, increasingly, on non-Euclidean geometry. A
-fourth section, on \emph{geometric attention}, acts as a bridge: it shows how
-the transformer --- the architecture behind much of modern machine learning ---
-fits the geometric blueprint and reappears, suitably constrained, throughout the
-other application areas.
+The chapter has two movements. The first develops the \emph{attention
+mechanism} in full: its history, its algebraic foundations, the geometry of its
+query, key, and value spaces, its formulation as an integral operator, and ---
+crucially --- the precise sense in which it is the adaptive counterpart of the
+geometric convolution of \Cref{ch:grids,ch:groups}. This material is foundational
+rather than merely applied: the transformer is the architecture behind much of
+modern machine learning, and understanding it geometrically explains both its
+success and the long line of equivariant variants that power the rest of the
+chapter. The second movement surveys the application areas themselves,
+organized around three families of data. \emph{Computer vision} ranges from
+regular pixel grids to unstructured three-dimensional point clouds, exercising
+the grid, group, and gauge themes. \emph{Molecules and physical systems} are the
+showcase of $\Eucl(3)$ and $\SE(3)$ equivariance, where respecting the
+symmetries of physics is not a refinement but a requirement. \emph{Recommender
+systems and social networks} are relational by nature and rely on permutation
+invariance and, increasingly, on non-Euclidean geometry.
 
-\section{Computer vision}
-\label{sec:apps:vision}
+\section{Attention mechanisms}
+\label{sec:apps:attention-foundations}
 
-Computer vision is the historical birthplace of the ideas in this book.
-Convolutional neural networks won the ImageNet competition in
-2012~\citep{krizhevsky2012alexnet} precisely because they encode a symmetry of
-images: a translation of the input produces a translated feature map. As
-developed in \Cref{ch:grids}, this translation equivariance is what lets a
-single learned filter be reused at every position, slashing the parameter count
-and providing the inductive bias that makes images learnable from finite data.
-Everything that follows in computer vision can be read as an attempt to extend
-this success beyond the flat pixel grid.
+Attention mechanisms are the natural complement of the geometric convolutions
+developed in the previous chapters: where convolutions impose rigid structure
+through shared, content-independent kernels, attention introduces adaptive
+flexibility, weighting the contribution of each element dynamically according to
+the information it carries. This section develops the mathematical foundations
+of attention, from its classical algebraic formulation to the geometric
+extensions that let it operate on non-Euclidean domains while preserving
+symmetries.
 
-\paragraph{Beyond translation.}
-Many visual tasks are invariant to more than translation. A galaxy, a cell
-under a microscope, or an aerial image has no preferred orientation; a
-classifier should not have to relearn the same pattern in every rotated copy.
-Group-equivariant convolutional networks (\Cref{ch:groups}) build rotation and
-reflection symmetry directly into the convolution, so that a feature detected in
-one orientation is automatically detected in all of them. The payoff is sharper
-on small datasets, where data augmentation cannot cover the symmetry group
-densely enough and the architecture must supply the invariance instead.
+\subsection{History and motivation}
+\label{subsec:apps:attn-history}
 
-\paragraph{Three-dimensional vision.}
-The cleanest break from the grid comes with three-dimensional data. A LiDAR
-scan or a depth sensor returns a \emph{point cloud}: an unordered set of points
-in $\R^3$, with no grid, no canonical ordering, and a variable cardinality. The
-relevant symmetry is twofold. First, the output must be \emph{invariant to
-permutations} of the points, since the set $\{p_1,\dots,p_n\}$ does not depend on
-how we list its elements. Second, for many tasks it must be invariant or
-equivariant to rigid motions of the scene. The first requirement is captured
-exactly by the theory of functions on sets.
+Attention mechanisms emerged historically from the need to overcome the
+limitations of sequential models in natural language processing. The early work
+of \citet{bahdanau2014neural} and \citet{luong2015effective} introduced
+attention into recurrent-network machine-translation systems, allowing the model
+to ``attend'' to different parts of the input sequence during generation. The
+turning point came with the seminal \emph{``Attention is All You Need''} of
+\citet{vaswani2017attentionneed}, which showed that attention alone --- without
+recurrence or convolution --- could reach state-of-the-art performance on
+translation. This transformer architecture revolutionized not only natural
+language processing but became the foundation of models for computer vision,
+graph processing, and, eventually, geometric deep learning.
 
-\begin{theorem}[Universal representation of set functions]
-\label{thm:apps:deepsets}
-Any continuous permutation-invariant function $f$ of a set
-$\{x_1,\dots,x_n\}\subset\R^d$ can be written in the form
+The historical evolution can be summarized in three phases: attention as a
+\emph{complement} to recurrent networks (2014--2016), used to improve the
+handling of long-range dependencies; attention as the \emph{principal
+architecture} (2017--2019), with pure transformers replacing recurrent models;
+and \emph{geometric attention} (2020--present), extending the mechanism to
+non-Euclidean data while preserving symmetries. The remainder of this chapter
+follows that arc to its current destination.
+
+\subsection{Algebraic foundations}
+\label{subsec:apps:attn-algebra}
+
+Attention rests on concepts from linear algebra and the geometry of vector
+spaces. In essence it operates on three interrelated vector spaces that encode
+different aspects of the information.
+
+\paragraph{Feature spaces.}
+Consider a feature space $\mathcal{H} = \R^d$ in which the input
+representations live. For a set of $n$ input elements we collect them into a
+matrix
 \[
-  f(\{x_1,\dots,x_n\}) \;=\; \rho\!\left(\sum_{i=1}^n \phi(x_i)\right),
+  X = [x_1, x_2, \dots, x_n]^\top \in \R^{n \times d},
 \]
-for suitable continuous functions $\phi$ and $\rho$.
+where each $x_i \in \mathcal{H}$ is one element of the input sequence. The
+attention mechanism defines three fundamental linear transformations, the
+\emph{queries}, \emph{keys}, and \emph{values},
+\[
+  Q = X W_Q \in \R^{n\times d_k},
+  \qquad
+  K = X W_K \in \R^{n\times d_k},
+  \qquad
+  V = X W_V \in \R^{n\times d_v},
+\]
+where the weight matrices $W_Q, W_K \in \R^{d\times d_k}$ and
+$W_V \in \R^{d\times d_v}$ are trainable parameters projecting the input space
+onto specialized subspaces. In the standard multi-head implementation one takes
+$d_k = d_v = d/h$, where $h$ is the number of attention heads.
+
+\begin{definition}[Dot product as a similarity measure]
+\label{def:apps:dot-similarity}
+The fundamental compatibility function in attention is the dot product
+\[
+  \operatorname{sim}(q_i, k_j) = q_i^\top k_j
+  = \norm{q_i}\,\norm{k_j}\cos\theta_{ij},
+\]
+where $\theta_{ij}$ is the angle between $q_i$ and $k_j$.
+\end{definition}
+
+This geometric reading shows that attention measures a normalized cosine
+similarity between representations in feature space: aligned query--key pairs
+score highly, orthogonal pairs score near zero.
+
+\paragraph{The geometry of the Q, K, V spaces.}
+The compatibility of all query--key pairs is collected in the
+\emph{similarity matrix}
+\[
+  S = Q K^\top, \qquad S_{ij} = \inner{q_i}{k_j} \in \R^{n\times n}.
+\]
+This matrix encodes all the geometric relations between queries and keys; when
+$Q = K$ (pure self-attention) it coincides with the Gram matrix of the keys. It
+admits a singular value decomposition $S = U\Sigma V^\top$ whose factors capture
+the principal directions of queries and keys, its Frobenius norm satisfies
+$\norm{S}_F^2 = \operatorname{tr}(QK^\top K Q^\top)$, and entrywise
+$S_{ij} = \norm{q_i}\norm{k_j}\cos\theta_{ij}$.
+
+\begin{theorem}[Geometric projection in attention]
+\label{thm:apps:geom-projection}
+The attention mechanism can be interpreted as a geometric projection of the
+value space onto the subspace spanned by the queries, mediated by the metric
+induced by the keys. For each query $q_i$,
+\[
+  y_i = \sum_{j=1}^{n} \alpha_{ij}\, v_j = V^\top \boldsymbol{\alpha}_i,
+  \qquad
+  \boldsymbol{\alpha}_i = \softmax\!\bigl(S_{i,:}/\sqrt{d_k}\bigr),
+\]
+where $\boldsymbol{\alpha}_i$ is a probability distribution over the value
+index.
 \end{theorem}
 
-This result, due to the DeepSets framework~\citep{zaheer2017deepsets}, is the
-theoretical foundation of architectures such as
-PointNet~\citep{qi2017pointnet}: encode each point independently with a shared
-network $\phi$, pool the encodings with a permutation-invariant aggregator (a
-sum or a max), and decode with $\rho$. The construction is the simplest possible
-instance of the message-passing blueprint of \Cref{ch:graphs} --- a single
-round of messages on a graph with no edges --- and it already guarantees the
-correct invariance by design rather than by augmentation.
+\begin{proof}
+The attention weights $\alpha_{ij}$ form a convex (probabilistic) combination
+over the values, determined by the geometric proximity of $q_i$ to each key
+$k_j$ as measured by the scaled, softmax-normalized inner product. The resulting
+projection preserves the structure of the value space while emphasizing
+directions aligned with the query according to the metric defined by the keys.
+\end{proof}
 
-\paragraph{Curved domains.}
-When the data lives on a curved surface rather than in free space, the gauge and
-geodesic themes (\Cref{ch:geodesics,ch:gauges}) take over. Spherical signals ---
-panoramic images, cosmological maps, the surface of the Earth --- are processed
-by spherical convolutional networks~\citep{cohen2018sphericalcnns} that are
-equivariant to the rotation group $\SO(3)$, so that rotating the sphere rotates
-the response coherently. On a general mesh there is no global frame, and
-gauge-equivariant networks ensure that the output does not depend on the
-arbitrary local choice of coordinates. In every case the recurring lesson is the
-same: identify the symmetry of the domain, then build it into the operator.
+\Cref{fig:apps:qkv} illustrates this two-stage picture: similarities are read
+off as angles in the query--key space, and the output is the corresponding
+convex combination of value vectors.
 
-\section{Geometric attention and transformers}
-\label{sec:apps:attention}
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small, scale=0.82, every node/.style={transform shape}]
+% ============================================================
+% LEFT PANEL: Query-Key space (dot-product similarity)
+% ============================================================
+\begin{scope}[shift={(0,0)}]
+  \node[font=\bfseries, align=center, text=black] at (3.2, 6.8)
+    {Query and key space};
+  \draw[->, gdlgray!60, line width=0.8pt] (-0.3, 0) -- (6.8, 0)
+    node[right, font=\footnotesize, text=gdlgray!70!black] {$e_1$};
+  \draw[->, gdlgray!60, line width=0.8pt] (0, -0.3) -- (0, 6.5)
+    node[above, font=\footnotesize, text=gdlgray!70!black] {$e_2$};
+  \foreach \x in {1,...,6} {\draw[gdlgray!15] (\x, -0.1) -- (\x, 6.3);}
+  \foreach \y in {1,...,6} {\draw[gdlgray!15] (-0.1, \y) -- (6.6, \y);}
+  \node[font=\footnotesize, text=gdlgray!70!black, anchor=north east] at (-0.1, -0.1) {$0$};
+  \draw[gdlpurple!60, line width=0.8pt]
+    ({2.2*cos(42.0)}, {2.2*sin(42.0)}) arc[start angle=42.0, end angle=51.1, radius=2.2];
+  \node[font=\scriptsize, text=gdlpurple!70!black, anchor=south west]
+    at ({2.55*cos(46.5)}, {2.55*sin(46.5)}) {$\theta_{i1}$};
+  \draw[gdlpurple!60, line width=0.8pt]
+    ({1.8*cos(23.3)}, {1.8*sin(23.3)}) arc[start angle=23.3, end angle=42.0, radius=1.8];
+  \node[font=\scriptsize, text=gdlpurple!70!black, anchor=north west]
+    at ({2.15*cos(32.5)}, {2.15*sin(32.5)}) {$\theta_{i2}$};
+  \draw[gdlpurple!60, line width=0.8pt]
+    ({1.5*cos(42.0)}, {1.5*sin(42.0)}) arc[start angle=42.0, end angle=78.3, radius=1.5];
+  \node[font=\scriptsize, text=gdlpurple!70!black, anchor=south]
+    at ({1.9*cos(60)}, {1.9*sin(60)}) {$\theta_{i3}$};
+  \draw[-{Stealth[length=5pt,width=4pt]}, gdlblue!80, line width=1.8pt] (0,0) -- (5.0, 4.5);
+  \node[font=\small, text=gdlblue!70!black, anchor=south west] at (5.1, 4.5) {$\mathbf{q}_i$};
+  \fill[gdlblue!70] (5.0, 4.5) circle (3pt);
+  \draw[-{Stealth[length=5pt,width=4pt]}, gdlred!80, line width=1.8pt] (0,0) -- (4.2, 5.2);
+  \node[font=\small, text=gdlred!70!black, anchor=south] at (4.2, 5.35) {$\mathbf{k}_1$};
+  \fill[gdlred!70] (4.2, 5.2) circle (3pt);
+  \draw[-{Stealth[length=5pt,width=4pt]}, gdlred!80, line width=1.8pt] (0,0) -- (5.8, 2.5);
+  \node[font=\small, text=gdlred!70!black, anchor=west] at (5.9, 2.5) {$\mathbf{k}_2$};
+  \fill[gdlred!70] (5.8, 2.5) circle (3pt);
+  \draw[-{Stealth[length=5pt,width=4pt]}, gdlred!80, line width=1.8pt] (0,0) -- (1.2, 5.8);
+  \node[font=\small, text=gdlred!70!black, anchor=south] at (1.2, 5.9) {$\mathbf{k}_3$};
+  \fill[gdlred!70] (1.2, 5.8) circle (3pt);
+  \coordinate (projfoot) at (4.17, 5.17);
+  \draw[gdlpurple!40, line width=0.6pt, densely dotted] (5.0, 4.5) -- (projfoot);
+  \fill[gdlpurple!50] (projfoot) circle (2pt);
+  \node[font=\tiny, text=gdlpurple!70!black, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=1.5pt, rounded corners=1pt, anchor=south west]
+    at (4.5, 5.35) {high similarity};
+  \node[font=\tiny, text=gdlpurple!70!black, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=1.5pt, rounded corners=1pt, anchor=south west]
+    at (6.0, 2.55) {medium};
+  \node[font=\tiny, text=gdlpurple!70!black, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=1.5pt, rounded corners=1pt, anchor=south east]
+    at (0.9, 5.95) {low};
+  \node[font=\scriptsize, text=gdlpurple!70!black, align=center, anchor=north west]
+    at (0.3, -0.8) {$\alpha_{ij} = \operatorname{softmax}_j\!\left(\dfrac{\mathbf{q}_i \cdot \mathbf{k}_j}{\sqrt{d_k}}\right)$};
+\end{scope}
+% ============================================================
+% ARROW between panels
+% ============================================================
+\draw[->, gdlorange!70, line width=2pt] (7.8, 3.2) -- (9.5, 3.2);
+\node[font=\footnotesize, align=center, text=gdlorange!70!black] at (8.65, 4.0)
+  {Attention\\weights $\alpha_{ij}$};
+% ============================================================
+% RIGHT PANEL: Weighted value aggregation
+% ============================================================
+\begin{scope}[shift={(10.0, 0)}]
+  \node[font=\bfseries, align=center, text=black] at (3.5, 6.8)
+    {Weighted aggregation of values};
+  \draw[->, gdlgray!60, line width=0.8pt] (-0.3, 0) -- (7.3, 0)
+    node[right, font=\footnotesize, text=gdlgray!70!black] {$e_1$};
+  \draw[->, gdlgray!60, line width=0.8pt] (0, -0.3) -- (0, 6.5)
+    node[above, font=\footnotesize, text=gdlgray!70!black] {$e_2$};
+  \foreach \x in {1,...,7} {\draw[gdlgray!15] (\x, -0.1) -- (\x, 6.3);}
+  \foreach \y in {1,...,6} {\draw[gdlgray!15] (-0.1, \y) -- (7.1, \y);}
+  \node[font=\footnotesize, text=gdlgray!70!black, anchor=north east] at (-0.1, -0.1) {$0$};
+  \draw[-{Stealth[length=4pt,width=3pt]}, gdlgreen!35, line width=0.8pt] (0,0) -- (3.0, 5.5);
+  \node[font=\small, text=gdlgreen!70!black, anchor=south] at (3.0, 5.6) {$\mathbf{v}_1$};
+  \fill[gdlgreen!60] (3.0, 5.5) circle (2.5pt);
+  \draw[-{Stealth[length=4pt,width=3pt]}, gdlgreen!35, line width=0.8pt] (0,0) -- (5.5, 2.0);
+  \node[font=\small, text=gdlgreen!70!black, anchor=north west] at (5.6, 1.9) {$\mathbf{v}_2$};
+  \fill[gdlgreen!60] (5.5, 2.0) circle (2.5pt);
+  \draw[-{Stealth[length=3pt,width=2.5pt]}, gdlgreen!25, line width=0.6pt] (0,0) -- (1.5, 4.0);
+  \node[font=\small, text=gdlgreen!70!black, anchor=east] at (1.3, 4.3) {$\mathbf{v}_3$};
+  \fill[gdlgreen!50] (1.5, 4.0) circle (2pt);
+  \draw[-{Stealth[length=5pt,width=4pt]}, gdlgreen!75, line width=2.2pt] (0,0) -- (1.95, 3.575);
+  \node[font=\scriptsize, text=gdlgreen!70!black, anchor=east,
+        fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt, rounded corners=1pt]
+    at (1.5, 2.5) {$\alpha_{i1}\mathbf{v}_1$};
+  \draw[-{Stealth[length=4pt,width=3pt]}, gdlgreen!65, line width=1.4pt] (0,0) -- (1.375, 0.5);
+  \node[font=\scriptsize, text=gdlgreen!70!black, anchor=north west,
+        fill=white, fill opacity=0.85, text opacity=1, inner sep=1pt, rounded corners=1pt]
+    at (1.45, 0.55) {$\alpha_{i2}\mathbf{v}_2$};
+  \draw[-{Stealth[length=3pt,width=2pt]}, gdlgreen!50, line width=0.6pt] (0,0) -- (0.15, 0.4);
+  \draw[gdlorange!60, line width=0.7pt, dashed] (1.95, 3.575) -- (3.325, 4.075);
+  \draw[gdlorange!60, line width=0.7pt, dashed] (1.375, 0.5) -- (3.325, 4.075);
+  \draw[gdlorange!50, line width=0.5pt, densely dotted] (3.325, 4.075) -- (3.475, 4.475);
+  \draw[-{Stealth[length=6pt,width=5pt]}, gdlorange!80, line width=2.4pt] (0,0) -- (3.475, 4.475);
+  \node[font=\small\bfseries, text=gdlorange!70!black, anchor=south west] at (3.55, 4.5) {$\mathbf{y}_i$};
+  \fill[gdlorange!80] (3.475, 4.475) circle (3.5pt);
+  \node[font=\scriptsize, text=gdlpurple!70!black, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=2pt, rounded corners=1pt, anchor=west]
+    at (3.3, 5.5) {$\alpha_{i1} = 0.65$};
+  \node[font=\scriptsize, text=gdlpurple!70!black, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=2pt, rounded corners=1pt, anchor=west]
+    at (5.8, 2.5) {$\alpha_{i2} = 0.25$};
+  \node[font=\scriptsize, text=gdlpurple!70!black, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=2pt, rounded corners=1pt, anchor=east]
+    at (1.0, 4.6) {$\alpha_{i3} = 0.10$};
+  \node[font=\scriptsize, text=gdlorange!70!black, align=center, anchor=north west]
+    at (0.3, -0.8) {$\mathbf{y}_i = \displaystyle\sum_{j} \alpha_{ij}\, \mathbf{v}_j$};
+\end{scope}
+\end{tikzpicture}
+\caption[Geometric interpretation of attention]{Geometric interpretation of the
+attention mechanism. \textbf{Left}: in the query and key space, the similarity
+between $\mathbf{q}_i$ and each $\mathbf{k}_j$ is measured by the angle
+$\theta_{ij}$ (scaled inner product). \textbf{Right}: the values
+$\mathbf{v}_j$ are weighted by the attention coefficients $\alpha_{ij}$, and the
+output $\mathbf{y}_i$ is their convex combination.}
+\label{fig:apps:qkv}
+\end{figure}
 
-The transformer~\citep{vaswani2017attentionneed} is, at first sight, a creature
-of a different world: it was designed for sequences of words, not for grids or
-graphs. Yet it fits the geometric picture precisely, and understanding why
-explains both its success and the long line of geometric variants that power the
-applications in the rest of this chapter.
+\subsection{The basic attention mechanism}
+\label{subsec:apps:attn-basic}
 
-\paragraph{Attention as adaptive message passing.}
-Scaled dot-product attention computes, for each element, a weighted average of
-the others,
+Scaled dot-product attention is defined formally as
 \[
-  \mathrm{Attention}(Q,K,V)
-  = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
-  \qquad
-  y_i = \sum_{j} \alpha_{ij}\, v_j,
+  \Attn(Q, K, V) = \softmax\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V .
 \]
-where the weights $\alpha_{ij}\ge 0$ sum to one and form a probability
-distribution over the inputs. Read geometrically, this is message passing
+The score matrix $S = QK^\top \in \R^{n\times n}$ encodes the compatibility of
+each query--key pair, and the scale factor $1/\sqrt{d_k}$ prevents the dot
+products from growing excessively with the dimension and saturating the softmax.
+Equivalently, for each element
+\[
+  y_i = \sum_{j=1}^{n} \alpha_{ij}\, v_j,
+  \qquad \sum_{j=1}^{n}\alpha_{ij} = 1, \qquad \alpha_{ij}\ge 0,
+\]
+so the output is a convex interpolation in the value space, with weights forming
+a probability distribution over the inputs.
+
+\begin{definition}[Generalized attention function]
+\label{def:apps:generalized-attn}
+A \emph{generalized attention function} computes, for each query,
+\[
+  y_i = \sum_{j=1}^{n}\alpha_{ij}\, v_j,
+  \qquad
+  \alpha_{ij} = \frac{\exp(e_{ij})}{\sum_{k=1}^n \exp(e_{ik})},
+  \qquad
+  e_{ij} = a(q_i, k_j),
+\]
+where $a:\mathcal{X}\times\mathcal{Y}\to\R$ is a compatibility function. The
+scaled dot product is the choice $a(q,k) = \inner{q}{k}/\sqrt{d_k}$, but any
+$G$-invariant scalar of the pair $(q_i, k_j)$ is admissible --- the freedom that
+the geometric variants below exploit.
+\end{definition}
+
+\emph{Self-attention} is the special case $Q = K = V = X$ in which queries,
+keys, and values all come from the same input, letting every element attend to
+all the others and capturing global dependencies in a single operation. This
+construction is also maximally expressive among permutation-equivariant maps.
+
+\begin{theorem}[Universality of self-attention]
+\label{thm:apps:self-attn-universal}
+Let $\mathcal{K}\subseteq\R^{n\times d}$ be compact. Any continuous
+permutation-equivariant function $f:\mathcal{K}\to\R^{n\times d}$ (that is,
+$f(PX) = P f(X)$ for every permutation matrix $P$) can be approximated uniformly
+on $\mathcal{K}$ to arbitrary precision. Full universality requires the complete
+transformer block --- self-attention together with feed-forward layers and
+residual connections --- not isolated self-attention layers alone; see
+\citet{yun2020transformers} for the rigorous statement.
+\end{theorem}
+
+\begin{proof}[Sketch]
+By the representation theorem for symmetric functions~\citep{zaheer2017deepsets},
+any continuous permutation-equivariant $f$ can be written as
+$f(X)_i = \phi\bigl(x_i, \sum_j \rho(x_j)\bigr)$ for suitable continuous
+$\phi,\rho$. By the universal approximation theorem one approximates this, for
+any $\epsilon>0$, by a sum of pairwise interactions
+$\sum_j \softmax\bigl(g_1(x_i)^\top g_2(x_j)\bigr)\, h(g_3(x_j))$, which is
+realized exactly by a self-attention layer whose projection matrices implement
+$g_1,g_2,g_3$, the scale factor being absorbed into $g_1,g_2$. Composition of
+universally approximable maps gives the result.
+\end{proof}
+
+\subsection{Multi-head attention}
+\label{subsec:apps:multihead}
+
+Multi-head attention extends the basic mechanism by processing several
+representation subspaces in parallel,
+\[
+  \operatorname{MultiHead}(Q,K,V) = \Concat(\mathrm{head}_1,\dots,\mathrm{head}_h)\,W_O,
+  \qquad
+  \mathrm{head}_i = \Attn(QW_Q^i, KW_K^i, VW_V^i),
+\]
+with projections $W_Q^i, W_K^i \in \R^{d\times d_k}$ and
+$W_V^i \in \R^{d\times d_v}$ for $i = 1,\dots,h$ and an output projection
+$W_O \in \R^{hd_v\times d}$. The decomposition into parallel subspaces lets each
+head specialize in a different type of relation, increases the model's capacity
+to attend to several positions and subspaces at once, and improves training
+stability through partial redundancy (\Cref{fig:apps:multihead}).
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    scale=0.78, every node/.style={transform shape},
+    arrow/.style={-{Stealth[length=5pt]}, thick, draw=gdlgray!60},
+    line/.style={thick, draw=gdlgray!60},
+    inputbox/.style={rectangle, rounded corners=3pt, draw=gdlblue!60, fill=gdlblue!20,
+        thick, minimum width=2.4cm, minimum height=0.7cm, font=\small,
+        text=gdlblue!70!black, align=center},
+    projbox/.style={rectangle, rounded corners=3pt, draw=gdlgreen!60, fill=gdlgreen!20,
+        thick, minimum width=1.1cm, minimum height=0.55cm, font=\footnotesize,
+        text=gdlgreen!70!black, align=center},
+    attnbox/.style={rectangle, rounded corners=3pt, draw=gdlorange!60, fill=gdlorange!20,
+        thick, minimum width=2.8cm, minimum height=0.6cm, font=\footnotesize,
+        text=gdlorange!70!black, align=center},
+    concatbox/.style={rectangle, rounded corners=3pt, draw=gdlpurple!60, fill=gdlpurple!20,
+        thick, minimum width=3.2cm, minimum height=0.7cm, font=\small,
+        text=gdlpurple!70!black, align=center},
+    outputbox/.style={rectangle, rounded corners=3pt, draw=gdlblue!60, fill=gdlblue!20,
+        thick, minimum width=2.4cm, minimum height=0.7cm, font=\small,
+        text=gdlblue!70!black, align=center},
+    headlabel/.style={font=\footnotesize\bfseries, text=gdlgray!70!black},
+    dashedbox/.style={rectangle, rounded corners=5pt, draw=gdlgray!40, dashed,
+        thick, inner sep=10pt, inner ysep=10pt}
+]
+\def\headspacing{4.0}
+\def\projy{-2.8}
+\def\attny{-4.2}
+\def\distribY{-1.2}
+\def\concaty{-6.0}
+\def\outputy{-7.5}
+\node[inputbox] (input) at (0, 0) {$\mathbf{X} \in \mathbb{R}^{n \times d}$};
+\node[projbox] (q1) at ({-\headspacing - 0.65}, \projy) {$\mathbf{Q}_1$};
+\node[projbox] (k1) at ({-\headspacing + 0.35}, \projy) {$\mathbf{K}_1$};
+\node[projbox] (v1) at ({-\headspacing + 1.35}, \projy) {$\mathbf{V}_1$};
+\node[attnbox] (attn1) at ({-\headspacing + 0.35}, \attny)
+    {$\mathrm{Attn}(\mathbf{Q}_1, \mathbf{K}_1, \mathbf{V}_1)$};
+\node[projbox] (q2) at ({-0.65}, \projy) {$\mathbf{Q}_2$};
+\node[projbox] (k2) at (0.35, \projy) {$\mathbf{K}_2$};
+\node[projbox] (v2) at (1.35, \projy) {$\mathbf{V}_2$};
+\node[attnbox] (attn2) at (0.35, \attny)
+    {$\mathrm{Attn}(\mathbf{Q}_2, \mathbf{K}_2, \mathbf{V}_2)$};
+\node[projbox] (q3) at ({\headspacing - 0.65}, \projy) {$\mathbf{Q}_3$};
+\node[projbox] (k3) at ({\headspacing + 0.35}, \projy) {$\mathbf{K}_3$};
+\node[projbox] (v3) at ({\headspacing + 1.35}, \projy) {$\mathbf{V}_3$};
+\node[attnbox] (attn3) at ({\headspacing + 0.35}, \attny)
+    {$\mathrm{Attn}(\mathbf{Q}_3, \mathbf{K}_3, \mathbf{V}_3)$};
+\foreach \h in {1,2,3} {
+    \draw[arrow] (q\h.south) -- (attn\h.north -| q\h.south);
+    \draw[arrow] (k\h.south) -- (attn\h.north -| k\h.south);
+    \draw[arrow] (v\h.south) -- (attn\h.north -| v\h.south);
+}
+\node[dashedbox, fit=(q1)(v1)(attn1)] (hbox1) {};
+\node[dashedbox, fit=(q2)(v2)(attn2)] (hbox2) {};
+\node[dashedbox, fit=(q3)(v3)(attn3)] (hbox3) {};
+\node[headlabel, anchor=south] at (hbox1.north) {Head 1};
+\node[headlabel, anchor=south] at (hbox2.north) {Head 2};
+\node[headlabel, anchor=south] at (hbox3.north) {Head 3};
+\draw[line] (input.south) -- (0, \distribY);
+\draw[line] ({-\headspacing + 0.35}, \distribY) -- ({\headspacing + 0.35}, \distribY);
+\pgfmathsetmacro{\arrowEndY}{\projy + 1.45}
+\draw[arrow] ({-\headspacing + 0.35}, \distribY) -- ({-\headspacing + 0.35}, \arrowEndY);
+\draw[arrow] (0.35, \distribY) -- (0.35, \arrowEndY);
+\draw[arrow] ({\headspacing + 0.35}, \distribY) -- ({\headspacing + 0.35}, \arrowEndY);
+\node[concatbox] (concat) at (0.35, \concaty)
+    {$\mathrm{Concat}(\mathrm{head}_1, \ldots, \mathrm{head}_h)$};
+\pgfmathsetmacro{\convY}{\concaty + 0.7}
+\draw[line] (attn1.south) -- (attn1.south |- 0, \convY);
+\draw[arrow] (attn1.south |- 0, \convY) -| ($(concat.north) + (-0.5, 0)$);
+\draw[arrow] (attn2.south) -- (concat.north);
+\draw[line] (attn3.south) -- (attn3.south |- 0, \convY);
+\draw[arrow] (attn3.south |- 0, \convY) -| ($(concat.north) + (0.5, 0)$);
+\node[outputbox] (output) at (0.35, \outputy) {$\mathbf{W}^O \cdot \mathrm{Concat}$};
+\draw[arrow] (concat.south) -- (output.north);
+\node[font=\small, text=gdlblue!70!black, below=4pt of output]
+    {Output $\in \mathbb{R}^{n \times d}$};
+\node[font=\scriptsize, text=gdlgray!70!black, align=left, anchor=north west]
+    at ($(hbox3.east) + (0.5, 0.4)$)
+    {$\mathbf{W}_i^Q, \mathbf{W}_i^K \in \mathbb{R}^{d \times d_k}$\\[2pt]
+     $\mathbf{W}_i^V \in \mathbb{R}^{d \times d_v}$\\[2pt]
+     $\mathbf{W}^O \in \mathbb{R}^{hd_v \times d}$\\[2pt]
+     $d_k = d_v = d/h$};
+\end{tikzpicture}
+\caption[Multi-head attention]{Multi-head attention. The input is projected into
+$h$ parallel subspaces, each with its own matrices $\mathbf{W}^Q_i$,
+$\mathbf{W}^K_i$, $\mathbf{W}^V_i$. Each head computes attention independently,
+and the results are concatenated and projected through $\mathbf{W}^O$.}
+\label{fig:apps:multihead}
+\end{figure}
+
+\begin{proposition}[Representational capacity of multi-head pre-softmax scores]
+\label{prop:apps:multihead-capacity}
+Multi-head attention with $h$ heads can represent any pre-softmax score pattern
+that decomposes as a sum of $h$ low-rank terms. Formally, if
+$S^\star = \sum_{i=1}^h U_i\Sigma_i V_i^\top$ with each
+$U_i\Sigma_i V_i^\top$ of rank $r_i\le d_k$, then there is a configuration with
+$h$ heads whose pre-softmax score matrix is exactly $S^\star$.
+\end{proposition}
+
+\begin{proof}
+Set $W_Q^i = U_i\Sigma_i^{1/2}$, $W_K^i = V_i\Sigma_i^{1/2}$, and $W_V^i = I$
+for each term. Then head $i$ has pre-softmax scores
+$Q_i K_i^\top = X U_i\Sigma_i V_i^\top X^\top$, and the sum over heads reproduces
+$S^\star$.
+\end{proof}
+
+\begin{remark}
+\label{rem:apps:multihead-nonlinearity}
+This construction operates at the level of pre-softmax scores. In practice each
+head applies softmax before aggregating with the values, which forces the
+effective attention weights to be non-negative and to sum to one per row. This
+nonlinearity prevents the multi-head mechanism from representing arbitrary
+attention functions exactly at the level of the output, but the capacity result
+explains why a handful of heads already captures rich, multi-relational
+structure. The time and space cost of the layer is
+$O(n^2 d + n d h d_k)$ and $O(n^2 + ndh)$ respectively; the $n^2$ term dominates
+for long sequences and motivates sparse and linear approximations.
+\end{remark}
+
+\subsection{Attention as an integral operator}
+\label{subsec:apps:integral-operator}
+
+Self-attention can be formalized rigorously as an integral operator acting on
+functions over a manifold, a viewpoint that connects it to the classical theory
+of compact operators and exposes its spectral behaviour. Let $\mathcal{M}$ be a
+compact Riemannian manifold equipped with a measure $\mu$. For a function
+$f:\mathcal{M}\to\R^d$ the attention operator is
+\[
+  \mathcal{T}f(x) = \int_{\mathcal{M}} \kappa(x,y)\, f(y)\, d\mu(y),
+  \qquad
+  \kappa(x,y) = \sigma\!\left(\frac{\inner{Q(x)}{K(y)}}{\sqrt{d_k}}\right) V(y)^\top,
+\]
+with $Q,K,V$ mapping $\mathcal{M}$ into the query, key, and value spaces and
+$\sigma$ a generalized softmax. The discrete transformer is the empirical
+quadrature of this integral over $n$ sample points.
+
+\begin{proposition}[Compactness of the attention operator]
+\label{prop:apps:attn-compact}
+If the kernel $\kappa(x,y)$ is continuous on $\mathcal{M}\times\mathcal{M}$ and
+$\mathcal{M}$ is compact, then $\mathcal{T}: L^2(\mathcal{M})\to L^2(\mathcal{M})$
+is compact.
+\end{proposition}
+
+\begin{proof}[Sketch]
+For $f$ in the unit ball of $L^2(\mathcal{M})$, the image $\mathcal{T}f$ is
+uniformly bounded (since $\kappa$ attains its maximum on the compact
+$\mathcal{M}\times\mathcal{M}$) and equicontinuous (since $\kappa$ is uniformly
+continuous there). By Arzel\`a--Ascoli the image of the unit ball is relatively
+compact in $C(\mathcal{M})$, hence in $L^2(\mathcal{M})$, so $\mathcal{T}$ is
+compact.
+\end{proof}
+
+When the kernel is a Mercer kernel --- symmetric and positive definite, as for
+the Gaussian variant
+$\kappa_{\text{gauss}}(x,y) = \exp(-\norm{Q(x)-K(y)}^2/2\sigma^2)$ --- the
+spectral theorem for compact self-adjoint operators yields a decomposition
+$\kappa(x,y) = \sum_{i} \lambda_i\,\phi_i(x)\phi_i(y)$ with non-negative
+eigenvalues $\lambda_1\ge\lambda_2\ge\cdots\ge 0$ and orthonormal eigenfunctions
+$\phi_i$, so that
+\[
+  \mathcal{T}f = \sum_{i=1}^{\infty}\lambda_i \inner{f}{\phi_i}_{L^2}\phi_i .
+\]
+The eigenfunctions are the fundamental ``attention modes'' and the eigenvalues
+rank them by importance (\Cref{fig:apps:spectrum}). Because the eigenvalues
+typically decay rapidly, attention acts as a natural low-pass filter: the
+rank-$r$ truncation $\mathcal{T}_r$ satisfies the error bound
+$\norm{\mathcal{T}f - \mathcal{T}_r f}_{L^2}\le \lambda_{r+1}\norm{f}_{L^2}$, so
+a finite effective rank already captures the operator. When the kernel is
+translation invariant this spectral decomposition reduces to the classical
+Fourier analysis of \Cref{ch:grids}, with eigenfunctions complex exponentials
+and eigenvalues the Fourier transform of the kernel --- a direct bridge between
+the attention operator and the convolution.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[>=Stealth, font=\small, scale=0.78, every node/.style={transform shape}]
+% LEFT PANEL: eigenvalue spectrum
+\begin{scope}[shift={(0,0)}]
+  \node[font=\bfseries, text=black] at (4.0, 6.2) {Spectrum of the attention operator};
+  \fill[gdlyellow!10] (0.27, 0) rectangle (3.65, 5.2);
+  \draw[->, gdlgray!70, line width=0.8pt] (-0.3, 0) -- (8.5, 0)
+    node[right, font=\footnotesize, text=gdlgray!70!black] {$i$};
+  \draw[->, gdlgray!70, line width=0.8pt] (0, -0.3) -- (0, 5.8)
+    node[above, font=\footnotesize, text=gdlgray!70!black] {$\lambda_i$};
+  \foreach \y/\lab in {1/0.2, 2/0.4, 3/0.6, 4/0.8, 5/1.0} {
+    \draw[gdlgray!50] (-0.1, \y) -- (0.1, \y);
+    \node[font=\tiny, text=gdlgray!70!black, anchor=east] at (-0.15, \y) {$\lab$};}
+  \def\barwidth{0.45}
+  \fill[gdlblue!60] (0.5-\barwidth/2, 0) rectangle (0.5+\barwidth/2, 5.0);
+  \node[font=\tiny, text=gdlgray!70!black] at (0.5, -0.3) {$1$};
+  \fill[gdlblue!55] (1.2-\barwidth/2, 0) rectangle (1.2+\barwidth/2, 2.5);
+  \node[font=\tiny, text=gdlgray!70!black] at (1.2, -0.3) {$2$};
+  \fill[gdlblue!50] (1.9-\barwidth/2, 0) rectangle (1.9+\barwidth/2, 1.48);
+  \node[font=\tiny, text=gdlgray!70!black] at (1.9, -0.3) {$3$};
+  \fill[gdlblue!45] (2.6-\barwidth/2, 0) rectangle (2.6+\barwidth/2, 1.0);
+  \node[font=\tiny, text=gdlgray!70!black] at (2.6, -0.3) {$4$};
+  \fill[gdlblue!40] (3.3-\barwidth/2, 0) rectangle (3.3+\barwidth/2, 0.72);
+  \node[font=\tiny, text=gdlgray!70!black] at (3.3, -0.3) {$5$};
+  \fill[gdlblue!35] (4.0-\barwidth/2, 0) rectangle (4.0+\barwidth/2, 0.55);
+  \node[font=\tiny, text=gdlgray!70!black] at (4.0, -0.3) {$6$};
+  \fill[gdlblue!30] (4.7-\barwidth/2, 0) rectangle (4.7+\barwidth/2, 0.43);
+  \node[font=\tiny, text=gdlgray!70!black] at (4.7, -0.3) {$7$};
+  \fill[gdlblue!25] (5.4-\barwidth/2, 0) rectangle (5.4+\barwidth/2, 0.35);
+  \node[font=\tiny, text=gdlgray!70!black] at (5.4, -0.3) {$8$};
+  \fill[gdlblue!20] (6.1-\barwidth/2, 0) rectangle (6.1+\barwidth/2, 0.28);
+  \node[font=\tiny, text=gdlgray!70!black] at (6.1, -0.3) {$9$};
+  \fill[gdlblue!18] (6.8-\barwidth/2, 0) rectangle (6.8+\barwidth/2, 0.24);
+  \node[font=\tiny, text=gdlgray!70!black] at (6.8, -0.3) {$10$};
+  \node[font=\small, text=gdlgray!70!black] at (7.6, 0.15) {$\cdots$};
+  \node[font=\tiny, text=gdlgray!70!black] at (7.6, -0.3) {$n$};
+  \draw[gdlred!70, line width=1.2pt, dashed, smooth]
+    plot[domain=0.5:8.0, samples=50] (\x, {5.0/(\x)^1.5});
+  \node[font=\scriptsize, text=gdlred!70!black, anchor=west, fill=white,
+        fill opacity=0.85, text opacity=1, inner sep=2pt, rounded corners=1pt]
+    at (5.5, 1.8) {$\lambda_i \sim i^{-\alpha}$};
+  \draw[gdlorange!70, line width=1.0pt, densely dash dot] (3.65, -0.15) -- (3.65, 5.5);
+  \node[font=\scriptsize, text=gdlorange!70!black, anchor=south, fill=white,
+        fill opacity=0.85, text opacity=1, inner sep=2pt, rounded corners=1pt]
+    at (3.65, 5.5) {effective rank $r$};
+  \node[font=\scriptsize, text=gdlblue!70!black, align=center, anchor=north]
+    at (4.0, -0.9) {$\kappa(x,y) = \displaystyle\sum_{i=1}^{\infty} \lambda_i \,\phi_i(x)\,\phi_i(y)$};
+\end{scope}
+% RIGHT PANEL: eigenfunctions
+\begin{scope}[shift={(10.5, 0)}]
+  \node[font=\bfseries, text=black] at (2.5, 6.2) {Eigenfunctions $\phi_i$};
+  \node[font=\scriptsize, text=gdlblue!70!black, anchor=east] at (-0.3, 4.8) {$\phi_1$};
+  \draw[->, gdlgray!50, line width=0.4pt] (0, 4.8) -- (5.2, 4.8);
+  \draw[gdlgreen!70, line width=1.4pt, smooth]
+    plot[domain=0:5, samples=40] (\x, {4.8 + 0.4*cos(18*\x)});
+  \node[font=\tiny, text=gdlpurple!70!black, anchor=west] at (5.3, 4.8) {$\lambda_1$};
+  \fill[gdlpurple!60] (5.9, 4.72) rectangle (6.9, 4.88);
+  \node[font=\scriptsize, text=gdlblue!70!black, anchor=east] at (-0.3, 3.3) {$\phi_2$};
+  \draw[->, gdlgray!50, line width=0.4pt] (0, 3.3) -- (5.2, 3.3);
+  \draw[gdlgreen!70, line width=1.4pt, smooth]
+    plot[domain=0:5, samples=60] (\x, {3.3 + 0.45*cos(72*\x)});
+  \node[font=\tiny, text=gdlpurple!70!black, anchor=west] at (5.3, 3.3) {$\lambda_2$};
+  \fill[gdlpurple!55] (5.9, 3.22) rectangle (6.4, 3.38);
+  \node[font=\scriptsize, text=gdlblue!70!black, anchor=east] at (-0.3, 1.8) {$\phi_3$};
+  \draw[->, gdlgray!50, line width=0.4pt] (0, 1.8) -- (5.2, 1.8);
+  \draw[gdlgreen!70, line width=1.4pt, smooth]
+    plot[domain=0:5, samples=80] (\x, {1.8 + 0.45*sin(144*\x)});
+  \node[font=\tiny, text=gdlpurple!70!black, anchor=west] at (5.3, 1.8) {$\lambda_3$};
+  \fill[gdlpurple!50] (5.9, 1.72) rectangle (6.2, 1.88);
+  \node[font=\scriptsize, text=gdlblue!70!black, anchor=east] at (-0.3, 0.3) {$\phi_4$};
+  \draw[->, gdlgray!50, line width=0.4pt] (0, 0.3) -- (5.2, 0.3);
+  \draw[gdlgreen!70, line width=1.4pt, smooth]
+    plot[domain=0:5, samples=100] (\x, {0.3 + 0.4*cos(216*\x)});
+  \node[font=\tiny, text=gdlpurple!70!black, anchor=west] at (5.3, 0.3) {$\lambda_4$};
+  \fill[gdlpurple!45] (5.9, 0.22) rectangle (6.1, 0.38);
+  \node[font=\small, text=gdlgray!60] at (2.5, -0.4) {$\vdots$};
+  \node[font=\scriptsize, text=gdlgreen!60!black, align=center, anchor=north]
+    at (2.5, -0.8) {Increasing frequency $\longrightarrow$};
+  \draw[gdlpurple!50, line width=0.6pt, decorate,
+        decoration={brace, amplitude=4pt, mirror}] (7.1, 0.15) -- (7.1, 4.95);
+  \node[font=\tiny, text=gdlpurple!70!black, anchor=west, align=center] at (7.4, 2.55)
+    {Decay\\$\lambda_i \to 0$};
+\end{scope}
+\end{tikzpicture}
+\caption[Spectral decomposition of attention]{Spectral decomposition of the
+attention operator. \textbf{Left}: the eigenvalues $\lambda_i$ of the attention
+kernel decay rapidly ($\lambda_i\sim i^{-\alpha}$), indicating a finite effective
+rank $r$; the shaded region marks the dominant modes. \textbf{Right}: the
+associated eigenfunctions $\phi_i$ show increasing frequency, analogous to a
+Fourier basis; the purple bars indicate the magnitude of the corresponding
+eigenvalue.}
+\label{fig:apps:spectrum}
+\end{figure}
+
+\subsection{Attention as adaptive message passing}
+\label{subsec:apps:attn-mpnn}
+
+Read geometrically, scaled dot-product attention is message passing
 (\Cref{ch:graphs}) in which the edge weights are not fixed by the domain but
 \emph{computed from the data}: each element queries the others and decides how
-much to listen to each. Where a convolution hard-codes the neighbourhood
-weights and a graph network fixes them by the topology, attention learns them
-on the fly. This places attention at the adaptive end of a spectrum whose rigid
-end is the equivariant convolution --- a tension between built-in structure and
-learned flexibility that recurs throughout geometric deep learning.
+much to listen to each. Where a convolution hard-codes the neighbourhood weights
+and a graph network fixes them by the topology, attention learns them on the fly.
+This places attention at the adaptive end of a spectrum whose rigid end is the
+equivariant convolution --- a tension between built-in structure and learned
+flexibility that recurs throughout geometric deep learning and which
+\Cref{sec:apps:cnn-attention} makes precise.
 
 \paragraph{Attention on graphs.}
 The most direct geometric instance is the Graph Attention Network
@@ -127,7 +643,7 @@ normalizes them over the neighbourhood, and aggregates,
 \[
   e_{ij} = \operatorname{LeakyReLU}\!\bigl(a^\top[Wh_i \,\|\, Wh_j]\bigr),
   \qquad
-  \alpha_{ij} = \operatorname{softmax}_j(e_{ij}),
+  \alpha_{ij} = \softmax_j(e_{ij}),
   \qquad
   h_i' = \sigma\!\Bigl(\textstyle\sum_{j\in\mathcal{N}(i)} \alpha_{ij}\,Wh_j\Bigr).
 \]
@@ -217,18 +733,18 @@ Then $f(g\cdot x) = g\cdot f(x)$ for every $g\in G$.
 The $\SE(3)$-Transformer~\citep{fuchs2020se3transformers} realizes this for
 rigid motions in three dimensions. It computes attention scores from quantities
 that are invariant under rotations and translations --- scalar features,
-interatomic distances $\|r_i - r_j\|$, and inner products of vector features ---
-and aggregates type-$\ell$ features so that vectors rotate with the scene while
-scalars stay fixed. The Equiformer~\citep{liao2022equiformer} replaces the dot
-product with an equivariant network acting on tensor products of irreducible
+interatomic distances $\norm{r_i - r_j}$, and inner products of vector features
+--- and aggregates type-$\ell$ features so that vectors rotate with the scene
+while scalars stay fixed. The Equiformer~\citep{liao2022equiformer} replaces the
+dot product with an equivariant network acting on tensor products of irreducible
 representations, allowing richer interactions while preserving $\SO(3)$
 equivariance, and the Point Transformer~\citep{zhao2021point} brings vector
 attention to point clouds. These models are the workhorses of the molecular and
-physical applications of the next section.
+physical applications of \Cref{sec:apps:molecules}.
 
 \paragraph{Non-Euclidean and algebraic attention.}
 Two further directions widen the reach of attention. Hyperbolic attention
-networks~\citep{gulcehre2018hyperbolic} replace the Euclidean inner product with
+networks~\citep{gulcehre2019hyperbolic} replace the Euclidean inner product with
 operations in hyperbolic space, whose exponentially growing volume embeds
 tree-like and hierarchical data with far less distortion than Euclidean space
 (developed in \Cref{ch:geodesics}). Geometric Algebra Transformers
@@ -238,6 +754,175 @@ on top, yielding a single architecture that handles diverse 3D geometric
 primitives. The common thread is that the inductive bias of the geometry --- be
 it negative curvature or the algebra of rigid motions --- is carried into the
 attention operator itself.
+
+\section{From convolution to attention: a unified view}
+\label{sec:apps:cnn-attention}
+
+The attention foundations of the previous section and the geometric convolutions
+of \Cref{ch:grids,ch:groups,ch:graphs} are not two competing paradigms but two
+points on a single continuum. This section makes the connection precise, closing
+the theoretical arc of the book before turning to applications.
+
+\begin{definition}[Generalized geometric message passing]
+\label{def:apps:geom-mp}
+Let $\mathcal{D}$ be a geometric domain (a Euclidean grid, a graph, a manifold,
+a homogeneous space), $G$ a symmetry group, and $\mathcal{F}(\mathcal{D})$ the
+space of signals on $\mathcal{D}$. A geometric message-passing operator is a
+transformation $\mathcal{T}^{(G)}:\mathcal{F}(\mathcal{D})\to\mathcal{F}(\mathcal{D})$
+that is $G$-equivariant ($\mathcal{T}^{(G)}(g\cdot f) = g\cdot\mathcal{T}^{(G)}(f)$),
+geometrically local (its support is determined by the geometry of
+$\mathcal{D}$), and compositional (composites preserve these properties).
+\end{definition}
+
+\begin{theorem}[CNN--attention correspondence]
+\label{thm:apps:cnn-attn-correspondence}
+There is a correspondence between geometric convolutions and geometric attention
+through geometric message passing: a geometric convolution is message passing
+with \emph{fixed} weights, geometric attention is message passing with
+\emph{adaptive} weights, and hybrid architectures sit between, with partially
+structured weights. The correspondence preserves equivariance, expressive power,
+and computational complexity.
+\end{theorem}
+
+\begin{proof}[Sketch]
+The equivalence holds at three levels. \emph{Algebraically}, both operations are
+generalized convolutions in the group algebra $\C[G]$: for a convolution the
+kernel is fixed, $k_g$; for attention it is dynamic, $\alpha_{ij}(h_i, h_j)$.
+\emph{Spectrally}, in the Fourier basis of the domain both correspond to
+multiplication by a transfer function --- a fixed spectral filter
+$\hat{k}(\lambda)$ for convolution, an adaptive one $\hat\alpha(\lambda;h)$ for
+attention (cf.\ \Cref{subsec:apps:integral-operator}). \emph{Geometrically}, the
+neighbourhood structure fixes the support of integration: convolution integrates
+over fixed neighbourhoods, attention integrates with content-dependent weights
+that still respect the underlying geometry.
+\end{proof}
+
+\Cref{tab:apps:cnn-attn} records the correspondence concept by concept. The same
+unifying principle --- operations that commute with the group action --- underlies
+group convolution and $G$-equivariant attention, fixed and adaptive spectral
+filters, gauge convolution and gauge-equivariant attention, and parallel
+transport and Riemannian attention. The architectures of geometric deep learning
+thereby form a natural hierarchy of generalization, with the rigid convolutional
+family on one side and the adaptive attention family on the other, dual under
+this correspondence.
+
+\begin{table}[h]
+\centering
+\caption{Fundamental correspondences between geometric convolution and geometric
+attention.}
+\label{tab:apps:cnn-attn}
+\begin{tabular}{@{}p{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Geometric CNN} & \textbf{Geometric attention} & \textbf{Unifying principle} \\
+\midrule
+Group convolution (\Cref{ch:groups}) & $G$-equivariant attention & Operations commuting with the action of $G$ \\
+\addlinespace
+Spectral filter $\hat{f}(\lambda) = g(\lambda)\hat{x}(\lambda)$ & Spectral attention $A = \softmax(f(\lambda_i,\lambda_j))$ & Multiplication in the Fourier domain of the Laplacian \\
+\addlinespace
+Gauge convolution (\Cref{ch:gauges}) & Gauge-equivariant attention & Respect for local coordinate transformations \\
+\addlinespace
+Steerable CNN, $f\mapsto\rho(g)f$ & Steerable attention, $A\mapsto\rho(g)A\rho(g)^{-1}$ & Coherent action on vector fields \\
+\addlinespace
+Spherical CNN, harmonics $Y_\ell^m$ & Spherical attention & Harmonic analysis on the sphere \\
+\addlinespace
+Manifold CNN, parallel transport & Riemannian attention & Intrinsic geometry of manifolds \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}[Rigidity versus adaptability]
+\label{rem:apps:rigidity-adaptability}
+The most fundamental distinction between the convolutional and attention
+paradigms is the balance between imposed structure (rigidity) and learnable
+flexibility (adaptability). One may measure the \emph{rigidity} of an
+architecture by the fraction of its parameter budget devoted to imposed
+symmetries and its \emph{adaptability} by the fraction devoted to
+content-dependent weights, with the two competing for the same budget. The
+trade-off is sharp: theoretical guarantees scale with rigidity, while expressive
+capacity scales with adaptability. Along the progression from the classical CNN
+(high rigidity, low adaptability) through group CNNs and graph attention to the
+full transformer (low rigidity, high adaptability), this explains why
+convolutional models generalize better from little data while transformers
+require massive data but attain greater expressivity.
+\end{remark}
+
+\begin{remark}[Convergence of paradigms]
+\label{rem:apps:convergence}
+Recent architectures suggest a conceptual convergence of the two families.
+Hybrid designs combine a convolutional kernel --- for local features with
+geometric guarantees --- with attention heads --- for adaptive global
+dependencies --- and a learnable mechanism to balance them; both families can be
+approximated arbitrarily well by finite-dimensional spectral operators, and both
+converge to the same limit of equivariant operators on the domain. The future of
+geometric deep learning lies not in competition between paradigms but in their
+synthesis: combining the stability and efficiency of geometric convolutions with
+the flexibility and expressivity of adaptive attention, guided by mathematical
+principles rather than heuristics. Geometry, as so often in mathematics and
+physics, provides the unifying language.
+\end{remark}
+
+\section{Computer vision}
+\label{sec:apps:vision}
+
+Computer vision is the historical birthplace of the ideas in this book.
+Convolutional neural networks won the ImageNet competition in
+2012~\citep{krizhevsky2012alexnet} precisely because they encode a symmetry of
+images: a translation of the input produces a translated feature map. As
+developed in \Cref{ch:grids}, this translation equivariance is what lets a
+single learned filter be reused at every position, slashing the parameter count
+and providing the inductive bias that makes images learnable from finite data.
+Everything that follows in computer vision can be read as an attempt to extend
+this success beyond the flat pixel grid.
+
+\paragraph{Beyond translation.}
+Many visual tasks are invariant to more than translation. A galaxy, a cell
+under a microscope, or an aerial image has no preferred orientation; a
+classifier should not have to relearn the same pattern in every rotated copy.
+Group-equivariant convolutional networks (\Cref{ch:groups}) build rotation and
+reflection symmetry directly into the convolution, so that a feature detected in
+one orientation is automatically detected in all of them. The payoff is sharper
+on small datasets, where data augmentation cannot cover the symmetry group
+densely enough and the architecture must supply the invariance instead.
+
+\paragraph{Three-dimensional vision.}
+The cleanest break from the grid comes with three-dimensional data. A LiDAR
+scan or a depth sensor returns a \emph{point cloud}: an unordered set of points
+in $\R^3$, with no grid, no canonical ordering, and a variable cardinality. The
+relevant symmetry is twofold. First, the output must be \emph{invariant to
+permutations} of the points, since the set $\{p_1,\dots,p_n\}$ does not depend on
+how we list its elements. Second, for many tasks it must be invariant or
+equivariant to rigid motions of the scene. The first requirement is captured
+exactly by the theory of functions on sets.
+
+\begin{theorem}[Universal representation of set functions]
+\label{thm:apps:deepsets}
+Any continuous permutation-invariant function $f$ of a set
+$\{x_1,\dots,x_n\}\subset\R^d$ can be written in the form
+\[
+  f(\{x_1,\dots,x_n\}) \;=\; \rho\!\left(\sum_{i=1}^n \phi(x_i)\right),
+\]
+for suitable continuous functions $\phi$ and $\rho$.
+\end{theorem}
+
+This result, due to the DeepSets framework~\citep{zaheer2017deepsets}, is the
+theoretical foundation of architectures such as
+PointNet~\citep{qi2017pointnet}: encode each point independently with a shared
+network $\phi$, pool the encodings with a permutation-invariant aggregator (a
+sum or a max), and decode with $\rho$. The construction is the simplest possible
+instance of the message-passing blueprint of \Cref{ch:graphs} --- a single
+round of messages on a graph with no edges --- and it already guarantees the
+correct invariance by design rather than by augmentation.
+
+\paragraph{Curved domains.}
+When the data lives on a curved surface rather than in free space, the gauge and
+geodesic themes (\Cref{ch:geodesics,ch:gauges}) take over. Spherical signals ---
+panoramic images, cosmological maps, the surface of the Earth --- are processed
+by spherical convolutional networks~\citep{cohen2018sphericalcnns} that are
+equivariant to the rotation group $\SO(3)$, so that rotating the sphere rotates
+the response coherently. On a general mesh there is no global frame, and
+gauge-equivariant networks ensure that the output does not depend on the
+arbitrary local choice of coordinates. In every case the recurring lesson is the
+same: identify the symmetry of the domain, then build it into the operator.
 
 \section{Molecules and physical systems}
 \label{sec:apps:molecules}
@@ -256,9 +941,9 @@ the three-dimensional information that governs biological activity. When the
 target depends on the molecular conformation --- energies, forces, dipole
 moments --- the model must be $\Eucl(3)$- or $\SE(3)$-equivariant: rotating the
 molecule must rotate predicted vectors and leave predicted scalars unchanged.
-The equivariant attention architectures of the previous section, together with
-tensor-field and equivariant message-passing networks, are precisely the tools
-that enforce this.
+The equivariant attention architectures of \Cref{sec:apps:attn-mpnn}, together
+with tensor-field and equivariant message-passing networks~\citep{satorras2021enequivariant},
+are precisely the tools that enforce this.
 
 \begin{example}[AlphaFold and protein structure]
 \label{ex:apps:alphafold}
@@ -270,7 +955,10 @@ of residues in space while respecting the $\SE(3)$ symmetry of rigid motions:
 the predicted structure transforms consistently when the frame of reference is
 rotated or translated. Geometric equivariance is not a stylistic choice here but
 a structural requirement, and it is a large part of why the model generalizes so
-well.
+well. AlphaFold is, in this sense, the paradigmatic illustration of the
+theory--architecture connection that this book traces: the abstract $\SE(3)$
+equivariance of \Cref{ch:groups} made concrete in a system that reshaped
+structural biology.
 \end{example}
 
 \paragraph{Physical simulation.}
@@ -323,7 +1011,7 @@ enough room to embed such growth without crushing distances. Hyperbolic space
 does: its volume also grows exponentially, so a tree embeds with almost no
 distortion (\Cref{fig:apps:hyperbolic}). This is the geometric motivation behind
 hyperbolic embeddings and the hyperbolic attention networks of
-\Cref{sec:apps:attention}, which place knowledge-graph entities and hierarchical
+\Cref{sec:apps:attn-mpnn}, which place knowledge-graph entities and hierarchical
 users in negatively curved space.
 
 \begin{figure}[h]
@@ -433,9 +1121,11 @@ The breadth of these applications is itself the strongest evidence for the
 central claim of this book. Convolutional networks for images, equivariant
 transformers for proteins, and graph networks for social data look like
 unrelated tools, yet each is an instance of equivariant message passing,
-differing only in the domain and the symmetry group it respects. Geometry is not
-a domain-specific trick but the common principle that geometric deep learning
-identifies, formalizes, and exploits.
+differing only in the domain and the symmetry group it respects --- and, by
+\Cref{thm:apps:cnn-attn-correspondence}, differing only in whether the messages
+carry fixed or adaptive weights. Geometry is not a domain-specific trick but the
+common principle that geometric deep learning identifies, formalizes, and
+exploits.
 \end{remark}
 
 Beyond these consolidated areas, the same ideas are opening lines of research
