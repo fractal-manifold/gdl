@@ -1,5 +1,4 @@
 \providecommand{\Ad}{\operatorname{Ad}}
-\providecommand{\Lie}{\mathfrak{g}}
 \providecommand{\Hol}{\operatorname{Hol}}
 \providecommand{\GL}{\operatorname{GL}}
 \providecommand{\SO}{\operatorname{SO}}
@@ -238,22 +237,22 @@ a ella.
 \begin{definition}[Espacio vertical y campo vectorial fundamental]
 \label{def:gauge:vertical}
 Para $u \in P$ el \emph{espacio vertical} es $V_u P = \ker(\mathrm{d}\pi_u)$, las
-direcciones tangentes a la fibra. Para $A \in \Lie$, el \'algebra de Lie de $G$,
+direcciones tangentes a la fibra. Para $A \in \Lie{g}$, el \'algebra de Lie de $G$,
 el \emph{campo vectorial fundamental} es
 \[
   A^*_u = \left.\frac{\mathrm{d}}{\mathrm{d}t}\right|_{t=0} u \cdot \exp(tA),
 \]
 la velocidad de la curva de \'orbita. Como la acci\'on preserva fibras,
 $A^*_u \in V_u P$, y la aplicaci\'on $A \mapsto A^*_u$ es un isomorfismo
-can\'onico $\Lie \cong V_u P$.
+can\'onico $\Lie{g} \cong V_u P$.
 \end{definition}
 
 \begin{definition}[Conexi\'on]
 \label{def:gauge:connection}
 Una \emph{conexi\'on} en $(P, \Mani, \pi, G)$ es una $1$-forma con valores en el
-\'algebra de Lie, $\omega \in \Omega^1(P, \Lie)$, tal que
+\'algebra de Lie, $\omega \in \Omega^1(P, \Lie{g})$, tal que
 \begin{enumerate}
-  \item \emph{normalizaci\'on}: $\omega(A^*_u) = A$ para todo $A \in \Lie$;
+  \item \emph{normalizaci\'on}: $\omega(A^*_u) = A$ para todo $A \in \Lie{g}$;
   \item \emph{equivarianza}: $R_g^* \omega = \Ad_{g^{-1}} \omega$ para todo
     $g \in G$, donde $R_g$ es la acci\'on derecha y $\Ad$ la representaci\'on
     adjunta.
@@ -443,7 +442,7 @@ equivalentemente el fallo de la distribuci\'on horizontal a ser integrable.
 \begin{definition}[Curvatura y ecuaci\'on de estructura de Cartan]
 \label{def:gauge:curvature}
 La \emph{curvatura} de una conexi\'on $\omega$ es la $2$-forma con valores en
-$\Lie$
+$\Lie{g}$
 \[
   \Omega = \mathrm{d}\omega + \tfrac{1}{2}[\omega \wedge \omega],
 \]

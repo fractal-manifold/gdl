@@ -1,5 +1,4 @@
 \providecommand{\Ad}{\operatorname{Ad}}
-\providecommand{\Lie}{\mathfrak{g}}
 \providecommand{\Hol}{\operatorname{Hol}}
 \providecommand{\GL}{\operatorname{GL}}
 \providecommand{\SO}{\operatorname{SO}}
@@ -231,21 +230,21 @@ fibre and a \emph{horizontal} part transverse to it.
 \label{def:gauge:vertical}
 For $u \in P$ the \emph{vertical space} is
 $V_u P = \ker(\mathrm{d}\pi_u)$, the directions tangent to the fibre. For
-$A \in \Lie$, the Lie algebra of $G$, the \emph{fundamental vector field} is
+$A \in \Lie{g}$, the Lie algebra of $G$, the \emph{fundamental vector field} is
 \[
   A^*_u = \left.\frac{\mathrm{d}}{\mathrm{d}t}\right|_{t=0} u \cdot \exp(tA),
 \]
 the velocity of the orbit curve. Since the action preserves fibres, $A^*_u \in
-V_u P$, and the map $A \mapsto A^*_u$ is a canonical isomorphism $\Lie \cong
+V_u P$, and the map $A \mapsto A^*_u$ is a canonical isomorphism $\Lie{g} \cong
 V_u P$.
 \end{definition}
 
 \begin{definition}[Connection]
 \label{def:gauge:connection}
 A \emph{connection} on $(P, \Mani, \pi, G)$ is a Lie-algebra-valued $1$-form
-$\omega \in \Omega^1(P, \Lie)$ such that
+$\omega \in \Omega^1(P, \Lie{g})$ such that
 \begin{enumerate}
-  \item \emph{normalization}: $\omega(A^*_u) = A$ for all $A \in \Lie$;
+  \item \emph{normalization}: $\omega(A^*_u) = A$ for all $A \in \Lie{g}$;
   \item \emph{equivariance}: $R_g^* \omega = \Ad_{g^{-1}} \omega$ for all
     $g \in G$, where $R_g$ is the right action and $\Ad$ the adjoint
     representation.
@@ -427,7 +426,7 @@ distribution to be integrable.
 
 \begin{definition}[Curvature and the Cartan structure equation]
 \label{def:gauge:curvature}
-The \emph{curvature} of a connection $\omega$ is the $\Lie$-valued $2$-form
+The \emph{curvature} of a connection $\omega$ is the $\Lie{g}$-valued $2$-form
 \[
   \Omega = \mathrm{d}\omega + \tfrac{1}{2}[\omega \wedge \omega],
 \]
