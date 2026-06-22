@@ -1,13 +1,13 @@
 ---
 import { getCollection, render } from 'astro:content';
-import ChapterLayout from '../../layouts/ChapterLayout.astro';
+import ChapterLayout from '../../../layouts/ChapterLayout.astro';
 
 export async function getStaticPaths() {
   const chapters = await getCollection('chapters');
   return chapters
-    .filter((c) => c.id.startsWith('en/'))
+    .filter((c) => c.id.startsWith('es/'))
     .map((chapter) => ({
-      params: { slug: chapter.id.replace(/^en\//, '') },
+      params: { slug: chapter.id.replace(/^es\//, '') },
       props: { chapter },
     }));
 }
@@ -20,7 +20,7 @@ const { Content } = await render(chapter);
   title={chapter.data.title}
   summary={chapter.data.summary}
   part={chapter.data.part}
-  lang="en"
+  lang="es"
 >
   <Content />
 </ChapterLayout>

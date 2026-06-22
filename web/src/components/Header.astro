@@ -1,22 +1,69 @@
 ---
-// Anchors are on the landing page; prefix with "/" so they also work from
-// sub-pages (e.g. /chapters/...).
+import {
+  type Lang,
+  defaultLang,
+  languages,
+  localizePath,
+  switchLocalePath,
+  useTranslations,
+} from '../i18n/ui';
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = useTranslations(lang);
+
+// Anchors live on the landing page; build them locale-aware so they work from
+// sub-pages (e.g. /chapters/...) and in both languages.
 const links = [
-  { href: '/#thesis', label: 'The Thesis' },
-  { href: '/#gs', label: 'The 5 Gs' },
-  { href: '/#contents', label: 'Contents' },
+  { href: localizePath('/#thesis', lang), label: t('nav.thesis') },
+  { href: localizePath('/#gs', lang), label: t('nav.gs') },
+  { href: localizePath('/#contents', lang), label: t('nav.contents') },
 ];
+
+// Language switcher targets: same page in the other locale.
+const here = Astro.url.pathname;
+const langLinks = (Object.keys(languages) as Lang[]).map((code) => ({
+  code,
+  label: code.toUpperCase(),
+  href: switchLocalePath(here, code),
+  current: code === lang,
+}));
 ---
 
-<header class="site-header">
+<header class="site-header" id="site-header">
   <div class="shell inner">
-    <a class="brand" href="/">
+    <a class="brand" href={localizePath('/', lang)}>
       <img src="/logo.png" alt="Fractal Manifold" width="36" height="36" />
       <span>Fractal Manifold</span>
     </a>
-    <nav aria-label="Main">
+    <button
+      class="nav-toggle"
+      type="button"
+      aria-label="Toggle navigation menu"
+      aria-expanded="false"
+      aria-controls="site-nav"
+    >
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line class="bar bar-top" x1="3" y1="6" x2="21" y2="6"></line>
+        <line class="bar bar-mid" x1="3" y1="12" x2="21" y2="12"></line>
+        <line class="bar bar-bot" x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <nav id="site-nav" aria-label="Main">
       {links.map((l) => <a class="navlink" href={l.href}>{l.label}</a>)}
-      <a class="getbook" href="/#access">Get the book</a>
+      <div class="lang-switch" role="group" aria-label={t('lang.label')}>
+        {langLinks.map((l) => (
+          <a
+            class:list={['lang', { active: l.current }]}
+            href={l.href}
+            aria-current={l.current ? 'true' : undefined}
+            hreflang={l.code}
+          >{l.label}</a>
+        ))}
+      </div>
+      <a class="getbook" href={localizePath('/#access', lang)}>{t('nav.getbook')}</a>
     </nav>
   </div>
 </header>
@@ -78,8 +125,121 @@ const links = [
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3);
   }
+
+  /* Language switcher */
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.15rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+  .lang {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    line-height: 1;
+    transition: color 0.3s ease, background 0.3s ease;
+  }
+  .lang:hover { color: var(--color-text); }
+  .lang.active {
+    color: var(--color-bg);
+    background: var(--color-gold);
+  }
+
+  /* Hamburger button — hidden on desktop, shown on mobile */
+  .nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: -0.5rem;
+    background: none;
+    border: none;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  .nav-toggle .bar {
+    transform-origin: center;
+    transition: transform 0.3s ease, opacity 0.2s ease;
+  }
+
   @media (max-width: 720px) {
-    .navlink { display: none; }
-    nav { gap: 0; }
+    .nav-toggle { display: flex; }
+    /* Collapse the nav into a dropdown panel below the header */
+    nav {
+      position: absolute;
+      top: var(--header-h);
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding: 0.5rem 0 1rem;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--color-border);
+      transform: translateY(-8px);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.25s ease, opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .site-header.open nav {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .navlink {
+      padding: 0.85rem 2rem;
+      border-bottom: none;
+      font-size: 1.05rem;
+    }
+    .navlink:hover { border-bottom-color: transparent; }
+    .getbook {
+      margin: 0.75rem 2rem 0;
+      text-align: center;
+      padding: 0.7rem 1.1rem;
+    }
+    .lang-switch {
+      align-self: flex-start;
+      margin: 0.85rem 2rem 0.25rem;
+    }
+    .lang { font-size: 0.8rem; padding: 0.35rem 0.7rem; }
+    /* Animate hamburger into an X when open */
+    .site-header.open .bar-top { transform: translateY(6px) rotate(45deg); }
+    .site-header.open .bar-mid { opacity: 0; }
+    .site-header.open .bar-bot { transform: translateY(-6px) rotate(-45deg); }
   }
 </style>
+
+<script>
+  const header = document.getElementById('site-header');
+  const toggle = header?.querySelector('.nav-toggle');
+  const nav = document.getElementById('site-nav');
+
+  function setOpen(open: boolean) {
+    if (!header || !toggle) return;
+    header.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+
+  toggle?.addEventListener('click', () => {
+    setOpen(!header?.classList.contains('open'));
+  });
+
+  // Close when a nav link is tapped (anchor navigation stays on the page)
+  nav?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => setOpen(false));
+  });
+
+  // Close with Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
+  });
+</script>

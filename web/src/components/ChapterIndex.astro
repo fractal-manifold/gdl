@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import { type Lang, defaultLang, localizePath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = useTranslations(lang);
+
+const chapters = (await getCollection('chapters'))
+  .filter((c) => c.id.startsWith(`${lang}/`))
+  .sort((a, b) => a.data.order - b.data.order);
+const slugOf = (id: string) => id.replace(/^(en|es)\//, '');
+---
+
+<h1>{t('chapters.title')}</h1>
+<ol class="chapter-list">
+  {chapters.map((c) => (
+    <li>
+      <a href={localizePath(`/chapters/${slugOf(c.id)}/`, lang)}>
+        <span class="num">{String(c.data.order).padStart(2, '0')}</span>
+        <span>
+          <strong>{c.data.title}</strong>
+          {c.data.summary && <span class="summary">{c.data.summary}</span>}
+        </span>
+      </a>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .chapter-list { list-style: none; padding: 0; }
+  .chapter-list li { border-bottom: 1px solid var(--color-border); }
+  .chapter-list a {
+    display: flex;
+    gap: 1.1rem;
+    align-items: baseline;
+    padding: 1.1rem 0;
+    color: var(--color-text);
+  }
+  .chapter-list a:hover { text-decoration: none; }
+  .chapter-list a:hover strong { color: var(--color-gold); }
+  .num {
+    color: var(--color-gold);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary { display: block; color: var(--color-text-muted); font-size: 0.9rem; }
+</style>

@@ -1,13 +1,20 @@
 ---
+import { type Lang, defaultLang, useTranslations } from '../i18n/ui';
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = defaultLang } = Astro.props;
+const t = useTranslations(lang);
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
   <div class="shell">
     <p>
-      © {year} <span class="org">Fractal Manifold</span>. All rights reserved.
+      © {year} <span class="org">Fractal Manifold</span>. {t('footer.rights')}
       <span class="sep" aria-hidden="true">·</span>
-      <a href="#top">Back to top</a>
+      <a href="#top">{t('footer.top')}</a>
       <span class="sep" aria-hidden="true">·</span>
       <a href="mailto:contact@fractalmanifold.com">contact@fractalmanifold.com</a>
     </p>

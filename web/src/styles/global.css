@@ -53,6 +53,12 @@ h1, h2, h3, h4 {
 .shell { max-width: var(--shell); margin: 0 auto; padding: 0 2rem; }
 .container { max-width: var(--reading); margin: 0 auto; padding: 0 1.5rem; }
 
+@media (max-width: 720px) {
+  :root { --header-h: 64px; }
+  .shell { padding: 0 1.25rem; }
+  .container { padding: 0 1.15rem; }
+}
+
 /* Brand gradient text */
 .gradient-text {
   background: var(--brand-gradient);

@@ -1,46 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
-
-const chapters = (await getCollection('chapters')).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+import ChapterIndex from '../../components/ChapterIndex.astro';
 ---
 
-<BaseLayout title="Chapters · GDL">
-  <h1>Chapters</h1>
-  <ol class="chapter-list">
-    {chapters.map((c) => (
-      <li>
-        <a href={`/chapters/${c.id}/`}>
-          <span class="num">{String(c.data.order).padStart(2, '0')}</span>
-          <span>
-            <strong>{c.data.title}</strong>
-            {c.data.summary && <span class="summary">{c.data.summary}</span>}
-          </span>
-        </a>
-      </li>
-    ))}
-  </ol>
-
-  <style>
-    .chapter-list { list-style: none; padding: 0; }
-    .chapter-list li { border-bottom: 1px solid var(--color-border); }
-    .chapter-list a {
-      display: flex;
-      gap: 1.1rem;
-      align-items: baseline;
-      padding: 1.1rem 0;
-      color: var(--color-text);
-    }
-    .chapter-list a:hover { text-decoration: none; }
-    .chapter-list a:hover strong { color: var(--color-gold); }
-    .num {
-      color: var(--color-gold);
-      font-family: var(--font-display);
-      font-size: 0.85rem;
-      font-variant-numeric: tabular-nums;
-    }
-    .summary { display: block; color: var(--color-text-muted); font-size: 0.9rem; }
-  </style>
+<BaseLayout title="Chapters · GDL" lang="en">
+  <ChapterIndex lang="en" />
 </BaseLayout>

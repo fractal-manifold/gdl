@@ -1,15 +1,17 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import { type Lang, defaultLang } from '../i18n/ui';
 
 interface Props {
   title: string;
   summary?: string;
   part?: string;
+  lang?: Lang;
 }
-const { title, summary, part } = Astro.props;
+const { title, summary, part, lang = defaultLang } = Astro.props;
 ---
 
-<BaseLayout title={`${title} · GDL`} description={summary}>
+<BaseLayout title={`${title} · GDL`} description={summary} lang={lang}>
   <article class="prose">
     {part && <p class="eyebrow">{part}</p>}
     <h1>{title}</h1>
