@@ -1,10 +1,11 @@
-name: Build book PDF and publish release
+name: Build book PDFs and publish dated release
 
 on:
   push:
     branches: [main]
     paths:
       - 'book/**'
+      - 'portada.jpg'
       - '.github/workflows/book.yml'
   workflow_dispatch:
 
@@ -18,61 +19,37 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Full TeX Live (latexmk + all packages used: algorithm, algpseudocode,
+    # contour, eso-pic, pdfrender, ...). The Makefile is the single source of
+    # truth for how the PDFs and KDP covers are built.
+    container: texlive/texlive:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compile screen edition (A4, English)
-        uses: xu-cheng/latex-action@v3
-        with:
-          working_directory: book
-          root_file: screen.tex
-          latexmk_use_lualatex: false
-
-      - name: Compile print edition (7x10 in, English)
-        uses: xu-cheng/latex-action@v3
-        with:
-          working_directory: book
-          root_file: print.tex
-          latexmk_use_lualatex: false
-
-      - name: Compile screen edition (A4, Spanish)
-        uses: xu-cheng/latex-action@v3
-        with:
-          working_directory: book
-          root_file: screen-es.tex
-          latexmk_use_lualatex: false
-
-      - name: Compile print edition (7x10 in, Spanish)
-        uses: xu-cheng/latex-action@v3
-        with:
-          working_directory: book
-          root_file: print-es.tex
-          latexmk_use_lualatex: false
-
-      - name: Rename PDFs
+      - name: Install build tools (ImageMagick, pdfinfo, make)
         run: |
-          cd book
-          mv screen.pdf geometric-deep-learning.pdf
-          mv print.pdf geometric-deep-learning-print.pdf
-          mv screen-es.pdf geometric-deep-learning-es.pdf
-          mv print-es.pdf geometric-deep-learning-print-es.pdf
-          ls -la *.pdf
+          apt-get update
+          apt-get install -y --no-install-recommends make gawk imagemagick poppler-utils
 
-      - name: Publish to GitHub Release
+      - name: Date stamp
+        id: date
+        run: echo "date=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Build all editions + covers into out/
+        run: make -C book dist
+
+      - name: Publish dated GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: book-latest
-          name: Latest book build
+          tag_name: book-${{ steps.date.outputs.date }}
+          name: Geometric Deep Learning — ${{ steps.date.outputs.date }}
           body: >-
-            Automatically built PDFs of the book.
-            `geometric-deep-learning.pdf` is the A4 screen edition (English);
-            `geometric-deep-learning-print.pdf` is the 7×10 in print edition (English);
-            `geometric-deep-learning-es.pdf` is the A4 screen edition (Spanish);
-            `geometric-deep-learning-print-es.pdf` is the 7×10 in print edition (Spanish).
+            Book PDFs built on ${{ steps.date.outputs.date }}.
+            `geometric-deep-learning.pdf` — A4 reading edition (English);
+            `geometric-deep-learning-print.pdf` — 7×10 in print edition (English);
+            `geometric-deep-learning-es.pdf` — A4 reading edition (Spanish);
+            `geometric-deep-learning-print-es.pdf` — 7×10 in print edition (Spanish);
+            `geometric-deep-learning-cover.pdf` / `-cover-es.pdf` — KDP wraparound covers.
           make_latest: true
-          files: |
-            book/geometric-deep-learning.pdf
-            book/geometric-deep-learning-print.pdf
-            book/geometric-deep-learning-es.pdf
-            book/geometric-deep-learning-print-es.pdf
+          files: out/*.pdf

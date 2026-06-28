@@ -34,7 +34,21 @@ web/.astro/
 book/main.pdf
 book/screen.pdf
 book/print.pdf
+book/screen-es.pdf
+book/print-es.pdf
 book/build/
+
+# Cover build artifacts (derived from portada.jpg; the .jpg is the source)
+book/cover-dimensions.tex
+book/cover.pdf
+book/cover-en.pdf
+book/cover-es.pdf
+book/figures/cover-front-print.jpg
+book/figures/cover-front-screen.jpg
+book/figures/cover-wrap.jpg
+
+# Collected release payload (built by `make dist` / scripts/release.sh)
+/out/
 
 # Local design reference (not part of the site)
 Geometric Deep Learning.html

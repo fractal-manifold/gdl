@@ -29,14 +29,38 @@ published at **[gdl.fractalmanifold.com](https://gdl.fractalmanifold.com)**.
 
 ## Building the book (PDF)
 
-Requires a TeX distribution (TeX Live / MacTeX) with `latexmk`.
+Requires a TeX distribution (TeX Live / MacTeX) with `latexmk`, plus
+`ImageMagick` and `poppler-utils` (`pdfinfo`) for the covers.
+
+The book ships in two editions × two languages, plus a print cover:
 
 ```bash
 cd book
-make          # builds main.pdf
-make watch    # continuous rebuild
-make clean    # remove build artifacts
+make            # all four interior editions (EN/ES × A4/print)
+make screen     # A4 reading edition, English (also: print, screen-es, print-es)
+make cover      # Amazon KDP wraparound cover, English (also: cover-es)
+make watch      # continuous rebuild of the screen edition
+make clean      # remove build artifacts
 ```
+
+Every edition carries an image **front cover** (page 1, from `portada.jpg`).
+The `cover` / `cover-es` targets produce the separate **full wraparound**
+print cover (`[back | spine | front]`), sizing the spine from the matching
+print edition's page count (KDP white-paper formula).
+
+### Collecting and releasing PDFs
+
+```bash
+make dist                       # build everything into the repo-level out/
+scripts/release.sh              # build + publish a date-stamped GitHub release
+scripts/release.sh 2026-06-27   # ... with an explicit date
+```
+
+`make dist` renames the PDFs and gathers them in `out/`.
+`scripts/release.sh` runs `make dist` and publishes them to a release tagged
+`book-YYYY-MM-DD` via the GitHub CLI (`gh`). Pushing changes under `book/` (or
+`portada.jpg`) to `main` also triggers `.github/workflows/book.yml`, which
+builds the PDFs and publishes the same date-stamped release automatically.
 
 ## Running the website locally
 

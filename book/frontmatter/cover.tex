@@ -1,0 +1,38 @@
+% =====================================================================
+%  Image front cover (page 1 of every edition).
+%  Full-bleed mirrored artwork (derived from portada.jpg by the Makefile)
+%  with white, black-outlined title text overlaid. The plain typographic
+%  title page follows as the inside title page. Language comes from the
+%  \book* macros; the raster is chosen by edition (A4 vs 7x10).
+% =====================================================================
+\begingroup
+\thispagestyle{empty}%
+
+% Pick the raster matching the edition's trim (both are pre-mirrored and
+% cropped to the page aspect, so width/height fill is distortion-free).
+\ifx\bookedition\edScreen
+  \def\coverart{cover-front-screen}%
+\else
+  \def\coverart{cover-front-print}%
+\fi
+
+% Full-bleed background on THIS page only (starred form).
+\AddToShipoutPictureBG*{%
+  \put(0,0){\includegraphics[width=\paperwidth,height=\paperheight]{\coverart}}}%
+
+% White text with a solid black halo, anchored in paper coordinates.
+\begin{tikzpicture}[remember picture, overlay]
+  % Title block near the top (dark sky reads well behind white text).
+  \node[anchor=north, align=center, text width=\paperwidth] at ($(current page.north)+(0,-3.2cm)$){%
+    \coverfont\color{white}%
+    \contourlength{1.3pt}\contournumber{32}%
+    {\LARGE\contour{black}{\booktitle}}\\[14pt]
+    {\large\contourlength{0.8pt}\contour{black}{\booksubtitle}}};
+  % Author and publisher near the bottom.
+  \node[anchor=south, align=center, text width=\paperwidth] at ($(current page.south)+(0,2.0cm)$){%
+    \coverfont\color{white}\contourlength{0.8pt}%
+    {\large\contour{black}{\bookauthor}}\\[8pt]
+    {\normalsize\contour{black}{\bookpublisher}}};
+\end{tikzpicture}%
+\null\clearpage
+\endgroup

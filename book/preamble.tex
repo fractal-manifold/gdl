@@ -3,9 +3,21 @@
 % =====================================================================
 
 % ----- Encoding & fonts ---------------------------------------------
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
+% The book builds with lualatex (see the Makefile) so the cover can use the
+% Bruno Ace display font (\coverfont). It still compiles under pdflatex for
+% portability, where \coverfont falls back to bold serif. Math stays on the
+% classic Latin Modern math fonts under both engines (no unicode-math).
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+  \newcommand{\coverfont}{\bfseries}
+\else
+  \usepackage{fontspec}
+  \setmainfont{Latin Modern Roman}
+  \newfontface\coverfont{BrunoAce-Regular.ttf}[Path=fonts/]
+\fi
 \usepackage[\babellang]{babel} % language chosen by \booklang (see lang/)
 \usepackage{microtype}
 
@@ -18,8 +30,18 @@
 \usepackage{graphicx}
 \graphicspath{{figures/}}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit}
+\usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,decorations.pathreplacing}
 \usepackage{float}
+
+% ----- Algorithms ----------------------------------------------------
+% algorithm: the floating wrapper + \caption; algpseudocode: the
+% algorithmic environment and \State / \For / \Require / \Return / ...
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% Full-bleed cover background (eso-pic) and white-with-black-halo cover
+% text (contour). Used by the image cover page; harmless elsewhere.
+\usepackage{eso-pic}
+\usepackage[outline]{contour}
 
 % ----- Brand palette (shared by inline TikZ figures) ----------------
 \definecolor{gdlblue}{RGB}{41, 98, 168}
@@ -46,14 +68,14 @@
     citecolor=green!40!black,
     urlcolor=blue!60!black,
     pdftitle={\booktitle, \booksubtitle},
-    pdfauthor={Jorge Mu\~noz Fuentes}
+    pdfauthor={\bookauthor}
   }
 \else
   \hypersetup{
     colorlinks=false,
     pdfborder={0 0 0},
     pdftitle={\booktitle, \booksubtitle},
-    pdfauthor={Jorge Mu\~noz Fuentes}
+    pdfauthor={\bookauthor}
   }
 \fi
 \usepackage[capitalise]{cleveref}
@@ -91,6 +113,7 @@
 \newcommand{\group}{\mathfrak{G}}
 \newcommand{\Hom}{\operatorname{Hom}}
 \newcommand{\sgn}{\operatorname{sgn}}
+\DeclareMathOperator{\Ad}{Ad}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \newcommand{\inner}[2]{\langle #1, #2 \rangle}
