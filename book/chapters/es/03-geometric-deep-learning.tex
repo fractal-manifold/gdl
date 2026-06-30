@@ -26,7 +26,7 @@ El marco del \gls{GDL} se estructura alrededor de cinco conceptos fundamentales,
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/five_gs_framework.pdf}
+\includegraphics[width=0.7\textwidth]{figures/five_gs_framework.pdf}
 \caption[Las cinco G's del Geometric Deep Learning]{Las cinco G's fundamentales del Geometric Deep Learning. Cada componente representa un aspecto esencial del marco unificador: \textbf{Geometry} (dominios), \textbf{Groups} (simetrías), \textbf{Graphs} (discretización), \textbf{Geodesics} (distancias) y \textbf{Gauges} (coordenadas locales).}
 \label{fig:five_gs_framework}
 \end{figure}
@@ -257,7 +257,7 @@ Las funciones de transición $\phi_\beta \circ \phi_\alpha^{-1}: \phi_\alpha(U_\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.75\textwidth]{images/charts_atlas.pdf}
+\includegraphics[width=0.75\textwidth]{figures/charts_atlas.pdf}
 \caption[Atlas y cartas de una variedad]{Atlas $\mathcal{A} = \{(U_\alpha, \phi_\alpha)\}_{\alpha \in I}$ de una variedad $\mathcal{M}$: cada carta $(U_\alpha, \phi_\alpha)$ es un homeomorfismo $\phi_\alpha: U_\alpha \to V_\alpha \subset \mathbb{R}^m$ que define coordenadas locales en un abierto de $\mathcal{M}$. La función de transición $\phi_\beta \circ \phi_\alpha^{-1}: \phi_\alpha(U_\alpha \cap U_\beta) \to \phi_\beta(U_\alpha \cap U_\beta)$ conecta las representaciones de cartas solapadas.}
 \label{fig:charts_atlas}
 \end{figure}
@@ -395,7 +395,7 @@ El espacio tangente $T_p S^2$ es el plano $\{(x,y,0) : x,y \in \mathbb{R}\}$, qu
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/tangent_space.pdf}
+\includegraphics[width=0.7\textwidth]{figures/tangent_space.pdf}
 \caption[Espacio tangente a una variedad]{Espacio tangente $T_p\mathcal{M}$ en un punto $p$ de una variedad. Los vectores tangentes representan velocidades iniciales de curvas que pasan por $p$, formando un espacio vectorial que aproxima linealmente la variedad en cada punto.}
 \label{fig:tangent_space}
 \end{figure}
@@ -631,7 +631,7 @@ La formalización mediante el tensor de curvatura de Riemann se desarrolla en la
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{images/manifold_hypothesis.png}
+\includegraphics[width=0.9\textwidth]{figures/manifold_hypothesis.png}
 \caption[Hipótesis de la variedad]{Ilustración de la hipótesis de la variedad. Izquierda: el toro $\mathbb{T}^2$ como variedad bidimensional embebida en $\mathbb{R}^3$. Derecha: paraboloide hiperbólico (silla de montar) con datos distribuidos sobre la superficie, ilustrando cómo datos de alta dimensión se concentran en variedades de baja dimensión.}
 \label{fig:manifold_hypothesis}
 \end{figure}
@@ -720,7 +720,7 @@ En el contexto del \gls{GDL}, estas propiedades geométricas (véase \autoref{re
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{images/curvature_comparison.pdf}
+\includegraphics[width=0.85\textwidth]{figures/curvature_comparison.pdf}
 \caption[Comparación de geometrías según la curvatura]{Comparación de las tres geometrías clásicas según el signo de la curvatura seccional $K$. En curvatura positiva ($K > 0$), las geodésicas convergen, facilitando la agregación global de información. En curvatura nula ($K = 0$), las geodésicas mantienen distancia constante (geometría euclidiana). En curvatura negativa ($K < 0$), las geodésicas divergen exponencialmente, proporcionando mayor capacidad representacional para datos jerárquicos.}
 \label{fig:curvature_comparison}
 \end{figure}
@@ -834,7 +834,7 @@ Los espacios hiperbólicos $\mathbb{H}^n$ poseen curvatura negativa constante, l
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{images/hyperbolic_embedding}
+\includegraphics[width=\textwidth]{figures/hyperbolic_embedding}
 \caption[Embedding jerárquico en el disco de Poincaré]{Embedding de una estructura jerárquica en el disco de Poincaré $\mathbb{D}^2$. El crecimiento exponencial del volumen en geometría hiperbólica permite representar árboles y jerarquías con distorsión mínima, en contraste con el espacio euclidiano donde la dimensionalidad requerida crece exponencialmente.}
 \label{fig:hyperbolic_embedding}
 \end{figure}
@@ -1204,7 +1204,7 @@ Así, la exponencial convierte un ángulo (elemento del álgebra) en una matriz 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/exponential_map.pdf}
+\includegraphics[width=0.7\textwidth]{figures/exponential_map.pdf}
 \caption[Mapa exponencial de grupos de Lie]{Mapa exponencial $\exp: \mathfrak{g} \to G$. Transforma vectores del álgebra de Lie (espacio tangente en la identidad $e$) en elementos del grupo de Lie, conectando la estructura lineal del álgebra con la estructura no lineal del grupo.}
 \label{fig:exponential_map}
 \end{figure}
@@ -1566,7 +1566,7 @@ J = \begin{pmatrix}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.6\textwidth]{images/so2_rotations.pdf}
+\includegraphics[width=0.6\textwidth]{figures/so2_rotations.pdf}
 \caption[Rotaciones en el plano: $SO(2)$]{El grupo $SO(2)$ de rotaciones en el plano. Cada elemento $R_\theta$ rota vectores por un ángulo $\theta$. Topológicamente, $SO(2)$ es isomorfo al círculo $S^1$.}
 \label{fig:so2_rotations}
 \end{figure}
@@ -1661,7 +1661,7 @@ El corchete de Lie satisface $[L_i, L_j] = \epsilon_{ijk} L_k$, donde $\epsilon_
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.75\textwidth]{images/so3_rotations.pdf}
+\includegraphics[width=0.75\textwidth]{figures/so3_rotations.pdf}
 \caption[Rotaciones en el espacio: $SO(3)$]{El grupo $SO(3)$ de rotaciones en el espacio tridimensional. Las matrices de rotación elementales $R_x$, $R_y$ y $R_z$ rotan alrededor de los ejes coordenados. Topológicamente, $SO(3) \cong \mathbb{RP}^3$.}
 \label{fig:so3_rotations}
 \end{figure}
@@ -1875,7 +1875,7 @@ La invarianza es un caso especial de equivarianza donde el grupo actúa trivialm
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.65\textwidth]{images/equivariance_diagram.pdf}
+\includegraphics[width=0.65\textwidth]{figures/equivariance_diagram.pdf}
 \caption[Diagrama conmutativo de equivarianza]{Diagrama conmutativo de equivarianza. Una función $\phi: X \to Y$ es $G$-equivariante si el diagrama conmuta: aplicar primero la transformación $\rho_X(g)$ y luego $\phi$ produce el mismo resultado que aplicar primero $\phi$ y luego $\rho_Y(g)$.}
 \label{fig:equivariance_diagram}
 \end{figure}
@@ -2019,7 +2019,7 @@ Este teorema es fundamental para \gls{GDL} porque establece que cualquier domini
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/orbit_stabilizer.pdf}
+\includegraphics[width=0.7\textwidth]{figures/orbit_stabilizer.pdf}
 \caption[Teorema Órbita-Estabilizador]{Visualización del Teorema Órbita-Estabilizador. La órbita $\mathrm{Orb}(x)$ bajo la acción de $G$ es isomorfa al espacio cociente $G/\mathrm{Stab}(x)$: cada clase lateral $g\,\mathrm{Stab}(x)$ corresponde a exactamente un punto de la órbita.}
 \label{fig:orbit_stabilizer}
 \end{figure}
@@ -2336,7 +2336,7 @@ Esta construcción simple tiene consecuencias profundas: si los puntos $\{x_i\}$
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/epsilon_neighborhood_graph.pdf}
+\includegraphics[width=0.7\textwidth]{figures/epsilon_neighborhood_graph.pdf}
 \caption[Grafo de $\epsilon$-vecindad]{Construcción de un grafo de $\epsilon$-vecindad. Los puntos muestreados de una variedad (izquierda) se conectan cuando su distancia es menor que $\epsilon$, formando un grafo que aproxima la estructura local de la variedad original (derecha).}
 \label{fig:epsilon_neighborhood_graph}
 \end{figure}
@@ -2409,7 +2409,7 @@ Para formalizar las triangulaciones y sus generalizaciones, necesitamos definir 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{images/simplicial_complex.pdf}
+\includegraphics[width=0.85\textwidth]{figures/simplicial_complex.pdf}
 \caption[Símplices y complejo simplicial]{Arriba: símplices de dimensión creciente: un 0-símplice (punto), 1-símplice (arista), 2-símplice (triángulo relleno) y 3-símplice (tetraedro). Abajo: un complejo simplicial $\mathcal{K}$ ensamblado a partir de símplices, cuyo 1-esqueleto forma el grafo subyacente $G = (V,E)$.}
 \label{fig:simplicial_complex}
 \end{figure}
@@ -2482,7 +2482,7 @@ El operador central del análisis en grafos es el \textbf{Laplaciano}, que discr
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.8\textwidth]{images/graph_laplacian.pdf}
+\includegraphics[width=0.8\textwidth]{figures/graph_laplacian.pdf}
 \caption[Matrices del Laplaciano de un grafo]{Ejemplo concreto de las matrices asociadas a un grafo: matriz de adyacencia $A$, matriz de grados $D$ y Laplaciano $L_G = D - A$. Las entradas del Laplaciano codifican la conectividad local: $L_{ii} = \deg(i)$ y $L_{ij} = -W_{ij}$ para vértices adyacentes.}
 \label{fig:graph_laplacian}
 \end{figure}
@@ -2948,7 +2948,7 @@ Esta transformación descompone $f$ en las ``bases armónicas'' $\{u_i\}$ del gr
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{images/laplacian_eigenvectors}
+\includegraphics[width=0.95\textwidth]{figures/laplacian_eigenvectors}
 \caption[Autovectores del Laplaciano en grafos]{Autovectores del Laplaciano en un grafo de grilla. Los autovalores pequeños corresponden a funciones suaves (baja frecuencia), mientras que los autovalores grandes corresponden a funciones oscilatorias (alta frecuencia).}
 \label{fig:laplacian_eigenvectors}
 \end{figure}
@@ -2983,7 +2983,7 @@ Esta transformación descompone $f$ en las ``bases armónicas'' $\{u_i\}$ del gr
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{images/graph_fourier_transform}
+\includegraphics[width=0.95\textwidth]{figures/graph_fourier_transform}
 \caption[Transformada de Fourier en grafos]{Transformada de Fourier en grafos. Arriba: una señal sobre un grafo cíclico, sus coeficientes de Fourier y el espectro de frecuencias. Abajo: reconstrucción parcial usando diferentes números de modos, mostrando cómo los componentes de baja frecuencia capturan variaciones suaves.}
 \label{fig:graph_fourier_transform}
 \end{figure}
@@ -3775,7 +3775,7 @@ Esta proposición conecta los dos pilares algebraico y geométrico del marco te�
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\textwidth]{images/fiber_bundle.pdf}
+\includegraphics[width=0.7\textwidth]{figures/fiber_bundle.pdf}
 \caption[Estructura de un fibrado principal]{Estructura de un fibrado principal. El espacio total $P$ se proyecta sobre la variedad base $\mathcal{M}$ mediante $\pi$. Cada fibra $\pi^{-1}(x)$ es difeomorfa al grupo estructural $G$, y trivializaciones locales $\phi_\alpha$ permiten representar el fibrado como productos $U_\alpha \times G$ en regiones abiertas.}
 \label{fig:fiber_bundle}
 \end{figure}
@@ -3891,7 +3891,7 @@ Para una exposición alternativa, véase~\citep[Cap.~II, Prop.~3.2]{Kobayashi199
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{images/parallel_transport.pdf}
+\includegraphics[width=0.85\textwidth]{figures/parallel_transport.pdf}
 \caption[Transporte paralelo y holonomía]{Transporte paralelo a lo largo de una curva $\gamma$ en una variedad. Un vector tangente en $\gamma(0)$ se transporta a lo largo del camino manteniéndose ``paralelo'' según la conexión. La holonomía surge cuando el vector retorna a su punto inicial tras recorrer un lazo cerrado.}
 \label{fig:parallel_transport}
 \end{figure}
@@ -3977,7 +3977,7 @@ para todo $u \in P$ y $g \in G$.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.75\textwidth]{images/gauge_transformation.pdf}
+\includegraphics[width=0.75\textwidth]{figures/gauge_transformation.pdf}
 \caption[Transformación gauge en un grafo]{Transformación gauge en un grafo. Una transformación gauge $g: V \to G$ rota independientemente el marco de referencia en cada vértice, transformando las features $f_i$ en $\rho(g_i)f_i$. Los arcos punteados indican la rotación local aplicada en cada nodo.}
 \label{fig:gauge_transformation}
 \end{figure}
@@ -4094,7 +4094,7 @@ donde $M_\ell$ es la función de mensaje, $U_\ell$ es la función de actualizaci
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{images/mpnn_unification.pdf}
+\includegraphics[width=\textwidth]{figures/mpnn_unification.pdf}
 \caption[Unificación de arquitecturas mediante Message Passing]{Las cuatro arquitecturas principales del Deep Learning como instancias del marco \gls{MPNN}. \textbf{ANN}: grafo completo con pesos específicos para cada par. \textbf{CNN}: grilla regular con pesos compartidos por traslación. \textbf{Transformer}: grafo completo con pesos adaptativos (atención). \textbf{GNN}: grafo arbitrario con agregación por vecindario. Las diferencias residen en la topología del grafo y el grupo de simetría $G$.}
 \label{fig:mpnn_unification}
 \end{figure}
@@ -4276,7 +4276,7 @@ Dos grafos $G_1$ y $G_2$ son \textit{WL-equivalentes}, denotado $G_1 \equiv_{\ma
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{images/weisfeiler_leman.pdf}
+\includegraphics[width=\textwidth]{figures/weisfeiler_leman.pdf}
 \caption[Refinamiento de colores Weisfeiler-Leman]{Ejemplo del test de refinamiento de colores 1-WL sobre un grafo de 6 nodos. (a) Coloración inicial uniforme. (b) Tras la primera iteración, los nodos se distinguen por grado: azul (grado~3), rojo (grado~4), verde (grado~2). (c) La segunda iteración refina según el multiconjunto de colores vecinos: $v_3$ y $v_4$ (amarillo) se separan de $v_6$ (rojo) porque sus vecindarios tienen composiciones de colores distintas.}
 \label{fig:weisfeiler_leman}
 \end{figure}

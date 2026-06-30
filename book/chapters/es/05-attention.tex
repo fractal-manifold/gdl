@@ -108,7 +108,7 @@ La estructura geométrica subyacente de los espacios de consultas, claves y valo
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/qkv_geometric_projection.pdf}
+    \includegraphics[width=0.95\textwidth]{figures/qkv_geometric_projection.pdf}
     \caption{Interpretación geométrica del mecanismo de atención. \textbf{Izquierda}: en el espacio de queries y keys, la similitud entre $\mathbf{q}_i$ y cada $\mathbf{k}_j$ se mide por el ángulo $\theta_{ij}$ (producto interno escalado). \textbf{Derecha}: los valores $\mathbf{v}_j$ se ponderan por los pesos de atención $\alpha_{ij}$, y la salida $\mathbf{y}_i$ es su combinación convexa.}
     \label{fig:qkv_geometric_projection}
 \end{figure}
@@ -284,7 +284,7 @@ La arquitectura multi-cabeza proporciona varios beneficios fundamentales:
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{images/multi_head_attention.pdf}
+\includegraphics[width=0.85\textwidth]{figures/multi_head_attention.pdf}
 \caption{Diagrama de Multi-Head Attention. La entrada se proyecta en $h$ subespacios paralelos, cada uno con sus propias matrices $\mathbf{W}^Q_i$, $\mathbf{W}^K_i$, $\mathbf{W}^V_i$. Cada cabeza computa atención independientemente y los resultados se concatenan y proyectan mediante $\mathbf{W}^O$.}
 \label{fig:multi_head_attention}
 \end{figure}
@@ -429,7 +429,7 @@ Los eigenvalores $\lambda_i$ indican la importancia relativa de cada patrón de 
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/attention_spectrum.pdf}
+    \includegraphics[width=0.95\textwidth]{figures/attention_spectrum.pdf}
     \caption{Descomposición espectral del operador de atención. \textbf{Izquierda}: los eigenvalores $\lambda_i$ del núcleo de atención exhiben decaimiento rápido ($\lambda_i \sim i^{-\alpha}$), lo que indica un rango efectivo finito $r$ del operador. La región sombreada corresponde a los modos dominantes. \textbf{Derecha}: las eigenfunciones $\phi_i$ asociadas muestran frecuencia creciente, análogamente a la base de Fourier; las barras púrpura indican la magnitud del eigenvalor correspondiente.}
     \label{fig:attention_spectrum}
 \end{figure}
@@ -747,7 +747,7 @@ donde $d_\ell^{m'm}(\beta)$ son las matrices reducidas de Wigner, que dependen s
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.85\textwidth]{images/spherical_harmonics.pdf}
+    \includegraphics[width=0.85\textwidth]{figures/spherical_harmonics.pdf}
     \caption{Armónicos esféricos $Y_\ell^m(\theta, \varphi)$ para grados $\ell = 0, 1, 2$. Las regiones azules y rojas indican valores positivos y negativos, respectivamente. El grado $\ell$ controla la frecuencia angular (número de cambios de signo) y el orden $m$ determina la orientación del patrón nodal. Estas funciones forman la base de las representaciones irreducibles de $SO(3)$ de dimensión $2\ell+1$ utilizadas en la descomposición de características equivariantes~\eqref{eq:irrep_decomposition}.}
     \label{fig:spherical_harmonics_attention}
 \end{figure}
@@ -1051,7 +1051,7 @@ donde $a \in \mathbb{R}^{2d'}$ es un vector de atención aprendible y $\|$ denot
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.75\textwidth]{images/gat_mechanism.pdf}
+\includegraphics[width=0.75\textwidth]{figures/gat_mechanism.pdf}
 \caption{Mecanismo de Graph Attention Network (GAT). El nodo central (rojo) computa coeficientes de atención $\alpha_{ij}$ con cada vecino (azul). El grosor de las flechas refleja la magnitud de los pesos de atención: la red aprende a asignar diferentes importancias a cada vecino según las características de los nodos.}
 \label{fig:gat_mechanism}
 \end{figure}
@@ -1784,7 +1784,7 @@ La justificación geométrica desarrollada en esta sección motiva una pregunta 
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.9\textwidth]{images/hyperbolic_embedding.pdf}
+    \includegraphics[width=0.9\textwidth]{figures/hyperbolic_embedding.pdf}
     \caption{Comparación entre embedding euclidiano (izquierda) y embedding en el disco de Poincaré (derecha) de un árbol jerárquico. En $\mathbb{R}^2$, las hojas del árbol se comprimen y las distancias se distorsionan. En el disco de Poincaré $\mathbb{D}^2$, el crecimiento exponencial del volumen hiperbólico permite separar las ramas con distorsión mínima (\autoref{thm:embedding_arboles_hiperbolico}), mientras que en $\mathbb{R}^d$ se necesita $d = \Omega(\log n)$ (\autoref{prop:cota_inferior_euclidiano}).}
     \label{fig:hyperbolic_embedding_attention}
 \end{figure}
@@ -2155,7 +2155,7 @@ por lo que $g(V,W)$ es constante a lo largo de $\gamma$.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/parallel_transport_surface.pdf}
+    \includegraphics[width=0.8\textwidth]{figures/parallel_transport_surface.pdf}
     \caption{Transporte paralelo de un vector tangente a lo largo de una curva $\gamma$ en una superficie. El vector $V(t)$ satisface $\nabla_{\dot{\gamma}} V = 0$, manteniendo su norma y ángulo relativo a la curva constantes. La dependencia del resultado en el camino elegido (holonomía) refleja la curvatura de la superficie y motiva la atención con transporte paralelo (\autoref{def:attention_parallel_transport}).}
     \label{fig:parallel_transport_attention}
 \end{figure}
@@ -2955,7 +2955,7 @@ Un dataset simplicial $\mathcal{D} = (\mathcal{K}, \mathbf{X})$ consiste en:
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.8\textwidth]{images/simplicial_messages.pdf}
+\includegraphics[width=0.8\textwidth]{figures/simplicial_messages.pdf}
 \caption{Tres tipos de mensajes en Simplicial Attention Networks. Una arista objetivo (roja) recibe: mensajes \emph{lower} desde sus vértices frontera (verde), mensajes \emph{upper} desde triángulos de los que es cara (naranja), y mensajes \emph{horizontales} desde aristas adyacentes (púrpura).}
 \label{fig:simplicial_messages}
 \end{figure}

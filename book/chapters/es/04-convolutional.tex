@@ -56,7 +56,7 @@ La explosión de las redes convolucionales y el aprendizaje profundo (deep learn
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/alexnet_architecture}
+    \includegraphics[width=0.95\textwidth]{figures/alexnet_architecture}
     \caption[Arquitectura de AlexNet]{Arquitectura de AlexNet: red convolucional con 8 capas (5 convolucionales y 3 completamente conectadas) que alcanzó un error Top-5 del 15.3\% en ImageNet ILSVRC-2012, una mejora significativa respecto al 26.2\% del segundo mejor modelo.}
     \label{fig:alexnet}
 \end{figure}
@@ -100,7 +100,7 @@ Esta propiedad de equivarianza es fundamental para entender tanto las fortalezas
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/convolution_operation}
+	\includegraphics[width=0.85\textwidth]{figures/convolution_operation}
 	\caption[Operación convolucional 2D]{Operación convolucional 2D: un kernel $\mathbf{W}$ de tamaño $3 \times 3$ se desliza sobre la imagen de entrada $\mathbf{X}$, computando el producto interno local en cada posición para producir el mapa de activación de salida $(\mathbf{X} \star \mathbf{W})$.}
 	\label{fig:convolution_operation}
 \end{figure}
@@ -353,7 +353,7 @@ La capacidad de analizar múltiples escalas simultáneamente hace que las wavele
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/fourier_pairs}
+	\includegraphics[width=0.85\textwidth]{figures/fourier_pairs}
 	\caption[Pares de transformadas de Fourier]{Pares de transformadas de Fourier: correspondencia entre señales en el dominio temporal ($t$) y sus representaciones en el dominio frecuencial ($\omega$). Se observa la dualidad localización-deslocalización que fundamenta el principio de incertidumbre.}
 	\label{fig:fourier_pairs}
 \end{figure}
@@ -808,7 +808,7 @@ El $k$-ésimo eigenvector $\phi_k$ minimiza esta variación total sujeto a ortog
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{images/cnn_graph_kernel_spectral}
+    \includegraphics[width=0.85\textwidth]{figures/cnn_graph_kernel_spectral}
     \caption[De kernel CNN a representación espectral en grafos]{Transformación de un kernel de CNN a representación espectral en grafos. El kernel espacial de una CNN tradicional (izquierda) se puede interpretar como un filtro espectral sobre el grafo de la grilla regular (derecha), donde los autovalores del Laplaciano determinan las frecuencias y el filtro modula cada componente frecuencial.}
     \label{fig:cnn_graph_kernel_spectral}
 \end{figure}
@@ -1199,7 +1199,7 @@ La diferencia clave es que el scattering transform tiene garantías teóricas de
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/wavelet_multiresolution}
+	\includegraphics[width=0.85\textwidth]{figures/wavelet_multiresolution}
 	\caption[Descomposición wavelet multiresolución]{Descomposición wavelet multiresolución: una señal se descompone iterativamente mediante filtros paso-bajo ($h$) y paso-alto ($g$) seguidos de submuestreo ($\downarrow 2$), separando las componentes de aproximación ($c_{j,k}$) y detalle ($d_{j,k}$) a múltiples escalas.}
 	\label{fig:wavelet_multiresolution}
 \end{figure}
@@ -1469,7 +1469,7 @@ Los datos se representan en un grafo mediante:
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/image_as_graph}
+	\includegraphics[width=0.85\textwidth]{figures/image_as_graph}
 	\caption[Imagen como grafo de grilla regular]{Una imagen puede representarse como un grafo de grilla regular con conectividad 4: cada píxel es un nodo y las aristas conectan píxeles vecinos horizontal y verticalmente. La vecindad $\mathcal{N}(v_i)$ corresponde exactamente al soporte del kernel convolucional.}
 	\label{fig:image_as_graph}
 \end{figure}
@@ -1658,7 +1658,7 @@ Los pesos \(K_{u,v}\) del kernel corresponden a los mensajes ponderados. \(\squa
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.90\textwidth]{images/conv_message_passing}
+	\includegraphics[width=0.90\textwidth]{figures/conv_message_passing}
 	\caption[Equivalencia convolución-message passing]{Equivalencia entre convolución y message passing: los tres pasos fundamentales (mensaje, agregación, actualización) corresponden exactamente a la operación convolucional cuando el grafo es una grilla regular.}
 	\label{fig:conv_message_passing}
 \end{figure}
@@ -2100,7 +2100,7 @@ Dada una CNN con arquitectura de capas $\{L_\ell\}$ y kernels $\{K_\ell\}$, exis
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.95\textwidth]{images/cnn_to_spectral_graph}
+	\includegraphics[width=0.95\textwidth]{figures/cnn_to_spectral_graph}
 	\caption[Transformación de un kernel CNN a su representación espectral en un grafo grilla]{Transformación de un kernel CNN a su representación espectral en un grafo grilla. Izquierda: kernel $3 \times 3$ aplicado sobre una grilla de imagen con valores proporcionales a la intensidad. Centro: representación del mismo dominio como un grafo con conectividad 4. Derecha: filtro espectral $g(\lambda)$ y su aproximación mediante polinomios de Chebyshev $\hat{g}(\lambda) = \sum_k \theta_k T_k(\lambda)$.}
 	\label{fig:cnn_to_spectral_graph}
 \end{figure}
@@ -2478,7 +2478,7 @@ Por la propiedad de composición de funciones equivariantes establecida en el \a
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/d4_group_actions}
+	\includegraphics[width=0.85\textwidth]{figures/d4_group_actions}
 	\caption[Elementos del grupo $D_4$ actuando sobre un patch]{Los 8 elementos del grupo diédrico $D_4$ actuando sobre un patch asimétrico. Fila superior: las 4 rotaciones ($e$, $r$, $r^2$, $r^3$). Fila inferior: las 4 reflexiones ($s$, $sr$, $sr^2$, $sr^3$). La red $D_4$-equivariante produce la misma salida independientemente de la transformación aplicada.}
 	\label{fig:d4_group_actions}
 \end{figure}
@@ -2870,7 +2870,7 @@ Los filtros steerable constituyen el fundamento teórico de las Steerable CNNs, 
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/steerable_filters}
+	\includegraphics[width=0.85\textwidth]{figures/steerable_filters}
 	\caption[Filtros steerable y steerability]{Filtros steerable: cualquier rotación del filtro base $\psi_0$ puede expresarse como combinación lineal de filtros de una base finita. Esta propiedad permite equivarianza a rotaciones continuas con un número finito de parámetros.}
 	\label{fig:steerable_filters}
 \end{figure}
@@ -3364,7 +3364,7 @@ Las proyecciones tradicionales de datos esféricos a dominios rectangulares intr
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.80\textwidth]{images/spherical_harmonics}
+	\includegraphics[width=0.80\textwidth]{figures/spherical_harmonics}
 	\caption[Armónicos esféricos $Y_l^m$]{Armónicos esféricos $Y_l^m(\theta, \varphi)$ para grados $l = 0, 1, 2$. El grado $l$ controla la frecuencia (número de oscilaciones) y el orden $m$ determina la orientación. Regiones azules y rojas representan valores positivos y negativos respectivamente.}
 	\label{fig:spherical_harmonics}
 \end{figure}
@@ -5112,7 +5112,7 @@ Para cada punto $p \in M$, se construye un \textbf{chart geodésico} que permite
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.80\textwidth]{images/geodesic_convolution}
+	\includegraphics[width=0.80\textwidth]{figures/geodesic_convolution}
 	\caption[Convolución geodésica sobre una superficie]{Convolución geodésica: el kernel se aplica en la bola geodésica $B_r(p)$ alrededor de un punto $p$ sobre la superficie $\mathcal{M}$, transportando paralelamente las características de los vecinos $q_j$ al espacio tangente $T_p\mathcal{M}$.}
 	\label{fig:geodesic_convolution}
 \end{figure}
@@ -5606,7 +5606,7 @@ curva \(\gamma: [0,1] \to \mathcal{M}\) con \(\gamma(0) = p, \gamma(1) = q\) pre
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.75\textwidth]{images/parallel_transport_surface}
+	\includegraphics[width=0.75\textwidth]{figures/parallel_transport_surface}
 	\caption[Transporte paralelo en una superficie curva]{Transporte paralelo de un vector $v \in T_p\mathcal{M}$ a lo largo de una curva $\gamma$ sobre una superficie curva. El vector transportado $\Gamma_\gamma(v) \in T_q\mathcal{M}$ preserva la norma y los ángulos, pero su orientación respecto a la superficie cambia según la curvatura.}
 	\label{fig:parallel_transport_surface}
 \end{figure}
@@ -6441,7 +6441,7 @@ Antes de adentrarnos en el formalismo matemático, es crucial comprender \textit
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.90\textwidth]{images/gauge_freedom}
+	\includegraphics[width=0.90\textwidth]{figures/gauge_freedom}
 	\caption[Libertad gauge: elección de marcos locales]{Libertad gauge: la misma superficie admite diferentes elecciones de marcos locales (Gauge 1 y Gauge 2). La convolución gauge-equivariante produce resultados idénticos independientemente de la elección de gauge, conectados por transformaciones $g(x) \in SO(2)$ punto a punto.}
 	\label{fig:gauge_freedom}
 \end{figure}
@@ -6575,7 +6575,7 @@ donde:
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.95\textwidth]{images/gauge_transport_cylinder.png}
+	\includegraphics[width=0.95\textwidth]{figures/gauge_transport_cylinder.png}
 	\caption[Transporte gauge en un cilindro]{Transporte gauge en un cilindro. Izquierda: sistemas de coordenadas locales (vectores tangentes) en diferentes puntos del cilindro. Centro: kernels de convolución transportados a lo largo de una geodésica entre puntos vecinos. Derecha: concepto de invarianza gauge: diferentes elecciones de orientación local (Gauge 1 vs Gauge 2) producen el mismo patrón detectado.}
 	\label{fig:gauge_transport_cylinder}
 \end{figure}
@@ -7279,7 +7279,7 @@ Verificación de $\partial^2 = 0$:
 
 \begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.85\textwidth]{images/simplicial_hierarchy}
+	\includegraphics[width=0.85\textwidth]{figures/simplicial_hierarchy}
 	\caption[Jerarquía simplicial: paso de mensajes multi-orden]{Jerarquía de paso de mensajes en un complejo simplicial: mensajes entre nodos (0-cadenas), aristas (1-cadenas) y caras (2-cadenas), conectados por operadores frontera $\partial_k$ y cofrontera $\delta_k$. El Laplaciano de Hodge $L_k$ captura la interacción entre niveles adyacentes.}
 	\label{fig:simplicial_hierarchy}
 \end{figure}

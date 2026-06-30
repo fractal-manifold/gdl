@@ -28,7 +28,7 @@
 
 % ----- Graphics & figures -------------------------------------------
 \usepackage{graphicx}
-\graphicspath{{figures/}{images/}}
+\graphicspath{{figures/}}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,decorations.pathreplacing}
 \usepackage{tikz-cd}
@@ -50,9 +50,10 @@
 \newfloat{listing}{htbp}{lol}
 
 % ----- Robust \includegraphics --------------------------------------
-% If a referenced image file cannot be found (e.g. the images/ folder
-% has not been added yet) draw a labelled placeholder so the document
-% still compiles. When the real file is present it is used as normal.
+% If a referenced figure cannot be found (e.g. `make figures` has not
+% been run yet to regenerate the compiled PDFs/PNGs) draw a labelled
+% placeholder so the document still compiles. When the real file is
+% present it is used as normal.
 \makeatletter
 \let\gdl@origincludegraphics\includegraphics
 \newif\ifgdl@imgfound
@@ -61,7 +62,6 @@
   \gdl@imgfoundfalse
   \@for\gdl@ext:=\gdl@extlist\do{%
     \IfFileExists{#1\gdl@ext}{\gdl@imgfoundtrue}{}%
-    \IfFileExists{images/#1\gdl@ext}{\gdl@imgfoundtrue}{}%
     \IfFileExists{figures/#1\gdl@ext}{\gdl@imgfoundtrue}{}%
   }%
 }

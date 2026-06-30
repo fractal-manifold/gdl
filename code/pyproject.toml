@@ -1,7 +1,7 @@
 [project]
 name = "gdltfg"
 version = "0.1.0"
-description = "Add your description here"
+description = "Demonstration Geometric Deep Learning models for the GDL thesis (skeleton)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
