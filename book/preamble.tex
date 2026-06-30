@@ -28,10 +28,53 @@
 
 % ----- Graphics & figures -------------------------------------------
 \usepackage{graphicx}
-\graphicspath{{figures/}}
+\graphicspath{{figures/}{images/}}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,decorations.pathreplacing}
+\usepackage{tikz-cd}
 \usepackage{float}
+\usepackage{longtable}
+
+% ----- Code listings (pure-LaTeX; no minted/shell-escape needed) -----
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{gdlblue}\bfseries,
+  commentstyle=\color{gdlgreen}\itshape,
+  stringstyle=\color{gdlred},
+  numbers=left, numberstyle=\tiny\color{gdlgray}, numbersep=8pt,
+  showstringspaces=false, breaklines=true, frame=single,
+  columns=fullflexible, keepspaces=true,
+}
+\floatstyle{plain}
+\newfloat{listing}{htbp}{lol}
+
+% ----- Robust \includegraphics --------------------------------------
+% If a referenced image file cannot be found (e.g. the images/ folder
+% has not been added yet) draw a labelled placeholder so the document
+% still compiles. When the real file is present it is used as normal.
+\makeatletter
+\let\gdl@origincludegraphics\includegraphics
+\newif\ifgdl@imgfound
+\def\gdl@extlist{,.pdf,.png,.jpg,.jpeg,.PDF,.PNG,.eps}
+\newcommand{\gdl@testimage}[1]{%
+  \gdl@imgfoundfalse
+  \@for\gdl@ext:=\gdl@extlist\do{%
+    \IfFileExists{#1\gdl@ext}{\gdl@imgfoundtrue}{}%
+    \IfFileExists{images/#1\gdl@ext}{\gdl@imgfoundtrue}{}%
+    \IfFileExists{figures/#1\gdl@ext}{\gdl@imgfoundtrue}{}%
+  }%
+}
+\renewcommand{\includegraphics}[2][]{%
+  \gdl@testimage{#2}%
+  \ifgdl@imgfound
+    \gdl@origincludegraphics[#1]{#2}%
+  \else
+    \fbox{\begin{minipage}{0.6\linewidth}\centering
+      \ttfamily\scriptsize [imagen pendiente]\\\detokenize{#2}\end{minipage}}%
+  \fi
+}
+\makeatother
 
 % ----- Algorithms ----------------------------------------------------
 % algorithm: the floating wrapper + \caption; algpseudocode: the
@@ -80,6 +123,14 @@
 \fi
 \usepackage[capitalise]{cleveref}
 
+% ----- Glossary & acronyms ------------------------------------------
+% Uses the "noidx" machinery so the glossary builds with LaTeX alone
+% (no makeindex / bin2gls step needed in CI). Entries are language
+% specific and live in glossary/<booklang>.tex.
+\usepackage[acronym,nonumberlist,nopostdot,toc,sort=use]{glossaries}
+\makenoidxglossaries
+\input{glossary/\booklang}
+
 % ----- Spanish / TikZ shorthand clash -------------------------------
 % babel-spanish makes < and > active (for << >> guillemets), which breaks
 % TikZ arrow syntax such as ->, >=stealth and <-. Disable just those two
@@ -104,6 +155,13 @@
 \newtheorem{lemma}[definition]{\nameLemma}
 \newtheorem{proposition}[definition]{\nameProposition}
 \newtheorem{corollary}[definition]{\nameCorollary}
+\newtheorem{hypothesis}[definition]{\nameHypothesis}
+\newtheorem{conjecture}[definition]{\nameConjecture}
+\newtheorem{application}[definition]{\nameApplication}
+
+% ----- Editorial notes ----------------------------------------------
+% \TODO marks author notes; rendered as nothing in the finished book.
+\newcommand{\TODO}[1]{}
 
 % ----- Math macros ---------------------------------------------------
 \newcommand{\R}{\mathbb{R}}

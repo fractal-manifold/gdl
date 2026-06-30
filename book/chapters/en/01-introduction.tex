@@ -1,266 +1,150 @@
-\chapter{Introduction}
-\label{ch:introduction}
+\chapter{Introduction}\label{ch:intro}
 
-Artificial intelligence has grown explosively in recent years, not only as
-a field of scientific research but as a technology that is rapidly entering
-everyday life. The trend is unmistakable, and we may well be living through
-one of the most significant shifts in the history of technology.
+Artificial intelligence has experienced exponential growth in recent years, not only in terms of scientific research but as a tool that is rapidly being introduced into people's everyday lives. The impact and the trend are clear, and we may well be facing one of the most significant changes in the history of technology.
 
-The story of machine learning reaches back to the 1940s and 1950s, with the
-first attempts to build computational models inspired by the brain. The
-perceptron, proposed by Frank Rosenblatt in 1958~\citep{rosenblatt1958perceptron},
-was one of the earliest learning algorithms able to classify linearly
-separable patterns. Its theoretical limitations, made precise by Minsky and
-Papert~\citep{minsky1969perceptrons}, contributed to the first ``AI winter'':
-a prolonged period of skepticism and reduced funding. The revival came in the
-1980s with the backpropagation algorithm~\citep{rumelhart1986backprop}, which
-made it possible to train multilayer networks efficiently. Even so, vanishing
-gradients and the limited computing power of the time kept these techniques in
-the background for years.
+The history of machine learning dates back to the 1940s--1950s, with the first attempts to create computational models inspired by the human brain. The perceptron, proposed by Frank Rosenblatt in 1957~\citep{rosenblatt1958perceptron}, represented one of the first machine learning algorithms capable of classifying linearly separable patterns. However, the theoretical limitations of the perceptron (formally proven by Minsky and Papert) led to the first ``artificial intelligence winter'', a prolonged period of skepticism and reduced funding in the field.
 
-The transformation we now call \emph{deep learning} arrived in 2012, when
-AlexNet~\citep{krizhevsky2012alexnet} won the ImageNet competition and
-slashed the classification error of traditional methods. This success rested
-on the convergence of three factors: large labelled datasets, accessible
-specialized hardware (GPUs) capable of training models with millions of
-parameters, and training techniques that overcame the historical obstacles of
-deep networks. Since then, deep learning has proven remarkably effective at
-image recognition, natural language processing, content generation, and
-protein structure prediction, among many other tasks.
+The resurgence came in the 1980s with the development of the backpropagation algorithm (\textit{backpropagation})~\citep{backpropagation} by Rumelhart, Hinton, and Williams, which made it possible to train multilayer neural networks efficiently. Nevertheless, problems such as the vanishing gradient and the limited computational capacity of the time kept these techniques in the background during the following decades.
 
-The architectures behind these achievements --- convolutional, recurrent, and
-attention-based networks --- were conceived to operate on data laid out in
-regular Euclidean domains: grids of pixels, temporal sequences, tables of
-features. As the community began applying them to data with intrinsically
-richer structure (molecules, social networks, three-dimensional surfaces), it
-became clear that the assumption of Euclidean regularity was a fundamental
-limitation --- conceptual, not merely technical. This realization gave rise to
-a new paradigm, \emph{geometric deep learning} (GDL), which inverts the
-traditional relationship between data and architecture: instead of forcing the
-data to fit pre-existing models, the geometric properties of the data dictate
-the structure of the model.
+The revolution that transformed the field is due to what we now know as deep learning or \gls{DL}. The turning point occurred in 2012 with the victory of AlexNet~\citep{alexnet} in the ImageNet competition, drastically reducing the classification error relative to traditional methods. This success was made possible by the convergence of three factors: large amounts of available data, accessible specialized hardware such as \glspl{GPU} that allowed models with millions of parameters to be trained, and new training techniques that overcame the historical problems of deep networks.
 
-\section{What is geometric deep learning?}
-\label{sec:what-is-gdl}
+From that moment on, \gls{DL} has demonstrated its effectiveness in a wide range of tasks: image recognition with superhuman accuracy, natural language processing, content generation, and protein structure prediction, among many others. However, the architectures responsible for these achievements (convolutional, recurrent, and attention networks) were conceived to operate on data organized in regular Euclidean domains: pixel grids, temporal sequences, feature tables. As the research community began to apply these techniques to data with intrinsically richer structure (molecules, social networks, three-dimensional surfaces), it became evident that the assumption of Euclidean regularity constituted a fundamental limitation, not merely technical but conceptual. This realization prompted the emergence of a new paradigm, \gls{GDL}, which proposes inverting the traditional relationship between data and architecture: instead of forcing the data to fit into preexisting models, it is the geometric properties of the data that must dictate the structure of the model.
 
-Traditional architectures are designed for data with regular Euclidean
-structure. Convolutional networks exploit the regular grid of an image, where
-every pixel has a fixed number of neighbours in predetermined positions;
-recurrent and attention models process sequences endowed with a natural
-temporal order. This dependence on regular domains breaks down when the data
-does not fit such templates.
+\section{Limitations of traditional methods}\label{sec:limitaciones_tradicionales}
 
-Consider analysing a social network: users and their connections form an
-irregular graph in which each node may have an arbitrary number of neighbours,
-with no natural ordering or grid. Applying a convolutional network directly
-would require flattening the graph into a Euclidean representation (such as an
-adjacency matrix), discarding crucial structural information and introducing a
-flood of zeros that make the computation wasteful. The analysis of molecules
-in drug discovery is equally telling: molecules are naturally graphs whose
-nodes are atoms and whose edges are chemical bonds, and their pharmacological
-behaviour is governed by three-dimensional geometry and bond topology.
-Classical methods relied on hand-crafted descriptors or string encodings (such
-as SMILES), losing geometric information essential to biological activity. The
-same ``curse of non-Euclideanity'' appears in the analysis of 3D shapes, where
-surfaces admit no natural parametrization on a regular grid and techniques such
-as voxelization or multi-view projection introduce artefacts and erase fine
-geometric detail.
+The traditional architectures of \gls{ANN} and \gls{DL}, especially \gls{CNN} (which we will study in \autoref{ch:cnn}), \gls{RNN} networks, and attention models (\autoref{ch:attention}), have been designed specifically to operate on data with regular Euclidean structure. \gls{CNN} take advantage of the regular grid structure of images, where each pixel has a fixed number of neighbors at predefined positions. Similarly, \gls{RNN} and attention models process sequences in which there is a natural temporal order and a linear structure.
 
-\Cref{fig:data-types} illustrates the three fundamental categories of data
-according to their geometric structure: Euclidean data with a regular grid,
-graphs with irregular topology, and manifolds with continuous geometry.
+This dependence on regular Euclidean structures presents fundamental limitations when the data do not conform to these paradigms. Consider the problem of analyzing social networks: users and their connections form an irregular graph where each node can have an arbitrary number of neighbors, and there is no natural ordering or grid structure. Attempting to apply \glspl{CNN} directly would require transforming the graph into a Euclidean representation (such as an adjacency matrix), losing crucial structural information and introducing a large number of zeros that make the process computationally inefficient.
+
+Another paradigmatic example is the analysis of molecules in drug discovery. Molecules are naturally represented as graphs where atoms are nodes and chemical bonds are edges. The three-dimensional geometry of the molecule, the chemical properties of the atoms, and the topology of the bonds determine its pharmacological properties. Traditional methods required the manual extraction of specific chemical features (molecular descriptors) or conversion to string representations (such as SMILES), losing three-dimensional geometric information that is crucial for understanding biological activity.
+
+The ``curse of non-Euclideanity'' also manifests itself in domains such as 3D shape analysis, where the surfaces of objects do not have a natural parameterization on a regular grid. Traditional techniques required voxelization (conversion to a regular 3D grid) or projections onto multiple 2D views, introducing artifacts and losing fine geometric information. This loss of information translates into suboptimal representations that limit the performance of models and require more complex architectures to compensate for representational deficiencies.
+
+\autoref{fig:tipos_datos_geometricos} illustrates these three fundamental categories of data: Euclidean data with a regular grid structure, graphs with irregular topology, and manifolds with continuous geometry.
 
 \begin{figure}[h]
 \centering
-\begin{tikzpicture}[scale=0.9]
-% --- Left panel: Euclidean (regular grid) ---
-\begin{scope}[shift={(-5,0)}]
-    \begin{scope}[on background layer]
-        \fill[gdlblue!15, rounded corners=2pt] (-0.3,-0.3) rectangle (3.3,3.3);
-    \end{scope}
-    \foreach \x in {0,...,3} \foreach \y in {0,...,4}
-        \draw[gdlgray!50] (\x*0.75, \y*0.75) -- (\x*0.75+0.75, \y*0.75);
-    \foreach \x in {0,...,4} \foreach \y in {0,...,3}
-        \draw[gdlgray!50] (\x*0.75, \y*0.75) -- (\x*0.75, \y*0.75+0.75);
-    \foreach \x in {0,...,4} \foreach \y in {0,...,4}
-        \fill[gdlblue!60] (\x*0.75, \y*0.75) circle (2.5pt);
-    \node[below, font=\bfseries, text=gdlblue!70!black] at (1.5, -0.7) {Euclidean};
-\end{scope}
-% --- Centre panel: Graph (irregular topology) ---
-\begin{scope}[shift={(0.5,0)}]
-    \coordinate (n1) at (0.3, 2.8); \coordinate (n2) at (1.8, 3.0);
-    \coordinate (n3) at (0.0, 1.5); \coordinate (n4) at (1.5, 1.6);
-    \coordinate (n5) at (2.8, 2.0); \coordinate (n6) at (0.5, 0.2);
-    \coordinate (n7) at (2.2, 0.3);
-    \foreach \a/\b in {n1/n2,n1/n3,n1/n4,n2/n4,n2/n5,n3/n4,n3/n6,n4/n5,n4/n6,n4/n7,n5/n7,n6/n7}
-        \draw[gdlgreen!50, thick] (\a) -- (\b);
-    \foreach \n in {n1,n2,n3,n4,n5,n6,n7} \fill[gdlgreen!70] (\n) circle (4pt);
-    \node[below, font=\bfseries, text=gdlgreen!70!black] at (1.5, -0.7) {Graph};
-\end{scope}
-% --- Right panel: Manifold (continuous geometry) ---
-\begin{scope}[shift={(5.5,0)}]
-    \shade[ball color=gdlorange!25, opacity=0.9]
-        (0.0, 1.5) .. controls (-0.5, 2.8) and (1.0, 3.5) .. (1.8, 3.0)
-        .. controls (2.6, 2.5) and (3.3, 2.8) .. (3.2, 1.8)
-        .. controls (3.1, 0.8) and (2.5, -0.2) .. (1.5, 0.0)
-        .. controls (0.5, 0.2) and (0.5, 0.3) .. (0.0, 1.5);
-    \draw[thick, gdlorange!60]
-        (0.0, 1.5) .. controls (-0.5, 2.8) and (1.0, 3.5) .. (1.8, 3.0)
-        .. controls (2.6, 2.5) and (3.3, 2.8) .. (3.2, 1.8)
-        .. controls (3.1, 0.8) and (2.5, -0.2) .. (1.5, 0.0)
-        .. controls (0.5, 0.2) and (0.5, 0.3) .. (0.0, 1.5);
-    \draw[gdlorange!30, thin] (0.5, 1.2) .. controls (1.2, 1.8) .. (2.5, 1.5);
-    \draw[gdlorange!30, thin] (0.8, 2.2) .. controls (1.5, 2.6) .. (2.6, 2.2);
-    \node[below, font=\bfseries, text=gdlorange!70!black] at (1.5, -0.7) {Manifold};
-\end{scope}
-\end{tikzpicture}
-\caption[Types of geometric data]{The three fundamental kinds of data by
-geometric structure: Euclidean data on a regular grid (left), graphs with
-irregular topology where each node may have a different number of neighbours
-(centre), and manifolds with continuous geometry requiring local
-parametrizations (right).}
-\label{fig:data-types}
+\includegraphics[width=0.9\textwidth]{images/tipos_datos_geometricos}
+\caption[Types of geometric data]{Comparison of the three fundamental types of data according to their geometric structure: Euclidean data with a regular grid structure (left), graphs with irregular topology where each node can have a different number of neighbors (center), and manifolds with continuous geometry that require local parameterizations (right).}
+\label{fig:tipos_datos_geometricos}
 \end{figure}
 
-Geometric deep learning is a mathematically principled response to these
-limitations. Rather than adapting the data to existing architectures --- a
-process that invariably loses information --- it designs architectures that
-respect and exploit the intrinsic geometric structure of the data. The central
-observation is that many real-world domains carry natural symmetries and
-geometric structure that can be exploited to improve both computational
-efficiency and predictive performance. By building these symmetries directly
-into the network, GDL not only resolves the representational problems above but
-also guarantees desirable properties such as equivariance, robust
-generalization, and parameter efficiency.
+\section{Geometric Deep Learning}\label{sec:introduccion_gdl}
 
-The full mathematical foundations --- group theory, the notions of invariance
-and equivariance, and the unifying ``5 Gs'' framework --- are developed in
-\Cref{ch:foundations,ch:priors}. For now it is enough to understand that GDL
-provides a theoretical framework unifying seemingly disparate architectures
---- convolutional networks, graph networks, and attention mechanisms --- under
-a common geometric paradigm.
+\gls{GDL} arises as a natural and mathematically rigorous response to the inherent limitations of traditional Deep Learning methods. Instead of adapting the data to existing architectures —a process that invariably introduces information loss and artifacts— this paradigm inverts the relationship: it designs architectures that respect and exploit the intrinsic geometric structure of the data.
 
-\section{Symmetry as a design principle}
-\label{sec:symmetry-principle}
+The fundamental principle of \gls{GDL} lies in the recognition that many real-world data domains possess symmetries and natural geometric structure that can be exploited to improve both computational efficiency and predictive performance. By incorporating these symmetries directly into the neural architecture, \gls{GDL} not only solves representation problems but also guarantees desirable properties such as equivariance, robust generalization, and efficiency in the use of parameters.
 
-The organizing idea of geometric deep learning is \emph{symmetry}. A symmetry
-of a problem is a transformation of the data that leaves the quantity of
-interest unchanged. Rotating an image of a cat still shows a cat; relabelling
-the nodes of a molecular graph does not change the molecule. Such
-transformations form a \emph{group}, and demanding that a model behave
-consistently under that group is a powerful constraint on its architecture.
-
-Two notions make this precise. A function is \emph{invariant} when its output
-does not change as the input is transformed by the group --- appropriate, for
-example, for whole-image classification. It is \emph{equivariant} when
-transforming the input produces a correspondingly transformed output: if
-$f$ is equivariant to a group $\group$ acting on its input and output spaces,
-then
-\[
-  f(g \cdot x) = g \cdot f(x) \qquad \text{for all } g \in \group .
-\]
-Equivariance is the property we want from the intermediate layers of a network:
-each layer should transform predictably under the symmetry so that structure is
-preserved as information flows through the model, with an invariant readout only
-at the end. Because equivariant maps compose into equivariant maps, this
-principle yields a constructive recipe for entire architectures rather than a
-property to be checked after the fact. These ideas are formalized in
-\Cref{ch:priors}.
-
-\section{The 5 Gs: a roadmap}
-\label{sec:five-gs}
-
-Geometric deep learning organizes its domains and symmetries around five
-recurring themes --- the ``5 Gs'' that give this book its subtitle: grids,
-groups, graphs, geodesics, and gauges~\citep{bronstein2021geometric}.
-\Cref{tab:five-gs} summarizes them and points to the chapter where each is
-developed.
+The complete mathematical foundations of \gls{GDL}, including group theory, the concepts of equivariance and invariance, and the unifying framework of the ``5~Gs'', will be developed in depth in \autoref{ch:gdl} after establishing the foundations of artificial neural networks in \autoref{ch:neural_networks}. For now, it is sufficient to understand that \gls{GDL} provides a theoretical framework that unifies seemingly disparate architectures such as convolutional networks, graph networks, and attention mechanisms under a common geometric paradigm. \autoref{tab:cinco_gs_intro} presents a summary of these five fundamental concepts.
 
 \begin{table}[h]
 \centering
-\caption{The five Gs of geometric deep learning.}
-\label{tab:five-gs}
-\begin{tabular}{@{}lp{6.2cm}p{3.6cm}@{}}
+\caption{The five Gs of Geometric Deep Learning}
+\label{tab:cinco_gs_intro}
+\begin{tabular}{@{}lp{6cm}p{4.5cm}@{}}
 \toprule
-\textbf{Theme} & \textbf{Idea} & \textbf{Chapter} \\
+\textbf{Concept} & \textbf{Description} & \textbf{Example in GDL} \\
 \midrule
-Grids & Regular Euclidean domains with translation symmetry & Convolutional networks (\Cref{ch:grids}) \\
+Geometry & Intrinsic structure of the data domain & Molecule as a 3D graph embedded in $\mathbb{R}^3$ \\
 \addlinespace
-Groups & Global symmetries beyond translation, such as rotations and reflections & Group-equivariant networks (\Cref{ch:groups}) \\
+Groups & Symmetries that preserve the structure of the problem & Rotations SO(3), permutations $S_n$ \\
 \addlinespace
-Graphs & Irregular relational domains with permutation symmetry & Graph neural networks (\Cref{ch:graphs}) \\
+Graphs & Discretizations of geometric domains that capture neighborhood relations & Social network as a graph of users \\
 \addlinespace
-Geodesics & Intrinsic geometry of manifolds: distances, curvature, and information flow & Learning on manifolds (\Cref{ch:geodesics}) \\
+Geodesics & Optimal paths that determine the propagation of information & Message passing in GNNs \\
 \addlinespace
-Gauges & Local reference frames and the freedom in choosing coordinates & Gauge-equivariant networks (\Cref{ch:gauges}) \\
+Gauges & Local invariances in the choice of coordinate systems & Local frames in 3D meshes \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-These themes are not isolated. Grids are the most rigid domain and the
-historical starting point; relaxing the requirement of a global grid while
-keeping global symmetries leads to group-equivariant networks; discarding the
-ambient grid altogether and keeping only relational structure leads to graphs;
-endowing a domain with intrinsic distances and curvature leads to manifolds and
-geodesics; and acknowledging that on a curved domain there is no canonical
-choice of local frame leads to gauges. A single thread --- message passing ---
-runs through all of them and exposes convolutional networks, graph networks,
-and transformers as instances of one geometric construction.
 
-\section{How to read this book}
-\label{sec:how-to-read}
+\subsection{Applications and Success Stories of GDL}\label{subsec:casos_exito_gdl}
 
-The book follows a logical progression from foundations to advanced models.
-\Cref{fig:book-structure} shows the dependencies between chapters.
+Computational biology constitutes one of the fields where \gls{GDL} has had a more profound impact. Molecules are, naturally, three-dimensional graphs whose nodes represent atoms and whose edges encode chemical bonds; \glspl{GNN} exploit this structure to predict pharmacological properties directly from the topology and geometry of the molecular graph, overcoming the limitations of classical chemical descriptors. AlphaFold~\citep{jumper2021alphafold} paradigmatically illustrates the power of this approach: by means of networks equivariant under the Euclidean group $E(3)$, it managed to solve the problem of predicting the three-dimensional structure of proteins, a challenge that had remained open for decades in structural biology. On the other hand, social network analysis and recommendation systems take advantage of graph architectures to capture complex relationships between users and content in irregular topologies, where invariance to permutations of the set of nodes is the relevant symmetry.
+
+In three-dimensional vision and computational physics, \gls{GDL} makes it possible to process the native geometric domains of the data directly. Point clouds and polygonal meshes are processed without resorting to voxelization or projections onto multiple two-dimensional views, thus preserving the fine geometric information of the surfaces. In physical simulation, equivariant networks operate on irregular meshes and respect the symmetries of the partial differential equations that govern the system, which makes it possible to obtain physically consistent predictions with greater efficiency than classical numerical methods.
+
+Beyond these consolidated domains, \gls{GDL} is opening up lines of research in interdisciplinary fields where the geometric structure of the data plays a fundamental role. In computational neuroscience, graph networks model brain connectivity (both structural and functional) and make it possible to identify patterns associated with neurological disorders that tabular methods do not detect. In materials science, the crystallographic symmetries of solids are encoded into equivariant networks to predict the mechanical, thermal, and electronic properties of new compounds. Climatology takes advantage of the spherical geometry of the Earth to build weather prediction models by means of spherical \glspl{CNN} that respect the symmetries of the group $\text{SO}(3)$. In finance, transaction networks are represented as temporal graphs whose topology evolves and where \glspl{GNN} detect patterns of fraud or systemic risk. This diversity of applications makes it clear that geometry is not a technical detail specific to each domain, but the common organizing principle that \gls{GDL} identifies and formalizes.
+
+\section{Objectives of the work}\label{sec:objetivos_trabajo}
+
+The main objective of this work is to provide a rigorous mathematical formalization of \gls{GDL}, establishing the theoretical foundations that unify modern deep learning architectures. To achieve this general objective, the following specific objectives are proposed:
+
+\begin{enumerate}
+    \item \textbf{Theoretical foundations}: Develop the mathematical framework of the ``5~Gs'' (Geometry, Groups, Graphs, Geodesics, Gauges) that structure \gls{GDL}, providing the necessary foundations of group theory, differential geometry, and harmonic analysis.
+
+    \item \textbf{Architectural unification}: Formally demonstrate how seemingly disparate architectures (\glspl{CNN}, \glspl{GNN}, \glspl{Transformer}) emerge as particular cases of the geometric paradigm, connected by the principle of equivariant message passing.
+
+    \item \textbf{Geometric extensions}: Analyze the extensions of traditional operations (convolutions, attention mechanisms) to non-Euclidean domains, showing how the symmetries and equivariances present in the data can be exploited to improve the performance and efficiency of models.
+
+    \item \textbf{Theory--architecture connection}: Illustrate, through the analysis of concrete architectures, how the formalized geometric principles manifest themselves in modern models, connecting the theory with representative architectures of \gls{GDL}.
+\end{enumerate}
+
+This work is theoretical in nature, with an emphasis on the mathematical rigor of the definitions, proofs, and formal connections among the various frameworks presented.
+
+
+\section{Structure of the Document}\label{sec:estructura_documento}
+
+This work is structured following a logical progression from the theoretical foundations to the advanced models of \gls{GDL}. \autoref{fig:estructura_documento} shows the map of dependencies among chapters.
 
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
-    node distance=0.9cm and 1.4cm,
-    box/.style={rectangle, draw, rounded corners, minimum width=2.7cm,
-        minimum height=0.8cm, align=center, font=\small},
-    found/.style={box, fill=gdlblue!15},
-    five/.style={box, fill=gdlgreen!18},
-    prac/.style={box, fill=gdlpurple!16},
+    node distance=1.2cm and 2cm,
+    chapter/.style={rectangle, draw, rounded corners, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small},
+    fundamentos/.style={chapter, fill=gdlblue!15},
+    teoria/.style={chapter, fill=gdlgreen!20},
+    modelos/.style={chapter, fill=gdlpurple!18},
     arrow/.style={->, thick, >=stealth}
 ]
-\node[found] (intro) {Ch.\ 1\\Introduction};
-\node[found, below=of intro] (found) {Ch.\ 2\\Foundations};
-\node[found, below=of found] (priors) {Ch.\ 3\\Geometric priors};
-\node[five, below left=1.1cm and 0.2cm of priors] (grids) {Ch.\ 4--5\\Grids, Groups};
-\node[five, below right=1.1cm and 0.2cm of priors] (graphs) {Ch.\ 6--8\\Graphs, Geodesics, Gauges};
-\node[prac, below=2.6cm of priors] (apps) {Ch.\ 9--10\\Applications, Conclusion};
-\draw[arrow] (intro) -- (found);
-\draw[arrow] (found) -- (priors);
-\draw[arrow] (priors) -- (grids);
-\draw[arrow] (priors) -- (graphs);
-\draw[arrow] (grids) -- (apps);
-\draw[arrow] (graphs) -- (apps);
-\node[right=1.6cm of priors, font=\footnotesize, align=left] {
-    \tikz\fill[gdlblue!15] (0,0) rectangle (0.3,0.3); ~Foundations\\[2pt]
-    \tikz\fill[gdlgreen!18] (0,0) rectangle (0.3,0.3); ~The Five Gs\\[2pt]
-    \tikz\fill[gdlpurple!16] (0,0) rectangle (0.3,0.3); ~Practice};
+% Nodos
+\node[chapter] (intro) {Ch. 1\\Introduction};
+\node[fundamentos, below=of intro] (ann) {Ch. 2\\ANN};
+\node[teoria, below=of ann] (gdl) {Ch. 3\\GDL};
+\node[modelos, below left=1cm and 0.8cm of gdl] (cnn) {Ch. 4\\Convolutional M.};
+\node[modelos, below right=1cm and 0.8cm of gdl] (att) {Ch. 5\\Attention M.};
+\node[chapter, below=2.5cm of gdl] (conc) {Ch. 6\\Conclusions};
+
+% Flechas desde GDL
+\draw[arrow] (gdl) -- (cnn);
+\draw[arrow] (gdl) -- (att);
+
+% Flechas principales
+\draw[arrow] (intro) -- (ann);
+\draw[arrow] (ann) -- (gdl);
+\draw[arrow] (cnn) -- (conc);
+\draw[arrow] (att) -- (conc);
+
+% Flechas desde ANN a capítulos de modelos
+\draw[arrow] (ann) -- (cnn);
+\draw[arrow] (ann) -- (att);
+
+% Leyenda
+\node[right=2.5cm of gdl, font=\footnotesize] (leg) {
+\begin{tabular}{cl}
+\tikz\fill[gdlblue!15] (0,0) rectangle (0.3,0.3); & Foundations \\
+\tikz\fill[gdlgreen!20] (0,0) rectangle (0.3,0.3); & GDL Theory \\
+\tikz\fill[gdlpurple!18] (0,0) rectangle (0.3,0.3); & Models \\
+\end{tabular}
+};
 \end{tikzpicture}
-\caption{Structure of the book and dependencies between chapters.}
-\label{fig:book-structure}
+\caption{Structure and dependencies among the chapters of the work.}
+\label{fig:estructura_documento}
 \end{figure}
 
-\textbf{Part I (Foundations).} \Cref{ch:foundations} establishes the
-mathematical language --- groups, representations, homogeneous spaces, and
-manifolds. \Cref{ch:priors} introduces invariance and equivariance and the
-blueprint that turns a symmetry into an architecture.
+The content of each chapter is briefly described below:
 
-\textbf{Part II (The Five Gs).} \Cref{ch:grids,ch:groups,ch:graphs,ch:geodesics,ch:gauges}
-develop the five themes in turn, from convolutional networks on grids to
-gauge-equivariant networks on manifolds, showing how each extends the previous
-one and how message passing unifies them.
+\textbf{\autoref{ch:neural_networks}: Artificial Neural Networks} - The foundations of classical artificial neural networks are established, including the perceptron model, universal approximation theorems, and the inherent limitations of Euclidean approaches that motivate the development of the unifying geometric framework.
 
-\textbf{Part III (Practice).} \Cref{ch:applications} surveys applications
-across computer vision, the physical sciences, and relational data, and
-\Cref{ch:conclusion} synthesizes the unified view and outlines open problems.
+\textbf{\autoref{ch:gdl}: Geometric Deep Learning: A Unifying Theoretical Framework} - The fundamental theoretical framework that unifies all neural architectures under geometric principles is developed. The chapter presents the ``5~Gs'' (Geometry, Groups, Graphs, Geodesics, Gauges), the mathematical foundations of equivariance and invariance, and demonstrates how \glspl{ANN}, \glspl{CNN}, \glspl{GNN}, and \glspl{Transformer} emerge as special cases of a general geometric paradigm.
 
-This is a theoretical book, with emphasis on the mathematical rigour of its
-definitions, results, and the formal connections between the frameworks it
-presents. The reader is assumed to be comfortable with linear algebra,
-multivariable calculus, and the basics of machine learning; the geometric and
-group-theoretic prerequisites are developed as needed.
+\textbf{\autoref{ch:cnn}: Convolutional Models} - An exhaustive exploration of the geometric extensions of traditional \glspl{CNN} is presented. The chapter covers everything from the foundations of group theory and equivariance to advanced implementations including \glspl{GCNN} for finite groups, Steerable \glspl{CNN} for SO(2), spherical \glspl{CNN} for SO(3), gauge convolutions, and algebraic extensions based on Clifford algebras. Rigorous mathematical analyses, implementation algorithms, and connections with theoretical physics are included.
+
+\textbf{\autoref{ch:attention}: Attention Models} - A unified perspective on attention mechanisms is developed from the framework of geometric deep learning. The chapter integrates group theory, spectral analysis, differential geometry, and algebraic topology to mathematically ground \glspl{Transformer} and their extensions. Recent developments such as \glspl{GATr}, attention on manifolds, advanced topological algebra with the Hodge Laplacian and persistent homology, as well as applications in the sciences, are included.
+
+\textbf{\autoref{ch:conclusions}: Conclusions and Future Directions} - The main findings of the work are synthesized, the current state of \gls{GDL} is evaluated, and the most promising research directions are identified. The current limitations and the opportunities for emerging applications are discussed.
+
+\bigskip
+
+\textbf{Main Contributions of this Thesis:} This work provides a \textbf{rigorous mathematical formalization} of the fundamental principles of Geometric Deep Learning, establishing the \textbf{formal connections} among seemingly disparate architectures (\glspl{ANN}, \glspl{CNN}, \glspl{GNN}, and \glspl{Transformer}) under a unifying geometric framework, and providing a \textbf{unified theoretical analysis} that demonstrates how these architectures emerge as instances of a common geometric paradigm.

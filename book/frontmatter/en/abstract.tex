@@ -1,10 +1,13 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-This book develops the principles of \emph{geometric deep learning}: a
-unifying framework that derives neural network architectures from the
-symmetries and geometric structure of the data they operate on. Starting
-from the notions of invariance and equivariance, we build up the theory
-through the ``5 Gs'' — grids, groups, graphs, geodesics, and gauges — and
-connect it to practical models such as convolutional networks, group
-equivariant networks, graph neural networks, and beyond.
+Deep learning has transformed artificial intelligence, yet traditional architectures are constrained to data with regular Euclidean structure (sequences, grids, voxels). Geometric Deep Learning (GDL) emerges as a unifying paradigm that extends these techniques to non-Euclidean domains---graphs, manifolds, groups---through the systematic incorporation of geometric symmetries. This thesis presents a rigorous mathematical analysis of GDL organized around the ``5~Gs'' framework: Geometry, Groups, Graphs, Geodesics, and Gauges.
+
+The development begins with the formalization of classical neural networks using Lebesgue measure theory, including a complete proof of Cybenko's universal approximation theorem. The GDL framework is built around the five Gs: \emph{Geometry} provides the structure of data domains through Riemannian manifolds, tangent spaces, and curvature; \emph{Groups} formalize symmetries via Lie groups and algebras, representation theory (Peter-Weyl and Schur theorems), and the equivariance principle; \emph{Graphs} discretize continuous domains through spectral analysis and the graph Laplacian; \emph{Geodesics} provide Riemannian metrics, the exponential map, and parallel transport for information propagation; and \emph{Gauges} introduce local invariances through principal bundles and connections. This mathematical apparatus is applied to the formalization of equivariant convolutional networks---over finite groups, compact and non-compact Lie groups, and manifolds---and geometric attention mechanisms, including equivariant Transformers and hyperbolic attention.
+
+Through formal proofs and detailed analyses, this thesis shows how fundamental geometric principles---equivariance, invariance, locality---unify convolutional networks, graph networks, and Transformers under a common geometric message passing framework. The result is a view of GDL as a mathematical framework that not only explains existing architectures but guides the design of new ones.
+
+\vspace{0.5cm}
+\begin{flushleft}
+	\textbf{Keywords}: Geometric Deep Learning, Group Theory, Equivariance, Riemannian Manifolds, Representation Theory, Lie Groups, Convolutional Networks, Graph Neural Networks, Transformers, Message Passing
+\end{flushleft}

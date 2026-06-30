@@ -43,24 +43,16 @@
 \input{frontmatter/\booklang/abstract}
 \input{frontmatter/\booklang/preface}
 \tableofcontents
+\input{chapters/\booklang/notation}
 
 % ----- Main matter --------------------------------------------------
 \mainmatter
-\part{\partFoundations}
 \input{chapters/\booklang/01-introduction}
-\input{chapters/\booklang/02-mathematical-foundations}
-\input{chapters/\booklang/03-geometric-priors}
-
-\part{\partFiveGs}
-\input{chapters/\booklang/04-grids}
-\input{chapters/\booklang/05-groups}
-\input{chapters/\booklang/06-graphs}
-\input{chapters/\booklang/07-geodesics-manifolds}
-\input{chapters/\booklang/08-gauges}
-
-\part{\partPractice}
-\input{chapters/\booklang/09-applications}
-\input{chapters/\booklang/10-conclusion}
+\input{chapters/\booklang/02-neural-networks}
+\input{chapters/\booklang/03-geometric-deep-learning}
+\input{chapters/\booklang/04-convolutional}
+\input{chapters/\booklang/05-attention}
+\input{chapters/\booklang/06-conclusions}
 
 % ----- Appendices ---------------------------------------------------
 \appendix
@@ -68,6 +60,8 @@
 
 % ----- Back matter --------------------------------------------------
 \backmatter
+\printnoidxglossary[type=\acronymtype,title=\acronymTitle]
+\printnoidxglossary[title=\glossaryTitle]
 \bibliographystyle{plainnat}
 \bibliography{bib/references}
 

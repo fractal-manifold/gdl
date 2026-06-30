@@ -1,1973 +1,1285 @@
-\chapter{Teoremas y Demostraciones Auxiliares}
-\label{ch:appendix}
+\chapter{Teoremas y Demostraciones Complementarios}\label{ch:teoremas_complementarios}
 
-\providecommand{\Q}{\mathbb{Q}}
-\providecommand{\GL}{\operatorname{GL}}
-\providecommand{\SO}{\operatorname{SO}}
-\providecommand{\Orth}{\operatorname{O}}
-\providecommand{\SU}{\operatorname{SU}}
-\providecommand{\Sym}{\operatorname{Sym}}
-\providecommand{\rank}{\operatorname{rank}}
-\providecommand{\tr}{\operatorname{tr}}
-\providecommand{\Img}{\operatorname{Im}}
-\providecommand{\Ric}{\operatorname{Ric}}
-\providecommand{\Vol}{\operatorname{Vol}}
-\providecommand{\diag}{\operatorname{diag}}
-\providecommand{\II}{\mathrm{II}}
-\providecommand{\dvol}{\,dA}
+Este apéndice contiene teoremas clásicos de geometría diferencial y sus demostraciones que, aunque fundamentales para el rigor matemático del trabajo, no son centrales para la teoría del Geometric Deep Learning desarrollada en los capítulos principales.
 
-Este ap\'endice re\'une teoremas cl\'asicos de geometr\'ia diferencial,
-\'algebra lineal, teor\'ia de grupos, teor\'ia de la medida y an\'alisis
-funcional, junto con sus demostraciones. Aunque estos resultados son
-fundamentales para el rigor matem\'atico del texto principal, no son centrales
-para la teor\'ia del aprendizaje profundo geom\'etrico desarrollada en los
-cap\'itulos principales, y agruparlos aqu\'i mantiene la exposici\'on
-enfocada. Cada secci\'on presenta un teorema con los preliminares que requiere,
-un enunciado formal y una demostraci\'on completa o un esquema de demostraci\'on
-con referencias a las fuentes originales. La maquinaria de teor\'ia de la medida
-y an\'alisis funcional de las dos \'ultimas secciones sustenta el teorema de
-aproximaci\'on universal, cuyo enunciado permanece en el \Cref{ch:foundations} y
-que remite a este ap\'endice para sus prerrequisitos m\'as pesados.
+Cada sección presenta un teorema con sus preliminares necesarios, el enunciado formal y una demostración completa o un esquema de demostración con referencias a las fuentes originales.
 
-%=======================================================================
-\section{El Teorema de Gauss--Bonnet}
-\label{sec:app:gauss-bonnet}
-%=======================================================================
+\section{Teorema de Gauss-Bonnet}\label{sec:gauss_bonnet}
 
-El teorema de Gauss--Bonnet es uno de los resultados m\'as profundos de la
-geometr\'ia diferencial, pues establece una conexi\'on fundamental entre la
-geometr\'ia local (la curvatura) y la topolog\'ia global (la caracter\'istica de
-Euler) de una superficie. Demuestra que ciertas cantidades geom\'etricas est\'an
-determinadas \'unicamente por la topolog\'ia de la superficie.
+El teorema de Gauss-Bonnet es uno de los resultados más profundos de la geometría  diferencial, estableciendo una conexión fundamental entre la geometría local (curvatura) y la topología global (característica de Euler) de una superficie.  Este teorema demuestra que ciertas cantidades geométricas están determinadas  únicamente por la topología de la superficie.
 
-\subsection{Preliminares}
-\label{subsec:app:gauss-bonnet-prelim}
+\subsection{Preliminares}\label{subsec:gauss_bonnet_preliminares}
 
-Antes de enunciar el teorema, introducimos las nociones necesarias.
+Antes de enunciar el teorema, introducimos los conceptos necesarios.
 
-\begin{definition}[Curvatura gaussiana]
-\label{def:app:gaussian-curvature}
-Sea $\mathcal{M}$ una superficie regular inmersa en $\R^3$. En cada punto
-$p \in \mathcal{M}$ consideramos las \emph{curvaturas principales} $\kappa_1$ y
-$\kappa_2$, los valores propios de la segunda forma fundamental. La
-\emph{curvatura gaussiana} $K \colon \mathcal{M} \to \R$ es el producto de las
-curvaturas principales:
-\begin{equation}
-\label{eq:app:gaussian-curvature}
-K = \kappa_1 \kappa_2 .
+\begin{definition}[Curvatura gaussiana]\label{def:curvatura_gaussiana_apendice}
+Sea $\mathcal{M}$ una superficie regular inmersa en $\mathbb{R}^3$. En cada punto $p \in \mathcal{M}$, consideramos las \textit{curvaturas principales} $\kappa_1$ y $\kappa_2$, que son los valores propios de la segunda forma fundamental. La \textit{curvatura gaussiana} $K: \mathcal{M} \to \mathbb{R}$ se define como el producto de las curvaturas principales:
+\begin{equation}\label{eq:curvatura_gaussiana}
+K = \kappa_1 \kappa_2
 \end{equation}
 \end{definition}
 
 \begin{remark}
-El \emph{Theorema Egregium} de Gauss establece que la curvatura gaussiana $K$ es
-una \emph{invariante isom\'etrica}: depende solo de la primera forma fundamental
-(la m\'etrica) y no de c\'omo la superficie est\'a inmersa en $\R^3$. As\'i, $K$
-es una propiedad intr\'inseca de la superficie.
+El \textit{Theorema Egregium} de Gauss establece que la curvatura gaussiana $K$ es una \textit{isometría invariante}: depende únicamente de la primera forma fundamental (la métrica) y no de cómo la superficie está inmersa en $\mathbb{R}^3$. Esto significa que $K$ es una propiedad intrínseca de la superficie.
 \end{remark}
 
-\begin{definition}[Curvatura geod\'esica]
-\label{def:app:geodesic-curvature}
-Sea $\gamma \colon [a,b] \to \mathcal{M}$ una curva regular parametrizada por
-longitud de arco sobre una superficie orientada $\mathcal{M}$. Sea $\mathbf{n}$
-la normal unitaria a la superficie y $\mathbf{T} = \gamma'$ la tangente unitaria
-a la curva. La \emph{curvatura geod\'esica} $\kappa_g$ de $\gamma$ es
-\begin{equation}
-\label{eq:app:geodesic-curvature}
-\kappa_g = \inner{\gamma''}{\mathbf{n} \times \mathbf{T}} ,
+\begin{definition}[Curvatura geodésica]\label{def:curvatura_geodesica}
+Sea $\gamma: [a,b] \to \mathcal{M}$ una curva regular parametrizada por longitud  de arco en una superficie orientada $\mathcal{M}$. Sea $\mathbf{n}$ el vector  normal unitario a la superficie y $\mathbf{T} = \gamma'$ el vector tangente  unitario a la curva. La \textit{curvatura geodésica} $\kappa_g$ de $\gamma$ se define como:
+\begin{equation}\label{eq:curvatura_geodesica}
+\kappa_g = \langle \gamma'', \mathbf{n} \times \mathbf{T} \rangle
 \end{equation}
-donde $\mathbf{n} \times \mathbf{T}$ es la normal a la curva que yace en el plano
-tangente a la superficie.
+donde $\mathbf{n} \times \mathbf{T}$ es el vector normal a la curva que yace en el plano tangente a la superficie.
 \end{definition}
 
 \begin{remark}
-La curvatura geod\'esica $\kappa_g$ mide cu\'anto se desv\'ia una curva de ser una
-geod\'esica dentro de la superficie. Una curva es una geod\'esica si y solo si
-$\kappa_g = 0$ en todos sus puntos. Intuitivamente, $\kappa_g$ captura la
-componente de la curvatura que es ``visible'' desde dentro de la superficie.
+La curvatura geodésica $\kappa_g$ mide cuánto se desvía una curva de ser una geodésica dentro de la superficie. Una curva es una geodésica si y solo si $\kappa_g = 0$ en todos sus puntos. Intuitivamente, $\kappa_g$ captura la componente de la curvatura que es ``visible'' desde dentro de la superficie.
 \end{remark}
 
-\begin{definition}[Caracter\'istica de Euler]
-\label{def:app:euler-characteristic}
-Sea $\mathcal{M}$ una superficie compacta. La \emph{caracter\'istica de Euler}
-$\chi(\mathcal{M})$ es un invariante topol\'ogico definido de las siguientes
-maneras equivalentes:
+\begin{definition}[Característica de Euler]\label{def:caracteristica_euler}
+Sea $\mathcal{M}$ una superficie compacta. La \textit{característica de Euler} $\chi(\mathcal{M})$ es un invariante topológico definido de las siguientes maneras equivalentes:
 \begin{enumerate}
-    \item \textbf{Triangulaci\'on.} Si $\mathcal{M}$ admite una triangulaci\'on
-          con $V$ v\'ertices, $E$ aristas y $F$ caras, entonces
-          \begin{equation}
-          \label{eq:app:euler-triangulation}
-          \chi(\mathcal{M}) = V - E + F .
+    \item \textbf{Triangulación}: Si $\mathcal{M}$ admite una triangulación con $V$ vértices, $E$ aristas y $F$ caras, entonces:
+          \begin{equation}\label{eq:euler_triangulacion}
+          \chi(\mathcal{M}) = V - E + F
           \end{equation}
-    \item \textbf{G\'enero.} Para una superficie orientable de g\'enero $g$
-          (n\'umero de ``asas''),
-          \begin{equation}
-          \label{eq:app:euler-genus}
-          \chi(\mathcal{M}) = 2 - 2g .
+
+    \item \textbf{Género}: Para una superficie orientable de género $g$ (número de ``asas''):
+          \begin{equation}\label{eq:euler_genero}
+          \chi(\mathcal{M}) = 2 - 2g
           \end{equation}
 \end{enumerate}
 \end{definition}
 
-\begin{example}
-\label{ex:app:euler-surfaces}
-Algunos valores de la caracter\'istica de Euler para superficies conocidas:
+\begin{example}\label{ex:euler_superficies}
+Algunos valores de la característica de Euler para superficies conocidas:
 \begin{itemize}
-    \item Esfera $S^2$: $\chi(S^2) = 2$ (g\'enero $g = 0$).
-    \item Toro $T^2$: $\chi(T^2) = 0$ (g\'enero $g = 1$).
-    \item Doble toro: $\chi = -2$ (g\'enero $g = 2$).
-    \item Disco: $\chi = 1$ (una superficie con borde).
+    \item Esfera $S^2$: $\chi(S^2) = 2$ (género $g = 0$)
+    \item Toro $T^2$: $\chi(T^2) = 0$ (género $g = 1$)
+    \item Doble toro: $\chi = -2$ (género $g = 2$)
+    \item Disco: $\chi = 1$ (superficie con borde)
 \end{itemize}
 \end{example}
 
-\subsection{Enunciado del teorema}
-\label{subsec:app:gauss-bonnet-statement}
+%-----------------------------------------------------------------------
+\subsection{Enunciado del teorema}\label{subsec:gauss_bonnet_enunciado}
+%-----------------------------------------------------------------------
 
-Presentamos primero la versi\'on general para superficies con borde y luego
-derivamos casos particulares importantes.
+Presentamos primero la versión general del teorema para superficies con borde, y luego derivamos casos particulares importantes.
 
-\begin{theorem}[Gauss--Bonnet para superficies con borde]
-\label{thm:app:gauss-bonnet-general}
-Sea $\mathcal{M}$ una superficie riemanniana compacta orientada con borde
-$\partial \mathcal{M}$ suave a trozos. Supongamos que $\partial \mathcal{M}$
-consta de curvas regulares unidas en v\'ertices donde forman \'angulos exteriores
-$\alpha_1, \ldots, \alpha_n$. Entonces
-\begin{equation}
-\label{eq:app:gauss-bonnet-general}
-\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds
-+ \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M}) ,
+\begin{theorem}[Gauss-Bonnet para superficies con borde]\label{thm:gauss_bonnet_general}
+Sea $\mathcal{M}$ una superficie riemanniana compacta orientada con borde $\partial \mathcal{M}$ suave a trozos. Supongamos que $\partial \mathcal{M}$ consiste en curvas regulares unidas en vértices donde forman ángulos exteriores $\alpha_1, \ldots, \alpha_n$. Entonces:
+\begin{equation}\label{eq:gauss_bonnet_general}
+\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds + \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M})
 \end{equation}
-donde $K$ es la curvatura gaussiana, $dA$ el elemento de \'area inducido por la
-m\'etrica riemanniana, $\kappa_g$ la curvatura geod\'esica del borde, $ds$ el
-elemento de longitud de arco y $\alpha_i$ el \'angulo exterior en el $i$-\'esimo
-v\'ertice del borde.
+donde:
+\begin{itemize}
+    \item $K$ es la curvatura gaussiana
+    \item $dA$ es el elemento de área inducido por la métrica riemanniana
+    \item $\kappa_g$ es la curvatura geodésica del borde
+    \item $ds$ es el elemento de longitud de arco
+    \item $\alpha_i$ es el ángulo exterior en el $i$-ésimo vértice del borde
+\end{itemize}
 \end{theorem}
 
-\begin{corollary}[Gauss--Bonnet para superficies cerradas]
-\label{cor:app:gauss-bonnet-closed}
-Si $\mathcal{M}$ es una superficie compacta sin borde (cerrada), entonces
-\begin{equation}
-\label{eq:app:gauss-bonnet-closed}
-\int_{\mathcal{M}} K \, dA = 2\pi \chi(\mathcal{M}) .
+\begin{corollary}[Gauss-Bonnet para superficies cerradas]\label{cor:gauss_bonnet_cerradas}
+Si $\mathcal{M}$ es una superficie compacta sin borde (cerrada), entonces:
+\begin{equation}\label{eq:gauss_bonnet_cerradas}
+\int_{\mathcal{M}} K \, dA = 2\pi \chi(\mathcal{M})
 \end{equation}
 \end{corollary}
 
 \begin{proof}
-Si $\partial \mathcal{M} = \emptyset$, la integral sobre el borde y la suma de
-\'angulos exteriores se anulan, y el resultado se sigue directamente del
-\Cref{thm:app:gauss-bonnet-general}.
+Si $\partial \mathcal{M} = \emptyset$, la integral sobre el borde y la suma de ángulos exteriores son ambas cero, y el resultado sigue directamente del \autoref{thm:gauss_bonnet_general}.
 \end{proof}
 
-\begin{corollary}[Suma de \'angulos en tri\'angulos geod\'esicos]
-\label{cor:app:gauss-bonnet-triangle}
-Sea $T \subset \mathcal{M}$ un tri\'angulo geod\'esico (una regi\'on limitada por
-tres geod\'esicas) en una superficie riemanniana, con \'angulos interiores
-$\alpha$, $\beta$, $\gamma$. Entonces
-\begin{equation}
-\label{eq:app:gauss-bonnet-triangle}
-\alpha + \beta + \gamma = \pi + \int_T K \, dA .
+\begin{corollary}[Suma de ángulos en triángulos geodésicos]\label{cor:gauss_bonnet_triangulo}
+Sea $T \subset \mathcal{M}$ un triángulo geodésico (región limitada por tres geodésicas) en una superficie riemanniana, con ángulos interiores $\alpha$,$\beta$, $\gamma$. Entonces:
+\begin{equation}\label{eq:gauss_bonnet_triangulo_apendice}
+\alpha + \beta + \gamma = \pi + \int_T K \, dA
 \end{equation}
 \end{corollary}
 
 \begin{proof}
-Aplicamos el \Cref{thm:app:gauss-bonnet-general} al tri\'angulo $T$:
+Aplicamos el \autoref{thm:gauss_bonnet_general} al triángulo $T$:
 \begin{enumerate}
-    \item Como $T$ es homeomorfo a un disco, $\chi(T) = 1$.
-    \item Como los lados son geod\'esicas, $\kappa_g = 0$ en todo el borde, de
-          modo que $\int_{\partial T} \kappa_g \, ds = 0$.
-    \item Los \'angulos exteriores en los v\'ertices satisfacen
-          $\alpha_i^{\text{ext}} = \pi - \alpha_i^{\text{int}}$, donde
-          $\alpha_i^{\text{int}}$ es el \'angulo interior correspondiente.
+    \item Como $T$ es homeomorfo al disco, $\chi(T) = 1$.
+    \item Como los lados son geodésicas, $\kappa_g = 0$ en todo el borde, por lo  que $\int_{\partial T} \kappa_g \, ds = 0$.
+    \item Los ángulos exteriores en los vértices satisfacen $\alpha_i^{\text{ext}} = \pi - \alpha_i^{\text{int}}$, donde $\alpha_i^{\text{int}}$ es el ángulo interior correspondiente.
 \end{enumerate}
-El teorema da, por tanto,
+
+Por tanto, el teorema da:
 \[
-\int_T K \, dA + 0 + \sum_{i=1}^3 (\pi - \theta_i) = 2\pi ,
+\int_T K \, dA + 0 + \sum_{i=1}^3 (\pi - \theta_i) = 2\pi
 \]
-donde $\theta_1, \theta_2, \theta_3$ son los \'angulos interiores
-$\alpha, \beta, \gamma$. Simplificando,
+donde $\theta_1, \theta_2, \theta_3$ son los ángulos interiores $\alpha, \beta, \gamma$. Simplificando:
 \[
-\int_T K \, dA + 3\pi - (\alpha + \beta + \gamma) = 2\pi ,
-\qquad\text{de donde}\qquad
-\alpha + \beta + \gamma = \pi + \int_T K \, dA . \qedhere
+\int_T K \, dA + 3\pi - (\alpha + \beta + \gamma) = 2\pi
+\]
+\[
+\alpha + \beta + \gamma = \pi + \int_T K \, dA
 \]
 \end{proof}
 
-\begin{remark}[Interpretaci\'on geom\'etrica]
-El \Cref{cor:app:gauss-bonnet-triangle} tiene implicaciones profundas:
+\begin{remark}[Interpretación geométrica]
+El \autoref{cor:gauss_bonnet_triangulo} tiene profundas implicaciones:
 \begin{itemize}
-    \item \textbf{Geometr\'ia euclidiana} ($K = 0$):
-          $\alpha + \beta + \gamma = \pi$ (el resultado cl\'asico de Euclides).
-    \item \textbf{Geometr\'ia esf\'erica} ($K > 0$):
-          $\alpha + \beta + \gamma > \pi$ (exceso angular proporcional al
-          \'area).
-    \item \textbf{Geometr\'ia hiperb\'olica} ($K < 0$):
-          $\alpha + \beta + \gamma < \pi$ (defecto angular proporcional al
-          \'area).
+    \item \textbf{Geometría euclidiana} ($K = 0$): $\alpha + \beta + \gamma = \pi$ (el resultado clásico de Euclides)
+    \item \textbf{Geometría esférica} ($K > 0$): $\alpha + \beta + \gamma > \pi$ (exceso angular proporcional al área)
+    \item \textbf{Geometría hiperbólica} ($K < 0$): $\alpha + \beta + \gamma < \pi$ (defecto angular proporcional al área)
 \end{itemize}
-Esto muestra que el quinto postulado de Euclides (sobre las paralelas) es
-equivalente a la condici\'on $K = 0$.
+Esto demuestra que el quinto postulado de Euclides (sobre paralelas) es equivalente a la condición $K = 0$.
 \end{remark}
 
-\subsection{Demostraci\'on del teorema}
-\label{subsec:app:gauss-bonnet-proof}
+\subsection{Demostración del teorema}\label{subsec:gauss_bonnet_demostracion}
 
-Presentamos un esquema de demostraci\'on siguiendo el enfoque
-cl\'asico~\citep{do1976differential,lee2018introduction}.
+Presentamos un esquema de la demostración siguiendo el enfoque clásico \citep{do1976differential,lee2018introduction}.
 
-\begin{lemma}[F\'ormula para pol\'igonos geod\'esicos]
-\label{lem:app:geodesic-polygon}
-Sea $P$ un pol\'igono geod\'esico simple en una superficie $\mathcal{M}$ con $n$
-v\'ertices y \'angulos interiores $\theta_1, \ldots, \theta_n$. Entonces
-\begin{equation}
-\label{eq:app:geodesic-polygon}
-\sum_{i=1}^n \theta_i = (n-2)\pi + \int_P K \, dA .
+\begin{lemma}[Fórmula para polígonos geodésicos]\label{lem:poligono_geodesico}
+Sea $P$ un polígono geodésico simple en una superficie $\mathcal{M}$ con $n$ vértices y ángulos interiores $\theta_1, \ldots, \theta_n$. Entonces:
+\begin{equation}\label{eq:poligono_geodesico}
+\sum_{i=1}^n \theta_i = (n-2)\pi + \int_P K \, dA
 \end{equation}
 \end{lemma}
 
-\begin{proof}
-Triangulamos el pol\'igono $P$ en $n-2$ tri\'angulos geod\'esicos
-$T_1, \ldots, T_{n-2}$ (siempre posible para pol\'igonos simples). Aplicando el
-\Cref{cor:app:gauss-bonnet-triangle} a cada tri\'angulo y sumando,
+\begin{proof}[Demostración del \autoref{lem:poligono_geodesico}]Triangulamos el polígono $P$ en $n-2$ triángulos geodésicos $T_1, \ldots, T_{n-2}$(esto siempre es posible para polígonos simples). Aplicando el \autoref{cor:gauss_bonnet_triangulo} a cada triángulo y sumando:
 \[
-\sum_{j=1}^{n-2} (\alpha_j + \beta_j + \gamma_j)
-= (n-2)\pi + \sum_{j=1}^{n-2} \int_{T_j} K \, dA .
+\sum_{j=1}^{n-2} (\alpha_j + \beta_j + \gamma_j) = (n-2)\pi + \sum_{j=1}^{n-2} \int_{T_j} K \, dA
 \]
-En el lado izquierdo, los \'angulos en v\'ertices interiores suman $2\pi$ cada uno
-(\'angulo completo), mientras que los \'angulos en los v\'ertices del borde son
-exactamente los $\theta_i$ del pol\'igono original. En el lado derecho, la suma de
-integrales es la integral sobre todo $P$:
+
+En el lado izquierdo, los ángulos en vértices interiores suman $2\pi$ cada uno(ángulo completo), y los ángulos en los vértices del borde son exactamente los$\theta_i$ del polígono original. En el lado derecho, la suma de integrales es la integral sobre todo $P$:
 \[
-\sum_{i=1}^n \theta_i + 2\pi \cdot (\text{v\'ertices interiores})
-= (n-2)\pi + \int_P K \, dA .
+\sum_{i=1}^n \theta_i + 2\pi \cdot (\text{vértices interiores}) = (n-2)\pi + \int_P K \, dA
 \]
-Un conteo cuidadoso de la triangulaci\'on (usando la f\'ormula de Euler para
-grafos planares) muestra que la contribuci\'on de los v\'ertices interiores se
-cancela, dando el resultado deseado.
+
+Un conteo cuidadoso de la triangulación (usando la fórmula de Euler para grafos planares) muestra que la contribución de los vértices interiores se cancela,dando el resultado deseado.
 \end{proof}
 
-\begin{proof}[Esquema de demostraci\'on del \Cref{thm:app:gauss-bonnet-general}]
-La demostraci\'on procede en varios pasos.
+\begin{proof}[Esquema de demostración del \autoref{thm:gauss_bonnet_general}]
+La demostración procede en varios pasos:
 
-\textbf{Paso 1: Triangulaci\'on de la superficie.}
-Por el \Cref{thm:app:rado}, toda superficie compacta admite una triangulaci\'on.
-Refinando si es necesario, obtenemos una triangulaci\'on geod\'esica
-$\mathcal{T} = \{T_1, \ldots, T_F\}$ en la que cada tri\'angulo tiene lados
-geod\'esicos.
+\textbf{Paso 1: Triangulación de la superficie.}
+Por el \autoref{thm:rado_apendice}, toda superficie compacta admite una triangulación. Refinando si es necesario, obtenemos una triangulación geodésica $\mathcal{T} = \{T_1, \ldots, T_F\}$ donde cada triángulo tiene lados geodésicos.
 
-\textbf{Paso 2: Aplicaci\'on del lema a cada tri\'angulo.}
-Aplicamos el \Cref{lem:app:geodesic-polygon} (caso $n = 3$) a cada tri\'angulo:
+\textbf{Paso 2: Aplicación del lema a cada triángulo.}
+Aplicamos el \autoref{lem:poligono_geodesico} (caso $n=3$) a cada triángulo:
 \[
-\alpha_j + \beta_j + \gamma_j = \pi + \int_{T_j} K \, dA ,
-\qquad j = 1, \ldots, F .
+\alpha_j + \beta_j + \gamma_j = \pi + \int_{T_j} K \, dA
+\]
+para $j = 1, \ldots, F$.
+
+\textbf{Paso 3: Suma sobre todos los triángulos.}
+Sumando sobre todos los triángulos:
+\[
+\sum_{j=1}^F (\alpha_j + \beta_j + \gamma_j) = F\pi + \int_{\mathcal{M}} K \, dA
 \]
 
-\textbf{Paso 3: Suma sobre todos los tri\'angulos.}
-Sumando sobre todos los tri\'angulos,
-\[
-\sum_{j=1}^F (\alpha_j + \beta_j + \gamma_j) = F\pi + \int_{\mathcal{M}} K \, dA .
-\]
-
-\textbf{Paso 4: An\'alisis de la suma de \'angulos.}
-La suma de \'angulos del lado izquierdo se descompone seg\'un la ubicaci\'on de
-los v\'ertices:
+\textbf{Paso 4: Análisis de la suma de ángulos.}
+La suma de ángulos del lado izquierdo se puede descomponer según la ubicación de los vértices:
 \begin{itemize}
-    \item \textit{V\'ertices interiores}: cada uno contribuye $2\pi$ (\'angulo
-          completo alrededor del punto). Si hay $V_{\text{int}}$ v\'ertices
-          interiores, contribuyen $2\pi V_{\text{int}}$.
-    \item \textit{V\'ertices del borde suaves}: cada uno en una parte suave del
-          borde contribuye $\pi$ (medio \'angulo).
-    \item \textit{V\'ertices del borde (esquinas)}: cada esquina con \'angulo
-          interior $\theta_i$ contribuye exactamente $\theta_i = \pi - \alpha_i$.
+    \item \textit{Vértices interiores}: Cada vértice interior contribuye $2\pi$(ángulo completo alrededor del punto). Si hay $V_{\text{int}}$ vértices interiores, contribuyen $2\pi V_{\text{int}}$.
+    \item \textit{Vértices del borde (suaves)}: Cada vértice en una parte suave del borde contribuye $\pi$ (medio ángulo).
+    \item \textit{Vértices del borde (esquinas)}: Cada esquina con ángulo interior $\theta_i$ contribuye exactamente $\theta_i = \pi - \alpha_i$.
 \end{itemize}
 
-\textbf{Paso 5: Aplicaci\'on de la f\'ormula de Euler.}
-Sean $V$, $E$, $F$ el n\'umero total de v\'ertices, aristas y caras en la
-triangulaci\'on. Por la f\'ormula de Euler, $V - E + F = \chi(\mathcal{M})$.
-Adem\'as, contando aristas: cada tri\'angulo tiene tres aristas, cada arista
-interior es compartida por dos tri\'angulos y las aristas del borde pertenecen a
-un solo tri\'angulo, lo que da relaciones entre $V$, $E$, $F$ y las cantidades del
-borde.
-
-\textbf{Paso 6: Combinaci\'on de t\'erminos.}
-Combinando las identidades de los pasos 3--5 con \'algebra cuidadosa, los
-t\'erminos se reorganizan para dar
+\textbf{Paso 5: Aplicación de la fórmula de Euler.} Sea $V$ el número total de vértices, $E$ el número de aristas y $F$ el número  de caras en la triangulación. Por la fórmula de Euler:
 \[
-\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds
-+ \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M}) .
+V - E + F = \chi(\mathcal{M})
 \]
-La integral de curvatura geod\'esica aparece naturalmente al pasar al l\'imite
-cuando la triangulaci\'on se refina cerca del borde.
+
+Además, contando aristas: cada triángulo tiene 3 aristas, y cada arista interior es compartida por 2 triángulos, mientras que las aristas del borde pertenecen a un solo triángulo. Esto da relaciones entre $V$, $E$, $F$ y las cantidades del borde.
+
+\textbf{Paso 6: Combinación de términos.}
+Combinando las identidades de los pasos 3-5 con álgebra cuidadosa, los términos se reorganizan para dar:
+\[
+\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds + \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M})
+\]
+
+La integral de curvatura geodésica aparece naturalmente al considerar el límite cuando la triangulación se refina cerca del borde.
 \end{proof}
 
 \begin{remark}
-Una demostraci\'on completa y rigurosa puede encontrarse en
-\citet[Cap\'itulo~4]{do1976differential} o en
-\citet[Cap\'itulo~9]{lee2018introduction}. La versi\'on para variedades
-riemannianas abstractas (no necesariamente inmersas en $\R^3$) requiere conexiones
-y transporte paralelo.
+Una demostración completa y rigurosa puede encontrarse en \citet{do1976differential}(Capítulo 4) o en \citet{lee2018introduction} (Capítulo 9). La versión para variedades riemannianas abstractas (no necesariamente inmersas en $\mathbb{R}^3$)requiere el uso de conexiones y transporte paralelo.
 \end{remark}
 
-\subsection{Generalizaciones}
-\label{subsec:app:gauss-bonnet-generalizations}
+%-----------------------------------------------------------------------
+\subsection{Generalizaciones}\label{subsec:gauss_bonnet_generalizaciones}
+%-----------------------------------------------------------------------
 
-El teorema de Gauss--Bonnet admite varias generalizaciones importantes:
+El teorema de Gauss-Bonnet admite varias generalizaciones importantes:
+
 \begin{enumerate}
-    \item \textbf{Teorema de Gauss--Bonnet--Chern.} Para variedades riemannianas
-          de dimensi\'on par $2n$, el teorema se generaliza usando la forma de
-          Pfaffian de la curvatura~\citep{chern1944simple}.
-    \item \textbf{Teorema del \'indice de Atiyah--Singer.} Una generalizaci\'on
-          profunda que conecta invariantes anal\'iticos (el \'indice de operadores
-          el\'ipticos) con invariantes topol\'ogicos.
-    \item \textbf{Versi\'on discreta.} Para mallas poligonales existe una
-          versi\'on discreta del teorema, \'util en geometr\'ia computacional y
-          procesamiento de geometr\'ia.
+    \item \textbf{Teorema de Gauss-Bonnet-Chern}: Para variedades riemannianas de dimensión $2n$, el teorema se generaliza usando la forma de Pfaffian de la curvatura \citep{chern1944simple}.
+
+    \item \textbf{Teorema del índice de Atiyah-Singer}: Una generalización profunda que conecta invariantes analíticos (índice de operadores elípticos) con invariantes topológicos.
+
+    \item \textbf{Versión discreta}: Para mallas poligonales, existe una versión discreta del teorema que es útil en geometría computacional y procesamiento de geometría.
 \end{enumerate}
 
-%=======================================================================
-\section{El Teorema de Sard}
-\label{sec:app:sard}
-%=======================================================================
+\section{Teorema de Sard}\label{sec:sard}
 
-El teorema de Sard es una herramienta fundamental del an\'alisis en variedades
-que permite argumentos de ``posici\'on general'': garantiza que, en un sentido
-preciso, la mayor\'ia de los puntos del codominio de una aplicaci\'on suave son
-valores regulares. Este resultado es esencial en la demostraci\'on del teorema de
-inmersi\'on de Whitney.
+El teorema de Sard es una herramienta fundamental del análisis en variedades que permite argumentos de ``posición general'': garantiza que, en cierto sentido, la mayoría de los puntos del codominio de una aplicación suave son valores regulares. Este resultado es esencial en la demostración del Teorema de Inmersión de Whitney (\autoref{thm:whitney_embedding}).
 
-\begin{definition}[Punto cr\'itico y valor cr\'itico]
-\label{def:app:critical-point}
-Sea $F \colon \mathcal{M} \to \mathcal{N}$ una aplicaci\'on suave entre variedades
-diferenciables. Un punto $p \in \mathcal{M}$ es un \emph{punto cr\'itico} de $F$
-si el diferencial $dF_p \colon T_p\mathcal{M} \to T_{F(p)}\mathcal{N}$ no es
-sobreyectivo. Un punto $y \in \mathcal{N}$ es un \emph{valor cr\'itico} si es
-imagen de alg\'un punto cr\'itico, es decir, si $y = F(p)$ para alg\'un punto
-cr\'itico $p$.
+\begin{definition}[Punto crítico y valor crítico]\label{def:punto_critico}
+Sea $F: \mathcal{M} \to \mathcal{N}$ una aplicación suave entre variedades diferenciables. Un punto $p \in \mathcal{M}$ es un \textit{punto crítico} de $F$ si el diferencial $dF_p: T_p\mathcal{M} \to T_{F(p)}\mathcal{N}$ no es sobreyectivo. Un punto $y \in \mathcal{N}$ es un \textit{valor crítico} si es imagen de algún punto crítico, es decir, si $y = F(p)$ para algún punto crítico $p$.
 \end{definition}
 
-\begin{definition}[Valor regular]
-\label{def:app:regular-value}
-Un punto $y \in \mathcal{N}$ es un \emph{valor regular} de
-$F \colon \mathcal{M} \to \mathcal{N}$ si no es valor cr\'itico, es decir, si para
-todo $p \in F^{-1}(y)$ el diferencial $dF_p$ es sobreyectivo. En particular, si
-$y \notin F(\mathcal{M})$, entonces $y$ es trivialmente un valor regular.
+\begin{definition}[Valor regular]\label{def:valor_regular}
+Un punto $y \in \mathcal{N}$ es un \textit{valor regular} de $F: \mathcal{M} \to \mathcal{N}$ si no es valor crítico, es decir, si para todo $p \in F^{-1}(y)$ el diferencial $dF_p$ es sobreyectivo. En particular, si $y \notin F(\mathcal{M})$, entonces $y$ es trivialmente un valor regular.
 \end{definition}
 
-\begin{theorem}[Teorema de Sard]
-\label{thm:app:sard}
-Sea $F \colon \mathcal{M} \to \mathcal{N}$ una aplicaci\'on suave entre variedades
-diferenciables. Entonces el conjunto de valores cr\'iticos de $F$ tiene medida de
-Lebesgue nula en $\mathcal{N}$. Equivalentemente, el conjunto de valores regulares
-es denso en $\mathcal{N}$.
+\begin{theorem}[Teorema de Sard]\label{thm:sard}
+Sea $F: \mathcal{M} \to \mathcal{N}$ una aplicación suave entre variedades diferenciables. Entonces el conjunto de valores críticos de $F$ tiene medida de Lebesgue nula en $\mathcal{N}$. Equivalentemente, el conjunto de valores regulares es denso en $\mathcal{N}$.
 \end{theorem}
 
-La demostraci\'on completa, que procede por inducci\'on sobre la dimensi\'on y usa
-estimaciones de medida basadas en el desarrollo de Taylor de $F$, puede
-encontrarse en \citet[Cap\'itulo~6, Teorema~6.10]{lee2012introduction} o en
-\citet[Cap\'itulo~3]{milnor1965topology}.
+La demostración completa, que procede por inducción sobre la dimensión y utiliza estimaciones de medida basadas en el desarrollo de Taylor de $F$, puede encontrarse en \citet[Capítulo 6, Teorema 6.10]{lee2012introduction} o en \citet[Capítulo 3]{milnor1965topology}.
 
 \begin{remark}
-La potencia del teorema de Sard reside en que permite concluir la existencia de
-objetos con buenas propiedades (valores regulares) sin construirlos
-expl\'icitamente: basta mostrar que los ``malos'' forman un conjunto de medida
-nula. En la demostraci\'on del teorema de Whitney, este argumento garantiza la
-existencia de direcciones de proyecci\'on que preservan el embebimiento.
+La potencia del Teorema de Sard reside en que permite concluir la existencia de objetos con buenas propiedades (valores regulares) sin construirlos explícitamente: basta mostrar que los ``malos'' forman un conjunto de medida nula. En la demostración del Teorema de Whitney, este argumento se aplica para garantizar la existencia de direcciones de proyección que preservan el embebimiento.
 \end{remark}
 
-%=======================================================================
-\section{El Teorema del Nivel Regular}
-\label{sec:app:regular-level}
-%=======================================================================
+\section{Teorema del Nivel Regular}\label{sec:nivel_regular}
 
-El teorema del nivel regular conecta la teor\'ia de aplicaciones suaves entre
-variedades con la estructura de subvariedad de sus conjuntos de nivel. Es una
-herramienta fundamental de la geometr\'ia diferencial: construye subvariedades
-como preim\'agenes de valores regulares y es la base te\'orica de la estructura de
-las fibras de una submersi\'on.
+El Teorema del Nivel Regular conecta la teoría de aplicaciones suaves entre variedades con la estructura de subvariedad de sus conjuntos de nivel. Es una herramienta fundamental en geometría diferencial: permite construir subvariedades como preimágenes de valores regulares, y es la base teórica de la estructura de las fibras de una submersión.
 
-\begin{theorem}[Teorema del nivel regular]
-\label{thm:app:regular-level}
-Sea $F \colon \mathcal{M} \to \mathcal{N}$ una aplicaci\'on suave entre variedades
-diferenciables de dimensiones $m = \dim \mathcal{M}$ y $n = \dim \mathcal{N}$, con
-$m \geq n$. Si $q \in \mathcal{N}$ es un valor regular de $F$
-(\Cref{def:app:regular-value}) con $F^{-1}(q) \neq \emptyset$, entonces
-$F^{-1}(q)$ es una subvariedad suave de $\mathcal{M}$ de dimensi\'on $m - n$.
+\begin{theorem}[Teorema del Nivel Regular]\label{thm:nivel_regular}
+Sea $F: \mathcal{M} \to \mathcal{N}$ una aplicación suave entre variedades diferenciables de dimensiones $m = \dim \mathcal{M}$ y $n = \dim \mathcal{N}$, con $m \geq n$. Si $q \in \mathcal{N}$ es un valor regular de $F$ (\autoref{def:valor_regular}) con $F^{-1}(q) \neq \emptyset$, entonces $F^{-1}(q)$ es una subvariedad suave de $\mathcal{M}$ de dimensión $m - n$.
 \end{theorem}
 
 \begin{proof}
-Sea $p \in F^{-1}(q)$. Como $q$ es un valor regular, el diferencial
-$dF_p \colon T_p\mathcal{M} \to T_q\mathcal{N}$ es sobreyectivo, luego de rango
-$n$. Elegimos cartas $(U, \varphi)$ centrada en $p$ y $(V, \psi)$ centrada en $q$
-con $F(U) \subseteq V$. En estas coordenadas, la representaci\'on local
-$\hat{F} = \psi \circ F \circ \varphi^{-1} \colon \varphi(U) \subseteq \R^m \to
-\R^n$ tiene jacobiana $D\hat{F}_{\varphi(p)}$ de rango $n$.
+Sea $p \in F^{-1}(q)$. Como $q$ es valor regular, el diferencial $dF_p: T_p\mathcal{M} \to T_q\mathcal{N}$ es sobreyectivo, y por tanto tiene rango $n$. Elegimos cartas $(U, \varphi)$ centrada en $p$ y $(V, \psi)$ centrada en $q$ tales que $F(U) \subseteq V$. En estas coordenadas, la representación local $\hat{F} = \psi \circ F \circ \varphi^{-1}: \varphi(U) \subseteq \mathbb{R}^m \to \mathbb{R}^n$ satisface que su jacobiana $D\hat{F}_{\varphi(p)}$ tiene rango $n$.
 
-Reordenando coordenadas si es necesario, podemos suponer que las \'ultimas $n$
-columnas de $D\hat{F}_{\varphi(p)}$ forman un bloque $n \times n$ invertible.
-Escribimos $\R^m = \R^{m-n} \times \R^n$ con coordenadas $(x', x'')$, donde
-$x' = (x_1, \ldots, x_{m-n})$ y $x'' = (x_{m-n+1}, \ldots, x_m)$.
+Reordenando coordenadas si es necesario, podemos suponer que las últimas $n$ columnas de $D\hat{F}_{\varphi(p)}$ forman una submatriz $n \times n$ invertible. Escribimos $\mathbb{R}^m = \mathbb{R}^{m-n} \times \mathbb{R}^n$ con coordenadas $(x', x'')$ donde $x' = (x_1, \ldots, x_{m-n})$ y $x'' = (x_{m-n+1}, \ldots, x_m)$.
 
-Consideramos la aplicaci\'on $\Phi \colon \varphi(U) \to \R^m$ dada por
-$\Phi(x', x'') = (x', \hat{F}(x', x''))$. Su jacobiana en $\varphi(p)$ es
+Consideramos la aplicación $\Phi: \varphi(U) \to \mathbb{R}^m$ definida por $\Phi(x', x'') = (x', \hat{F}(x', x''))$. Su jacobiana en $\varphi(p)$ es:
 \[
-D\Phi_{\varphi(p)} = \begin{pmatrix} I_{m-n} & 0 \\[2pt]
-\frac{\partial \hat{F}}{\partial x'} & \frac{\partial \hat{F}}{\partial x''}
-\end{pmatrix} ,
+D\Phi_{\varphi(p)} = \begin{pmatrix} I_{m-n} & 0 \\ \frac{\partial \hat{F}}{\partial x'} & \frac{\partial \hat{F}}{\partial x''} \end{pmatrix}
 \]
-que es invertible por ser triangular inferior por bloques con bloques diagonales
-invertibles $I_{m-n}$ y $\frac{\partial \hat{F}}{\partial x''}$. Por el teorema de
-la funci\'on inversa (\Cref{thm:app:inverse-function}), $\Phi$ es un difeomorfismo
-local en un entorno $W$ de $\varphi(p)$.
+que es invertible por ser triangular inferior por bloques con $I_{m-n}$ y $\frac{\partial \hat{F}}{\partial x''}$ invertibles en el bloque diagonal. Por el teorema de la función inversa (\autoref{thm:funcion_inversa}), $\Phi$ es un difeomorfismo local en un entorno $W$ de $\varphi(p)$.
 
-En las nuevas coordenadas $\Phi$, la aplicaci\'on $F$ se lee como
+En las nuevas coordenadas $\Phi$, la aplicación $F$ se lee como:
 \[
-\hat{F} \circ \Phi^{-1}(y', y'') = y'' ,
+\hat{F} \circ \Phi^{-1}(y', y'') = y''
 \]
-es decir, $\hat{F}$ se convierte en la proyecci\'on sobre las \'ultimas $n$
-coordenadas. Por tanto,
+es decir, $\hat{F}$ se convierte en la proyección sobre las últimas $n$ coordenadas. Por tanto:
 \[
-(\hat{F} \circ \Phi^{-1})^{-1}(\psi(q))
-= \{(y', y'') \in \Phi(W) : y'' = \psi(q)\}
-= \{(y', \psi(q)) : y' \in U'\}
+(\hat{F} \circ \Phi^{-1})^{-1}(\psi(q)) = \{(y', y'') \in \Phi(W) : y'' = \psi(q)\} = \{(y', \psi(q)) : y' \in U'\}
 \]
-para cierto abierto $U' \subseteq \R^{m-n}$. Esto muestra que, cerca de cada punto
-$p$, $F^{-1}(q)$ es localmente el grafo de una funci\'on suave de $m - n$
-variables, lo que le confiere estructura de subvariedad suave de dimensi\'on
-$m - n$.
+para cierto abierto $U' \subseteq \mathbb{R}^{m-n}$. Esto muestra que $F^{-1}(q)$ es localmente, en un entorno de cada punto $p$, el grafo de una función suave de $m - n$ variables, lo que le confiere estructura de subvariedad suave de dimensión $m - n$.
 \end{proof}
 
-\begin{corollary}[Fibras de una submersi\'on]
-\label{cor:app:submersion-fibres}
-Si $F \colon \mathcal{M} \to \mathcal{N}$ es una submersi\'on suave, entonces para
-cada $q \in F(\mathcal{M})$ la fibra $F^{-1}(q)$ es una subvariedad suave de
-$\mathcal{M}$ de dimensi\'on $\dim \mathcal{M} - \dim \mathcal{N}$.
+\begin{corollary}[Fibras de una submersión]\label{cor:fibras_submersion}
+Si $F: \mathcal{M} \to \mathcal{N}$ es una submersión suave (\autoref{def:submersion_suave}), entonces para cada $q \in F(\mathcal{M})$, la fibra $F^{-1}(q)$ es una subvariedad suave de $\mathcal{M}$ de dimensión $\dim \mathcal{M} - \dim \mathcal{N}$.
 \end{corollary}
 
 \begin{proof}
-Como $F$ es una submersi\'on, $dF_p$ es sobreyectivo para todo
-$p \in \mathcal{M}$. En particular, todo punto $q \in F(\mathcal{M})$ es un valor
-regular de $F$, y el resultado se sigue del \Cref{thm:app:regular-level}.
+Como $F$ es submersión, $dF_p$ es sobreyectivo para todo $p \in \mathcal{M}$. En particular, todo punto $q \in F(\mathcal{M})$ es valor regular de $F$, y el resultado se sigue del \autoref{thm:nivel_regular}.
 \end{proof}
 
 \begin{remark}
-Una referencia completa para el teorema del nivel regular y sus aplicaciones puede
-encontrarse en \citet[Cap\'itulo~5, Teorema~5.12]{lee2012introduction}. La
-formulaci\'on cl\'asica en $\R^n$ se obtiene como caso particular tomando
-$\mathcal{M} = \R^m$ y $\mathcal{N} = \R^n$ con las cartas identidad.
+Una referencia completa para el Teorema del Nivel Regular y sus aplicaciones puede encontrarse en \citet[Capítulo~5, Teorema~5.12]{lee2012introduction}. La formulación clásica en $\mathbb{R}^n$ se obtiene como caso particular tomando $\mathcal{M} = \mathbb{R}^m$ y $\mathcal{N} = \mathbb{R}^n$ con las cartas identidad.
 \end{remark}
 
-%=======================================================================
-\section{\'Area de Discos Geod\'esicos en Superficies de Curvatura Constante}
-\label{sec:app:geodesic-disc}
-%=======================================================================
+\section{Área de discos geodésicos en superficies de curvatura constante}\label{sec:area_disco_geodesico}
 
-El \'area de un disco geod\'esico de radio $R$ en una superficie de curvatura
-gaussiana constante $K$ satisface una f\'ormula que generaliza el resultado
-euclidiano $\pi R^2$. Derivamos esta f\'ormula a partir de la ecuaci\'on de Jacobi
-en coordenadas polares geod\'esicas.
+En la \autoref{rem:significado_curvatura} se afirma que el área de un disco geodésico de radio $R$ en una superficie de curvatura gaussiana constante $K$ satisface una fórmula que generaliza el resultado euclidiano $\pi R^2$. Derivamos aquí esta fórmula a partir de la ecuación de Jacobi en coordenadas polares geodésicas.
 
-\begin{proposition}[M\'etrica en coordenadas polares geod\'esicas]
-\label{prop:app:geodesic-polar-metric}
-Sea $(\mathcal{M}, g)$ una superficie riemanniana de curvatura gaussiana constante
-$K$, y sea $p \in \mathcal{M}$. En coordenadas polares geod\'esicas $(r, \theta)$
-centradas en $p$ (donde $r = d_g(p, \cdot)$ y $\theta \in [0, 2\pi)$ es el
-\'angulo en $T_p\mathcal{M}$), la m\'etrica riemanniana toma la forma
-\begin{equation}
-\label{eq:app:geodesic-polar-metric}
-ds^2 = dr^2 + f_K(r)^2 \, d\theta^2 ,
+\begin{proposition}[Métrica en coordenadas polares geodésicas]\label{prop:metrica_polar_geodesica}
+Sea $(\mathcal{M}, g)$ una superficie riemanniana de curvatura gaussiana constante $K$, y sea $p \in \mathcal{M}$. En coordenadas polares geodésicas $(r, \theta)$ centradas en $p$ (donde $r = d_g(p, \cdot)$ y $\theta \in [0, 2\pi)$ es el ángulo en $T_p\mathcal{M}$), la métrica riemanniana toma la forma:
+\begin{equation}\label{eq:metrica_polar_geodesica}
+ds^2 = dr^2 + f_K(r)^2 \, d\theta^2
 \end{equation}
-donde la funci\'on $f_K \colon [0, \infty) \to \R$ satisface la \textbf{ecuaci\'on
-de Jacobi}
-\begin{equation}
-\label{eq:app:jacobi-radial}
-f_K''(r) + K \, f_K(r) = 0 , \qquad f_K(0) = 0 , \quad f_K'(0) = 1 .
+donde la función $f_K: [0, \infty) \to \mathbb{R}$ satisface la \textbf{ecuación de Jacobi}:
+\begin{equation}\label{eq:jacobi_radial}
+f_K''(r) + K \, f_K(r) = 0, \qquad f_K(0) = 0, \quad f_K'(0) = 1
 \end{equation}
 \end{proposition}
 
 \begin{proof}
-En coordenadas polares geod\'esicas, las geod\'esicas radiales desde $p$
-corresponden a $\theta = \text{const}$, con parametrizaci\'on natural por longitud
-de arco $r$. El coeficiente m\'etrico $g_{rr} = 1$ refleja esta parametrizaci\'on.
-El coeficiente angular $g_{\theta\theta} = f_K(r)^2$ mide c\'omo se separan las
-geod\'esicas radiales adyacentes; la funci\'on $f_K(r)$ es la norma del campo de
-Jacobi $J(r)$ a lo largo de una geod\'esica radial con condiciones iniciales
-$J(0) = 0$ y $\norm{J'(0)} = 1$. La ecuaci\'on de Jacobi
-$J'' + R(\dot{\gamma}, J)\dot{\gamma} = 0$, en el caso de curvatura constante $K$
-en dimensi\'on $2$, se reduce a la ecuaci\'on escalar $f_K'' + K f_K = 0$
-\citep[Cap\'itulo~10]{lee2018introduction}.
+En coordenadas polares geodésicas, las geodésicas radiales desde $p$ corresponden a $\theta = \text{const}$, y su parametrización natural es por longitud de arco $r$. El coeficiente métrico $g_{rr} = 1$ refleja esta parametrización. El coeficiente angular $g_{\theta\theta} = f_K(r)^2$ mide cómo se separan las geodésicas radiales adyacentes; la función $f_K(r)$ es la norma del campo de Jacobi $J(r)$ a lo largo de una geodésica radial con condiciones iniciales $J(0) = 0$ y $\|J'(0)\| = 1$. La ecuación de Jacobi $J'' + R(\dot{\gamma}, J)\dot{\gamma} = 0$, en el caso de curvatura constante $K$ en dimensión 2, se reduce a la ecuación escalar $f_K'' + K f_K = 0$ \citep[Capítulo~10]{lee2018introduction}.
 \end{proof}
 
-La soluci\'on de la ecuaci\'on~\eqref{eq:app:jacobi-radial} depende del signo de
-$K$:
-\begin{equation}
-\label{eq:app:fK-solutions}
+La solución de la ecuación~\eqref{eq:jacobi_radial} depende del signo de $K$:
+
+\begin{equation}\label{eq:soluciones_fK}
 f_K(r) = \begin{cases}
 \dfrac{1}{\sqrt{K}} \sin(\sqrt{K} \, r) & \text{si } K > 0, \\[8pt]
 r & \text{si } K = 0, \\[8pt]
-\dfrac{1}{\sqrt{\abs{K}}} \sinh(\sqrt{\abs{K}} \, r) & \text{si } K < 0.
+\dfrac{1}{\sqrt{|K|}} \sinh(\sqrt{|K|} \, r) & \text{si } K < 0.
 \end{cases}
 \end{equation}
-La verificaci\'on es inmediata: para $K > 0$,
-$f_K(r) = \frac{1}{\sqrt{K}} \sin(\sqrt{K} r)$ satisface $f_K(0) = 0$,
-$f_K'(0) = \cos(0) = 1$ y $f_K''(r) = -K f_K(r)$. Los casos $K = 0$ y $K < 0$ se
-comprueban an\'alogamente.
 
-\begin{theorem}[\'Area de un disco geod\'esico]
-\label{thm:app:geodesic-disc-area}
-Sea $(\mathcal{M}, g)$ una superficie de curvatura gaussiana constante $K$, y sea
-$B_R(p) = \{q \in \mathcal{M} : d_g(p,q) \leq R\}$ el disco geod\'esico de radio
-$R$ centrado en $p$ (con $R$ menor que el radio de inyectividad). Entonces
-\begin{equation}
-\label{eq:app:geodesic-disc-area}
+La verificación es inmediata: para $K > 0$, $f_K(r) = \frac{1}{\sqrt{K}} \sin(\sqrt{K} r)$ satisface $f_K(0) = 0$, $f_K'(0) = \cos(0) = 1$ y $f_K''(r) = -K f_K(r)$. Los casos $K = 0$ y $K < 0$ se comprueban análogamente.
+
+\begin{theorem}[Área de un disco geodésico]\label{thm:area_disco_geodesico}
+Sea $(\mathcal{M}, g)$ una superficie de curvatura gaussiana constante $K$, y sea $B_R(p) = \{q \in \mathcal{M} : d_g(p,q) \leq R\}$ el disco geodésico de radio $R$ centrado en $p$ (con $R$ menor que el radio de inyectividad). Entonces:
+\begin{equation}\label{eq:area_disco_geodesico}
 A(R) = \begin{cases}
 \dfrac{2\pi}{K}\bigl(1 - \cos(\sqrt{K} \, R)\bigr) & \text{si } K > 0, \\[8pt]
 \pi R^2 & \text{si } K = 0, \\[8pt]
-\dfrac{2\pi}{\abs{K}}\bigl(\cosh(\sqrt{\abs{K}} \, R) - 1\bigr) & \text{si } K < 0.
+\dfrac{2\pi}{|K|}\bigl(\cosh(\sqrt{|K|} \, R) - 1\bigr) & \text{si } K < 0.
 \end{cases}
 \end{equation}
-Adem\'as, $\lim_{K \to 0} A(R) = \pi R^2$ en todos los casos.
+Además, $\lim_{K \to 0} A(R) = \pi R^2$ en todos los casos.
 \end{theorem}
 
 \begin{proof}
-El elemento de \'area en coordenadas polares geod\'esicas es
-$dA = f_K(r) \, dr \, d\theta$ (por~\eqref{eq:app:geodesic-polar-metric}, ya que
-$\sqrt{\det(g)} = f_K(r)$). Por tanto,
+El elemento de área en coordenadas polares geodésicas es $dA = f_K(r) \, dr \, d\theta$ (por~\eqref{eq:metrica_polar_geodesica}, ya que $\sqrt{\det(g)} = f_K(r)$). Por tanto:
 \[
-A(R) = \int_0^{2\pi} \int_0^R f_K(r) \, dr \, d\theta
-= 2\pi \int_0^R f_K(r) \, dr .
+A(R) = \int_0^{2\pi} \int_0^R f_K(r) \, dr \, d\theta = 2\pi \int_0^R f_K(r) \, dr
 \]
 
 \textbf{Caso $K > 0$:}
 \[
-A(R) = 2\pi \int_0^R \frac{1}{\sqrt{K}} \sin(\sqrt{K} \, r) \, dr
-= 2\pi \left[ \frac{-\cos(\sqrt{K} \, r)}{K} \right]_0^R
-= \frac{2\pi}{K} \bigl(1 - \cos(\sqrt{K} \, R)\bigr) .
+A(R) = 2\pi \int_0^R \frac{1}{\sqrt{K}} \sin(\sqrt{K} \, r) \, dr = 2\pi \left[ \frac{-\cos(\sqrt{K} \, r)}{K} \right]_0^R = \frac{2\pi}{K} \bigl(1 - \cos(\sqrt{K} \, R)\bigr)
 \]
 
 \textbf{Caso $K = 0$:}
 \[
-A(R) = 2\pi \int_0^R r \, dr = \pi R^2 .
+A(R) = 2\pi \int_0^R r \, dr = \pi R^2
 \]
 
-\textbf{Caso $K < 0$:} escribiendo $K = -\abs{K}$,
+\textbf{Caso $K < 0$:} Escribiendo $K = -|K|$:
 \[
-A(R) = 2\pi \int_0^R \frac{1}{\sqrt{\abs{K}}} \sinh(\sqrt{\abs{K}} \, r) \, dr
-= 2\pi \left[ \frac{\cosh(\sqrt{\abs{K}} \, r)}{\abs{K}} \right]_0^R
-= \frac{2\pi}{\abs{K}} \bigl(\cosh(\sqrt{\abs{K}} \, R) - 1\bigr) .
+A(R) = 2\pi \int_0^R \frac{1}{\sqrt{|K|}} \sinh(\sqrt{|K|} \, r) \, dr = 2\pi \left[ \frac{\cosh(\sqrt{|K|} \, r)}{|K|} \right]_0^R = \frac{2\pi}{|K|} \bigl(\cosh(\sqrt{|K|} \, R) - 1\bigr)
 \]
 
-\textbf{L\'imite $K \to 0$:} usando el desarrollo de Taylor
-$\cos(x) = 1 - \frac{x^2}{2} + \frac{x^4}{24} - \cdots$,
+\textbf{Límite $K \to 0$:} Usando el desarrollo de Taylor $\cos(x) = 1 - \frac{x^2}{2} + \frac{x^4}{24} - \cdots$:
 \[
-\frac{1 - \cos(\sqrt{K} R)}{K}
-= \frac{1 - \bigl(1 - \frac{KR^2}{2} + \frac{K^2 R^4}{24} - \cdots\bigr)}{K}
-= \frac{R^2}{2} - \frac{K R^4}{24} + \cdots
-\xrightarrow{K \to 0} \frac{R^2}{2} .
+\frac{1 - \cos(\sqrt{K} R)}{K} = \frac{1 - \left(1 - \frac{KR^2}{2} + \frac{K^2 R^4}{24} - \cdots\right)}{K} = \frac{R^2}{2} - \frac{K R^4}{24} + \cdots \xrightarrow{K \to 0} \frac{R^2}{2}
 \]
-Multiplicando por $2\pi$ se obtiene $\pi R^2$. El caso $K < 0$ es an\'alogo usando
-$\cosh(x) = 1 + \frac{x^2}{2} + \cdots$.
+Multiplicando por $2\pi$ se obtiene $\pi R^2$. El caso $K < 0$ es análogo usando $\cosh(x) = 1 + \frac{x^2}{2} + \cdots$.
 \end{proof}
 
-\begin{remark}[Interpretaci\'on geom\'etrica]
-\label{rem:app:geodesic-disc-interpretation}
-El \Cref{thm:app:geodesic-disc-area} cuantifica el efecto de la curvatura sobre el
-crecimiento del \'area:
+\begin{remark}[Interpretación geométrica]\label{rem:area_disco_interpretacion}
+El \autoref{thm:area_disco_geodesico} cuantifica el efecto de la curvatura sobre el crecimiento del área:
 \begin{itemize}
-    \item \textbf{Curvatura positiva} ($K > 0$): $A(R) < \pi R^2$. El \'area crece
-          m\'as lentamente que en el caso euclidiano. En la esfera $S^2$
-          ($K = 1$), $A(R) = 2\pi(1 - \cos R)$; para $R = \pi/2$ (un cuarto de
-          esfera), $A = 2\pi$.
-    \item \textbf{Curvatura negativa} ($K < 0$): $A(R) > \pi R^2$. Como
-          $\cosh(x) \sim \frac{1}{2}e^x$ para $x$ grande, el \'area crece
-          \emph{exponencialmente}:
-          $A(R) \sim \frac{\pi}{\abs{K}} e^{\sqrt{\abs{K}} R}$.
-    \item \textbf{Conexi\'on con la ecuaci\'on de Jacobi.} La funci\'on $f_K(r)$
-          que aparece en la m\'etrica es exactamente la que describe la
-          desviaci\'on de geod\'esicas paralelas, mostrando que el crecimiento del
-          \'area y la divergencia/convergencia de geod\'esicas son manifestaciones
-          del mismo fen\'omeno geom\'etrico.
+    \item \textbf{Curvatura positiva} ($K > 0$): $A(R) < \pi R^2$. El área crece más lentamente que en el caso euclidiano. En la esfera $S^2$ ($K = 1$), $A(R) = 2\pi(1 - \cos R)$; para $R = \pi/2$ (un cuarto de esfera), $A = 2\pi$.
+    \item \textbf{Curvatura negativa} ($K < 0$): $A(R) > \pi R^2$. Como $\cosh(x) \sim \frac{1}{2}e^x$ para $x$ grande, el área crece \textit{exponencialmente}: $A(R) \sim \frac{\pi}{|K|} e^{\sqrt{|K|} R}$.
+    \item \textbf{Conexión con la ecuación de Jacobi}: La función $f_K(r)$ que aparece en la métrica es exactamente la misma que describe la desviación de geodésicas paralelas en la \autoref{subsec:espacios_no_euclidianos}, mostrando que el crecimiento del área y la divergencia/convergencia de geodésicas son manifestaciones del mismo fenómeno geométrico.
 \end{itemize}
-Una demostraci\'on alternativa puede encontrarse en
-\citet[Cap\'itulo~4, Secci\'on~4.6]{do1976differential} para superficies y en
-\citet[Teorema~11.9]{lee2018introduction} para el caso riemanniano general.
+Una demostración alternativa puede encontrarse en \citet[Capítulo~4, Sección~4.6]{do1976differential} para superficies y en \citet[Teorema~11.9]{lee2018introduction} para el caso riemanniano general.
 \end{remark}
 
-%=======================================================================
-\section{Complejidad Muestral en Variedades}
-\label{sec:app:sample-complexity}
-%=======================================================================
+\section{Complejidad muestral en variedades}\label{sec:complejidad_muestral}
 
-El n\'umero de muestras necesarias para aproximar una funci\'on Lipschitz sobre
-una variedad escala con la dimensi\'on intr\'inseca $m$, no con la dimensi\'on
-ambiente $d$. Presentamos los preliminares necesarios y un esbozo de la
-demostraci\'on basado en los resultados de \citet{niyogi2008finding}.
+La \autoref{prop:complejidad_muestral_variedades} establece que el número de muestras necesarias para aproximar una función Lipschitz sobre una variedad escala con la dimensión intrínseca $m$, no con la dimensión ambiente $d$. En esta sección presentamos los preliminares necesarios y un esbozo de la demostración basado en los resultados de \citet{niyogi2008finding}.
 
-\subsection{Preliminares}
-\label{subsec:app:sample-complexity-prelim}
+\subsection{Preliminares}\label{subsec:complejidad_muestral_preliminares}
 
-\begin{definition}[N\'umero de recubrimiento]
-\label{def:app:covering-number}
-Sea $(X, d)$ un espacio m\'etrico y $\epsilon > 0$. Un \emph{$\epsilon$-recubrimiento}
-(o $\epsilon$-red) de $X$ es un subconjunto $S \subseteq X$ tal que para todo
-$x \in X$ existe $s \in S$ con $d(x, s) \leq \epsilon$. El \emph{n\'umero de
-recubrimiento} $\mathcal{N}(X, d, \epsilon)$ es el m\'inimo cardinal de un
-$\epsilon$-recubrimiento de $X$.
+\begin{definition}[Número de recubrimiento]\label{def:numero_recubrimiento}
+Sea $(X, d)$ un espacio métrico y $\epsilon > 0$. Un \textit{$\epsilon$-recubrimiento} (o $\epsilon$-net) de $X$ es un subconjunto $S \subseteq X$ tal que para todo $x \in X$ existe $s \in S$ con $d(x, s) \leq \epsilon$. El \textit{número de recubrimiento} $\mathcal{N}(X, d, \epsilon)$ es el mínimo cardinal de un $\epsilon$-recubrimiento de $X$.
 \end{definition}
 
-\begin{remark}
-\label{rem:app:covering-vs-topological}
-La noci\'on de $\epsilon$-recubrimiento m\'etrico no debe confundirse con la de
-recubrimiento topol\'ogico. Un $\epsilon$-recubrimiento es un conjunto de
-\emph{puntos} cuyas bolas de radio $\epsilon$ cubren el espacio, mientras que un
-recubrimiento topol\'ogico es una familia de conjuntos abiertos cuya uni\'on
-contiene al espacio. Ambos est\'an relacionados: si $S$ es un
-$\epsilon$-recubrimiento de $(X,d)$, entonces $\{B(s, \epsilon)\}_{s \in S}$ es un
-recubrimiento abierto de $X$ en sentido topol\'ogico.
+\begin{remark}\label{rem:recubrimiento_vs_topologico}
+El concepto de $\epsilon$-recubrimiento métrico no debe confundirse con el recubrimiento topológico (\autoref{def:recubrimiento}). Un $\epsilon$-recubrimiento es un conjunto de \textit{puntos} cuyas bolas de radio $\epsilon$ cubren el espacio, mientras que un recubrimiento topológico es una familia de conjuntos abiertos cuya unión contiene al espacio. Ambos conceptos están relacionados: si $S$ es un $\epsilon$-recubrimiento de $(X,d)$, entonces $\{B(s, \epsilon)\}_{s \in S}$ es un recubrimiento abierto de $X$ en sentido topológico.
 \end{remark}
 
-\begin{lemma}[Cota volum\'etrica del n\'umero de recubrimiento]
-\label{lem:app:volumetric-covering}
-Sea $(\mathcal{M}, g)$ una variedad riemanniana compacta y $\epsilon > 0$.
-Entonces
+\begin{lemma}[Cota volumétrica del número de recubrimiento]\label{lem:cota_volumetrica_recubrimiento}
+Sea $(\mathcal{M}, g)$ una variedad riemanniana compacta y $\epsilon > 0$. Entonces
 \[
-\mathcal{N}(\mathcal{M}, d_g, \epsilon) \geq
-\frac{\Vol(\mathcal{M})}{\sup_{p \in \mathcal{M}} \Vol(B_g(p, \epsilon))} ,
+\mathcal{N}(\mathcal{M}, d_g, \epsilon) \geq \frac{\operatorname{Vol}(\mathcal{M})}{\sup_{p \in \mathcal{M}} \operatorname{Vol}(B_g(p, \epsilon))},
 \]
-donde $B_g(p, \epsilon)$ denota la bola geod\'esica de centro $p$ y radio
-$\epsilon$.
+donde $B_g(p, \epsilon)$ denota la bola geodésica de centro $p$ y radio $\epsilon$.
 \end{lemma}
 
 \begin{proof}
-Sea $S = \{s_1, \ldots, s_N\}$ un $\epsilon$-recubrimiento \'optimo, es decir,
-$\abs{S} = \mathcal{N}(\mathcal{M}, d_g, \epsilon)$. Por definici\'on,
-$\mathcal{M} \subseteq \bigcup_{i=1}^N B_g(s_i, \epsilon)$, de modo que
+Sea $S = \{s_1, \ldots, s_N\}$ un $\epsilon$-recubrimiento óptimo, es decir, $|S| = \mathcal{N}(\mathcal{M}, d_g, \epsilon)$. Por definición, $\mathcal{M} \subseteq \bigcup_{i=1}^N B_g(s_i, \epsilon)$, de modo que
 \[
-\Vol(\mathcal{M}) \leq \sum_{i=1}^N \Vol(B_g(s_i, \epsilon))
-\leq N \cdot \sup_{p \in \mathcal{M}} \Vol(B_g(p, \epsilon)) .
+\operatorname{Vol}(\mathcal{M}) \leq \sum_{i=1}^N \operatorname{Vol}(B_g(s_i, \epsilon)) \leq N \cdot \sup_{p \in \mathcal{M}} \operatorname{Vol}(B_g(p, \epsilon)).
 \]
 Despejando $N$ se obtiene la cota deseada.
 \end{proof}
 
-\begin{theorem}[Comparaci\'on de Bishop--G\"unther]
-\label{thm:app:bishop-gunther}
-Sea $(\mathcal{M}^m, g)$ una variedad riemanniana completa de dimensi\'on $m$ cuya
-curvatura de Ricci satisface $\Ric \geq (m-1)\kappa_0 \, g$ para alg\'un
-$\kappa_0 \in \R$. Sea $\mathbb{M}^m_{\kappa_0}$ el espacio modelo de curvatura
-seccional constante $\kappa_0$. Entonces, para todo $p \in \mathcal{M}$ y $r > 0$
-(con $r < \pi/\sqrt{\kappa_0}$ si $\kappa_0 > 0$),
+\begin{theorem}[Comparación de Bishop-Günther]\label{thm:bishop_gunther}
+Sea $(\mathcal{M}^m, g)$ una variedad riemanniana completa de dimensión $m$ cuya curvatura de Ricci satisface $\operatorname{Ric} \geq (m-1)\kappa_0 \, g$ para algún $\kappa_0 \in \mathbb{R}$. Sea $\mathbb{M}^m_{\kappa_0}$ el espacio modelo de curvatura seccional constante $\kappa_0$. Entonces, para todo $p \in \mathcal{M}$ y $r > 0$ (con $r < \pi/\sqrt{\kappa_0}$ si $\kappa_0 > 0$),
 \[
-\Vol(B_g(p, r)) \leq \Vol(B_{\kappa_0}(r)) ,
+\operatorname{Vol}(B_g(p, r)) \leq \operatorname{Vol}(B_{\kappa_0}(r)),
 \]
-donde $B_{\kappa_0}(r)$ denota la bola geod\'esica de radio $r$ en
-$\mathbb{M}^m_{\kappa_0}$.
+donde $B_{\kappa_0}(r)$ denota la bola geodésica de radio $r$ en $\mathbb{M}^m_{\kappa_0}$.
 \end{theorem}
 
-\begin{remark}
-\label{rem:app:bishop-gunther-context}
-Este teorema generaliza a dimensi\'on arbitraria la comparaci\'on de \'areas del
-\Cref{thm:app:geodesic-disc-area}, que trata el caso bidimensional. En el espacio
-modelo, el volumen de la bola de radio $r$ es
-$\Vol(B_{\kappa_0}(r)) = \omega_m \int_0^r \operatorname{sn}_{\kappa_0}(t)^{m-1}
-\, dt$, donde $\omega_m$ es el volumen de la bola unitaria en $\R^m$ y
-$\operatorname{sn}_{\kappa_0}$ es la funci\'on de comparaci\'on
-($\sin(\sqrt{\kappa_0}\,t)/\sqrt{\kappa_0}$ si $\kappa_0 > 0$, $t$ si
-$\kappa_0 = 0$, $\sinh(\sqrt{\abs{\kappa_0}}\,t)/\sqrt{\abs{\kappa_0}}$ si
-$\kappa_0 < 0$). Para radios peque\~nos,
-$\Vol(B_{\kappa_0}(r)) = \omega_m r^m (1 + O(\kappa_0 r^2))$. Para una
-demostraci\'on completa, v\'ease \citet[Teorema~11.10]{lee2018introduction}.
+\begin{remark}\label{rem:bishop_gunther_contexto}
+Este teorema generaliza a dimensión arbitraria la comparación de áreas del \autoref{thm:area_disco_geodesico}, que trata el caso bidimensional. En el espacio modelo, el volumen de la bola de radio $r$ es $\operatorname{Vol}(B_{\kappa_0}(r)) = \omega_m \int_0^r \operatorname{sn}_{\kappa_0}(t)^{m-1} \, dt$, donde $\omega_m$ es el volumen de la bola unitaria en $\mathbb{R}^m$ y $\operatorname{sn}_{\kappa_0}$ es la función de comparación ($\sin(\sqrt{\kappa_0}\,t)/\sqrt{\kappa_0}$ si $\kappa_0 > 0$, $t$ si $\kappa_0 = 0$, $\sinh(\sqrt{|\kappa_0|}\,t)/\sqrt{|\kappa_0|}$ si $\kappa_0 < 0$). Para radios pequeños, $\operatorname{Vol}(B_{\kappa_0}(r)) = \omega_m r^m (1 + O(\kappa_0 r^2))$. Para una demostración completa, véase \citet[Teorema~11.10]{lee2018introduction}.
 \end{remark}
 
-\subsection{Esbozo de la demostraci\'on}
-\label{subsec:app:sample-complexity-proof}
+\subsection{Esbozo de la demostración}\label{subsec:complejidad_muestral_demo}
 
-Esbozamos la demostraci\'on de la cota de complejidad muestral en variedades en
-tres pasos.
+Esbozamos la demostración de la \autoref{prop:complejidad_muestral_variedades} en tres pasos.
 
-\paragraph{Paso 1: Reducci\'on a n\'umeros de recubrimiento.}
-Sea $f \colon \mathcal{M} \to \R$ una funci\'on $L$-Lipschitz y sea
-$\{x_1, \ldots, x_N\} \subset \mathcal{M}$ un conjunto de muestras. Si queremos
-aproximar $f$ uniformemente con error $\epsilon$ usando solo los valores
-$f(x_1), \ldots, f(x_N)$, entonces para cualquier punto $q \in \mathcal{M}$ debe
-existir una muestra $x_i$ con $d_g(q, x_i) \leq \epsilon/L$. En efecto, si
-$d_g(q, x_i) > \epsilon/L$ para todo $i$, la condici\'on Lipschitz solo garantiza
-$\abs{f(q) - f(x_i)} \leq L \cdot d_g(q, x_i)$, que no puede acotarse por
-$\epsilon$. Por tanto, las muestras deben formar un $(\epsilon/L)$-recubrimiento de
-$\mathcal{M}$, y se requieren al menos
-$\mathcal{N}(\mathcal{M}, d_g, \epsilon/L)$ muestras.
+\paragraph{Paso 1: Reducción a números de recubrimiento.}
+Sea $f: \mathcal{M} \to \mathbb{R}$ una función $L$-Lipschitz y sea $\{x_1, \ldots, x_N\} \subset \mathcal{M}$ un conjunto de muestras. Si queremos aproximar $f$ uniformemente con error $\epsilon$ usando solo los valores $f(x_1), \ldots, f(x_N)$, entonces para cualquier punto $q \in \mathcal{M}$ debe existir alguna muestra $x_i$ con $d_g(q, x_i) \leq \epsilon/L$. En efecto, si $d_g(q, x_i) > \epsilon/L$ para todo $i$, entonces la condición Lipschitz solo garantiza $|f(q) - f(x_i)| \leq L \cdot d_g(q, x_i)$, que no puede acotarse por $\epsilon$. Por tanto, las muestras deben formar un $(\epsilon/L)$-recubrimiento de $\mathcal{M}$, y se requieren al menos $\mathcal{N}(\mathcal{M}, d_g, \epsilon/L)$ muestras.
 
-\paragraph{Paso 2: Cota inferior del n\'umero de recubrimiento.}
-Aplicando el \Cref{lem:app:volumetric-covering} con radio $\epsilon/L$,
+\paragraph{Paso 2: Cota inferior del número de recubrimiento.}
+Aplicando el \autoref{lem:cota_volumetrica_recubrimiento} con radio $\epsilon/L$:
 \[
-N \geq \mathcal{N}\!\left(\mathcal{M}, d_g, \frac{\epsilon}{L}\right)
-\geq \frac{\Vol(\mathcal{M})}{\sup_{p} \Vol\!\left(B_g\!\left(p,
-\frac{\epsilon}{L}\right)\right)} .
+N \geq \mathcal{N}\!\left(\mathcal{M}, d_g, \frac{\epsilon}{L}\right) \geq \frac{\operatorname{Vol}(\mathcal{M})}{\sup_{p} \operatorname{Vol}\!\left(B_g\!\left(p, \frac{\epsilon}{L}\right)\right)}.
 \]
 
-\paragraph{Paso 3: Estimaci\'on de vol\'umenes.}
-La curvatura seccional de $\mathcal{M}$ est\'a acotada en valor absoluto por
-$\kappa$, lo que implica $\Ric \geq -(m-1)\kappa \, g$. Por el teorema de
-Bishop--G\"unther (\Cref{thm:app:bishop-gunther}) con $\kappa_0 = -\kappa$,
+\paragraph{Paso 3: Estimación de volúmenes.}
+La curvatura seccional de $\mathcal{M}$ está acotada en valor absoluto por $\kappa$, lo que implica $\operatorname{Ric} \geq -(m-1)\kappa \, g$. Por el Teorema de Bishop-Günther (\autoref{thm:bishop_gunther}) con $\kappa_0 = -\kappa$:
 \[
-\Vol\!\left(B_g\!\left(p, \frac{\epsilon}{L}\right)\right)
-\leq \omega_m \left(\frac{\epsilon}{L}\right)^m
-\left(1 + O\!\left(\kappa \cdot \frac{\epsilon^2}{L^2}\right)\right) .
+\operatorname{Vol}\!\left(B_g\!\left(p, \frac{\epsilon}{L}\right)\right) \leq \omega_m \left(\frac{\epsilon}{L}\right)^m \left(1 + O\!\left(\kappa \cdot \frac{\epsilon^2}{L^2}\right)\right).
 \]
-El volumen total $\Vol(\mathcal{M})$ admite una cota inferior que depende del
-alcance (\emph{reach}) $\tau$ y de $\kappa$ (por resultados de
-\citet{niyogi2008finding} sobre la geometr\'ia del \emph{reach}). Combinando,
+El volumen total $\operatorname{Vol}(\mathcal{M})$ admite una cota inferior que depende de $\tau$ y $\kappa$ (por resultados de \citet{niyogi2008finding} sobre la geometría del reach). Combinando:
 \[
-N \geq \frac{\Vol(\mathcal{M})}{\omega_m (\epsilon/L)^m
-(1 + O(\kappa \epsilon^2/L^2))}
-= \Omega\!\left(\left(\frac{L}{\epsilon}\right)^m \cdot
-\operatorname{poly}(\tau^{-1}, \kappa)\right) .
+N \geq \frac{\operatorname{Vol}(\mathcal{M})}{\omega_m (\epsilon/L)^m (1 + O(\kappa \epsilon^2/L^2))} = \Omega\!\left(\left(\frac{L}{\epsilon}\right)^m \cdot \operatorname{poly}(\tau^{-1}, \kappa)\right).
 \]
-Absorbiendo la constante de Lipschitz $L$ en el factor $\operatorname{poly}$ se
-obtiene la cota.
+Absorbiendo la constante de Lipschitz $L$ en el factor $\operatorname{poly}$, se obtiene la cota de la \autoref{prop:complejidad_muestral_variedades}.
 
-\begin{remark}[Dimensi\'on intr\'inseca frente a ambiente]
-\label{rem:app:intrinsic-complexity}
-El resultado clave es que el exponente en $1/\epsilon$ es la dimensi\'on
-intr\'inseca $m$, no la dimensi\'on ambiente $d$. Para datos en $\R^d$ que residen
-en una variedad $m$-dimensional con $m \ll d$, la cota $\Omega((1/\epsilon)^m)$ es
-exponencialmente menor que la cota $\Omega((1/\epsilon)^d)$ que se obtendr\'ia
-ignorando la estructura geom\'etrica. Esta es la formalizaci\'on matem\'atica de
-la maldici\'on de la dimensionalidad atenuada por la hip\'otesis de la variedad.
+\begin{remark}[Dimensión intrínseca vs.\ ambiente]\label{rem:complejidad_intrinseca}
+El resultado clave es que la exponente en $1/\epsilon$ es la dimensión intrínseca $m$, no la dimensión ambiente $d$. Para datos en $\mathbb{R}^d$ que residen en una variedad $m$-dimensional con $m \ll d$, la cota $\Omega((1/\epsilon)^m)$ es exponencialmente menor que la cota $\Omega((1/\epsilon)^d)$ que se obtendría ignorando la estructura geométrica. Esta es la formalización matemática de la ``maldición de la dimensionalidad'' reducida por la hipótesis de la variedad.
 \end{remark}
 
 %=======================================================================
-\section{Isometr\'ias entre Modelos del Espacio Hiperb\'olico}
-\label{sec:app:hyperbolic-isometries}
+\section{Isometrías entre Modelos del Espacio Hiperbólico}\label{sec:isometrias_hiperbolico}
 %=======================================================================
 
-Existen tres modelos del espacio hiperb\'olico (hiperboloide, disco de Poincar\'e,
-semiplano superior), y son isom\'etricos como variedades riemannianas. Demostramos
-expl\'icitamente las isometr\'ias entre ellos mediante la proyecci\'on
-estereogr\'afica y la transformada de Cayley.
+En los capítulos principales se presentan tres modelos del espacio hiperbólico (hiperboloide, disco de Poincaré, semiplano superior) y se afirma que son isométricos como variedades riemannianas. En esta sección demostramos explícitamente las isometrías entre ellos mediante la proyección estereográfica y la transformada de Cayley.
 
-\subsection{Preliminares}
-\label{subsec:app:hyperbolic-prelim}
+\subsection{Preliminares}\label{subsec:isometrias_preliminares}
 
-\begin{definition}[Isometr\'ia riemanniana]
-\label{def:app:riemannian-isometry}
-Sean $(\mathcal{M}, g)$ y $(\mathcal{N}, h)$ variedades riemannianas. Un
-difeomorfismo $F \colon \mathcal{M} \to \mathcal{N}$ es una \emph{isometr\'ia
-riemanniana} si preserva la m\'etrica, es decir, si $F^*h = g$, donde el
-\emph{pullback} de la m\'etrica se define por
-\begin{equation}
-\label{eq:app:metric-pullback}
+\begin{definition}[Isometría riemanniana]\label{def:isometria_riemanniana}
+Sean $(\mathcal{M}, g)$ y $(\mathcal{N}, h)$ variedades riemannianas. Un difeomorfismo $F: \mathcal{M} \to \mathcal{N}$ es una \textit{isometría riemanniana} si preserva la métrica, es decir, si $F^*h = g$, donde el \textit{pullback} de la métrica se define por:
+\begin{equation}\label{eq:pullback_metrica}
 (F^*h)_p(v, w) = h_{F(p)}(dF_p(v), dF_p(w))
 \end{equation}
 para todo $p \in \mathcal{M}$ y $v, w \in T_p\mathcal{M}$.
 \end{definition}
 
-\begin{remark}
-\label{rem:app:conformal-isometry}
-Cuando ambas m\'etricas son \emph{conformes}, es decir, de la forma
-$g_{ij} = \lambda(x)^2 \delta_{ij}$ y $h_{ij} = \mu(y)^2 \delta_{ij}$, verificar la
-condici\'on $F^*h = g$ se simplifica: basta comprobar que
+\begin{remark}\label{rem:isometria_conforme}
+Cuando ambas métricas son \textit{conformes}, es decir, de la forma $g_{ij} = \lambda(x)^2 \delta_{ij}$ y $h_{ij} = \mu(y)^2 \delta_{ij}$, verificar la condición $F^*h = g$ se simplifica: basta comprobar que
 \[
-\mu(F(x))^2 \cdot \norm{dF_x(v)}^2 = \lambda(x)^2 \cdot \norm{v}^2
+\mu(F(x))^2 \cdot \|dF_x(v)\|^2 = \lambda(x)^2 \cdot \|v\|^2
 \]
-para todo vector tangente $v$, donde $\norm{\cdot}$ es la norma euclidiana. Esto
-reduce la verificaci\'on a una identidad escalar entre los factores conformes.
-V\'ease \citet[Cap\'itulo~3]{lee2018introduction}.
+para todo vector tangente $v$, donde $\|\cdot\|$ denota la norma euclidiana. Esto reduce la verificación a una identidad escalar entre los factores conformes. Véase \citet[Capítulo~3]{lee2018introduction}.
 \end{remark}
 
-\subsection{Del hiperboloide al disco de Poincar\'e}
-\label{subsec:app:hyperboloid-poincare}
+%-----------------------------------------------------------------------
+\subsection{Del hiperboloide al disco de Poincaré}\label{subsec:isometria_hiperboloide_poincare}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Isometr\'ia hiperboloide--disco de Poincar\'e]
-\label{thm:app:hyperboloid-poincare}
-La proyecci\'on estereogr\'afica desde el polo sur del hiperboloide,
-\begin{equation}
-\label{eq:app:stereographic-hyperboloid}
-\pi \colon \mathbb{H}^n \to \mathbb{D}^n , \qquad
-\pi(x_0, x_1, \ldots, x_n) = \frac{(x_1, \ldots, x_n)}{1 + x_0} ,
+\begin{theorem}[Isometría hiperboloide--disco de Poincaré]\label{thm:isometria_hiperboloide_poincare}
+La proyección estereográfica desde el polo sur del hiperboloide:
+\begin{equation}\label{eq:proyeccion_estereografica_hiperboloide}
+\pi: \mathbb{H}^n \to \mathbb{D}^n, \qquad \pi(x_0, x_1, \ldots, x_n) = \frac{(x_1, \ldots, x_n)}{1 + x_0}
 \end{equation}
-es una isometr\'ia riemanniana
-$(\mathbb{H}^n, g_{\mathcal{L}}) \to (\mathbb{D}^n, g_{\mathbb{D}})$, donde
-$g_{\mathcal{L}}$ es la m\'etrica inducida por el producto de Lorentz sobre el
-hiperboloide y $g_{\mathbb{D}} = \frac{4}{(1-\norm{\mathbf{y}}^2)^2}\delta_{ij}$ es
-la m\'etrica de Poincar\'e. Su inversa es
-\begin{equation}
-\label{eq:app:inverse-stereographic}
-\pi^{-1}(y_1, \ldots, y_n) = \frac{1}{1 - \norm{\mathbf{y}}^2}
-\bigl(1 + \norm{\mathbf{y}}^2,\; 2y_1,\; \ldots,\; 2y_n\bigr) .
+es una isometría riemanniana $(\mathbb{H}^n, g_{\mathcal{L}}) \to (\mathbb{D}^n, g_{\mathbb{D}})$, donde $g_{\mathcal{L}}$ es la métrica inducida por el producto de Lorentz sobre el hiperboloide y $g_{\mathbb{D}} = \frac{4}{(1-\|\mathbf{y}\|^2)^2}\delta_{ij}$ es la métrica de Poincaré. Su inversa es:
+\begin{equation}\label{eq:inversa_proyeccion_estereografica}
+\pi^{-1}(y_1, \ldots, y_n) = \frac{1}{1 - \|\mathbf{y}\|^2}\bigl(1 + \|\mathbf{y}\|^2,\; 2y_1,\; \ldots,\; 2y_n\bigr)
 \end{equation}
 \end{theorem}
 
 \begin{proof}
 Procedemos en varios pasos.
 
-\textbf{Paso 1: Interpretaci\'on geom\'etrica.}
-La aplicaci\'on $\pi$ es la proyecci\'on estereogr\'afica desde el punto
-$(-1, 0, \ldots, 0)$ (el polo sur del hiperboloide en el espacio de Minkowski)
-sobre el hiperplano $\{x_0 = 0\} \cong \R^n$. La recta que une $(-1, \mathbf{0})$
-con $(x_0, \mathbf{x}) \in \mathbb{H}^n$ es
-$t \mapsto (-1, \mathbf{0}) + t\bigl((x_0+1), \mathbf{x}\bigr)$, y corta al
-hiperplano $x_0 = 0$ cuando $t = \frac{1}{1+x_0}$, dando el punto
-$\frac{\mathbf{x}}{1+x_0}$.
+\textbf{Paso 1: Interpretación geométrica.}
+La aplicación $\pi$ es la proyección estereográfica desde el punto $(-1, 0, \ldots, 0)$ (polo sur del hiperboloide en el espacio de Minkowski) sobre el hiperplano $\{x_0 = 0\} \cong \mathbb{R}^n$. La recta que une $(-1, \mathbf{0})$ con $(x_0, \mathbf{x}) \in \mathbb{H}^n$ es $t \mapsto (-1, \mathbf{0}) + t\bigl((x_0+1), \mathbf{x}\bigr)$, y corta al hiperplano $x_0 = 0$ cuando $t = \frac{1}{1+x_0}$, dando el punto $\frac{\mathbf{x}}{1+x_0}$.
 
 \textbf{Paso 2: Biyectividad y suavidad.}
-Tanto $\pi$ como $\pi^{-1}$ son funciones racionales de sus argumentos, luego
-suaves en sus dominios. Verificamos que $\pi^{-1}$ est\'a bien definida: si
-$\norm{\mathbf{y}} < 1$, debemos comprobar $\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$.
-Sea $s = \norm{\mathbf{y}}^2 < 1$. Entonces
+Ambas aplicaciones $\pi$ y $\pi^{-1}$ son funciones racionales de sus argumentos, por lo que son suaves en sus dominios. Verifiquemos que $\pi^{-1}$ está bien definida: si $\|\mathbf{y}\| < 1$, necesitamos comprobar que $\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$. Sea $s = \|\mathbf{y}\|^2 < 1$. Entonces:
 \[
-\inner{\pi^{-1}(\mathbf{y})}{\pi^{-1}(\mathbf{y})}_{\mathcal{L}}
-= \frac{1}{(1-s)^2}\bigl(-(1+s)^2 + 4s\bigr)
-= \frac{-(1-s)^2}{(1-s)^2} = -1 ,
+\langle \pi^{-1}(\mathbf{y}), \pi^{-1}(\mathbf{y}) \rangle_{\mathcal{L}} = \frac{1}{(1-s)^2}\left(-(1+s)^2 + 4s\right) = \frac{-(1+s)^2 + 4s}{(1-s)^2} = \frac{-(1-s)^2}{(1-s)^2} = -1
 \]
-y la componente $x_0 = \frac{1+s}{1-s} > 0$, de modo que
-$\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$.
+y la componente $x_0 = \frac{1+s}{1-s} > 0$, por lo que $\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$.
 
-Para la composici\'on $\pi \circ \pi^{-1}$: dado $\mathbf{y} \in \mathbb{D}^n$,
-$\pi^{-1}(\mathbf{y})$ tiene componente
-$x_0 = \frac{1+\norm{\mathbf{y}}^2}{1-\norm{\mathbf{y}}^2}$ y componentes
-espaciales $\frac{2y_i}{1-\norm{\mathbf{y}}^2}$. Entonces
+Para la composición $\pi \circ \pi^{-1}$: dado $\mathbf{y} \in \mathbb{D}^n$, $\pi^{-1}(\mathbf{y})$ tiene componente $x_0 = \frac{1+\|\mathbf{y}\|^2}{1-\|\mathbf{y}\|^2}$ y componentes espaciales $\frac{2y_i}{1-\|\mathbf{y}\|^2}$. Entonces:
 \[
-\pi(\pi^{-1}(\mathbf{y}))
-= \frac{(2y_1, \ldots, 2y_n)/(1-\norm{\mathbf{y}}^2)}
-{1 + (1+\norm{\mathbf{y}}^2)/(1-\norm{\mathbf{y}}^2)}
-= \frac{(2y_1, \ldots, 2y_n)/(1-\norm{\mathbf{y}}^2)}
-{2/(1-\norm{\mathbf{y}}^2)} = \mathbf{y} .
+\pi(\pi^{-1}(\mathbf{y})) = \frac{(2y_1, \ldots, 2y_n)/(1-\|\mathbf{y}\|^2)}{1 + (1+\|\mathbf{y}\|^2)/(1-\|\mathbf{y}\|^2)} = \frac{(2y_1, \ldots, 2y_n)/(1-\|\mathbf{y}\|^2)}{2/(1-\|\mathbf{y}\|^2)} = \mathbf{y}
 \]
-La verificaci\'on de $\pi^{-1} \circ \pi = \mathrm{id}$ es an\'aloga.
+La verificación de $\pi^{-1} \circ \pi = \mathrm{id}$ es análoga.
 
-\textbf{Paso 3: Relaci\'on entre norma y coordenadas.}
-Sea $(x_0, \mathbf{x}) \in \mathbb{H}^n$ y
-$\mathbf{y} = \pi(x_0, \mathbf{x}) = \frac{\mathbf{x}}{1+x_0}$. Usando la relaci\'on
-del hiperboloide $x_0^2 - \norm{\mathbf{x}}^2 = 1$,
-\begin{equation}
-\label{eq:app:norm-y-hyperboloid}
-\norm{\mathbf{y}}^2 = \frac{\norm{\mathbf{x}}^2}{(1+x_0)^2}
-= \frac{x_0^2 - 1}{(1+x_0)^2} = \frac{x_0 - 1}{x_0 + 1} .
+\textbf{Paso 3: Relación entre norma y coordenadas.}
+Sea $(x_0, \mathbf{x}) \in \mathbb{H}^n$ y $\mathbf{y} = \pi(x_0, \mathbf{x}) = \frac{\mathbf{x}}{1+x_0}$. Usando la relación del hiperboloide $x_0^2 - \|\mathbf{x}\|^2 = 1$, calculamos:
+\begin{equation}\label{eq:norma_y_hiperboloide}
+\|\mathbf{y}\|^2 = \frac{\|\mathbf{x}\|^2}{(1+x_0)^2} = \frac{x_0^2 - 1}{(1+x_0)^2} = \frac{x_0 - 1}{x_0 + 1}
 \end{equation}
-De aqu\'i se deduce la identidad clave
-\begin{equation}
-\label{eq:app:conformal-factor-key}
-1 - \norm{\mathbf{y}}^2 = 1 - \frac{x_0 - 1}{x_0 + 1} = \frac{2}{1 + x_0} .
+De aquí se deduce la identidad clave:
+\begin{equation}\label{eq:factor_conforme_clave}
+1 - \|\mathbf{y}\|^2 = 1 - \frac{x_0 - 1}{x_0 + 1} = \frac{2}{1 + x_0}
 \end{equation}
 
-\textbf{Paso 4: C\'alculo del diferencial.}
-Para calcular $d\pi$, usamos coordenadas intr\'insecas $(x_1, \ldots, x_n)$ en
-$\mathbb{H}^n$. La componente $x_0$ satisface
-$x_0 = \sqrt{1 + \norm{\mathbf{x}}^2}$, de donde
+\textbf{Paso 4: Cálculo del diferencial.}
+Para calcular $d\pi$, usamos coordenadas intrínsecas $(x_1, \ldots, x_n)$ en $\mathbb{H}^n$. La componente $x_0$ satisface $x_0 = \sqrt{1 + \|\mathbf{x}\|^2}$, de donde:
 \[
-dx_0 = \frac{\sum_{i=1}^n x_i \, dx_i}{x_0} .
+dx_0 = \frac{\sum_{i=1}^n x_i \, dx_i}{x_0}
 \]
-Diferenciando $y_j = \frac{x_j}{1+x_0}$,
+Diferenciando $y_j = \frac{x_j}{1+x_0}$:
 \begin{align}
 dy_j &= \frac{dx_j(1+x_0) - x_j \, dx_0}{(1+x_0)^2} \nonumber \\
-&= \frac{dx_j}{1+x_0} - \frac{x_j}{(1+x_0)^2} \cdot
-\frac{\sum_i x_i \, dx_i}{x_0} . \label{eq:app:differential-pi}
+&= \frac{dx_j}{1+x_0} - \frac{x_j}{(1+x_0)^2} \cdot \frac{\sum_i x_i \, dx_i}{x_0} \label{eq:diferencial_pi}
 \end{align}
 
-\textbf{Paso 5: Verificaci\'on de la isometr\'ia.}
-Debemos comprobar que $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$. La m\'etrica
-inducida por Lorentz en $\mathbb{H}^n$ con coordenadas intr\'insecas
-$(x_1, \ldots, x_n)$ es
+\textbf{Paso 5: Verificación de la isometría.}
+Debemos comprobar que $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$. La métrica inducida por Lorentz en $\mathbb{H}^n$ con coordenadas intrínsecas $(x_1, \ldots, x_n)$ es:
 \[
-g_{\mathcal{L}} = -dx_0^2 + \sum_{i=1}^n dx_i^2
-= -\frac{(\sum_i x_i \, dx_i)^2}{x_0^2} + \sum_{i=1}^n dx_i^2 ,
+(g_{\mathcal{L}})_{ij} = \delta_{ij} - \frac{\partial x_0}{\partial x_i} \frac{\partial x_0}{\partial x_j}
 \]
-es decir, en componentes
-$(g_{\mathcal{L}})_{ij} = \delta_{ij} - \frac{x_i x_j}{x_0^2}$. El pullback de la
-m\'etrica de Poincar\'e es
+Calculemos directamente. El producto de Lorentz inducido da:
 \[
-(\pi^* g_{\mathbb{D}})_{ij} = \frac{4}{(1-\norm{\mathbf{y}}^2)^2}
-\sum_{k=1}^n \frac{\partial y_k}{\partial x_i} \frac{\partial y_k}{\partial x_j} .
+g_{\mathcal{L}} = -dx_0^2 + \sum_{i=1}^n dx_i^2 = -\frac{(\sum_i x_i \, dx_i)^2}{x_0^2} + \sum_{i=1}^n dx_i^2
 \]
-Usando~\eqref{eq:app:conformal-factor-key}, el factor conforme es
-$\frac{4}{(1-\norm{\mathbf{y}}^2)^2} = (1+x_0)^2$.
-De~\eqref{eq:app:differential-pi},
+En componentes: $(g_{\mathcal{L}})_{ij} = \delta_{ij} - \frac{x_i x_j}{x_0^2}$.
+
+El pullback de la métrica de Poincaré es:
 \[
-\frac{\partial y_k}{\partial x_i} = \frac{\delta_{ki}}{1+x_0}
-- \frac{x_k x_i}{x_0(1+x_0)^2} ,
+(\pi^* g_{\mathbb{D}})_{ij} = \frac{4}{(1-\|\mathbf{y}\|^2)^2} \sum_{k=1}^n \frac{\partial y_k}{\partial x_i} \frac{\partial y_k}{\partial x_j}
 \]
-de modo que
+Usando~\eqref{eq:factor_conforme_clave}, el factor conforme es $\frac{4}{(1-\|\mathbf{y}\|^2)^2} = (1+x_0)^2$. Calculamos $\sum_k \frac{\partial y_k}{\partial x_i}\frac{\partial y_k}{\partial x_j}$ a partir de~\eqref{eq:diferencial_pi}:
 \begin{align*}
-\sum_{k} \frac{\partial y_k}{\partial x_i}\frac{\partial y_k}{\partial x_j}
-&= \frac{\delta_{ij}}{(1+x_0)^2}
-- \frac{2 x_i x_j}{x_0(1+x_0)^3}
-+ \frac{x_i x_j (x_0^2 - 1)}{x_0^2(1+x_0)^4} \\
-&= \frac{\delta_{ij}}{(1+x_0)^2}
-- \frac{2 x_i x_j}{x_0(1+x_0)^3}
-+ \frac{x_i x_j (x_0 - 1)}{x_0^2(1+x_0)^3} \\
-&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i x_j}{x_0^2(1+x_0)^2} ,
+\frac{\partial y_k}{\partial x_i} &= \frac{\delta_{ki}}{1+x_0} - \frac{x_k x_i}{x_0(1+x_0)^2}
 \end{align*}
-donde en el \'ultimo paso se utiliza
+Entonces:
+\begin{align*}
+\sum_{k} \frac{\partial y_k}{\partial x_i}\frac{\partial y_k}{\partial x_j} &= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i \sum_k x_k \delta_{kj}}{x_0(1+x_0)^3} - \frac{x_j \sum_k x_k \delta_{ki}}{x_0(1+x_0)^3} + \frac{x_i x_j \|\mathbf{x}\|^2}{x_0^2(1+x_0)^4} \\
+&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{2 x_i x_j}{x_0(1+x_0)^3} + \frac{x_i x_j (x_0^2 - 1)}{x_0^2(1+x_0)^4} \\
+&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{2 x_i x_j}{x_0(1+x_0)^3} + \frac{x_i x_j (x_0 - 1)}{x_0^2(1+x_0)^3} \\
+&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i x_j}{x_0^2(1+x_0)^2}
+\end{align*}
+donde en el último paso se ha utilizado:
 \[
--\frac{2}{x_0(1+x_0)} + \frac{x_0-1}{x_0^2(1+x_0)}
-= \frac{-2x_0 + x_0 - 1}{x_0^2(1+x_0)}
-= \frac{-(x_0+1)}{x_0^2(1+x_0)} = \frac{-1}{x_0^2} .
+-\frac{2}{x_0(1+x_0)} + \frac{x_0-1}{x_0^2(1+x_0)} = \frac{-2x_0 + x_0 - 1}{x_0^2(1+x_0)} = \frac{-(x_0+1)}{x_0^2(1+x_0)} = \frac{-1}{x_0^2}
 \]
-Multiplicando por $(1+x_0)^2$,
+Multiplicando por $(1+x_0)^2$:
 \[
-(\pi^* g_{\mathbb{D}})_{ij} = (1+x_0)^2 \left(\frac{\delta_{ij}}{(1+x_0)^2}
-- \frac{x_i x_j}{x_0^2(1+x_0)^2}\right)
-= \delta_{ij} - \frac{x_i x_j}{x_0^2} = (g_{\mathcal{L}})_{ij} .
+(\pi^* g_{\mathbb{D}})_{ij} = (1+x_0)^2 \left(\frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i x_j}{x_0^2(1+x_0)^2}\right) = \delta_{ij} - \frac{x_i x_j}{x_0^2} = (g_{\mathcal{L}})_{ij}
 \]
-Esto demuestra que $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$, es decir, $\pi$ es una
-isometr\'ia.
+Esto demuestra que $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$, es decir, $\pi$ es una isometría.
 \end{proof}
 
-\subsection{Del disco de Poincar\'e al semiplano superior}
-\label{subsec:app:poincare-halfplane}
+%-----------------------------------------------------------------------
+\subsection{Del disco de Poincaré al semiplano superior}\label{subsec:isometria_poincare_semiplano}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Isometr\'ia disco de Poincar\'e--semiplano superior]
-\label{thm:app:poincare-halfplane}
-En dimensi\'on $n = 2$, la transformada de Cayley
-\begin{equation}
-\label{eq:app:cayley-transform}
-C \colon \mathbb{D}^2 \to \mathbb{H}^2 , \qquad C(w) = i\,\frac{1+w}{1-w} ,
+\begin{theorem}[Isometría disco de Poincaré--semiplano superior]\label{thm:isometria_poincare_semiplano}
+En dimensión $n = 2$, la transformada de Cayley:
+\begin{equation}\label{eq:transformada_cayley}
+C: \mathbb{D}^2 \to \mathbb{H}^2, \qquad C(w) = i\,\frac{1+w}{1-w}
 \end{equation}
-es una isometr\'ia riemanniana del disco de Poincar\'e
-$(\mathbb{D}^2, g_{\mathbb{D}})$ al semiplano superior
-$(\mathbb{H}^2, g_{\mathbb{H}})$, donde
-$g_{\mathbb{H}} = \frac{dx^2 + dy^2}{y^2}$. Su inversa es
-\begin{equation}
-\label{eq:app:cayley-inverse}
-C^{-1} \colon \mathbb{H}^2 \to \mathbb{D}^2 , \qquad C^{-1}(z) = \frac{z - i}{z + i} .
+es una isometría riemanniana del disco de Poincaré $(\mathbb{D}^2, g_{\mathbb{D}})$ al semiplano superior $(\mathbb{H}^2, g_{\mathbb{H}})$, donde $g_{\mathbb{H}} = \frac{dx^2 + dy^2}{y^2}$. Su inversa es:
+\begin{equation}\label{eq:cayley_inversa}
+C^{-1}: \mathbb{H}^2 \to \mathbb{D}^2, \qquad C^{-1}(z) = \frac{z - i}{z + i}
 \end{equation}
 \end{theorem}
 
 \begin{proof}
 Procedemos en cuatro pasos.
 
-\textbf{Paso 1: Buena definici\'on ($C(\mathbb{D}^2) \subseteq \mathbb{H}^2$).}
-Sea $w \in \mathbb{D}^2$, es decir, $\abs{w} < 1$. Debemos verificar
-$\Img(C(w)) > 0$. Un c\'alculo directo da
+\textbf{Paso 1: Buena definición ($C(\mathbb{D}^2) \subseteq \mathbb{H}^2$).}
+Sea $w \in \mathbb{D}^2$, es decir, $|w| < 1$. Necesitamos verificar que $\operatorname{Im}(C(w)) > 0$. Escribiendo $w = u + iv$:
+\begin{equation}\label{eq:parte_imaginaria_cayley}
+\operatorname{Im}(C(w)) = \operatorname{Im}\!\left(i\,\frac{1+w}{1-w}\right) = \operatorname{Re}\!\left(\frac{1+w}{1-w}\right)
+\end{equation}
+Para simplificar, calculamos directamente:
 \[
-\frac{1+w}{1-w} = \frac{(1+w)(1-\bar{w})}{\abs{1-w}^2}
-= \frac{1 - \bar{w} + w - \abs{w}^2}{\abs{1-w}^2} ,
+\frac{1+w}{1-w} = \frac{(1+w)\overline{(1-w)}}{|1-w|^2} = \frac{(1+w)(1-\bar{w})}{|1-w|^2} = \frac{1 - \bar{w} + w - |w|^2}{|1-w|^2}
 \]
-de donde
+Luego:
 \[
-\Img(C(w)) = \operatorname{Re}\!\left(\frac{1+w}{1-w}\right)
-= \frac{1 - \abs{w}^2}{\abs{1-w}^2} .
+\operatorname{Im}(C(w)) = \operatorname{Re}\!\left(\frac{1+w}{1-w}\right) = \frac{1 - |w|^2}{|1-w|^2}
 \]
-Como $\abs{w} < 1$, tenemos $1 - \abs{w}^2 > 0$ y $\abs{1-w}^2 > 0$, por lo que
-$\Img(C(w)) > 0$.
+Como $|w| < 1$, tenemos $1 - |w|^2 > 0$ y $|1-w|^2 > 0$, por lo que $\operatorname{Im}(C(w)) > 0$.
 
 \textbf{Paso 2: Biyectividad.}
-Para $C^{-1}(z) = \frac{z-i}{z+i}$ con $\Img(z) > 0$, escribiendo $z = a + bi$ con
-$b > 0$,
+Para $C^{-1}(z) = \frac{z-i}{z+i}$ con $\operatorname{Im}(z) > 0$, escribimos $z = a + bi$ con $b > 0$:
 \[
-\abs{C^{-1}(z)}^2 = \frac{\abs{z-i}^2}{\abs{z+i}^2}
-= \frac{a^2 + (b-1)^2}{a^2 + (b+1)^2}
-= \frac{a^2 + b^2 - 2b + 1}{a^2 + b^2 + 2b + 1} < 1 ,
+|C^{-1}(z)|^2 = \frac{|z-i|^2}{|z+i|^2} = \frac{a^2 + (b-1)^2}{a^2 + (b+1)^2} = \frac{a^2 + b^2 - 2b + 1}{a^2 + b^2 + 2b + 1} < 1
 \]
-ya que $-2b < 2b$ cuando $b > 0$. Luego $C^{-1}(z) \in \mathbb{D}^2$. Las
-composiciones $C \circ C^{-1} = \mathrm{id}$ y $C^{-1} \circ C = \mathrm{id}$ se
-verifican por c\'alculo directo.
+ya que $-2b < 2b$ cuando $b > 0$. Luego $C^{-1}(z) \in \mathbb{D}^2$. Las composiciones $C \circ C^{-1} = \mathrm{id}$ y $C^{-1} \circ C = \mathrm{id}$ se verifican por cálculo directo.
 
 \textbf{Paso 3: Diferencial.}
-La derivada compleja de $C$ es
-\begin{equation}
-\label{eq:app:cayley-derivative}
-C'(w) = i \cdot \frac{(1-w) - (1+w)(-1)}{(1-w)^2} = \frac{2i}{(1-w)^2} .
+La derivada compleja de $C$ es:
+\begin{equation}\label{eq:derivada_cayley}
+C'(w) = i \cdot \frac{(1-w) - (1+w)(-1)}{(1-w)^2} = \frac{2i}{(1-w)^2}
 \end{equation}
 
-\textbf{Paso 4: Verificaci\'on de la isometr\'ia.}
-Para una aplicaci\'on holomorfa $C$ entre superficies con m\'etricas conformes, el
-pullback se calcula mediante
+\textbf{Paso 4: Verificación de la isometría.}
+Para una transformación holomorfa $C$ entre superficies con métricas conformes, el pullback se calcula mediante:
 \[
-(C^* g_{\mathbb{H}})_w = \frac{\abs{C'(w)}^2}{(\Img C(w))^2} \cdot (du^2 + dv^2) ,
+(C^* g_{\mathbb{H}})_w = \frac{|C'(w)|^2}{(\operatorname{Im}\, C(w))^2} \cdot (du^2 + dv^2)
 \]
-donde $w = u + iv$. Sustituyendo los resultados de los pasos anteriores,
+donde $w = u + iv$. Sustituyendo los resultados de los pasos anteriores:
 \[
-\frac{\abs{C'(w)}^2}{(\Img C(w))^2}
-= \frac{4/\abs{1-w}^4}{(1-\abs{w}^2)^2/\abs{1-w}^4}
-= \frac{4}{(1-\abs{w}^2)^2} ,
+\frac{|C'(w)|^2}{(\operatorname{Im}\, C(w))^2} = \frac{4/|1-w|^4}{(1-|w|^2)^2/|1-w|^4} = \frac{4}{(1-|w|^2)^2}
 \]
-que es exactamente el factor conforme de la m\'etrica de Poincar\'e
-$g_{\mathbb{D}} = \frac{4}{(1-\abs{w}^2)^2}(du^2 + dv^2)$. Por tanto
-$C^* g_{\mathbb{H}} = g_{\mathbb{D}}$.
+que es exactamente el factor conforme de la métrica de Poincaré $g_{\mathbb{D}} = \frac{4}{(1-|w|^2)^2}(du^2 + dv^2)$. Por tanto $C^* g_{\mathbb{H}} = g_{\mathbb{D}}$.
 \end{proof}
 
-\subsection{Equivalencia de los tres modelos}
-\label{subsec:app:three-models}
+%-----------------------------------------------------------------------
+\subsection{Equivalencia de los tres modelos}\label{subsec:equivalencia_modelos}
+%-----------------------------------------------------------------------
 
-\begin{corollary}[Equivalencia de los tres modelos hiperb\'olicos]
-\label{cor:app:hyperbolic-equivalence}
-Los tres modelos del espacio hiperb\'olico (hiperboloide, disco de Poincar\'e y
-semiplano superior) son riemannianamente isom\'etricos. En particular, la
-composici\'on $C \circ \pi$ proporciona una isometr\'ia expl\'icita del modelo del
-hiperboloide al semiplano superior.
+\begin{corollary}[Equivalencia de los tres modelos hiperbólicos]\label{cor:equivalencia_modelos_hiperbolicos}
+Los tres modelos del espacio hiperbólico (hiperboloide, disco de Poincaré y semiplano superior) son riemannianamente isométricos. En particular, la composición $C \circ \pi$ proporciona una isometría explícita del modelo del hiperboloide al semiplano superior.
 \end{corollary}
 
 \begin{proof}
-Composici\'on de las isometr\'ias de los
-\Cref{thm:app:hyperboloid-poincare,thm:app:poincare-halfplane}: como la
-composici\'on de isometr\'ias es una isometr\'ia,
-$C \circ \pi \colon (\mathbb{H}^n, g_{\mathcal{L}}) \to
-(\mathbb{D}^n, g_{\mathbb{D}}) \to (\mathbb{H}^2, g_{\mathbb{H}})$ es una
-isometr\'ia (en dimensi\'on $n = 2$ para el semiplano).
+Composición de los Teoremas~\ref{thm:isometria_hiperboloide_poincare} y~\ref{thm:isometria_poincare_semiplano}: como composición de isometrías es isometría, $C \circ \pi: (\mathbb{H}^n, g_{\mathcal{L}}) \to (\mathbb{D}^n, g_{\mathbb{D}}) \to (\mathbb{H}^2, g_{\mathbb{H}})$ es una isometría (en dimensión $n = 2$ para el semiplano).
 \end{proof}
 
-\begin{remark}[Implicaciones para el aprendizaje profundo geom\'etrico]
-\label{rem:app:models-gdl}
-La equivalencia isom\'etrica de los tres modelos justifica tratar la elecci\'on
-del modelo en aplicaciones de GDL como una cuesti\'on de conveniencia
-computacional:
+\begin{remark}[Implicaciones para Geometric Deep Learning]\label{rem:modelos_gdl}
+La equivalencia isométrica de los tres modelos justifica que la elección del modelo en aplicaciones de GDL sea cuestión de conveniencia computacional:
 \begin{itemize}
-    \item El \textbf{disco de Poincar\'e} $\mathbb{D}^n$ es preferido para la
-          optimizaci\'on por gradiente, ya que los mapas exponencial y
-          logar\'itmico admiten expresiones en forma cerrada~\citep{nickel2017poincare}.
-    \item El \textbf{modelo del hiperboloide} ofrece mayor estabilidad
-          num\'erica, puesto que el factor conforme
-          $\frac{4}{(1-\norm{\mathbf{x}}^2)^2}$ del disco de Poincar\'e diverge
-          cuando $\norm{\mathbf{x}} \to 1$ (cerca del borde del disco), mientras
-          que la m\'etrica de Lorentz inducida no presenta esta singularidad.
-    \item La transformaci\'on $\pi$ del \Cref{thm:app:hyperboloid-poincare} es
-          precisamente el mapeo utilizado en la pr\'actica para convertir entre
-          representaciones.
+    \item El \textbf{disco de Poincaré} $\mathbb{D}^n$ es preferido para optimización por gradiente, ya que los mapas exponencial y logarítmico admiten expresiones en forma cerrada \citep{nickel2017poincare}.
+    \item El \textbf{modelo del hiperboloide} ofrece mayor estabilidad numérica, puesto que el factor conforme $\frac{4}{(1-\|\mathbf{x}\|^2)^2}$ del disco de Poincaré diverge cuando $\|\mathbf{x}\| \to 1$ (cerca del borde del disco), mientras que la métrica de Lorentz inducida no presenta esta singularidad.
+    \item La transformación $\pi$ del \autoref{thm:isometria_hiperboloide_poincare} es precisamente el mapeo utilizado en la práctica para convertir entre representaciones (\autoref{def:modelo_poincare}).
 \end{itemize}
 \end{remark}
 
 %=======================================================================
-\section{Curvatura Seccional de los Espacios Modelo}
-\label{sec:app:model-curvature}
+\section{Curvatura Seccional de los Espacios Modelo}\label{sec:curvatura_espacios_modelo}
 %=======================================================================
 
-La esfera $S^n$ tiene curvatura seccional constante $+1$ y el espacio
-hiperb\'olico $\mathbb{H}^n$ tiene curvatura seccional constante $-1$. Demostramos
-ambos resultados aplicando la definici\'on de curvatura seccional a las m\'etricas
-expl\'icitas de estos espacios.
+En los capítulos principales se afirma que la esfera $S^n$ tiene curvatura seccional constante $+1$ y que el espacio hiperbólico $\mathbb{H}^n$ tiene curvatura seccional constante $-1$. En esta sección demostramos ambos resultados aplicando la definición de curvatura seccional (\autoref{def:curvatura_seccional}) a las métricas explícitas de estos espacios.
 
-\subsection{Preliminares}
-\label{subsec:app:model-curvature-prelim}
+\subsection{Preliminares}\label{subsec:curvatura_espacios_preliminares}
 
-\begin{lemma}[Ecuaci\'on de Gauss para hipersuperficies]
-\label{lem:app:gauss-equation}
-Sea $M^n \subset \R^{n+1}$ una hipersuperficie orientada con normal unitaria
-$\nu$, y sea $S_p \colon T_pM \to T_pM$ el \emph{operador de forma} (o de
-Weingarten) $S_p(v) = -d\nu_p(v)$. La segunda forma fundamental es
-$\II(u, v) = \inner{S_p(u)}{v}$. Si $u, v \in T_pM$ son ortonormales, entonces la
-curvatura seccional de $M$ en el plano generado por $\{u, v\}$ satisface
-\begin{equation}
-\label{eq:app:gauss-equation}
-K_M(u,v) = K_{\R^{n+1}}(u,v) + \II(u,u)\,\II(v,v) - \II(u,v)^2 .
+\begin{lemma}[Ecuación de Gauss para hipersuperficies]\label{lem:ecuacion_gauss}
+Sea $M^n \subset \mathbb{R}^{n+1}$ una hipersuperficie orientada con vector normal unitario $\nu$, y sea $S_p: T_pM \to T_pM$ el \textit{operador de forma} (o de Weingarten) definido por $S_p(v) = -d\nu_p(v)$. La segunda forma fundamental es $\mathrm{II}(u, v) = \langle S_p(u), v \rangle$. Si $u, v \in T_pM$ son ortonormales, entonces la curvatura seccional de $M$ en el plano generado por $\{u, v\}$ satisface:
+\begin{equation}\label{eq:ecuacion_gauss}
+K_M(u,v) = K_{\mathbb{R}^{n+1}}(u,v) + \mathrm{II}(u,u)\,\mathrm{II}(v,v) - \mathrm{II}(u,v)^2
 \end{equation}
-Como $\R^{n+1}$ es plano ($K_{\R^{n+1}} \equiv 0$), se reduce a
-\begin{equation}
-\label{eq:app:gauss-simplified}
-K_M(u,v) = \II(u,u)\,\II(v,v) - \II(u,v)^2 .
+Como $\mathbb{R}^{n+1}$ es plano ($K_{\mathbb{R}^{n+1}} \equiv 0$), se reduce a:
+\begin{equation}\label{eq:gauss_simplificada}
+K_M(u,v) = \mathrm{II}(u,u)\,\mathrm{II}(v,v) - \mathrm{II}(u,v)^2
 \end{equation}
 \end{lemma}
 
-La demostraci\'on puede encontrarse en \citet[Teorema~8.4]{lee2018introduction} o
-en \citet[Cap\'itulo~3, Proposici\'on~4]{do1976differential}.
+La demostración puede encontrarse en \citet[Teorema~8.4]{lee2018introduction} o en \citet[Capítulo~3, Proposición~4]{do1976differential}.
 
-\begin{lemma}[Curvatura de m\'etricas conformes en dimensi\'on 2]
-\label{lem:app:conformal-curvature-2d}
-Sea $g = \lambda(x,y)^2(dx^2 + dy^2)$ una m\'etrica conforme en un dominio de
-$\R^2$, donde $\lambda > 0$ es suave. Entonces la curvatura gaussiana de
-$(\R^2, g)$ es
-\begin{equation}
-\label{eq:app:conformal-curvature}
-K = -\frac{\Delta(\ln \lambda)}{\lambda^2} ,
+\begin{lemma}[Curvatura de métricas conformes en dimensión 2]\label{lem:curvatura_conforme_2d}
+Sea $g = \lambda(x,y)^2(dx^2 + dy^2)$ una métrica conforme en un dominio de $\mathbb{R}^2$, donde $\lambda > 0$ es una función suave. Entonces la curvatura gaussiana de $(\mathbb{R}^2, g)$ es:
+\begin{equation}\label{eq:curvatura_conforme}
+K = -\frac{\Delta(\ln \lambda)}{\lambda^2}
 \end{equation}
 donde $\Delta = \partial_{xx} + \partial_{yy}$ es el laplaciano euclidiano.
 \end{lemma}
 
 \begin{proof}
-Para la m\'etrica $g_{ij} = \lambda^2 \delta_{ij}$, los s\'imbolos de Christoffel
-son
+Para la métrica $g_{ij} = \lambda^2 \delta_{ij}$, los símbolos de Christoffel son:
 \[
-\Gamma^k_{ij} = (\partial_i \ln\lambda)\,\delta_{jk}
-+ (\partial_j \ln\lambda)\,\delta_{ik} - (\partial_k \ln\lambda)\,\delta_{ij} .
+\Gamma^k_{ij} = (\partial_i \ln\lambda)\,\delta_{jk} + (\partial_j \ln\lambda)\,\delta_{ik} - (\partial_k \ln\lambda)\,\delta_{ij}
 \]
-Sustituyendo en la expresi\'on del tensor de Riemann $R^l{}_{ijk}$ y contrayendo
-para obtener la curvatura gaussiana $K = R^1{}_{212}/\lambda^2$, un c\'alculo
-directo da~\eqref{eq:app:conformal-curvature}. Los detalles pueden consultarse en
-\citet[Proposici\'on~8.32]{lee2018introduction}.
+Sustituyendo en la expresión del tensor de Riemann $R^l{}_{ijk}$ y contrayendo para obtener la curvatura gaussiana $K = R^1{}_{212}/\lambda^2$, un cálculo directo da~\eqref{eq:curvatura_conforme}. Los detalles pueden consultarse en \citet[Proposición~8.32]{lee2018introduction}.
 \end{proof}
 
-\subsection{Curvatura de la esfera \texorpdfstring{$S^n$}{Sn}}
-\label{subsec:app:sphere-curvature}
+%-----------------------------------------------------------------------
+\subsection{Curvatura de la esfera \texorpdfstring{$S^n$}{Sn}}\label{subsec:curvatura_esfera}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Curvatura seccional de la esfera]
-\label{thm:app:sphere-curvature}
-La esfera unitaria $S^n \subset \R^{n+1}$ con la m\'etrica riemanniana inducida
-por la m\'etrica euclidiana ambiente tiene curvatura seccional constante
-$K = +1$.
+\begin{theorem}[Curvatura seccional de la esfera]\label{thm:curvatura_esfera}
+La esfera unitaria $S^n \subset \mathbb{R}^{n+1}$ con la métrica riemanniana inducida por la métrica euclidiana ambiente tiene curvatura seccional constante $K = +1$.
 \end{theorem}
 
 \begin{proof}
-Consideramos $S^n = \{p \in \R^{n+1} : \norm{p} = 1\}$ con la m\'etrica inducida
-por $\R^{n+1}$.
+Consideramos $S^n = \{p \in \mathbb{R}^{n+1} : \|p\| = 1\}$ con la métrica inducida por $\mathbb{R}^{n+1}$.
 
 \textbf{Paso 1: Normal unitaria.}
 El campo normal unitario exterior es $\nu(p) = p$ para todo $p \in S^n$.
 
 \textbf{Paso 2: Operador de forma.}
-Para $v \in T_pS^n$, consideramos la curva
-$\gamma(t) = \frac{p + tv}{\norm{p + tv}}$ en $S^n$ con $\gamma(0) = p$ y
-$\gamma'(0) = v$ (pues $\inner{p}{v} = 0$). Entonces
-$\nu(\gamma(t)) = \gamma(t) = \frac{p + tv}{\norm{p + tv}}$, y derivando en
-$t = 0$,
+Para $v \in T_pS^n$, consideramos la curva $\gamma(t) = \frac{p + tv}{\|p + tv\|}$ en $S^n$ con $\gamma(0) = p$ y $\gamma'(0) = v$ (pues $\langle p, v \rangle = 0$). Entonces:
 \[
-d\nu_p(v) = \frac{d}{dt}\bigg|_{t=0} \frac{p + tv}{\norm{p + tv}} = v ,
+\nu(\gamma(t)) = \gamma(t) = \frac{p + tv}{\|p + tv\|}
 \]
-ya que $\norm{p + tv}^2 = 1 + t^2\norm{v}^2$ implica
-$\frac{d}{dt}\norm{p+tv}\big|_{t=0} = 0$. Por tanto, el operador de forma es
-$S_p = -d\nu_p = -\operatorname{Id}_{T_pS^n}$.
+Derivando en $t = 0$:
+\[
+d\nu_p(v) = \frac{d}{dt}\bigg|_{t=0} \frac{p + tv}{\|p + tv\|} = v
+\]
+ya que $\|p + tv\|^2 = 1 + t^2\|v\|^2$ implica $\frac{d}{dt}\|p+tv\|\big|_{t=0} = 0$. Por tanto, el operador de forma es $S_p = -d\nu_p = -\operatorname{Id}_{T_pS^n}$.
 
 \textbf{Paso 3: Segunda forma fundamental.}
-Para $u, v \in T_pS^n$ ortonormales,
+Para $u, v \in T_pS^n$ ortonormales:
 \[
-\II(u,u) = \inner{S_p(u)}{u} = \inner{-u}{u} = -1 , \quad
-\II(v,v) = -1 , \quad \II(u,v) = \inner{-u}{v} = 0 .
+\mathrm{II}(u,u) = \langle S_p(u), u \rangle = \langle -u, u \rangle = -1, \qquad \mathrm{II}(v,v) = -1, \qquad \mathrm{II}(u,v) = \langle -u, v \rangle = 0
 \]
 
-\textbf{Paso 4: Ecuaci\'on de Gauss.}
-Aplicando el \Cref{lem:app:gauss-equation},
+\textbf{Paso 4: Ecuación de Gauss.}
+Aplicando el \autoref{lem:ecuacion_gauss}:
 \[
-K(u,v) = (-1)(-1) - 0^2 = 1 .
+K(u,v) = (-1)(-1) - 0^2 = 1
 \]
-Como la elecci\'on de $p \in S^n$ y del $2$-plano $\{u,v\}$ es arbitraria,
-$K \equiv +1$.
+Como la elección de $p \in S^n$ y del 2-plano $\{u,v\}$ es arbitraria, $K \equiv +1$.
 \end{proof}
 
-\subsection{Curvatura del espacio hiperb\'olico \texorpdfstring{$\mathbb{H}^n$}{Hn}}
-\label{subsec:app:hyperbolic-curvature}
+%-----------------------------------------------------------------------
+\subsection{Curvatura del espacio hiperbólico \texorpdfstring{$\mathbb{H}^n$}{Hn}}\label{subsec:curvatura_hiperbolico}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Curvatura seccional del espacio hiperb\'olico]
-\label{thm:app:hyperbolic-curvature}
-El disco de Poincar\'e $(\mathbb{D}^n, g_{\mathbb{D}})$ con la m\'etrica
-$g_{\mathbb{D}} = \frac{4}{(1-\norm{\mathbf{x}}^2)^2}\delta_{ij}$ tiene curvatura
-seccional constante $K = -1$.
+\begin{theorem}[Curvatura seccional del espacio hiperbólico]\label{thm:curvatura_hiperbolico}
+El disco de Poincaré $(\mathbb{D}^n, g_{\mathbb{D}})$ con la métrica $g_{\mathbb{D}} = \frac{4}{(1-\|\mathbf{x}\|^2)^2}\delta_{ij}$ tiene curvatura seccional constante $K = -1$.
 \end{theorem}
 
 \begin{proof}
-Procedemos en dos partes: primero un c\'alculo expl\'icito de la curvatura en
-dimensi\'on $2$, luego una extensi\'on a dimensi\'on arbitraria.
+Procedemos en dos partes: primero calculamos explícitamente la curvatura en dimensión 2 y luego extendemos el resultado a dimensión arbitraria.
 
-\textbf{Parte 1: Dimensi\'on 2 (c\'alculo expl\'icito).}
-En $\mathbb{D}^2$ la m\'etrica es conforme con factor
-$\lambda(x,y) = \frac{2}{1 - r^2}$, donde $r^2 = x^2 + y^2$. Calculamos
-$\ln\lambda = \ln 2 - \ln(1 - r^2)$ y
+\textbf{Parte 1: Dimensión 2 (cálculo explícito).}
+En $\mathbb{D}^2$, la métrica es conforme con factor $\lambda(x,y) = \frac{2}{1 - r^2}$, donde $r^2 = x^2 + y^2$. Calculamos:
 \[
-\partial_x(\ln\lambda) = \frac{2x}{1 - r^2} , \qquad
-\partial_{xx}(\ln\lambda) = \frac{2(1-r^2) + 4x^2}{(1-r^2)^2} .
+\ln\lambda = \ln 2 - \ln(1 - r^2)
 \]
-Por simetr\'ia, $\partial_{yy}(\ln\lambda) = \frac{2(1-r^2) + 4y^2}{(1-r^2)^2}$.
-Sumando,
+Derivando respecto a $x$:
 \[
-\Delta(\ln\lambda) = \frac{4(1-r^2) + 4r^2}{(1-r^2)^2} = \frac{4}{(1-r^2)^2} .
+\partial_x(\ln\lambda) = \frac{2x}{1 - r^2}
 \]
-Aplicando el \Cref{lem:app:conformal-curvature-2d},
 \[
-K = -\frac{\Delta(\ln\lambda)}{\lambda^2}
-= -\frac{4/(1-r^2)^2}{4/(1-r^2)^2} = -1 .
+\partial_{xx}(\ln\lambda) = \frac{2(1-r^2) + 4x^2}{(1-r^2)^2}
+\]
+Por simetría, $\partial_{yy}(\ln\lambda) = \frac{2(1-r^2) + 4y^2}{(1-r^2)^2}$. Sumando:
+\[
+\Delta(\ln\lambda) = \frac{4(1-r^2) + 4r^2}{(1-r^2)^2} = \frac{4}{(1-r^2)^2}
+\]
+Aplicando el \autoref{lem:curvatura_conforme_2d}:
+\[
+K = -\frac{\Delta(\ln\lambda)}{\lambda^2} = -\frac{4/(1-r^2)^2}{4/(1-r^2)^2} = -1
 \]
 
-\textbf{Parte 2: Extensi\'on a dimensi\'on $n$ (argumento de simetr\'ia).}
-La m\'etrica $g_{\mathbb{D}}$ es invariante bajo la acci\'on de $\Orth(n)$ por
-rotaciones de $\mathbf{x}$ (pues $g_{\mathbb{D}}$ depende solo de
-$\norm{\mathbf{x}}$). En cualquier punto $p \in \mathbb{D}^n$, el estabilizador de
-$p$ bajo esta acci\'on act\'ua transitivamente sobre los $2$-planos de
-$T_p\mathbb{D}^n$ que contienen la direcci\'on radial, y por composici\'on con
-rotaciones, sobre todos los $2$-planos. Esto implica que todas las curvaturas
-seccionales en $p$ son iguales.
+\textbf{Parte 2: Extensión a dimensión $n$ (argumento de simetría).}
+La métrica $g_{\mathbb{D}}$ es invariante bajo la acción de $O(n)$ por rotaciones de $\mathbf{x}$ (pues $g_{\mathbb{D}}$ depende solo de $\|\mathbf{x}\|$). En cualquier punto $p \in \mathbb{D}^n$, el estabilizador de $p$ bajo esta acción actúa transitivamente sobre los 2-planos de $T_p\mathbb{D}^n$ que contienen la dirección radial, y por composición con rotaciones, sobre todos los 2-planos. Esto implica que todas las curvaturas seccionales en $p$ son iguales.
 
-El subespacio $\Pi = \{x \in \mathbb{D}^n : x_3 = \cdots = x_n = 0\}$ es una
-subvariedad totalmente geod\'esica isom\'etrica a $(\mathbb{D}^2, g_{\mathbb{D}^2})$:
-la reflexi\'on $\sigma \colon x_i \mapsto -x_i$ para $i \geq 3$ es una isometr\'ia
-de $(\mathbb{D}^n, g_{\mathbb{D}})$ cuyo conjunto de puntos fijos es $\Pi$, y el
-conjunto de puntos fijos de una isometr\'ia es totalmente geod\'esico
-\citep[Proposici\'on~5.21]{lee2018introduction}. Por la Parte~1, la curvatura
-seccional en $\Pi$ es $-1$, luego $K = -1$ para todos los $2$-planos en cada punto
-de $\Pi$.
+El subespacio $\Pi = \{x \in \mathbb{D}^n : x_3 = \cdots = x_n = 0\}$ es una subvariedad totalmente geodésica isométrica a $(\mathbb{D}^2, g_{\mathbb{D}^2})$: la reflexión $\sigma: x_i \mapsto -x_i$ para $i \geq 3$ es una isometría de $(\mathbb{D}^n, g_{\mathbb{D}})$ cuyo conjunto de puntos fijos es $\Pi$, y el conjunto de puntos fijos de una isometría es totalmente geodésico \citep[Proposición~5.21]{lee2018introduction}. Por la Parte~1, la curvatura seccional en $\Pi$ es $-1$, luego $K = -1$ para todos los 2-planos en cada punto de $\Pi$.
 
-Finalmente, la m\'etrica de Poincar\'e es homog\'enea: las transformaciones de
-M\"obius proporcionan isometr\'ias que llevan cualquier punto de $\mathbb{D}^n$ a
-cualquier otro \citep{nickel2017poincare}. Por tanto, $K = -1$ en todo
-$\mathbb{D}^n$.
+Finalmente, la métrica de Poincaré es homogénea: las transformaciones de Möbius proporcionan isometrías que llevan cualquier punto de $\mathbb{D}^n$ a cualquier otro \citep{nickel2017poincare}. Por tanto, $K = -1$ en todo $\mathbb{D}^n$.
 \end{proof}
 
-\begin{corollary}
-\label{cor:app:hyperbolic-models-curvature}
-Por los \Cref{thm:app:hyperboloid-poincare,thm:app:poincare-halfplane}, el modelo
-del hiperboloide $(\mathbb{H}^n, g_{\mathcal{L}})$ y el semiplano superior
-$(\mathbb{H}^2, g_{\mathbb{H}})$ tambi\'en tienen curvatura seccional constante
-$K = -1$.
+\begin{corollary}\label{cor:curvatura_modelos_hiperbolicos}
+Por los Teoremas~\ref{thm:isometria_hiperboloide_poincare} y~\ref{thm:isometria_poincare_semiplano}, los modelos del hiperboloide $(\mathbb{H}^n, g_{\mathcal{L}})$ y del semiplano superior $(\mathbb{H}^2, g_{\mathbb{H}})$ también tienen curvatura seccional constante $K = -1$.
 \end{corollary}
 
 \begin{proof}
-Las isometr\'ias preservan la curvatura seccional: si
-$F \colon (M, g) \to (N, h)$ es una isometr\'ia riemanniana, entonces
-$K_M(\sigma) = K_N(dF(\sigma))$ para todo $2$-plano $\sigma \subset T_pM$. El
-resultado se sigue del \Cref{thm:app:hyperbolic-curvature} y de las isometr\'ias
-expl\'icitas de la \Cref{sec:app:hyperbolic-isometries}.
+Las isometrías preservan la curvatura seccional: si $F: (M, g) \to (N, h)$ es una isometría riemanniana, entonces $K_M(\sigma) = K_N(dF(\sigma))$ para todo 2-plano $\sigma \subset T_pM$. El resultado sigue del \autoref{thm:curvatura_hiperbolico} y las isometrías explícitas del Apéndice~\ref{sec:isometrias_hiperbolico}.
 \end{proof}
 
 %=======================================================================
-\section{El Teorema de Lagrange}
-\label{sec:app:lagrange}
+\section{Teorema de Lagrange}\label{sec:lagrange}
 %=======================================================================
 
-El teorema de Lagrange es un resultado fundamental de la teor\'ia de grupos
-finitos que relaciona el orden de un grupo con los \'ordenes de sus subgrupos.
-Aunque su demostraci\'on es elemental, incluimos los detalles por completitud.
+El teorema de Lagrange es un resultado fundamental de la teoría de grupos finitos que relaciona el orden de un grupo con el orden de sus subgrupos. Aunque su demostración es elemental, incluimos los detalles por completitud.
 
-\begin{theorem}[Lagrange]
-\label{thm:app:lagrange}
-Sea $\group$ un grupo finito y $H \leq \group$ un subgrupo. Entonces $\abs{H}$
-divide a $\abs{\group}$, y
+\begin{theorem}[Lagrange]\label{thm:lagrange}
+Sea $G$ un grupo finito y $H \leq G$ un subgrupo. Entonces $|H|$ divide a $|G|$, y se cumple:
 \begin{equation}
-\label{eq:app:lagrange}
-\abs{\group} = \abs{H} \cdot [\group:H] ,
+|G| = |H| \cdot [G:H]
 \end{equation}
-donde $[\group:H]$ denota el \'indice de $H$ en $\group$ (el n\'umero de clases
-laterales izquierdas de $H$ en $\group$).
+donde $[G:H]$ denota el índice de $H$ en $G$ (número de clases laterales izquierdas de $H$ en $G$).
 \end{theorem}
 
 \begin{proof}
-Definimos una relaci\'on de equivalencia en $\group$ por $a \sim b$ si y solo si
-$a^{-1}b \in H$. Las clases de equivalencia son las clases laterales izquierdas
-$g H = \{gh : h \in H\}$ para $g \in \group$.
+Definimos la relación de equivalencia en $G$: $a \sim b$ si y solo si $a^{-1}b \in H$. Las clases de equivalencia son las clases laterales izquierdas $gH = \{gh : h \in H\}$ para $g \in G$.
 
-\textbf{Paso 1.} Cada clase lateral tiene exactamente $\abs{H}$ elementos. En
-efecto, la aplicaci\'on $\varphi_g \colon H \to gH$ dada por $\varphi_g(h) = gh$
-es biyectiva: sobreyectiva por construcci\'on, e inyectiva porque $gh_1 = gh_2$
-implica $h_1 = h_2$ por la ley de cancelaci\'on.
+\textbf{Paso 1:} Cada clase lateral tiene exactamente $|H|$ elementos. En efecto, la aplicación $\varphi_g: H \to gH$ definida por $\varphi_g(h) = gh$ es biyectiva: es sobreyectiva por construcción, e inyectiva porque $gh_1 = gh_2$ implica $h_1 = h_2$ por la ley de cancelación.
 
-\textbf{Paso 2.} Las clases laterales forman una partici\'on de $\group$. Es
-consecuencia directa de que $\sim$ es una relaci\'on de equivalencia.
+\textbf{Paso 2:} Las clases laterales forman una partición de $G$. Esto es consecuencia directa de que $\sim$ es una relación de equivalencia.
 
-\textbf{Paso 3.} Si $[\group:H]$ denota el n\'umero de clases laterales distintas,
-entonces
+\textbf{Paso 3:} Si denotamos por $[G:H]$ el número de clases laterales distintas, entonces:
 \[
-\abs{\group} = [\group:H] \cdot \abs{H} ,
+|G| = [G:H] \cdot |H|
 \]
-pues $\group$ se descompone en exactamente $[\group:H]$ conjuntos disjuntos, cada
-uno de cardinal $\abs{H}$. En particular, $\abs{H}$ divide a $\abs{\group}$.
+pues $G$ se descompone en exactamente $[G:H]$ conjuntos disjuntos, cada uno de cardinal $|H|$.
+
+En particular, $|H|$ divide a $|G|$.
 \end{proof}
 
 %=======================================================================
-\section{El Teorema de Rad\'o (Triangulabilidad de Superficies)}
-\label{sec:app:rado}
+\section{Cuaterniones y su Relación con SU(2)}\label{sec:cuaterniones}
 %=======================================================================
 
-El teorema de Rad\'o establece que toda superficie compacta admite una
-triangulaci\'on, resultado fundamental tanto para la demostraci\'on del teorema de
-Gauss--Bonnet (\Cref{thm:app:gauss-bonnet-general}) como para las aplicaciones del
-aprendizaje profundo geom\'etrico sobre mallas trianguladas.
+Los cuaterniones, descubiertos por W.\,R.\ Hamilton en 1843, constituyen la primera extensión no conmutativa de los números reales con estructura de álgebra de división. Su relación con $SU(2)$ y las rotaciones tridimensionales los convierte en una herramienta fundamental tanto en física como en redes neuronales geométricas.
 
-\subsection{Preliminares}
-\label{subsec:app:rado-prelim}
+\begin{definition}[Álgebra de cuaterniones]\label{def:cuaterniones}
+El \textit{álgebra de cuaterniones} $\mathbb{H}$ es la $\mathbb{R}$-álgebra asociativa de dimensión $4$ con base $\{1, \mathbf{i}, \mathbf{j}, \mathbf{k}\}$ y relaciones de multiplicación:
+\begin{equation}\label{eq:relaciones_cuaterniones}
+\mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1
+\end{equation}
+Un cuaternión general se escribe como $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k}$ con $a, b, c, d \in \mathbb{R}$. La parte $a = \operatorname{Re}(q)$ se denomina \textit{parte real} y $b\mathbf{i} + c\mathbf{j} + d\mathbf{k} = \operatorname{Im}(q)$ la \textit{parte imaginaria}.
+\end{definition}
 
-Recordamos que una \emph{$2$-variedad topol\'ogica} (o \emph{superficie}) es un
-espacio topol\'ogico $M$ que es Hausdorff, segundo contable, y tal que todo punto
-$p \in M$ posee un entorno homeomorfo a un abierto de $\R^2$. El siguiente
-resultado cl\'asico de topolog\'ia plana es una herramienta clave en la
-demostraci\'on.
+De las relaciones~\eqref{eq:relaciones_cuaterniones} se deducen las reglas de multiplicación de los generadores:
+\[
+\mathbf{i}\mathbf{j} = \mathbf{k}, \quad \mathbf{j}\mathbf{k} = \mathbf{i}, \quad \mathbf{k}\mathbf{i} = \mathbf{j}, \qquad \mathbf{j}\mathbf{i} = -\mathbf{k}, \quad \mathbf{k}\mathbf{j} = -\mathbf{i}, \quad \mathbf{i}\mathbf{k} = -\mathbf{j}.
+\]
+Así, la multiplicación de cuaterniones es asociativa pero \emph{no conmutativa}.
 
-\begin{theorem}[Teorema de Jordan--Schoenflies]
-\label{thm:app:jordan-schoenflies}
-Todo homeomorfismo $h \colon S^1 \to \R^2$ cuya imagen es una curva de Jordan
-$\mathcal{C}$ se extiende a un homeomorfismo
-$H \colon \overline{D}^2 \to \overline{U}$, donde $D^2$ es el disco unitario
-abierto y $U$ es la componente acotada de $\R^2 \setminus \mathcal{C}$.
-\end{theorem}
-
-Para una demostraci\'on, v\'ease \citet[Cap\'itulo~4]{moise1977geometric}.
-
-\subsection{Enunciado formal}
-\label{subsec:app:rado-statement}
-
-\begin{theorem}[Teorema de Rad\'o, 1925]
-\label{thm:app:rado}
-Toda $2$-variedad topol\'ogica compacta admite una triangulaci\'on. Es decir, si
-$M$ es una superficie compacta, existen un complejo simplicial $\mathcal{K}$ y un
-homeomorfismo $h \colon \abs{\mathcal{K}} \to M$.
-\end{theorem}
-
-\begin{remark}[Triangulabilidad en dimensiones superiores]
-\label{rem:app:triangulability-dimensions}
-La triangulabilidad de variedades depende crucialmente de la dimensi\'on:
+\begin{definition}[Conjugación y norma]\label{def:conjugacion_norma_cuaterniones}
+Para $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k} \in \mathbb{H}$, se definen:
 \begin{itemize}
-    \item \textbf{Dimensi\'on 2}: Toda superficie compacta es triangulable
-          (\Cref{thm:app:rado}).
-    \item \textbf{Dimensi\'on 3}: \citet{moise1977geometric} demostr\'o en 1952
-          que toda $3$-variedad compacta admite una triangulaci\'on, un resultado
-          considerablemente m\'as dif\'icil.
-    \item \textbf{Dimensi\'on $\geq 4$}: Existen variedades topol\'ogicas
-          compactas no triangulables. El resultado de Casson (basado en el trabajo
-          de Freedman sobre $4$-variedades) muestra que la variedad $E_8$ no
-          admite triangulaci\'on alguna.
+    \item El \textit{conjugado}: $\bar{q} = a - b\mathbf{i} - c\mathbf{j} - d\mathbf{k}$.
+    \item La \textit{norma}: $|q|^2 = q\bar{q} = \bar{q}q = a^2 + b^2 + c^2 + d^2$.
+\end{itemize}
+Para todo $q \neq 0$, el inverso multiplicativo es $q^{-1} = \bar{q}/|q|^2$.
+\end{definition}
+
+La norma es multiplicativa ($|pq| = |p||q|$), lo cual implica que $\mathbb{H}$ es un \textbf{álgebra de división}: todo elemento no nulo tiene inverso. Junto con $\mathbb{R}$ y $\mathbb{C}$, es una de las tres únicas álgebras de división asociativas sobre $\mathbb{R}$ (teorema de Frobenius).
+
+\begin{proposition}[Cuaterniones unitarios e isomorfismo con $SU(2)$]\label{prop:cuaterniones_su2}
+El conjunto de cuaterniones unitarios
+\[
+S^3 = \{q \in \mathbb{H} : |q| = 1\} = \{a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k} : a^2 + b^2 + c^2 + d^2 = 1\}
+\]
+es un grupo de Lie bajo multiplicación de cuaterniones, difeomorfo a la esfera $S^3 \subset \mathbb{R}^4$. Además, la aplicación
+\begin{equation}\label{eq:iso_cuaterniones_su2}
+\varphi: S^3 \longrightarrow SU(2), \qquad q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k} \longmapsto \begin{pmatrix} a + d\,i & -c + b\,i \\ c + b\,i & a - d\,i \end{pmatrix}
+\end{equation}
+(donde $i = \sqrt{-1} \in \mathbb{C}$) es un isomorfismo de grupos de Lie.
+\end{proposition}
+
+\begin{proof}
+\textbf{Estructura de grupo.} Como $|pq| = |p||q|$, el producto de cuaterniones unitarios es unitario. Asimismo, $|\bar{q}| = |q| = 1$ y $q^{-1} = \bar{q}$ para $|q| = 1$, de modo que $S^3$ es cerrado bajo inversos. La asociatividad se hereda de $\mathbb{H}$.
+
+\textbf{$\varphi$ está bien definida.} Para $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k}$ con $|q| = 1$, escribimos $\alpha = a + di$ y $\beta = c + bi$ (con $i \in \mathbb{C}$). Entonces $|\alpha|^2 + |\beta|^2 = a^2 + d^2 + c^2 + b^2 = 1$, y la matriz
+\[
+\varphi(q) = \begin{pmatrix} \alpha & -\bar{\beta} \\ \beta & \bar{\alpha} \end{pmatrix}
+\]
+satisface $\det(\varphi(q)) = |\alpha|^2 + |\beta|^2 = 1$, luego $\varphi(q) \in SU(2)$.
+
+\textbf{$\varphi$ es homomorfismo.} Para $q_1, q_2 \in S^3$ con $\varphi(q_\ell) = \bigl(\begin{smallmatrix} \alpha_\ell & -\bar{\beta}_\ell \\ \beta_\ell & \bar{\alpha}_\ell \end{smallmatrix}\bigr)$, se verifica por cálculo directo que las componentes del producto $\varphi(q_1)\varphi(q_2)$ coinciden con las de $\varphi(q_1 q_2)$: la correspondencia $\mathbf{i} \mapsto \bigl(\begin{smallmatrix} 0 & i \\ i & 0 \end{smallmatrix}\bigr)$, $\mathbf{j} \mapsto \bigl(\begin{smallmatrix} 0 & -1 \\ 1 & 0 \end{smallmatrix}\bigr)$, $\mathbf{k} \mapsto \bigl(\begin{smallmatrix} i & 0 \\ 0 & -i \end{smallmatrix}\bigr)$ preserva las relaciones~\eqref{eq:relaciones_cuaterniones}.
+
+\textbf{$\varphi$ es biyectiva.} La inyectividad es inmediata: si $\varphi(q_1) = \varphi(q_2)$ entonces $(a_1, b_1, c_1, d_1) = (a_2, b_2, c_2, d_2)$. Para la sobreyectividad, toda matriz $\bigl(\begin{smallmatrix} \alpha & -\bar{\beta} \\ \beta & \bar{\alpha} \end{smallmatrix}\bigr) \in SU(2)$ con $\alpha = a + di$, $\beta = c + bi$ es imagen de $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k}$.
+\end{proof}
+
+\begin{proposition}[Rotaciones mediante cuaterniones]\label{prop:rotaciones_cuaterniones}
+Para $q \in S^3$, la aplicación $\rho_q: \operatorname{Im}(\mathbb{H}) \to \operatorname{Im}(\mathbb{H})$ definida por
+\begin{equation}\label{eq:rotacion_cuaterniones}
+\rho_q(\mathbf{v}) = q\mathbf{v}\bar{q}
+\end{equation}
+es una rotación en $SO(3)$ bajo la identificación $\operatorname{Im}(\mathbb{H}) \cong \mathbb{R}^3$ dada por $x\mathbf{i} + y\mathbf{j} + z\mathbf{k} \mapsto (x, y, z)$. Además, el homomorfismo $q \mapsto \rho_q$ coincide con la representación adjunta $\pi: SU(2) \to SO(3)$ del \autoref{ex:su2_so3} vía el isomorfismo $\varphi$ de la Proposición~\ref{prop:cuaterniones_su2}: el diagrama
+\[
+\begin{tikzcd}
+S^3 \arrow{r}{\varphi} \arrow[swap]{dr}{q \mapsto \rho_q} & SU(2) \arrow{d}{\pi} \\
+ & SO(3)
+\end{tikzcd}
+\]
+conmuta, es decir, $\pi \circ \varphi = \rho$.
+\end{proposition}
+
+\begin{proof}
+Para $q \in S^3$ y $\mathbf{v} \in \operatorname{Im}(\mathbb{H})$, el producto $q\mathbf{v}\bar{q}$ es imaginario puro: $\overline{q\mathbf{v}\bar{q}} = q\bar{\mathbf{v}}\bar{q} = -q\mathbf{v}\bar{q}$, donde usamos que $\bar{\mathbf{v}} = -\mathbf{v}$ para cuaterniones imaginarios puros. Además, $|q\mathbf{v}\bar{q}| = |q||\mathbf{v}||\bar{q}| = |\mathbf{v}|$, de modo que $\rho_q$ es una isometría lineal de $\mathbb{R}^3$. Puesto que $\rho_q$ es continua en $q$ y $\rho_1 = \operatorname{Id}$, la conexión de $S^3$ garantiza que $\det(\rho_q) = +1$, es decir, $\rho_q \in SO(3)$. La conmutatividad del diagrama se verifica comprobando que, para los generadores $\mathbf{i}, \mathbf{j}, \mathbf{k}$, la acción por conjugación cuaterniónica produce la misma matriz de rotación que $\pi(\varphi(q))$.
+\end{proof}
+
+\begin{remark}[Conexión con el álgebra de Clifford $\text{Cl}(0,2)$]\label{rem:cuaterniones_clifford}
+El álgebra de Clifford $\text{Cl}(0,2)$, generada por $\{e_1, e_2\}$ con $e_1^2 = e_2^2 = -1$ y $e_1 e_2 = -e_2 e_1$, tiene base $\{1, e_1, e_2, e_1 e_2\}$. La correspondencia
+\[
+e_1 \mapsto \mathbf{i}, \quad e_2 \mapsto \mathbf{j}, \quad e_1 e_2 \mapsto \mathbf{k}
+\]
+define un isomorfismo de álgebras $\text{Cl}(0,2) \cong \mathbb{H}$, verificándose que las relaciones de Clifford se transforman exactamente en las relaciones cuaterniónicas~\eqref{eq:relaciones_cuaterniones}. Este isomorfismo aparece en la \autoref{def:clifford_cnn} del \autoref{ch:cnn}.
+\end{remark}
+
+%% ─────────────────────────────────────────────────
+%%  Teorema de Radó
+%% ─────────────────────────────────────────────────
+\section{Teorema de Radó (Triangulabilidad de Superficies)}\label{sec:rado}
+
+El teorema de Radó establece que toda superficie compacta admite una triangulación, resultado fundamental tanto para la demostración del teorema de Gauss-Bonnet (\autoref{thm:gauss_bonnet_general}) como para las aplicaciones de \gls{GDL} sobre mallas trianguladas (\autoref{sec:grafos_discretizacion}).
+
+\subsection*{Preliminares}
+
+Recordamos que una \textit{2-variedad topológica} (o \textit{superficie}) es un espacio topológico $M$ que es Hausdorff, segundo contable, y tal que todo punto $p \in M$ posee un entorno homeomorfo a un abierto de $\mathbb{R}^2$. El siguiente resultado clásico de topología plana es una herramienta clave en la demostración:
+
+\begin{theorem}[Teorema de Jordan-Schoenflies]\label{thm:jordan_schoenflies}
+Todo homeomorfismo $h: S^1 \to \mathbb{R}^2$ cuya imagen es una curva de Jordan $\mathcal{C}$ se extiende a un homeomorfismo $H: \overline{D}^2 \to \overline{U}$, donde $D^2$ es el disco unitario abierto y $U$ es la componente acotada de $\mathbb{R}^2 \setminus \mathcal{C}$.
+\end{theorem}
+
+Para una demostración, véase \citet[Cap.~4]{moise1977geometric}.
+
+\subsection*{Enunciado formal}
+
+\begin{theorem}[Teorema de Radó, 1925]\label{thm:rado_apendice}
+Toda 2-variedad topológica compacta admite una triangulación. Es decir, si $M$ es una superficie compacta, existe un complejo simplicial $\mathcal{K}$ y un homeomorfismo $h: |\mathcal{K}| \to M$.
+\end{theorem}
+
+\begin{remark}[Triangulabilidad en dimensiones superiores]\label{rem:triangulabilidad_dimensiones}
+La triangulabilidad de variedades depende crucialmente de la dimensión:
+\begin{itemize}
+	\item \textbf{Dimensión 2}: Toda superficie compacta es triangulable (\autoref{thm:rado_apendice}).
+	\item \textbf{Dimensión 3}: \citet{moise1977geometric} demostró en 1952 que toda 3-variedad compacta admite una triangulación, un resultado considerablemente más difícil.
+	\item \textbf{Dimensión $\geq 4$}: Existen variedades topológicas compactas no triangulables. El resultado de Casson (basado en el trabajo de Freedman sobre variedades de dimensión 4) muestra que la variedad $E_8$ no admite triangulación alguna.
 \end{itemize}
 \end{remark}
 
-\subsection{Esquema de demostraci\'on}
-\label{subsec:app:rado-proof}
+\subsection*{Esquema de demostración}
 
-Presentamos las ideas principales de la prueba, siguiendo la exposici\'on de
-\citet[Cap\'itulo~8]{moise1977geometric}. V\'ease tambi\'en
-\citet[\S77]{munkres2000topology} para un tratamiento alternativo.
+Presentamos las ideas principales de la prueba, siguiendo la exposición de \citet[Cap.~8]{moise1977geometric}. Véase también \citet[§77]{munkres2000topology} para un tratamiento alternativo.
 
-\begin{proof}[Esquema de demostraci\'on del \Cref{thm:app:rado}]
-La demostraci\'on procede en cuatro pasos.
+\begin{proof}[Esquema de demostración del \autoref{thm:rado_apendice}]
+La demostración procede en cuatro pasos:
 
 \textbf{Paso 1: Triangulabilidad local.}
-Como $M$ es una $2$-variedad, cada punto $p \in M$ posee un entorno $U_p$
-homeomorfo a un abierto de $\R^2$ mediante una carta $(U_p, \phi_p)$. En $\R^2$,
-toda regi\'on acotada admite una triangulaci\'on (por ejemplo, mediante
-subdivisi\'on baric\'entrica de una rejilla). Por tanto, cada $U_p$ puede
-triangularse localmente transportando esta triangulaci\'on v\'ia $\phi_p^{-1}$.
+Puesto que $M$ es una 2-variedad, cada punto $p \in M$ posee un entorno $U_p$ homeomorfo a un abierto de $\mathbb{R}^2$ mediante una carta $(U_p, \phi_p)$. En $\mathbb{R}^2$, toda región acotada admite una triangulación (por ejemplo, mediante subdivisión baricéntrica de una grilla). Por tanto, cada $U_p$ puede triangularse localmente transportando esta triangulación vía $\phi_p^{-1}$.
 
 \textbf{Paso 2: Cubrimiento finito.}
-Por la compacidad de $M$, existe un subrecubrimiento finito $\{U_1, \ldots, U_N\}$
-con triangulaciones locales $\mathcal{T}_1, \ldots, \mathcal{T}_N$.
+Por la compacidad de $M$, existe un subrecubrimiento finito $\{U_1, \ldots, U_N\}$ con triangulaciones locales $\mathcal{T}_1, \ldots, \mathcal{T}_N$.
 
-\textbf{Paso 3: Compatibilidad mediante Jordan--Schoenflies.}
-El paso esencial consiste en hacer compatibles las triangulaciones locales en las
-regiones de solapamiento $U_i \cap U_j$. El \Cref{thm:app:jordan-schoenflies}
-permite extender homeomorfismos entre curvas cerradas simples en $\R^2$ a
-homeomorfismos de sus interiores, lo que garantiza que las triangulaciones locales
-pueden ajustarse para ser compatibles en las intersecciones.
+\textbf{Paso 3: Compatibilidad mediante Jordan-Schoenflies.}
+El paso esencial consiste en hacer compatibles las triangulaciones locales en las regiones de solapamiento $U_i \cap U_j$. El \autoref{thm:jordan_schoenflies} permite extender homeomorfismos entre curvas cerradas simples en $\mathbb{R}^2$ a homeomorfismos de sus interiores, lo cual garantiza que las triangulaciones locales pueden ajustarse para ser compatibles en las intersecciones.
 
 \textbf{Paso 4: Refinamiento y pegado.}
-Mediante subdivisiones sucesivas (refinamientos) de las triangulaciones locales,
-se obtienen triangulaciones suficientemente finas para ser compatibles en todas
-las intersecciones. El pegado produce un complejo simplicial global $\mathcal{K}$
-cuya realizaci\'on geom\'etrica $\abs{\mathcal{K}}$ es homeomorfa a $M$.
+Mediante subdivisiones sucesivas (refinamientos) de las triangulaciones locales, se obtienen triangulaciones suficientemente finas para que sean compatibles en todas las intersecciones. El pegado produce un complejo simplicial global $\mathcal{K}$ cuya realización geométrica $|\mathcal{K}|$ es homeomorfa a $M$.
 \end{proof}
 
-%=======================================================================
-\section{El Teorema Espectral para Matrices Sim\'etricas Reales}
-\label{sec:app:spectral}
-%=======================================================================
+%% ─────────────────────────────────────────────────────────────────────────────
+%% Teorema Espectral para Matrices Simétricas Reales
+%% ─────────────────────────────────────────────────────────────────────────────
 
-El teorema espectral es un resultado fundamental del \'algebra lineal que
-garantiza la diagonalizaci\'on ortogonal de toda matriz sim\'etrica real. En el
-contexto del aprendizaje profundo geom\'etrico, este teorema sustenta la
-descomposici\'on espectral del laplaciano de grafo, la transformada de Fourier en
-grafos y la definici\'on de matrices semidefinidas positivas. Para una exposici\'on
-detallada, v\'ease \citet[Cap\'itulo~7]{Axler2015}.
+\section{Teorema Espectral para Matrices Simétricas Reales}\label{sec:teorema_espectral}
 
-\begin{theorem}[Teorema espectral para matrices sim\'etricas reales]
-\label{thm:app:spectral}
-Sea $A \in \R^{n \times n}$ una matriz sim\'etrica ($A = A^T$). Entonces:
-\begin{enumerate}
-    \item Todos los valores propios de $A$ son reales.
-    \item Los vectores propios correspondientes a valores propios distintos son
-          ortogonales.
-    \item Existe una matriz ortogonal $U \in \Orth(n)$ tal que
-          \[
-          A = U \Lambda U^T , \quad
-          \Lambda = \diag(\lambda_1, \ldots, \lambda_n) ,
-          \]
-          donde $\lambda_1, \ldots, \lambda_n$ son los valores propios de $A$.
-\end{enumerate}
+El teorema espectral es un resultado fundamental del álgebra lineal que garantiza la diagonalización ortogonal de toda matriz simétrica real. En el contexto de Geometric Deep Learning, este teorema sustenta la descomposición espectral del Laplaciano de grafo (\autoref{prop:propiedades_espectrales_laplaciano_grafos}), la transformada de Fourier en grafos (\autoref{def:transformada_fourier_grafos}) y la definición de matrices semidefinidas positivas (\autoref{def:semidefinida_positiva}). Para una exposición detallada, véase \citet[Cap.~7]{Axler2015}.
+
+\begin{theorem}[Teorema Espectral para matrices simétricas reales]\label{thm:espectral_matrices_simetricas}
+	Sea $A \in \mathbb{R}^{n \times n}$ una matriz simétrica ($A = A^T$). Entonces:
+	\begin{enumerate}
+		\item Todos los valores propios de $A$ son reales.
+		\item Eigenvectores correspondientes a valores propios distintos son ortogonales.
+		\item Existe una matriz ortogonal $U \in O(n)$ tal que
+		\[
+			A = U \Lambda U^T, \quad \Lambda = \operatorname{diag}(\lambda_1, \ldots, \lambda_n),
+		\]
+		donde $\lambda_1, \ldots, \lambda_n$ son los valores propios de $A$.
+	\end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Procedemos por inducci\'on sobre $n$.
+	Procedemos por inducción sobre $n$.
 
-\textbf{Caso base $n = 1$.} Toda matriz $A = (a) \in \R^{1 \times 1}$ tiene un
-\'unico valor propio $\lambda_1 = a \in \R$, y $U = (1)$ satisface
-$A = U \Lambda U^T$ trivialmente.
+	\textbf{Caso base $n = 1$}. Toda matriz $A = (a) \in \mathbb{R}^{1 \times 1}$ tiene un único valor propio $\lambda_1 = a \in \mathbb{R}$, y $U = (1)$ satisface $A = U \Lambda U^T$ trivialmente.
 
-\textbf{Paso inductivo.} Supongamos el resultado v\'alido para matrices
-sim\'etricas de tama\~no $(n-1) \times (n-1)$ y sea $A \in \R^{n \times n}$
-sim\'etrica.
+	\textbf{Paso inductivo}. Supongamos el resultado válido para matrices simétricas de tamaño $(n-1) \times (n-1)$ y sea $A \in \mathbb{R}^{n \times n}$ simétrica.
 
-\textbf{(1) Valores propios reales.} Sea $\lambda$ un valor propio de $A$
-(posiblemente complejo) con vector propio
-$\mathbf{v} \in \C^n \setminus \{\mathbf{0}\}$. Usando el producto herm\'itico
-est\'andar $\inner{\mathbf{u}}{\mathbf{w}}_{\C} = \overline{\mathbf{u}}^T
-\mathbf{w}$,
-\[
-\lambda \inner{\mathbf{v}}{\mathbf{v}}_{\C}
-= \inner{\mathbf{v}}{A\mathbf{v}}_{\C}
-= \inner{A^T \mathbf{v}}{\mathbf{v}}_{\C}
-= \inner{A\mathbf{v}}{\mathbf{v}}_{\C}
-= \overline{\inner{\mathbf{v}}{A\mathbf{v}}_{\C}}
-= \bar{\lambda} \inner{\mathbf{v}}{\mathbf{v}}_{\C} ,
-\]
-donde usamos que $A = A^T$ implica $A = \bar{A}^T = A^*$ (pues $A$ es real). Como
-$\inner{\mathbf{v}}{\mathbf{v}}_{\C} = \norm{\mathbf{v}}^2 > 0$, se obtiene
-$\lambda = \bar{\lambda}$, es decir, $\lambda \in \R$.
+	\textbf{(1) Valores propios reales.} Sea $\lambda$ un valor propio de $A$ (posiblemente complejo) con eigenvector $\mathbf{v} \in \mathbb{C}^n \setminus \{\mathbf{0}\}$. Utilizando el producto hermítico estándar $\langle \mathbf{u}, \mathbf{w} \rangle_{\mathbb{C}} = \overline{\mathbf{u}}^T \mathbf{w}$:
+	\[
+		\lambda \langle \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \langle \mathbf{v}, A\mathbf{v} \rangle_{\mathbb{C}} = \langle A^T \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \langle A\mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \overline{\langle \mathbf{v}, A\mathbf{v} \rangle_{\mathbb{C}}} = \bar{\lambda} \langle \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}},
+	\]
+	donde hemos usado que $A = A^T$ implica $A = \bar{A}^T = A^*$ (pues $A$ es real). Como $\langle \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \|\mathbf{v}\|^2 > 0$, se obtiene $\lambda = \bar{\lambda}$, es decir, $\lambda \in \mathbb{R}$.
 
-\textbf{(2) Ortogonalidad de los vectores propios.} Sean
-$A\mathbf{v} = \lambda \mathbf{v}$ y $A\mathbf{w} = \mu \mathbf{w}$ con
-$\lambda \neq \mu$ (ambos reales por (1), y $\mathbf{v}, \mathbf{w} \in \R^n$).
-Entonces
-\[
-\lambda \inner{\mathbf{v}}{\mathbf{w}} = \inner{A\mathbf{v}}{\mathbf{w}}
-= \inner{\mathbf{v}}{A\mathbf{w}} = \mu \inner{\mathbf{v}}{\mathbf{w}} ,
-\]
-donde $\inner{\cdot}{\cdot}$ es el producto interior euclidiano en $\R^n$ y la
-segunda igualdad usa la simetr\'ia de $A$. Luego
-$(\lambda - \mu)\inner{\mathbf{v}}{\mathbf{w}} = 0$, y como $\lambda \neq \mu$,
-concluimos $\inner{\mathbf{v}}{\mathbf{w}} = 0$.
+	\textbf{(2) Ortogonalidad de eigenvectores.} Sean $A\mathbf{v} = \lambda \mathbf{v}$ y $A\mathbf{w} = \mu \mathbf{w}$ con $\lambda \neq \mu$ (ambos reales por (1), y $\mathbf{v}, \mathbf{w} \in \mathbb{R}^n$). Entonces:
+	\[
+		\lambda \langle \mathbf{v}, \mathbf{w} \rangle = \langle A\mathbf{v}, \mathbf{w} \rangle = \langle \mathbf{v}, A\mathbf{w} \rangle = \mu \langle \mathbf{v}, \mathbf{w} \rangle,
+	\]
+	donde $\langle \cdot, \cdot \rangle$ denota el producto interior euclidiano en $\mathbb{R}^n$ y la segunda igualdad usa la simetría de $A$. Luego $(\lambda - \mu)\langle \mathbf{v}, \mathbf{w} \rangle = 0$, y como $\lambda \neq \mu$, concluimos $\langle \mathbf{v}, \mathbf{w} \rangle = 0$.
 
-\textbf{(3) Diagonalizaci\'on ortogonal.} Por (1), $A$ posee un valor propio real
-$\lambda_1$ con vector propio unitario $\mathbf{v}_1 \in \R^n$
-($\norm{\mathbf{v}_1} = 1$). Consideremos el complemento ortogonal
-$W = \mathbf{v}_1^\perp = \{\mathbf{w} \in \R^n : \inner{\mathbf{w}}{\mathbf{v}_1}
-= 0\}$, un subespacio de dimensi\'on $n - 1$.
+	\textbf{(3) Diagonalización ortogonal.} Por (1), $A$ posee un valor propio real $\lambda_1$ con eigenvector unitario $\mathbf{v}_1 \in \mathbb{R}^n$ ($\|\mathbf{v}_1\| = 1$). Consideremos el complemento ortogonal $W = \mathbf{v}_1^\perp = \{\mathbf{w} \in \mathbb{R}^n : \langle \mathbf{w}, \mathbf{v}_1 \rangle = 0\}$, que es un subespacio de dimensión $n - 1$.
 
-\textit{Afirmaci\'on}: $W$ es $A$-invariante, es decir, $A\mathbf{w} \in W$ para
-todo $\mathbf{w} \in W$. En efecto, si $\mathbf{w} \in W$,
-\[
-\inner{A\mathbf{w}}{\mathbf{v}_1} = \inner{\mathbf{w}}{A\mathbf{v}_1}
-= \lambda_1 \inner{\mathbf{w}}{\mathbf{v}_1} = 0 ,
-\]
-por lo que $A\mathbf{w} \in \mathbf{v}_1^\perp = W$.
+	\textit{Afirmación}: $W$ es $A$-invariante, es decir, $A\mathbf{w} \in W$ para todo $\mathbf{w} \in W$. En efecto, si $\mathbf{w} \in W$:
+	\[
+		\langle A\mathbf{w}, \mathbf{v}_1 \rangle = \langle \mathbf{w}, A\mathbf{v}_1 \rangle = \lambda_1 \langle \mathbf{w}, \mathbf{v}_1 \rangle = 0,
+	\]
+	por lo que $A\mathbf{w} \in \mathbf{v}_1^\perp = W$.
 
-Sea $\{\mathbf{e}_2, \ldots, \mathbf{e}_n\}$ una base ortonormal de $W$ y
-$P = [\mathbf{e}_2 \mid \cdots \mid \mathbf{e}_n] \in \R^{n \times (n-1)}$. La
-restricci\'on $A|_W$ queda representada por la matriz sim\'etrica
-$B = P^T A P \in \R^{(n-1) \times (n-1)}$. Por la hip\'otesis de inducci\'on,
-existe una matriz ortogonal $\tilde{U} \in \Orth(n-1)$ con
-$B = \tilde{U} \tilde{\Lambda} \tilde{U}^T$, donde
-$\tilde{\Lambda} = \diag(\lambda_2, \ldots, \lambda_n)$. Definimos
-\[
-U = \begin{pmatrix} \mathbf{v}_1 & P\tilde{U} \end{pmatrix} \in \R^{n \times n} .
-\]
-Entonces $U$ es ortogonal (sus columnas forman una base ortonormal de $\R^n$) y
-\[
-U^T A U = \diag(\lambda_1, \lambda_2, \ldots, \lambda_n) ,
-\]
-lo que equivale a $A = U \Lambda U^T$, completando la inducci\'on.
+	Sea $\{\mathbf{e}_2, \ldots, \mathbf{e}_n\}$ una base ortonormal de $W$ y $P = [\mathbf{e}_2 \mid \cdots \mid \mathbf{e}_n] \in \mathbb{R}^{n \times (n-1)}$. La restricción $A|_W$ queda representada por la matriz simétrica $B = P^T A P \in \mathbb{R}^{(n-1) \times (n-1)}$. Por hipótesis de inducción, existe una matriz ortogonal $\tilde{U} \in O(n-1)$ tal que $B = \tilde{U} \tilde{\Lambda} \tilde{U}^T$, con $\tilde{\Lambda} = \operatorname{diag}(\lambda_2, \ldots, \lambda_n)$.
+
+	Definimos
+	\[
+		U = \begin{pmatrix} \mathbf{v}_1 & P\tilde{U} \end{pmatrix} \in \mathbb{R}^{n \times n}.
+	\]
+	Entonces $U$ es ortogonal (sus columnas forman una base ortonormal de $\mathbb{R}^n$) y
+	\[
+		U^T A U = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n),
+	\]
+	lo que equivale a $A = U \Lambda U^T$, completando la inducción.
 \end{proof}
 
-\begin{corollary}[Caracterizaci\'on de matrices semidefinidas positivas]
-\label{cor:app:psd-characterization}
-Sea $A \in \R^{n \times n}$ sim\'etrica con valores propios
-$\lambda_1, \ldots, \lambda_n$. Entonces $A$ es semidefinida positiva
-($A \succeq 0$) si y solo si $\lambda_i \geq 0$ para todo
-$i \in \{1, \ldots, n\}$.
+\begin{corollary}[Caracterización de matrices semidefinidas positivas]\label{cor:caracterizacion_semidefinida}
+	Sea $A \in \mathbb{R}^{n \times n}$ simétrica con valores propios $\lambda_1, \ldots, \lambda_n$. Entonces $A$ es semidefinida positiva ($A \succeq 0$) si y solo si $\lambda_i \geq 0$ para todo $i \in \{1, \ldots, n\}$.
 \end{corollary}
 
 \begin{proof}
-Por el \Cref{thm:app:spectral}, $A = U \Lambda U^T$ con $U$ ortogonal y
-$\Lambda = \diag(\lambda_1, \ldots, \lambda_n)$. Para cualquier
-$\mathbf{x} \in \R^n$, sea $\mathbf{y} = U^T \mathbf{x}$. Entonces
-\[
-\mathbf{x}^T A \mathbf{x} = \mathbf{x}^T U \Lambda U^T \mathbf{x}
-= \mathbf{y}^T \Lambda \mathbf{y} = \sum_{i=1}^n \lambda_i y_i^2 .
-\]
-Como $U$ es ortogonal, la aplicaci\'on $\mathbf{x} \mapsto \mathbf{y} = U^T
-\mathbf{x}$ es una biyecci\'on de $\R^n$. Si todos los $\lambda_i \geq 0$, la suma
-es claramente $\geq 0$ para todo $\mathbf{x}$. Rec\'iprocamente, si alg\'un
-$\lambda_j < 0$, tomando $\mathbf{x} = U\mathbf{e}_j$ (donde $\mathbf{e}_j$ es el
-$j$-\'esimo vector can\'onico) se obtiene
-$\mathbf{x}^T A \mathbf{x} = \lambda_j < 0$.
+	Por el \autoref{thm:espectral_matrices_simetricas}, $A = U \Lambda U^T$ con $U$ ortogonal y $\Lambda = \operatorname{diag}(\lambda_1, \ldots, \lambda_n)$. Para cualquier $\mathbf{x} \in \mathbb{R}^n$, sea $\mathbf{y} = U^T \mathbf{x}$. Entonces:
+	\[
+		\mathbf{x}^T A \mathbf{x} = \mathbf{x}^T U \Lambda U^T \mathbf{x} = \mathbf{y}^T \Lambda \mathbf{y} = \sum_{i=1}^n \lambda_i y_i^2.
+	\]
+	Como $U$ es ortogonal, la aplicación $\mathbf{x} \mapsto \mathbf{y} = U^T \mathbf{x}$ es biyectiva en $\mathbb{R}^n$. Si todos los $\lambda_i \geq 0$, la suma es claramente $\geq 0$ para todo $\mathbf{x}$. Recíprocamente, si algún $\lambda_j < 0$, tomando $\mathbf{x} = U\mathbf{e}_j$ (donde $\mathbf{e}_j$ es el $j$-ésimo vector canónico) se obtiene $\mathbf{x}^T A \mathbf{x} = \lambda_j < 0$.
 \end{proof}
 
-%=======================================================================
-\section{El Teorema de la Funci\'on Inversa}
-\label{sec:app:inverse-function}
-%=======================================================================
+%% ─────────────────────────────────────────────────────────
+%% Teorema de la Función Inversa
+%% ─────────────────────────────────────────────────────────
 
-El teorema de la funci\'on inversa es una herramienta fundamental del an\'alisis
-que garantiza la existencia local de inversas diferenciables. En el contexto de
-las variedades diferenciables se usa repetidamente para construir difeomorfismos
-locales, en particular para demostrar que el mapa exponencial riemanniano es un
-difeomorfismo local.
+\section{Teorema de la Función Inversa}\label{sec:funcion_inversa}
 
-\subsection{Preliminar: el teorema del punto fijo de Banach}
-\label{subsec:app:banach-fixed-point}
+El teorema de la función inversa es una herramienta fundamental del análisis que garantiza la existencia local de inversas diferenciables. En el contexto de variedades diferenciables, este resultado se usa repetidamente para construir difeomorfismos locales, en particular para demostrar que el mapa exponencial riemanniano es un difeomorfismo local (\autoref{prop:propiedades_exp}).
 
-\begin{theorem}[Teorema del punto fijo de Banach]
-\label{thm:app:banach-fixed-point}
-Sea $(X, d)$ un espacio m\'etrico completo y $T \colon X \to X$ una
-\emph{contracci\'on}, es decir, existe $\lambda \in [0, 1)$ tal que
+\subsection{Preliminar: Teorema del Punto Fijo de Banach}\label{subsec:punto_fijo_banach}
+
+\begin{theorem}[Teorema del Punto Fijo de Banach]\label{thm:punto_fijo_banach}
+Sea $(X, d)$ un espacio métrico completo y $T: X \to X$ una \textit{contracción}, es decir, existe $\lambda \in [0, 1)$ tal que
 \[
-d(T(x), T(y)) \leq \lambda \, d(x, y) \quad \text{para todo } x, y \in X .
+d(T(x), T(y)) \leq \lambda \, d(x, y) \quad \text{para todo } x, y \in X.
 \]
-Entonces $T$ posee un \'unico punto fijo $x^* \in X$ (es decir, $T(x^*) = x^*$).
-Adem\'as, para cualquier $x_0 \in X$, la sucesi\'on $x_{n+1} = T(x_n)$ converge a
-$x^*$, con la estimaci\'on
+Entonces $T$ posee un único punto fijo $x^* \in X$ (es decir, $T(x^*) = x^*$). Además, para cualquier $x_0 \in X$, la sucesión $x_{n+1} = T(x_n)$ converge a $x^*$ y se tiene la estimación:
 \[
-d(x_n, x^*) \leq \frac{\lambda^n}{1 - \lambda} \, d(x_0, x_1) .
+d(x_n, x^*) \leq \frac{\lambda^n}{1 - \lambda} \, d(x_0, x_1).
 \]
 \end{theorem}
 
 \begin{proof}
-\textbf{Existencia.} Sea $x_0 \in X$ arbitrario y definamos $x_{n+1} = T(x_n)$.
-Para $n \geq 1$,
+\textbf{Existencia.} Sea $x_0 \in X$ arbitrario y definamos $x_{n+1} = T(x_n)$. Para $n \geq 1$:
 \[
-d(x_{n+1}, x_n) = d(T(x_n), T(x_{n-1})) \leq \lambda \, d(x_n, x_{n-1})
-\leq \cdots \leq \lambda^n \, d(x_1, x_0) .
+d(x_{n+1}, x_n) = d(T(x_n), T(x_{n-1})) \leq \lambda \, d(x_n, x_{n-1}) \leq \cdots \leq \lambda^n \, d(x_1, x_0).
 \]
-Para $m > n$, la desigualdad triangular da
+Para $m > n$, la desigualdad triangular da:
 \[
-d(x_m, x_n) \leq \sum_{k=n}^{m-1} d(x_{k+1}, x_k)
-\leq \sum_{k=n}^{m-1} \lambda^k \, d(x_1, x_0)
-\leq \frac{\lambda^n}{1 - \lambda} \, d(x_1, x_0) .
+d(x_m, x_n) \leq \sum_{k=n}^{m-1} d(x_{k+1}, x_k) \leq \sum_{k=n}^{m-1} \lambda^k \, d(x_1, x_0) \leq \frac{\lambda^n}{1 - \lambda} \, d(x_1, x_0).
 \]
-Como $\lambda < 1$, el lado derecho tiende a $0$ cuando $n \to \infty$, luego
-$(x_n)$ es una sucesi\'on de Cauchy. Por la completitud de $(X, d)$, existe el
-l\'imite $x^* = \lim_{n \to \infty} x_n$.
+Como $\lambda < 1$, el lado derecho tiende a $0$ cuando $n \to \infty$, luego $(x_n)$ es una sucesión de Cauchy. Por completitud de $(X, d)$, existe $x^* = \lim_{n \to \infty} x_n$.
 
-Por la continuidad de $T$ (toda contracci\'on es lipschitziana, luego continua),
+Por continuidad de $T$ (toda contracción es lipschitziana, luego continua):
 \[
-T(x^*) = T\!\left(\lim_{n \to \infty} x_n\right)
-= \lim_{n \to \infty} T(x_n) = \lim_{n \to \infty} x_{n+1} = x^* .
+T(x^*) = T\!\left(\lim_{n \to \infty} x_n\right) = \lim_{n \to \infty} T(x_n) = \lim_{n \to \infty} x_{n+1} = x^*.
 \]
 
-\textbf{Unicidad.} Si $T(y^*) = y^*$ para otro punto $y^* \in X$, entonces
+\textbf{Unicidad.} Si $T(y^*) = y^*$ para otro punto $y^* \in X$, entonces:
 \[
-d(x^*, y^*) = d(T(x^*), T(y^*)) \leq \lambda \, d(x^*, y^*) .
+d(x^*, y^*) = d(T(x^*), T(y^*)) \leq \lambda \, d(x^*, y^*).
 \]
-Como $\lambda < 1$, esto fuerza $d(x^*, y^*) = 0$, es decir, $x^* = y^*$.
+Como $\lambda < 1$, esto implica $d(x^*, y^*) = 0$, es decir, $x^* = y^*$.
 
-\textbf{Estimaci\'on.} Tomando $m \to \infty$ en la desigualdad
-$d(x_m, x_n) \leq \frac{\lambda^n}{1-\lambda} d(x_1, x_0)$ se obtiene el resultado.
+\textbf{Estimación.} Tomando $m \to \infty$ en la desigualdad $d(x_m, x_n) \leq \frac{\lambda^n}{1-\lambda} d(x_1, x_0)$ se obtiene el resultado.
 \end{proof}
 
-\subsection{Enunciado y demostraci\'on del teorema de la funci\'on inversa}
-\label{subsec:app:inverse-function-proof}
+\subsection{Enunciado y demostración del Teorema de la Función Inversa}
 
-\begin{theorem}[Teorema de la funci\'on inversa]
-\label{thm:app:inverse-function}
-Sea $U \subseteq \R^n$ un abierto, $F \colon U \to \R^n$ una aplicaci\'on de clase
-$C^k$ ($k \geq 1$), y $p \in U$ un punto tal que el diferencial
-$DF_p \colon \R^n \to \R^n$ es invertible. Entonces existen entornos abiertos $V$
-de $p$ y $W$ de $F(p)$ tales que $F|_V \colon V \to W$ es un difeomorfismo de
-clase $C^k$.
+\begin{theorem}[Teorema de la Función Inversa]\label{thm:funcion_inversa}
+Sea $U \subseteq \mathbb{R}^n$ un abierto, $F: U \to \mathbb{R}^n$ una aplicación de clase $C^k$ ($k \geq 1$), y $p \in U$ un punto tal que el diferencial $DF_p: \mathbb{R}^n \to \mathbb{R}^n$ es invertible. Entonces existen entornos abiertos $V$ de $p$ y $W$ de $F(p)$ tales que $F|_V: V \to W$ es un difeomorfismo de clase $C^k$.
 \end{theorem}
 
 \begin{proof}
-La demostraci\'on sigue la estrategia cl\'asica de
-\citet[Teorema~9.24]{Rudin1976}, que presentamos en cuatro pasos.
+La demostración sigue la estrategia clásica de \citet[Teorema~9.24]{Rudin1976}, que presentamos en cuatro pasos.
 
-\textbf{Paso 1: Reducci\'on al caso $DF_p = I$.}
-Consideramos $G = (DF_p)^{-1} \circ F$. Entonces $G$ es de clase $C^k$,
-$G(p) = (DF_p)^{-1}(F(p))$ y $DG_p = (DF_p)^{-1} \circ DF_p = I$. Si demostramos el
-teorema para $G$, la composici\'on con la aplicaci\'on lineal invertible $DF_p$
-(un difeomorfismo global) proporciona el resultado para $F$. As\'i, podemos
-suponer sin p\'erdida de generalidad que $DF_p = I$ y, tras trasladar, que $p = 0$
-y $F(0) = 0$.
+\textbf{Paso 1: Reducción al caso $DF_p = I$.}
+Consideramos $G = (DF_p)^{-1} \circ F$. Entonces $G$ es de clase $C^k$, $G(p) = (DF_p)^{-1}(F(p))$, y $DG_p = (DF_p)^{-1} \circ DF_p = I$. Si demostramos el teorema para $G$, la composición con la transformación lineal invertible $DF_p$ (que es un difeomorfismo global) proporciona el resultado para $F$. Así, podemos suponer sin pérdida de generalidad que $DF_p = I$ y, trasladando, que $p = 0$ y $F(0) = 0$.
 
-\textbf{Paso 2: Sobreyectividad local v\'ia el punto fijo de Banach.}
-Definimos $\varphi(x) = x - F(x)$, de modo que $D\varphi_0 = I - DF_0 = 0$. Por la
-continuidad de $D\varphi$, existe $r > 0$ con
-$\norm{D\varphi_x} \leq \tfrac{1}{2}$ para todo $x \in \overline{B}(0, r)$. Por el
-teorema del valor medio, para $x_1, x_2 \in \overline{B}(0, r)$,
+\textbf{Paso 2: Sobreyectividad local vía Punto Fijo de Banach.}
+Definimos $\varphi(x) = x - F(x)$, de modo que $D\varphi_0 = I - DF_0 = 0$. Por continuidad de $D\varphi$, existe $r > 0$ tal que $\|D\varphi_x\| \leq \tfrac{1}{2}$ para todo $x \in \overline{B}(0, r)$. Por el teorema del valor medio, para $x_1, x_2 \in \overline{B}(0, r)$:
 \[
-\norm{\varphi(x_1) - \varphi(x_2)} \leq \tfrac{1}{2} \norm{x_1 - x_2} .
+\|\varphi(x_1) - \varphi(x_2)\| \leq \tfrac{1}{2} \|x_1 - x_2\|.
 \]
-Para cada $y \in B(0, r/2)$, definimos
-$T_y \colon \overline{B}(0, r) \to \R^n$ por
-$T_y(x) = y + \varphi(x) = y + x - F(x)$. Entonces
+Para cada $y \in B(0, r/2)$, definimos $T_y: \overline{B}(0, r) \to \mathbb{R}^n$ por $T_y(x) = y + \varphi(x) = y + x - F(x)$. Entonces:
 \[
-\norm{T_y(x)} \leq \norm{y} + \norm{\varphi(x) - \varphi(0)}
-\leq \tfrac{r}{2} + \tfrac{1}{2}\norm{x} \leq r ,
+\|T_y(x)\| \leq \|y\| + \|\varphi(x) - \varphi(0)\| \leq \tfrac{r}{2} + \tfrac{1}{2}\|x\| \leq r,
 \]
-luego $T_y$ aplica $\overline{B}(0, r)$ en s\'i misma. Adem\'as, $T_y$ es una
-contracci\'on con constante $\tfrac{1}{2}$, pues
-$T_y(x_1) - T_y(x_2) = \varphi(x_1) - \varphi(x_2)$. Como $\overline{B}(0, r)$ es
-completo, el \Cref{thm:app:banach-fixed-point} garantiza un \'unico
-$x \in \overline{B}(0, r)$ con $T_y(x) = x$, equivalentemente $F(x) = y$. Esto
-muestra que $F$ es sobreyectiva sobre $W = B(0, r/2)$.
+luego $T_y$ aplica $\overline{B}(0, r)$ en sí misma. Además, $T_y$ es una contracción con constante $\tfrac{1}{2}$, pues $T_y(x_1) - T_y(x_2) = \varphi(x_1) - \varphi(x_2)$. Como $\overline{B}(0, r)$ es completo, el \autoref{thm:punto_fijo_banach} garantiza la existencia de un único $x \in \overline{B}(0, r)$ con $T_y(x) = x$, equivalentemente $F(x) = y$. Esto demuestra que $F$ es sobreyectiva sobre $W = B(0, r/2)$.
 
 \textbf{Paso 3: Inyectividad.}
-Si $F(x_1) = F(x_2)$ con $x_1, x_2 \in \overline{B}(0, r)$, entonces
+Si $F(x_1) = F(x_2)$ con $x_1, x_2 \in \overline{B}(0, r)$, entonces:
 \[
-\norm{x_1 - x_2} = \norm{\varphi(x_1) - \varphi(x_2) + F(x_1) - F(x_2)}
-= \norm{\varphi(x_1) - \varphi(x_2)} \leq \tfrac{1}{2}\norm{x_1 - x_2} ,
+\|x_1 - x_2\| = \|\varphi(x_1) - \varphi(x_2) + F(x_1) - F(x_2)\| = \|\varphi(x_1) - \varphi(x_2)\| \leq \tfrac{1}{2}\|x_1 - x_2\|,
 \]
-de donde $x_1 = x_2$. Sea $V = F^{-1}(W) \cap B(0, r)$; entonces
-$F|_V \colon V \to W$ es biyectiva.
+de donde $x_1 = x_2$. Sea $V = F^{-1}(W) \cap B(0, r)$; entonces $F|_V: V \to W$ es biyectiva.
 
 \textbf{Paso 4: Diferenciabilidad de $F^{-1}$.}
-Sea $g = (F|_V)^{-1} \colon W \to V$. Debemos mostrar que $g$ es de clase $C^k$.
-Para $y, y + k \in W$ con $x = g(y)$ y $x + h = g(y + k)$,
+Sea $g = (F|_V)^{-1}: W \to V$. Debemos mostrar que $g$ es de clase $C^k$. Para $y, y + k \in W$ con $x = g(y)$ y $x + h = g(y + k)$:
 \[
-k = F(x + h) - F(x) = DF_x(h) + \norm{h} \cdot \varepsilon(h) ,
+k = F(x + h) - F(x) = DF_x(h) + \|h\| \cdot \varepsilon(h)
 \]
-donde $\varepsilon(h) \to 0$ cuando $h \to 0$. De la estimaci\'on de
-contracci\'on, $\norm{h} \leq 2\norm{k}$, por lo que $h \to 0$ cuando $k \to 0$.
-Como $DF_x$ es invertible (su determinante es una funci\'on continua no nula),
+donde $\varepsilon(h) \to 0$ cuando $h \to 0$. De la estimación de contracción, $\|h\| \leq 2\|k\|$, por lo que $h \to 0$ cuando $k \to 0$. Como $DF_x$ es invertible (su determinante es una función continua no nula):
 \[
-g(y + k) - g(y) = h = (DF_x)^{-1}(k) + \norm{k} \cdot \tilde{\varepsilon}(k) ,
+g(y + k) - g(y) = h = (DF_x)^{-1}(k) + \|k\| \cdot \tilde{\varepsilon}(k)
 \]
-con $\tilde{\varepsilon}(k) \to 0$, luego $Dg_y = (DF_{g(y)})^{-1}$. Como la
-inversi\'on de matrices y la composici\'on son operaciones $C^\infty$, un
-argumento inductivo muestra que $g$ es de clase $C^k$.
+con $\tilde{\varepsilon}(k) \to 0$, luego $Dg_y = (DF_{g(y)})^{-1}$. Como la inversión de matrices y la composición son operaciones $C^\infty$, un argumento inductivo muestra que $g$ es de clase $C^k$.
 \end{proof}
 
 %=======================================================================
-\section{Preliminares para el Teorema de Aproximaci\'on Universal}
-\label{sec:app:uat-preliminaries}
+% TEOREMAS COMPLEMENTARIOS PARA EL CAPÍTULO CNN
 %=======================================================================
 
-El teorema de aproximaci\'on universal del \Cref{ch:foundations} garantiza que
-cualquier funci\'on continua puede aproximarse arbitrariamente bien por una red
-neuronal artificial con una \'unica capa oculta. Su demostraci\'on requiere
-herramientas de teor\'ia de la medida y an\'alisis funcional: las nociones de
-medida y $\sigma$-\'algebra fundamentan los teoremas de representaci\'on (Riesz) y
-separaci\'on (Hahn--Banach) que constituyen el n\'ucleo de la prueba. Reunimos
-aqu\'i los preliminares necesarios, dejando el enunciado y la demostraci\'on del
-teorema en s\'i para el \Cref{ch:foundations}. Para un tratamiento en profundidad
-de estos fundamentos, v\'ease \citet{Folland1999} o \citet{Rudin1976}.
+\section{Fórmula de Reconstrucción Wavelet}\label{sec:reconstruccion_wavelet}
 
-\subsection{Preliminares de teor\'ia de la medida}
-\label{subsec:app:measure-theory}
-
-\begin{definition}[$\sigma$-\'algebra]
-\label{def:app:sigma-algebra}
-Sea $X$ un conjunto no vac\'io. Una \emph{$\sigma$-\'algebra} (o $\sigma$-campo)
-sobre $X$ es una colecci\'on $\mathcal{F}$ de subconjuntos de $X$ que satisface:
-\begin{enumerate}
-    \item $X \in \mathcal{F}$;
-    \item si $A \in \mathcal{F}$, entonces $A^c = X \setminus A \in \mathcal{F}$
-          (cerrada bajo complementos);
-    \item si $\{A_n\}_{n=1}^\infty \subseteq \mathcal{F}$, entonces
-          $\bigcup_{n=1}^\infty A_n \in \mathcal{F}$ (cerrada bajo uniones
-          numerables).
-\end{enumerate}
-Los elementos de $\mathcal{F}$ se denominan \emph{conjuntos medibles}.
-\end{definition}
-
-\begin{definition}[Espacio medible]
-\label{def:app:measurable-space}
-Un \emph{espacio medible} es un par $(X, \mathcal{F})$ donde $X$ es un conjunto no
-vac\'io y $\mathcal{F}$ es una $\sigma$-\'algebra sobre $X$.
-\end{definition}
-
-\begin{definition}[$\sigma$-\'algebra de Borel]
-\label{def:app:borel-sigma-algebra}
-Sea $(X, \tau)$ un espacio topol\'ogico. La \emph{$\sigma$-\'algebra de Borel}
-$\mathcal{B}(X)$ es la $\sigma$-\'algebra m\'as peque\~na que contiene todos los
-conjuntos abiertos de $X$. Sus elementos se denominan \emph{conjuntos de Borel} o
-\emph{borelianos}.
-\end{definition}
-
-En particular, para $\R^n$ la $\sigma$-\'algebra de Borel $\mathcal{B}(\R^n)$
-est\'a generada por los rect\'angulos abiertos, o equivalentemente por los
-semiespacios de la forma $\{x \in \R^n : w^T x + b > 0\}$.
-
-\begin{definition}[Medida]
-\label{def:app:measure}
-Sea $(X, \mathcal{F})$ un espacio medible. Una \emph{medida} es una funci\'on
-$\mu \colon \mathcal{F} \to [0, +\infty]$ que satisface:
-\begin{enumerate}
-    \item $\mu(\emptyset) = 0$;
-    \item \textbf{$\sigma$-aditividad}: para cualquier sucesi\'on
-          $\{A_n\}_{n=1}^\infty$ de conjuntos disjuntos dos a dos en
-          $\mathcal{F}$,
-          \[
-          \mu\!\left(\bigcup_{n=1}^\infty A_n\right) = \sum_{n=1}^\infty \mu(A_n) .
-          \]
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Espacio de medida]
-\label{def:app:measure-space}
-Un \emph{espacio de medida} es una terna $(X, \mathcal{F}, \mu)$ donde $X$ es un
-conjunto no vac\'io, $\mathcal{F}$ es una $\sigma$-\'algebra sobre $X$ y
-$\mu \colon \mathcal{F} \to [0, +\infty]$ es una medida. Si $\mu(X) < \infty$,
-decimos que $\mu$ es una \emph{medida finita}. Si $\mu(X) = 1$, decimos que $\mu$
-es una \emph{medida de probabilidad}.
-\end{definition}
-
-\begin{definition}[Medida finita con signo]
-\label{def:app:signed-measure}
-Sea $(X, \mathcal{F})$ un espacio medible. Una \emph{medida finita con signo} es
-una funci\'on $\mu \colon \mathcal{F} \to \R$ con $\mu(\emptyset) = 0$ que es
-$\sigma$-aditiva: para cualquier sucesi\'on $\{A_n\}_{n=1}^\infty$ de conjuntos
-disjuntos dos a dos en $\mathcal{F}$,
+\begin{theorem}[Fórmula de Reconstrucción Wavelet]\label{thm:reconstruccion_wavelet_apendice}
+Sea $\psi \in L^2(\mathbb{R})$ una wavelet madre que satisface la condición de admisibilidad:
 \[
-\mu\!\left(\bigcup_{n=1}^\infty A_n\right) = \sum_{n=1}^\infty \mu(A_n) ,
+C_\psi = \int_0^\infty \frac{|\hat{\psi}(\omega)|^2}{\omega} \, d\omega < \infty
 \]
-donde la serie converge absolutamente. La \emph{variaci\'on total} de $\mu$ es la
-medida $\abs{\mu}$ definida por
+Entonces, para toda $f \in L^2(\mathbb{R})$, se tiene la fórmula de reconstrucción:
 \[
-\abs{\mu}(A) = \sup\!\left\{ \sum_{i=1}^n \abs{\mu(A_i)} :
-\{A_i\}_{i=1}^n \text{ partici\'on finita de } A \right\} .
+f(t) = \frac{1}{C_\psi} \int_0^\infty \int_{-\infty}^{\infty} W_f(a, b) \, \psi_{a,b}(t) \, \frac{db \, da}{a^2}
 \]
-\end{definition}
-
-\begin{definition}[Medida de Lebesgue]
-\label{def:app:lebesgue-measure}
-La \emph{medida de Lebesgue} $\lambda$ en $\R^n$ es la \'unica medida en
-$(\R^n, \mathcal{B}(\R^n))$ que extiende la noci\'on de volumen $n$-dimensional y
-satisface:
-\begin{itemize}
-    \item para un rect\'angulo $R = [a_1, b_1] \times \cdots \times [a_n, b_n]$,
-          $\lambda(R) = \prod_{i=1}^n (b_i - a_i)$;
-    \item es invariante bajo traslaciones: $\lambda(A + x) = \lambda(A)$ para todo
-          $x \in \R^n$.
-\end{itemize}
-\end{definition}
-
-Un conjunto $A$ tiene \emph{medida de Lebesgue nula} (o medida cero) si
-$\lambda(A) = 0$. Ejemplos incluyen puntos aislados, conjuntos finitos, conjuntos
-numerables como $\Q$ y el conjunto de Cantor.
-
-\begin{definition}[Funci\'on medible]
-\label{def:app:measurable-function}
-Sean $(X, \mathcal{F})$ y $(Y, \mathcal{G})$ espacios medibles. Una funci\'on
-$f \colon X \to Y$ es \emph{medible} (o $\mathcal{F}$-$\mathcal{G}$-medible) si la
-preimagen de todo conjunto medible es medible:
-\[
-f^{-1}(B) = \{x \in X : f(x) \in B\} \in \mathcal{F}
-\quad \forall B \in \mathcal{G} .
-\]
-\end{definition}
-
-Cuando $Y = \R$ con la $\sigma$-\'algebra de Borel, basta verificar que
-$\{x : f(x) > \alpha\} \in \mathcal{F}$ para todo $\alpha \in \R$. En particular,
-toda funci\'on continua es medible respecto a las $\sigma$-\'algebras de Borel.
-
-\begin{definition}[Integral de Lebesgue]
-\label{def:app:lebesgue-integral}
-Sea $(X, \mathcal{F}, \mu)$ un espacio de medida. La \emph{integral de Lebesgue}
-se construye en tres pasos:
-\begin{enumerate}
-    \item \textbf{Funciones simples}: para $s = \sum_{i=1}^n a_i \chi_{A_i}$ con
-          $a_i \geq 0$ y $A_i \in \mathcal{F}$ disjuntos, donde $\chi_A$ es la
-          funci\'on caracter\'istica de $A$, se define
-          \[
-          \int_X s \, d\mu = \sum_{i=1}^n a_i \mu(A_i) .
-          \]
-    \item \textbf{Funciones no negativas}: para $f \colon X \to [0, +\infty]$
-          medible,
-          \[
-          \int_X f \, d\mu = \sup\!\left\{\int_X s \, d\mu :
-          s \text{ simple, } 0 \leq s \leq f\right\} .
-          \]
-    \item \textbf{Funciones generales}: para $f \colon X \to \R$ medible,
-          escribimos $f = f^+ - f^-$ con $f^+ = \max(f, 0)$ y $f^- = \max(-f, 0)$.
-          Decimos que $f$ es \emph{integrable} (o $f \in L^1(\mu)$) si
-          $\int_X f^+ \, d\mu < \infty$ y $\int_X f^- \, d\mu < \infty$, y se
-          define
-          \[
-          \int_X f \, d\mu = \int_X f^+ \, d\mu - \int_X f^- \, d\mu .
-          \]
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Casi por doquier]
-\label{def:app:almost-everywhere}
-Sea $(X, \mathcal{F}, \mu)$ un espacio de medida. Una propiedad $P(x)$ se cumple
-\emph{casi por doquier} (c.p.d.) si el conjunto de puntos donde no se cumple tiene
-medida cero:
-\[
-\mu(\{x \in X : \neg P(x)\}) = 0 .
-\]
-\end{definition}
-
-En el contexto de la medida de Lebesgue en $\R^n$, ``casi por doquier'' significa
-``excepto en un conjunto de medida de Lebesgue nula''.
-
-\subsection{Preliminares de an\'alisis funcional}
-\label{subsec:app:functional-analysis}
-
-\begin{definition}[Espacio vectorial]
-\label{def:app:vector-space}
-Un \emph{espacio vectorial} sobre $\R$ es un conjunto $V$ equipado con dos
-operaciones, suma $+ \colon V \times V \to V$ y producto por escalares
-$\cdot \colon \R \times V \to V$, que satisfacen los siguientes axiomas para todo
-$u, v, w \in V$ y $\alpha, \beta \in \R$:
-\begin{enumerate}
-    \item \textbf{Asociatividad de la suma:} $(u + v) + w = u + (v + w)$;
-    \item \textbf{Conmutatividad de la suma:} $u + v = v + u$;
-    \item \textbf{Elemento neutro:} existe $0 \in V$ con $v + 0 = v$;
-    \item \textbf{Elemento opuesto:} para cada $v$ existe $-v \in V$ con
-          $v + (-v) = 0$;
-    \item \textbf{Compatibilidad del producto:}
-          $\alpha(\beta v) = (\alpha\beta)v$;
-    \item \textbf{Elemento unidad:} $1 \cdot v = v$;
-    \item \textbf{Distributividad respecto a la suma vectorial:}
-          $\alpha(u + v) = \alpha u + \alpha v$;
-    \item \textbf{Distributividad respecto a la suma escalar:}
-          $(\alpha + \beta)v = \alpha v + \beta v$.
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Espacio vectorial normado]
-\label{def:app:normed-space}
-Un \emph{espacio vectorial normado} es un par $(X, \norm{\cdot})$ donde $X$ es un
-espacio vectorial real y $\norm{\cdot} \colon X \to [0, +\infty)$ es una
-\emph{norma}, es decir, una funci\'on que satisface:
-\begin{enumerate}
-    \item $\norm{x} = 0$ si y solo si $x = 0$;
-    \item $\norm{\alpha x} = \abs{\alpha} \norm{x}$ para todo $\alpha \in \R$;
-    \item $\norm{x + y} \leq \norm{x} + \norm{y}$ (desigualdad triangular).
-\end{enumerate}
-\end{definition}
-
-Ejemplos fundamentales incluyen $\R^n$ con la norma euclidiana y los espacios de
-funciones $L^p(\Omega)$.
-
-\begin{definition}[Recubrimiento]
-\label{def:app:cover}
-Sea $X$ un espacio topol\'ogico y $K \subseteq X$. Un \emph{recubrimiento} de $K$
-es una familia de conjuntos $\{U_\alpha\}_{\alpha \in A}$ con
-$K \subseteq \bigcup_{\alpha \in A} U_\alpha$. Si cada $U_\alpha$ es abierto, es un
-\emph{recubrimiento abierto}. Un \emph{subrecubrimiento} es una subfamilia que
-sigue siendo un recubrimiento de $K$.
-\end{definition}
-
-\begin{definition}[Espacio compacto]
-\label{def:app:compact-space}
-Un subconjunto $K$ de un espacio topol\'ogico es \emph{compacto} si todo
-recubrimiento abierto de $K$ admite un subrecubrimiento finito.
-\end{definition}
-
-Intuitivamente, la compacidad generaliza las propiedades de los conjuntos cerrados
-y acotados en $\R^n$ a espacios topol\'ogicos generales.
-
-\begin{theorem}[Heine--Borel]
-\label{thm:app:heine-borel}
-Un subconjunto $K \subset \R^n$ es compacto si y solo si es cerrado y acotado
-\citep[Teorema~2.41]{Rudin1976}.
+donde $W_f(a, b) = \langle f, \psi_{a,b} \rangle$ es la transformada wavelet continua y $\psi_{a,b}(t) = \frac{1}{\sqrt{a}} \psi\left(\frac{t-b}{a}\right)$.
 \end{theorem}
-
-En particular, el hipercubo unitario $I_m = [0,1]^m$ es compacto, lo cual es
-esencial para el teorema de aproximaci\'on universal.
-
-\begin{definition}[Funcional lineal]
-\label{def:app:linear-functional}
-Sea $X$ un espacio vectorial real. Un \emph{funcional lineal} es una aplicaci\'on
-$f \colon X \to \R$ que satisface
-\[
-f(\alpha x + \beta y) = \alpha f(x) + \beta f(y)
-\quad \forall x, y \in X, \, \forall \alpha, \beta \in \R .
-\]
-Es decir, un funcional lineal es un elemento del espacio dual algebraico $X^*$.
-\end{definition}
-
-\begin{definition}[Funcional lineal continuo]
-\label{def:app:continuous-functional}
-Sea $(X, \norm{\cdot})$ un espacio vectorial normado. Un funcional lineal
-$f \colon X \to \R$ es \emph{continuo} (o \emph{acotado}) si existe una constante
-$M > 0$ con
-\[
-\abs{f(x)} \leq M\norm{x} \quad \forall x \in X .
-\]
-\end{definition}
-
-El conjunto de todos los funcionales lineales continuos en $X$ forma el
-\emph{espacio dual} $X'$, un espacio de Banach con la norma del operador
-$\norm{f} = \sup_{\norm{x} \leq 1} \abs{f(x)}$.
-
-\begin{definition}[Espacio $C(K)$]
-\label{def:app:space-CK}
-Sea $K$ un espacio compacto. El espacio $C(K)$ es el conjunto de todas las
-funciones continuas $f \colon K \to \R$ equipado con la \emph{norma supremo} (o
-norma uniforme)
-\[
-\norm{f}_\infty = \sup_{x \in K} \abs{f(x)} .
-\]
-\end{definition}
-
-Con esta norma, $C(K)$ es un espacio de Banach (un espacio vectorial normado
-completo). En el contexto del teorema de aproximaci\'on universal, trabajamos con
-$C(I_m)$, el espacio de funciones continuas sobre el hipercubo unitario.
-
-\begin{theorem}[Convergencia dominada de Lebesgue]
-\label{thm:app:dominated-convergence}
-Sea $(X, \mathcal{F}, \mu)$ un espacio de medida y $\{f_n\}_{n=1}^\infty$ una
-sucesi\'on de funciones medibles $f_n \colon X \to \R$ tal que:
-\begin{enumerate}
-    \item $f_n(x) \to f(x)$ para casi todo $x \in X$;
-    \item existe una funci\'on integrable $g \colon X \to \R$ con
-          $\abs{f_n(x)} \leq g(x)$ para casi todo $x \in X$ y todo
-          $n \in \mathbb{N}$.
-\end{enumerate}
-Entonces $f$ es integrable y
-\[
-\lim_{n \to \infty} \int_X f_n \, d\mu = \int_X f \, d\mu
-= \int_X \lim_{n \to \infty} f_n \, d\mu
-\]
-\citep[Teorema~2.24]{Folland1999}.
-\end{theorem}
-
-Este teorema es fundamental para intercambiar l\'imites e integrales, lo cual es
-necesario para demostrar que las funciones sigmoidales son discriminatorias.
-
-\begin{definition}[Conjunto convexo]
-\label{def:app:convex-set}
-Un subconjunto $C$ de un espacio vectorial $V$ es \emph{convexo} si para todo
-$x, y \in C$ y $\lambda \in [0,1]$ se tiene $\lambda x + (1-\lambda)y \in C$.
-Equivalentemente, $C$ contiene el segmento que une cualquier par de sus puntos.
-\end{definition}
-
-\begin{theorem}[Hahn--Banach, forma geom\'etrica]
-\label{thm:app:hahn-banach}
-Sea $X$ un espacio vectorial topol\'ogico real, y $A$, $B$ subconjuntos convexos
-disjuntos de $X$ con $A$ abierto. Entonces existen un funcional lineal continuo
-$f \colon X \to \R$ y una constante $\alpha \in \R$ tales que
-\[
-f(a) < \alpha \leq f(b) \quad \forall a \in A, \, b \in B
-\]
-\citep[Teorema~5.5]{Folland1999}.
-\end{theorem}
-
-\begin{corollary}[Caracterizaci\'on de densidad]
-\label{cor:app:density-characterization}
-Sea $X$ un espacio vectorial normado y $Y \subset X$ un subespacio. Entonces $Y$
-es denso en $X$ si y solo si el \'unico funcional lineal continuo que se anula en
-$Y$ es el funcional cero.
-\end{corollary}
 
 \begin{proof}
-\textbf{($\Rightarrow$)} Supongamos que $Y$ es denso en $X$. Sea
-$f \colon X \to \R$ un funcional lineal continuo con $f(y) = 0$ para todo
-$y \in Y$. Para cualquier $x \in X$ existe una sucesi\'on $\{y_n\} \subset Y$ con
-$y_n \to x$. Por la continuidad de $f$,
+Trabajamos en el dominio de Fourier. La transformada de $\psi_{a,b}$ es $\hat{\psi}_{a,b}(\omega) = \sqrt{a} \, e^{-i\omega b} \hat{\psi}(a\omega)$. Los coeficientes wavelet satisfacen:
 \[
-f(x) = f\!\left(\lim_{n \to \infty} y_n\right)
-= \lim_{n \to \infty} f(y_n) = 0 ,
+W_f(a,b) = \int_{\mathbb{R}} f(t) \overline{\psi_{a,b}(t)} \, dt = \int_{\mathbb{R}} \hat{f}(\omega) \overline{\hat{\psi}_{a,b}(\omega)} \, d\omega = \sqrt{a} \int_{\mathbb{R}} \hat{f}(\omega) \overline{\hat{\psi}(a\omega)} e^{i\omega b} \, d\omega
 \]
-por lo que $f \equiv 0$.
-
-\textbf{($\Leftarrow$)} Supongamos que $Y$ no es denso en $X$. Entonces
-$\overline{Y} \neq X$, y existe $x_0 \in X \setminus \overline{Y}$. Como
-$\overline{Y}$ es un subespacio cerrado, tomamos una bola abierta
-$B_r(0) \subset X$ y definimos $A = \overline{Y} + B_r(0)$, que es abierto y
-convexo con $A \cap \{x_0\} = \emptyset$ para $r$ suficientemente peque\~no (ya que
-$x_0 \notin \overline{Y}$). Por el \Cref{thm:app:hahn-banach}, existen un funcional
-lineal $f$ y $\alpha \in \R$ con
+Sustituyendo en la fórmula de reconstrucción y usando el teorema de Fubini:
+\begin{align}
+I(t) &= \frac{1}{C_\psi} \int_0^\infty \int_{\mathbb{R}} W_f(a,b) \psi_{a,b}(t) \frac{db \, da}{a^2}
+\end{align}
+En el dominio de Fourier, la integral en $b$ produce una delta de Dirac:
 \[
-f(a) < \alpha \leq f(x_0) \quad \forall a \in A .
+\int_{\mathbb{R}} e^{i\omega b} e^{-i\omega' b} \, db = 2\pi \delta(\omega - \omega')
 \]
-Como $\overline{Y}$ es un subespacio, $0 \in \overline{Y} \subset A$, luego
-$f(0) = 0 < \alpha$. Adem\'as, para cualquier $y \in Y$ y $t \in \R$, $ty \in
-\overline{Y} \subset A$, de modo que $tf(y) = f(ty) < \alpha$ para todo $t$. Esto
-solo es posible si $f(y) = 0$. Sin embargo, $f(x_0) \geq \alpha > 0$, por lo que
-$f \not\equiv 0$.
+Tras integrar en $b$ y simplificar:
+\[
+\hat{I}(\omega) = \hat{f}(\omega) \cdot \frac{1}{C_\psi} \int_0^\infty \frac{|\hat{\psi}(a\omega)|^2}{a} \, da = \hat{f}(\omega) \cdot \frac{1}{C_\psi} \int_0^\infty \frac{|\hat{\psi}(u)|^2}{u} \, du = \hat{f}(\omega)
+\]
+donde en la penúltima igualdad usamos el cambio $u = a\omega$ (para $\omega > 0$). La igualdad $\hat{I} = \hat{f}$ implica $I = f$ en $L^2$. Véase \citep[Teorema~4.3]{Mallat2009} y \citep[Capítulo~2]{Daubechies1992} para detalles sobre las condiciones de convergencia.
 \end{proof}
 
-\begin{theorem}[Representaci\'on de Riesz para $C(K)$]
-\label{thm:app:riesz}
-Sea $K$ un espacio compacto y $C(K)$ el espacio de funciones continuas reales en
-$K$ con la norma supremo. Para todo funcional lineal continuo
-$L \colon C(K) \to \R$ existe una \'unica medida de Borel regular finita con signo
-$\mu$ en $K$ tal que
+\section{Descomposición Wavelet Multiresolución}\label{sec:descomposicion_wavelet}
+
+\begin{theorem}[Descomposición Wavelet]\label{thm:descomposicion_wavelet_apendice}
+Sea $\{V_j\}_{j \in \mathbb{Z}}$ un análisis de multiresolución (MRA) de $L^2(\mathbb{R})$ con función de escala $\phi$ y wavelet madre $\psi$. Entonces:
 \[
-L(f) = \int_K f \, d\mu \quad \forall f \in C(K) .
+L^2(\mathbb{R}) = V_{j_0} \oplus \bigoplus_{j=j_0}^{\infty} W_j
 \]
-Adem\'as, $\norm{L} = \abs{\mu}(K)$, donde $\abs{\mu}$ es la variaci\'on total de
-$\mu$ \citep[Teorema~7.17]{Folland1999}.
+donde $W_j$ es el complemento ortogonal de $V_j$ en $V_{j+1}$ y $\{2^{j/2}\psi(2^j \cdot - k)\}_{k \in \mathbb{Z}}$ forma una base ortonormal de $W_j$.
 \end{theorem}
 
-\begin{theorem}[Stone--Weierstrass]
-\label{thm:app:stone-weierstrass}
-Sea $K$ un espacio compacto y $\mathcal{A} \subset C(K)$ una sub\'algebra que
-separa puntos de $K$ y no se anula en ning\'un punto. Entonces $\mathcal{A}$ es
-densa en $C(K)$ con respecto a la norma supremo
-\citep[Teorema~7.32]{Rudin1976}.
+\begin{proof}
+Por definición de MRA, los subespacios $\{V_j\}$ satisfacen: (i) $V_j \subset V_{j+1}$, (ii) $\overline{\bigcup_j V_j} = L^2(\mathbb{R})$, (iii) $\bigcap_j V_j = \{0\}$, y (iv) $\{\phi(\cdot - k)\}_{k \in \mathbb{Z}}$ es base ortonormal de $V_0$.
+
+Sea $W_j = V_{j+1} \ominus V_j$ el complemento ortogonal de $V_j$ en $V_{j+1}$. Entonces $V_{j+1} = V_j \oplus W_j$ (suma ortogonal directa). Iterando desde $j_0$:
+\[
+V_J = V_{j_0} \oplus W_{j_0} \oplus W_{j_0+1} \oplus \cdots \oplus W_{J-1}
+\]
+
+Tomando $J \to \infty$ y usando la condición de densidad (ii): $L^2(\mathbb{R}) = \overline{\bigcup_J V_J} = V_{j_0} \oplus \bigoplus_{j=j_0}^{\infty} W_j$.
+
+Para la construcción de la base de $W_j$: por la ecuación de refinamiento $\phi(t) = \sqrt{2} \sum_k h_k \phi(2t - k)$ (donde $h_k$ son los coeficientes del filtro paso-bajo), se define $\psi(t) = \sqrt{2} \sum_k g_k \phi(2t - k)$ con $g_k = (-1)^k \overline{h_{1-k}}$ (filtro espejo en cuadratura). La ortonormalidad de $\{2^{j/2}\psi(2^j \cdot - k)\}_k$ en $W_j$ se verifica usando las propiedades del filtro espejo y la condición $|H(\omega)|^2 + |H(\omega + \pi)|^2 = 1$, donde $H(\omega) = \frac{1}{\sqrt{2}} \sum_k h_k e^{-ik\omega}$. Véase \citep[Capítulo~7]{Mallat2009}.
+\end{proof}
+
+\section{Expansión en Armónicos Esféricos}\label{sec:expansion_armonicos_esfericos}
+
+\begin{theorem}[Completitud de los Armónicos Esféricos]\label{thm:expansion_armonicos_apendice}
+Los armónicos esféricos $\{Y_l^m\}_{l \geq 0, |m| \leq l}$ forman un sistema ortonormal completo en $L^2(S^2)$: para toda $f \in L^2(S^2)$,
+\[
+f(\theta, \phi) = \sum_{l=0}^{\infty} \sum_{m=-l}^{l} f_l^m Y_l^m(\theta, \phi)
+\]
+con convergencia en $L^2(S^2)$, donde $f_l^m = \int_{S^2} f(\mathbf{x}) \overline{Y_l^m(\mathbf{x})} \, d\sigma(\mathbf{x})$.
 \end{theorem}
 
-En particular, si $\mathcal{A}$ contiene las funciones constantes y separa puntos,
-entonces es densa en $C(K)$.
+\begin{proof}
+La demostración procede en tres pasos.
 
-\begin{remark}
-Existen dos enfoques principales para demostrar el teorema de aproximaci\'on
-universal. El enfoque de \citet{cybenko1989} usa el corolario de Hahn--Banach
-junto con el teorema de representaci\'on de Riesz, demostrando que las funciones
-sigmoidales son ``discriminatorias'' (se anulan contra una medida solo si la
-medida es cero). El enfoque de \citet{hornik1989} usa el teorema de
-Stone--Weierstrass, demostrando que las redes neuronales forman una sub\'algebra
-que separa puntos. Ambos se apoyan en los preliminares reunidos arriba, y el
-enunciado y la demostraci\'on completos se desarrollan en el \Cref{ch:foundations}.
-\end{remark}
+\textbf{Paso 1: Ortonormalidad.} Los armónicos esféricos satisfacen $\langle Y_l^m, Y_{l'}^{m'} \rangle = \delta_{ll'} \delta_{mm'}$. Esto se verifica por cálculo directo: la integral sobre $\phi \in [0, 2\pi)$ de $e^{i(m-m')\phi}$ es $2\pi \delta_{mm'}$, y la integral sobre $\theta$ de los polinomios de Legendre asociados da la normalización correcta por las relaciones de ortogonalidad de Legendre.
+
+\textbf{Paso 2: Los $Y_l^m$ como eigenfunciones del Laplaciano.} El operador de Laplace-Beltrami en $S^2$ es:
+\[
+\Delta_{S^2} = \frac{1}{\sin\theta}\frac{\partial}{\partial\theta}\left(\sin\theta\frac{\partial}{\partial\theta}\right) + \frac{1}{\sin^2\theta}\frac{\partial^2}{\partial\phi^2}
+\]
+Se verifica que $\Delta_{S^2} Y_l^m = -l(l+1) Y_l^m$. Los eigenvalores $-l(l+1)$ tienen multiplicidad $2l+1$ (correspondiente a $m = -l, \ldots, l$).
+
+\textbf{Paso 3: Completitud.} El operador $\Delta_{S^2}$ es autoadjunto y elíptico en la variedad compacta $S^2$. Por el teorema espectral para operadores elípticos en variedades compactas, las eigenfunciones forman un sistema completo en $L^2(S^2)$. Equivalentemente, los polinomios armónicos homogéneos restringidos a $S^2$ generan un subálgebra que separa puntos y contiene las constantes; por el teorema de Stone-Weierstrass, esta subálgebra es densa en $C(S^2)$ y, por tanto, en $L^2(S^2)$. Véase \citep[Capítulo~IV]{Folland1999}.
+\end{proof}
+
+\section{Descomposición de Clebsch-Gordan}\label{sec:clebsch_gordan}
+
+\begin{theorem}[Descomposición de Clebsch-Gordan para $SO(3)$]\label{thm:clebsch_gordan_apendice}
+El producto tensorial de dos representaciones irreducibles $D^{(l_1)}$ y $D^{(l_2)}$ de $SO(3)$ se descompone como:
+\[
+D^{(l_1)} \otimes D^{(l_2)} = \bigoplus_{L=|l_1-l_2|}^{l_1+l_2} D^{(L)}
+\]
+La base del cambio está dada por los coeficientes de Clebsch-Gordan $C_{l_1 m_1, l_2 m_2}^{L M}$.
+\end{theorem}
+
+\begin{proof}
+El espacio del producto tensorial $V_{l_1} \otimes V_{l_2}$ tiene dimensión $(2l_1+1)(2l_2+1)$. La acción de $SO(3)$ sobre este espacio es $(D^{(l_1)} \otimes D^{(l_2)})(R) = D^{(l_1)}(R) \otimes D^{(l_2)}(R)$.
+
+\textit{Análisis de caracteres}: El carácter de $D^{(l)}$ es $\chi_l(\theta) = \sum_{m=-l}^{l} e^{im\theta} = \frac{\sin((l+1/2)\theta)}{\sin(\theta/2)}$, donde $\theta$ es el ángulo de rotación. El carácter del producto tensorial es:
+\[
+\chi_{l_1}(\theta) \cdot \chi_{l_2}(\theta) = \frac{\sin((l_1+1/2)\theta) \cdot \sin((l_2+1/2)\theta)}{\sin^2(\theta/2)}
+\]
+
+Usando la identidad del producto de senos: $\sin A \cdot \sin B = \frac{1}{2}[\cos(A-B) - \cos(A+B)]$, se obtiene, tras simplificación:
+\[
+\chi_{l_1} \cdot \chi_{l_2} = \sum_{L=|l_1-l_2|}^{l_1+l_2} \chi_L
+\]
+
+Como las representaciones irreducibles de $SO(3)$ están determinadas por sus caracteres (por el teorema de Peter-Weyl), esta identidad de caracteres implica la descomposición del enunciado. La dimensión se verifica: $\sum_{L=|l_1-l_2|}^{l_1+l_2}(2L+1) = (2l_1+1)(2l_2+1)$. Los coeficientes de Clebsch-Gordan $C_{l_1 m_1, l_2 m_2}^{LM}$ son los elementos de la matriz unitaria que efectúa el cambio de base entre $\{|l_1, m_1\rangle \otimes |l_2, m_2\rangle\}$ y $\{|L, M\rangle\}$. Véase \citep[Capítulo~8]{Serre1977} y \citep[Capítulo~11]{Fulton1991}.
+\end{proof}
+
+\section{Teorema de Cayley}\label{sec:cayley}
+
+\begin{theorem}[Cayley para Grupos Finitos]\label{thm:cayley_apendice}
+Todo grupo finito $G$ de orden $n$ es isomorfo a un subgrupo de $S_n$, el grupo simétrico de permutaciones de $n$ elementos.
+\end{theorem}
+
+\begin{proof}
+Para cada $g \in G$, definimos la \textit{multiplicación izquierda} $\lambda_g: G \to G$ por $\lambda_g(h) = gh$. Esta aplicación es biyectiva: es inyectiva porque $gh_1 = gh_2$ implica $h_1 = h_2$ (por la ley de cancelación en grupos), y sobreyectiva porque para todo $h \in G$ se tiene $h = g(g^{-1}h)$.
+
+Numerando los elementos de $G = \{g_1, \ldots, g_n\}$, cada $\lambda_g$ define una permutación $\sigma_g \in S_n$ mediante $\sigma_g(i) = j$ si $g \cdot g_i = g_j$.
+
+El homomorfismo $\Phi: G \to S_n$ definido por $\Phi(g) = \sigma_g$ es inyectivo: si $\Phi(g) = \Phi(h)$, entonces $\sigma_g = \sigma_h$, lo que implica $g \cdot g_i = h \cdot g_i$ para todo $i$. Tomando $g_i = e$ (identidad), $g = h$.
+
+La compatibilidad con la composición se verifica directamente: $\Phi(gh)(g_i) = (gh) \cdot g_i = g \cdot (h \cdot g_i) = \Phi(g)(\Phi(h)(g_i)) = (\Phi(g) \circ \Phi(h))(g_i)$.
+
+Por tanto, $\Phi$ es un homomorfismo inyectivo, y $G \cong \Phi(G) \leq S_n$. Véase \citep[Sección~4.2]{dummit2004abstract}.
+\end{proof}
+
+\section{Aproximación Universal Gauge}\label{sec:aproximacion_universal_gauge}
+
+\begin{theorem}[Aproximación Universal para Redes Gauge Equivariantes]\label{thm:aproximacion_universal_gauge_apendice}
+Sea $\mathcal{M}$ una variedad Riemanniana compacta y $G$ un grupo de Lie compacto actuando sobre fibras. Las redes gauge equivariantes son aproximadores universales en el espacio de funciones continuas gauge equivariantes: para toda función continua $f: \Gamma(E) \to \Gamma(E')$ gauge equivariante entre secciones de fibrados asociados y todo $\epsilon > 0$, existe una red gauge equivariante $\Phi$ tal que $\|f - \Phi\|_\infty < \epsilon$.
+\end{theorem}
+
+\begin{proof}[Esbozo de demostración]
+La demostración adapta el argumento de aproximación universal clásico al contexto gauge equivariante, siguiendo \citep{cohen2019gaugeequivariantconvolutional}.
+
+\textbf{Paso 1: Reducción local.} Por compacidad de $\mathcal{M}$, se puede cubrir con un número finito de cartas trivializantes $\{U_\alpha\}$ donde el fibrado es localmente trivial: $\pi^{-1}(U_\alpha) \cong U_\alpha \times F$. En cada carta, la función gauge equivariante se reduce a una función equivariante respecto a la acción de $G$ sobre la fibra.
+
+\textbf{Paso 2: Aproximación local equivariante.} En cada carta, por el teorema de aproximación universal equivariante (que se deduce del caso clásico mediante proyección al espacio de funciones equivariantes vía el operador de Reynolds $\mathcal{R}_G f = \frac{1}{|G|}\int_G \rho(g)^{-1} f(\rho(g) \cdot) \, dg$), existe una red local $\Phi_\alpha$ que aproxima $f|_{U_\alpha}$ con error $< \epsilon/2$.
+
+\textbf{Paso 3: Ensamblaje global.} Usando una partición de la unidad $\{\chi_\alpha\}$ subordinada a $\{U_\alpha\}$, se construye $\Phi = \sum_\alpha \chi_\alpha \Phi_\alpha$. La gauge equivarianza global se preserva porque cada $\Phi_\alpha$ es equivariante y las funciones de partición $\chi_\alpha$ son escalares (invariantes gauge). El error total se controla por $\|f - \Phi\|_\infty \leq \max_\alpha \|f|_{U_\alpha} - \Phi_\alpha\|_\infty < \epsilon$.
+\end{proof}
+
+\section{Teorema de De Rham}\label{sec:de_rham}
+
+\begin{theorem}[De Rham]\label{thm:de_rham_apendice}
+Sea $\mathcal{M}$ una variedad diferenciable compacta sin borde. Existe un isomorfismo natural entre la cohomología de De Rham y la cohomología singular con coeficientes reales:
+\[
+H^k_{\text{dR}}(\mathcal{M}) \cong H^k(\mathcal{M}; \mathbb{R})
+\]
+para todo $k \geq 0$, donde $H^k_{\text{dR}}(\mathcal{M}) = \ker(d_k)/\operatorname{Im}(d_{k-1})$ con $d_k: \Omega^k(\mathcal{M}) \to \Omega^{k+1}(\mathcal{M})$ la derivada exterior.
+\end{theorem}
+
+\begin{proof}[Esbozo de demostración]
+La demostración procede mediante la teoría de haces, siguiendo \citep{Warner1983}.
+
+\textbf{Paso 1: Lema de Poincaré.} Para todo abierto contractible $U \subseteq \mathbb{R}^n$ y $k \geq 1$, $H^k_{\text{dR}}(U) = 0$. La demostración usa el operador homotópico $K: \Omega^k(U) \to \Omega^{k-1}(U)$ definido por $(K\omega)(x) = \int_0^1 t^{k-1} \iota_{x-x_0} \omega(tx+(1-t)x_0) \, dt$, que satisface $dK + Kd = \operatorname{Id}$.
+
+\textbf{Paso 2: Resolución suave del haz constante.} El lema de Poincaré implica que la secuencia $0 \to \underline{\mathbb{R}} \to \Omega^0 \xrightarrow{d} \Omega^1 \xrightarrow{d} \Omega^2 \to \cdots$ es una resolución del haz constante $\underline{\mathbb{R}}$ por haces finos (las formas diferenciales admiten particiones de la unidad).
+
+\textbf{Paso 3: Teorema de haces finos.} Como los haces $\Omega^k$ son finos (por la existencia de particiones de la unidad suaves), la resolución anterior calcula la cohomología del haz $\underline{\mathbb{R}}$:
+\[
+H^k_{\text{dR}}(\mathcal{M}) = H^k(\Gamma(\mathcal{M}, \Omega^\bullet)) \cong H^k(\mathcal{M}; \underline{\mathbb{R}})
+\]
+
+\textbf{Paso 4: Cohomología del haz constante.} La cohomología del haz constante $\underline{\mathbb{R}}$ es isomorfa a la cohomología singular $H^k(\mathcal{M}; \mathbb{R})$ por el teorema de comparación de Eilenberg. Este isomorfismo se construye explícitamente mediante la integración: la aplicación $[\omega] \mapsto [\sigma \mapsto \int_\sigma \omega]$ define un homomorfismo de $H^k_{\text{dR}}$ a $H^k_{\text{sing}}(\mathcal{M}; \mathbb{R})$ que es un isomorfismo. Véase \citep[Capítulo~5]{Warner1983} y \citep[Capítulo~17]{Lee2013}.
+\end{proof}
+
+\section{Convergencia de Random Fourier Features}\label{sec:convergencia_rff}
+
+\begin{theorem}[Convergencia Uniforme de Random Fourier Features]\label{thm:convergencia_rff_apendice}
+Sea $k: \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$ un kernel definido positivo, estacionario y continuo con transformada de Fourier $p(\boldsymbol{\omega})$ (distribución espectral). Definamos la aproximación con $m$ random Fourier features:
+\[
+\hat{k}_m(\mathbf{x}, \mathbf{y}) = \frac{1}{m} \sum_{j=1}^{m} z_{\boldsymbol{\omega}_j}(\mathbf{x}) \, z_{\boldsymbol{\omega}_j}(\mathbf{y})
+\]
+donde $\boldsymbol{\omega}_j \sim p(\boldsymbol{\omega})$ i.i.d. y $z_{\boldsymbol{\omega}}(\mathbf{x}) = \sqrt{2}\cos(\boldsymbol{\omega}^T \mathbf{x} + b)$ con $b \sim \text{Uniforme}[0, 2\pi]$. Entonces, para todo $\epsilon, \delta > 0$ y conjunto finito $\mathcal{X} = \{\mathbf{x}_1, \ldots, \mathbf{x}_n\}$, si $m \geq \frac{4}{\epsilon^2}\log\frac{2n}{\delta}$:
+\[
+\Pr\!\left[\sup_{i,j} |k(\mathbf{x}_i, \mathbf{x}_j) - \hat{k}_m(\mathbf{x}_i, \mathbf{x}_j)| > \epsilon\right] < \delta
+\]
+\end{theorem}
+
+\begin{proof}
+\textbf{Paso 1: Representación espectral.} Por el teorema de Bochner, un kernel estacionario continuo definido positivo $k(\mathbf{x}, \mathbf{y}) = k(\mathbf{x} - \mathbf{y})$ admite la representación:
+\[
+k(\boldsymbol{\delta}) = \int_{\mathbb{R}^d} e^{i\boldsymbol{\omega}^T \boldsymbol{\delta}} \, p(\boldsymbol{\omega}) \, d\boldsymbol{\omega} = \mathbb{E}_{\boldsymbol{\omega} \sim p}\!\left[e^{i\boldsymbol{\omega}^T \boldsymbol{\delta}}\right]
+\]
+Escribiendo $e^{i\boldsymbol{\omega}^T \boldsymbol{\delta}} = \cos(\boldsymbol{\omega}^T \boldsymbol{\delta}) + i\sin(\boldsymbol{\omega}^T \boldsymbol{\delta})$ y usando que $k$ es real y $p$ es simétrica, $k(\boldsymbol{\delta}) = \mathbb{E}[\cos(\boldsymbol{\omega}^T \boldsymbol{\delta})]$.
+
+\textbf{Paso 2: Estimador insesgado.} Se verifica que $\mathbb{E}[z_{\boldsymbol{\omega}}(\mathbf{x}) z_{\boldsymbol{\omega}}(\mathbf{y})] = k(\mathbf{x} - \mathbf{y})$:
+\begin{align}
+\mathbb{E}_{b}[\cos(\boldsymbol{\omega}^T\mathbf{x}+b)\cos(\boldsymbol{\omega}^T\mathbf{y}+b)] &= \frac{1}{2}\cos(\boldsymbol{\omega}^T(\mathbf{x}-\mathbf{y}))
+\end{align}
+por la identidad del producto de cosenos. Multiplicando por 2 (del factor $\sqrt{2}$) y tomando esperanza sobre $\boldsymbol{\omega} \sim p$, se recupera $k(\mathbf{x}-\mathbf{y})$.
+
+\textbf{Paso 3: Concentración.} Cada variable $z_{\boldsymbol{\omega}}(\mathbf{x}) z_{\boldsymbol{\omega}}(\mathbf{y})$ está acotada en $[-2, 2]$ (pues $|z_{\boldsymbol{\omega}}| \leq \sqrt{2}$). Por la desigualdad de Hoeffding, para un par $(\mathbf{x}_i, \mathbf{x}_j)$ fijo:
+\[
+\Pr\!\left[|\hat{k}_m(\mathbf{x}_i, \mathbf{x}_j) - k(\mathbf{x}_i, \mathbf{x}_j)| > \epsilon\right] \leq 2\exp\!\left(-\frac{m\epsilon^2}{4}\right)
+\]
+
+\textbf{Paso 4: Unión sobre pares.} Por la cota de la unión sobre los $\binom{n}{2} \leq n^2/2$ pares:
+\[
+\Pr\!\left[\sup_{i,j} |\hat{k}_m - k| > \epsilon\right] \leq n^2 \exp\!\left(-\frac{m\epsilon^2}{4}\right) \leq \delta
+\]
+cuando $m \geq \frac{4}{\epsilon^2}\log\frac{n^2}{\delta} \geq \frac{4}{\epsilon^2}\log\frac{2n}{\delta}$. Véase \citep{rahimi2007random}.
+\end{proof}

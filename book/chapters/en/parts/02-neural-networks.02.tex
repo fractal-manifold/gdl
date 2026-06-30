@@ -1,0 +1,1924 @@
+\section{Neural networks as graphs}\label{sec:redes_grafos}
+
+In the previous sections we have defined neural layers and their composition algebraically, as functions that transform signals. However, there exists an equally important complementary perspective: the representation of neural networks as \textit{graphs}, where nodes represent computational units and edges represent the flow of information.
+
+This graph perspective is fundamental for several reasons:
+\begin{itemize}
+    \item It provides a precise mathematical language to describe the \textit{architecture} of a network
+    \item It allows distinguishing between different families of networks (feedforward, recurrent, etc.) by means of topological properties
+    \item It is the basis of the \textit{automatic differentiation} used in modern deep learning frameworks
+    \item It connects naturally with the field of \gls{GDL}, where the very structure of the graph encodes information about the domain of the data
+\end{itemize}
+
+\subsection{Graphs}
+
+So far we have presented neural networks as compositions of layers in a somewhat informal way. To rigorously formalize their structure, we turn to graph theory, which provides the precise mathematical language to describe the connectivity relationships between neurons and layers.
+
+\begin{definition}[\Gls{grafo}]\label{def:grafo_neuronal}
+A \textit{\gls{grafo}} is a mathematical structure $\mathcal{G} = (V, E)$ consisting of:
+\begin{itemize}
+    \item A set $V$ of \textit{vertices} (also called nodes)
+    \item A set $E$ of \textit{edges} (also called links or connections), where each edge connects a pair of vertices
+\end{itemize}
+Formally, for an undirected graph, $E \subseteq \{\{u, v\} : u, v \in V, u \neq v\}$, whereas for a directed graph, $E \subseteq V \times V$\footnote{Note that the definition of a directed graph allows self-loops $(v, v)$, which is relevant for recurrent networks where a neuron can feed back its own output.}.
+\end{definition}
+
+Graphs provide a natural abstraction for modeling relationships between objects. In the context of neural networks, the vertices represent neurons (or layers, depending on the level of abstraction) and the edges represent weighted connections that transmit signals.
+
+\begin{definition}[\Gls{grafo_dirigido}]\label{def:grafo_dirigido}
+A \textit{\gls{grafo_dirigido}} is a graph $\mathcal{G} = (V, \vec{E})$ where each edge has a specific direction. A directed edge $(u, v) \in \vec{E}$ indicates that there is a connection from vertex $u$ (source) to vertex $v$ (target). The direction matters: $(u, v) \neq (v, u)$.
+\end{definition}
+
+\begin{definition}[Undirected graph]\label{def:grafo_no_dirigido}
+An \textit{undirected graph} is a graph $\mathcal{G} = (V, E)$ where the edges are symmetric: if $(u, v) \in E$, then $(v, u) \in E$. Equivalently, $E$ can be viewed as a set of unordered pairs $\{\{u, v\} : u, v \in V\}$.
+\end{definition}
+
+In an \gls{ANN}, the directed edges represent the flow of information: the output of a neuron $u$ becomes the input to neuron $v$. This directional flow is fundamental to understanding how signals propagate during inference (forward pass) and how gradients are backpropagated during training (backward pass).
+
+\begin{definition}[Path in a directed graph]\label{def:camino}
+Given a \gls{grafo_dirigido} $\mathcal{G} = (V, \vec{E})$, a \textit{path} of length $k$ is a sequence of vertices $v_0, v_1, \ldots, v_k$ such that $(v_i, v_{i+1}) \in \vec{E}$ for all $i = 0, \ldots, k-1$.
+\end{definition}
+
+\begin{definition}[Cycle in a directed graph]\label{def:ciclo}
+Given a \gls{grafo_dirigido} $\mathcal{G} = (V, \vec{E})$, a \textit{cycle} is a path $v_0, v_1, \ldots, v_k$ where $v_0 = v_k$, $k \geq 1$, and the vertices $v_0, v_1, \ldots, v_{k-1}$ are pairwise distinct.
+\end{definition}
+
+A cycle in a neural network indicates feedback: the output of a neuron (or layer) can, directly or indirectly, influence its own input. This is fundamental in recurrent networks that process temporal sequences.
+
+\begin{definition}[\Gls{grafo_aciclico_dirigido} (DAG)]\label{def:dag}
+A \textit{\gls{grafo_aciclico_dirigido}} (DAG, for Directed Acyclic Graph) is a \gls{grafo_dirigido} that contains no cycles.
+\end{definition}
+
+\glspl{DAG} have especially useful computational properties:
+
+\begin{theorem}[Topological ordering]\label{thm:ordenamiento_topologico}
+Every directed acyclic graph $\mathcal{G} = (V, \vec{E})$ admits at least one \textit{topological ordering}: a numbering of its vertices $v_1, v_2, \ldots, v_{|V|}$ such that if $(v_i, v_j) \in \vec{E}$, then $i < j$.
+\end{theorem}
+
+\begin{proof}
+We proceed by induction on the number of vertices $n = |V|$.
+
+\textbf{Base case} ($n = 1$): A graph with a single vertex and no edges (being acyclic) trivially has a topological ordering.
+
+\textbf{Inductive step}: Suppose that every \gls{DAG} with $n$ vertices has a topological ordering. Consider a \gls{DAG} $\mathcal{G} = (V, \vec{E})$ with $n+1$ vertices.
+
+We claim that $\mathcal{G}$ must have at least one vertex $v$ with no incoming edges (in-degree zero). Indeed, if every vertex had at least one incoming edge, we could construct an infinite path by going backwards indefinitely, which by the pigeonhole principle (there are finitely many vertices) would imply a cycle, contradicting that $\mathcal{G}$ is acyclic.
+
+We select a vertex $v \in V$ with in-degree zero and place it first in the ordering. Consider the reduced graph $\mathcal{G}' = (V \setminus \{v\}, \vec{E}')$ where $\vec{E}'$ is $\vec{E}$ restricted to $V \setminus \{v\}$. This graph has $n$ vertices and remains acyclic (removing a vertex does not introduce cycles). By the induction hypothesis, $\mathcal{G}'$ has a topological ordering. Concatenating $v$ at the beginning of this ordering, we obtain a topological ordering of $\mathcal{G}$.
+\end{proof}
+
+The existence of a topological ordering guarantees that we can compute the outputs of all neurons in a sequential order without needing to solve systems of implicit equations, which makes feedforward networks computationally efficient.
+
+\subsection{Neural networks as graphs of neurons}
+
+An \gls{ANN} in its most general form can be represented as a \gls{grafo_dirigido} $\mathcal{G}_{\text{neuronas}} = (V_N, E_N)$ where:
+\begin{itemize}
+    \item $V_N$: set of neurons of the network
+    \item $E_N$: set of weighted connections. An edge $(n_i, n_j) \in E_N$ with weight $w_{ij} \in \mathbb{R}$ indicates that the output of neuron $n_i$ is multiplied by $w_{ij}$ and contributes to the input of neuron $n_j$
+\end{itemize}
+
+\subsubsection[Feedforward networks: DAGs of neurons]{Feedforward networks: \glspl{DAG} of neurons}
+
+Feedforward, or forward-propagation, neural networks are those whose graph of neurons is a \gls{DAG}. The absence of cycles guarantees that:
+
+\begin{enumerate}
+    \item \textbf{Deterministic single-pass computation}: Given an input, we can compute the output of each neuron exactly once by following a topological ordering. If $\sigma_i$ denotes the topological ordering of neuron $i$, then:
+    \[
+    y_i = \sigma_i\left(\sum_{(j,i) \in E_N} w_{ji} y_j + b_i\right)
+    \]
+    where $y_j$ has already been computed for all predecessors $j$ of $i$.
+
+    \item \textbf{Efficient parallelization}: All neurons at the same ``level'' of the \gls{DAG} (same distance from the input) can be computed in parallel, which allows leveraging modern hardware architectures (GPUs, TPUs).
+
+    \item \textbf{Efficient backpropagation}: The computation of gradients via the chain rule can be performed in a single backward pass following the reverse topological order. We will see more about learning in \glspl{ANN} in Section~\ref{sec:learning_ann}.
+\end{enumerate}
+
+\subsubsection{Recurrent networks: cyclic graphs}
+
+\glspl{RNN} and other architectures with feedback are modeled by directed graphs \textit{with cycles}. A cycle represents memory or internal state: the output at time step $t$ depends not only on the current input, but also on internal states from previous steps.
+
+Mathematically, this translates into equations of the form:
+\[
+h_t = f(h_{t-1}, x_t; \theta)
+\]
+where $h_t$ is the hidden state at time $t$, $x_t$ is the current input, and $\theta$ are the parameters. The implicit cycle $(h_{t-1} \to h_t \to h_{t+1} \to \cdots)$ allows the network to capture temporal dependencies.
+
+Although cyclic graphs (recurrent networks) have greater theoretical expressiveness for modeling temporal dynamics, modern architectures tend to favor \glspl{DAG} for practical reasons:
+
+\begin{enumerate}
+    \item \textbf{Computational efficiency}: \glspl{DAG} allow massive parallelization, crucial for training models with millions or billions of parameters.
+
+    \item \textbf{Numerical stability}: Recurrent networks suffer from exploding or vanishing gradient problems over long sequences, hindering their training.
+
+    \item \textbf{Conceptual simplicity}: \glspl{DAG} are easier to analyze theoretically and to debug in practice.
+\end{enumerate}
+
+Nevertheless, mechanisms such as attention and \gls{Transformer} architectures (see \autoref{ch:attention}) have managed to capture long-range dependencies while maintaining the \gls{DAG} structure, combining the best of both worlds.
+
+\subsection{Layers as graphs of transformations}\label{subsec:capas_grafos_transformaciones}
+
+In addition to understanding \gls{ANN} as graphs where the \textit{nodes are individual neurons}, there exists a complementary perspective at a higher level of abstraction that is fundamental to understanding modern architectures: thinking of networks as \textit{graphs of layers}, where each node represents a complete layer (potentially with thousands of neurons) and the edges represent the flow of data between layers.
+
+\begin{definition}[\Gls{grafo_de_capas}]\label{def:grafo_de_capas}
+Given a neural network composed of $k$ layers $L_1, L_2, \ldots, L_k$, its \textit{\gls{grafo_de_capas}} is a \gls{grafo_dirigido} $\mathcal{G}_{\mathcal{N}} = (V_L, E_L, V_{\text{in}}, V_{\text{out}})$ where:
+\begin{itemize}
+    \item $V_L = \{L_1, L_2, \ldots, L_k\}$: the set of layers
+    \item $(L_i, L_j) \in E_L$ if and only if the output of layer $L_i$ is (part of) the input of layer $L_j$
+    \item $V_{\text{in}} \subseteq V_L$: the \textit{input layers}, those with in-degree zero (they receive no output from other layers)
+    \item $V_{\text{out}} \subseteq V_L$: the \textit{output layers}, those with out-degree zero (their output does not feed other layers)
+\end{itemize}
+\end{definition}
+
+This level of abstraction simplifies the visualization of complex architectures and facilitates the analysis of the flow of information through the network. Moreover, it naturally reflects the algebraic structure: each layer $L_i$ can be decomposed as a linear transformation (representable as a matrix) followed by a nonlinear activation function, $L_i(x) = \sigma(W_i x + b_i)$, and the edges of the graph correspond to these compositions of transformations between vector spaces.
+
+\subsubsection[Feedforward architectures as DAGs of layers]{Feedforward architectures as \glspl{DAG} of layers}
+
+Classical feedforward architectures (such as multilayer perceptrons, standard convolutional \glspl{CNN}) have graphs of layers that are \glspl{DAG} with a particularly simple structure: a linear path.
+
+\begin{example}[Feedforward neural network]
+A feedforward neural network with $k$ layers is represented as:
+\[
+\mathcal{N}(x) = L_k \circ L_{k-1} \circ \cdots \circ L_2 \circ L_1(x)
+\]
+Its graph of layers is the directed path:
+\[
+L_1 \to L_2 \to L_3 \to \cdots \to L_{k-1} \to L_k
+\]
+This is the simplest possible \gls{DAG}: completely linear, with no branches or skip connections.
+\end{example}
+
+\subsubsection[Modern architectures with nonlinear DAGs]{Modern architectures with nonlinear \glspl{DAG}}
+
+Modern architectures have abandoned the restriction of linear graphs, exploring more complex \glspl{DAG} that allow richer flows of information:
+
+Residual connections, introduced in ResNet~\citep{he2016deep}, add edges that ``skip'' layers:
+\[
+h^{(\ell+1)} = h^{(\ell)} + F(h^{(\ell)}; \theta_\ell)
+\]
+where $F$ is a learned function. In the graph of layers, this creates a direct edge $L_\ell \to L_{\ell+1}$ that coexists with the path through the intermediate layers, resulting in a nonlinear \gls{DAG}.
+
+Networks such as Inception~\citep{szegedy2015going} process the input through multiple parallel paths that are then concatenated or summed:
+\[
+h^{(\ell+1)} = \text{Concatenate}(F_1(h^{(\ell)}), F_2(h^{(\ell)}), F_3(h^{(\ell)}))
+\]
+The graph of layers has an inverted-tree structure: one node (input) branches into multiple paths that are subsequently merged.
+
+\subsubsection{Recurrent networks as cyclic graphs of layers}
+
+\glspl{RNN} and \glspl{LSTM} introduced in Section~\ref{subsubsec:rnn}, by contrast, have graphs of layers with cycles:
+
+\begin{example}[Basic recurrent neural network]
+An \gls{RNN} processes a sequence $x_1, x_2, \ldots, x_T$ by maintaining a hidden state $h_t$ that is updated recursively:
+\[
+h_t = f(W_{hh} h_{t-1} + W_{xh} x_t + b)
+\]
+The graph of layers contains a self-directed cycle: the recurrent layer has an edge to itself, representing the temporal dependency $h_{t-1} \to h_t$.
+\end{example}
+
+\subsubsection{Connection between the graph-of-neurons and graph-of-layers perspectives}
+
+The two perspectives (graph of neurons and graph of layers) are related hierarchically:
+\begin{itemize}
+    \item The \textbf{graph of neurons} $\mathcal{G}_{\text{neuronas}} = (V_N, E_N)$ provides the complete microscopic description of the network
+    \item The \textbf{graph of layers} $\mathcal{G}_{\mathcal{N}} = (V_L, E_L)$ is a macroscopic abstraction where each node $L_i \in V_L$ represents a complete subgraph of neurons
+\end{itemize}
+
+Formally, there exists a projection function $\pi: V_N \to V_L$ that assigns each neuron to its corresponding layer. The edges in $E_L$ summarize the connectivity between groups of neurons:
+\[
+(L_i, L_j) \in E_L \iff \exists n \in \pi^{-1}(L_i), m \in \pi^{-1}(L_j) : (n, m) \in E_N
+\]
+
+This two-level abstraction is fundamental: it allows reasoning about global architectures (graphs of layers) without getting lost in the details of millions of individual connections (graph of neurons), while preserving the ability to compute exact gradients at the level of each individual parameter.
+
+\section{Learning in neural networks}\label{sec:learning_ann}
+
+The learning or training of a neural network is an iterative process that involves optimizing its parameters \(\theta\) or weights to minimize an error. The \gls{ANN} is provided with training datasets containing examples of the expected output of the \gls{ANN} given some input data. With the error at each step, an optimization algorithm for the parameters \(\theta\) is run; in particular, gradient descent or one of its variants such as stochastic gradient descent (\gls{SGD}) is used.
+
+\subsection{Loss function}
+
+The error of the \gls{ANN} is a measure of the difference between the expected output and the network's output. This measure of the error is performed with a function called the loss function (\emph{loss function}) or \textit{cost function}.
+
+\begin{definition}[Loss function]\label{def:funcion_perdida}
+	A \textit{loss function} is a function \(\mathcal{L}: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}_{\geq 0}\) that measures the discrepancy between the prediction \(\hat{y} \in \mathcal{Y}\) and the true value \(y \in \mathcal{Y}\), satisfying:
+	\begin{enumerate}
+		\item \textbf{Non-negativity}: \(\mathcal{L}(y, \hat{y}) \geq 0\) for all \(y, \hat{y} \in \mathcal{Y}\)
+		\item \textbf{Consistency}: \(\mathcal{L}(y, y) = 0\) for all \(y \in \mathcal{Y}\) (the perfect prediction incurs no loss)
+		\item \textbf{Differentiability}: \(\mathcal{L}\) is differentiable with respect to \(\hat{y}\) to enable gradient-based optimization
+	\end{enumerate}
+\end{definition}
+
+\begin{remark}
+Some loss functions satisfy the stronger condition \(\mathcal{L}(y, \hat{y}) = 0 \iff y = \hat{y}\) (for example, MSE and MAE), while others attain the minimum of zero over a wider region: the hinge loss (\autoref{def:hinge_loss}) satisfies \(\mathcal{L}(y, \hat{y}) = 0\) when \(y \hat{y} \geq 1\), not only when \(y = \hat{y}\).
+\end{remark}
+
+The loss function can be used in more than one layer of the \gls{ANN}, several can be combined, and it can even be used with the parameters \(\theta\) of the \gls{ANN} to prevent them from growing excessively\footnote{Applying a loss function over the weights of a network is a process called regularization and serves to avoid or reduce cumulative errors due to the representation capacity of computers, and also to force greater generalization of the learning.}. In the context of this work we will consider only a single loss function applied over the last layer of the \gls{ANN}, which will consist of more than one output.
+
+
+\subsubsection{Common loss functions}
+
+We now present the most widely used loss functions in practice, organized by the type of task.
+
+\paragraph{Regression}
+
+\textit{Regression} problems consist of predicting a continuous numerical value from the input features. Mathematically, we seek to approximate a function \(f: \mathcal{X} \to \mathbb{R}^d\) where the output space is a subset of \(\mathbb{R}^d\). Typical examples include predicting house prices, estimating future temperatures, or regressing spatial coordinates. Loss functions for regression measure the distance between the predicted value \(\hat{y}\) and the actual value \(y\) in Euclidean space.
+
+\begin{definition}[Mean squared error (MSE)]\label{def:mse}
+	The \textit{mean squared error} (\gls{MSE}) for a set of \(n\) predictions is:
+	\[
+		\mathcal{L}_{\text{MSE}}(y, \hat{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+	\]
+	For a single prediction: \(\mathcal{L}(y, \hat{y}) = (y - \hat{y})^2\).
+\end{definition}
+
+The \gls{MSE} heavily penalizes large errors due to the quadratic term, which makes it sensitive to outliers. Its gradient is \(\nabla_{\hat{y}} \mathcal{L} = -2(y - \hat{y})\), proportional to the error.
+
+\begin{definition}[Mean absolute error (MAE)]\label{def:mae}
+	The \textit{mean absolute error} (\gls{MAE}) is:
+	\[
+		\mathcal{L}_{\text{MAE}}(y, \hat{y}) = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|
+	\]
+\end{definition}
+
+The \gls{MAE} is more robust to outliers than the \gls{MSE}, but it has a problem: it is not differentiable at \(\hat{y} = y\). In practice, the subgradient \(\text{sign}(y - \hat{y})\) is used.
+
+\begin{definition}[Huber loss]\label{def:huber}
+	The \textit{Huber loss} combines the advantages of \gls{MSE} and \gls{MAE}:
+	\[
+		\mathcal{L}_{\delta}(y, \hat{y}) = \begin{cases}
+			\frac{1}{2}(y - \hat{y})^2 & \text{if } |y - \hat{y}| \leq \delta \\
+			\delta |y - \hat{y}| - \frac{1}{2}\delta^2 & \text{otherwise}
+		\end{cases}
+	\]
+	where \(\delta > 0\) is a hyperparameter that controls the transition.
+\end{definition}
+
+The Huber loss is quadratic for small errors (providing smooth gradients) and linear for large errors (robustness to outliers). It is differentiable everywhere, including at the transition at \(|y - \hat{y}| = \delta\).
+
+\paragraph{Classification}
+
+\textit{Classification} problems consist of assigning each input to one of \(K\) predefined discrete categories. Mathematically, we seek to approximate a function \(f: \mathcal{X} \to \{1, \ldots, K\}\), although in practice the network produces a vector of probabilities \(\hat{y} \in \Delta^{K-1}\) (the simplex of dimension \(K-1\)). When \(K = 2\) we speak of \textit{binary classification} (for example, detecting \textit{spam} email); when \(K > 2\), of \textit{multiclass classification} (for example, recognizing handwritten digits from 0 to 9, or classifying images into categories). Loss functions for classification penalize the discrepancies between the predicted distribution and the actual class.
+
+\begin{definition}[Cross-entropy]\label{def:cross_entropy}
+	The \textit{cross-entropy} measures the divergence between the true class distribution \(y\) and the estimated distribution \(\hat{y}\):
+	\begin{equation}
+		\mathcal{L}(y, \hat{y}) = -\sum_{i=1}^{K} y_i \log(\hat{y}_i)
+		\label{eq:cross_entropy}
+	\end{equation}
+	where $K$ is the number of classes, \(y_i\) is the true probability and \(\hat{y}_i\) the probability estimated by the network.
+\end{definition}
+
+For the values of the last layer to be probabilities, the softmax function (\autoref{def:softmax}) is applied.
+
+\begin{definition}[Binary logistic loss]\label{def:binary_cross_entropy}
+	For binary classification with \(y \in \{0, 1\}\) and \(\hat{y} \in (0, 1)\):
+	\[
+		\mathcal{L}(y, \hat{y}) = -y \log(\hat{y}) - (1-y) \log(1 - \hat{y})
+	\]
+	This is the cross-entropy specialized to the binary case, also known as \textit{log loss}.
+\end{definition}
+
+\begin{definition}[Hinge loss]\label{def:hinge_loss}
+	The \textit{hinge loss}, used in support vector machines (SVM), for \(y \in \{-1, +1\}\):
+	\[
+		\mathcal{L}(y, \hat{y}) = \max(0, 1 - y \cdot \hat{y})
+	\]
+\end{definition}
+
+The hinge loss does not penalize correct predictions with margin greater than 1, which induces maximum-margin solutions. It is not differentiable at \(y \cdot \hat{y} = 1\).
+
+\paragraph{For probability distributions}
+
+In addition to the standard regression and classification problems, some applications require the network to produce a complete probability distribution as output, not just a point or a class. This is common in generative models, where the network learns to generate data following a target distribution, and in knowledge distillation, where a student network learns to mimic the probability distributions of a teacher network. The following loss functions measure the divergence or distance between probability distributions.
+
+\begin{definition}[Kullback-Leibler divergence]\label{def:kl_divergence}
+	The \textit{KL divergence} between two distributions \(P\) and \(Q\) over a discrete space \(\mathcal{X}\) is:
+	\[
+		D_{\text{KL}}(P \| Q) = \sum_{x \in \mathcal{X}} P(x) \log \frac{P(x)}{Q(x)}
+	\]
+	For continuous distributions, the sum is replaced by an integral.
+\end{definition}
+
+The \gls{KL} divergence measures how much information is lost when using \(Q\) to approximate \(P\). Note that \(D_{\text{KL}}(P \| Q) \neq D_{\text{KL}}(Q \| P)\) in general, so it is not symmetric. The cross-entropy is related to \gls{KL} by: \(H(P, Q) = H(P) + D_{\text{KL}}(P \| Q)\), where \(H(P)\) is the entropy of \(P\) and \(H(P, Q)\) the cross-entropy.
+
+The \gls{KL} divergence is a special case of a more general family of divergences:
+
+\begin{definition}[\(f\)-divergence]\label{def:f_divergence}
+	Let \(f: (0, \infty) \to \mathbb{R}\) be a convex function with \(f(1) = 0\). The \textit{\(f\)-divergence} between distributions \(P\) and \(Q\) is:
+	\[
+		D_f(P \| Q) = \sum_{x \in \mathcal{X}} Q(x) \, f\left(\frac{P(x)}{Q(x)}\right)
+	\]
+	For continuous distributions with densities \(p\) and \(q\): \(D_f(P \| Q) = \int q(x) \, f\left(\frac{p(x)}{q(x)}\right) dx\).
+\end{definition}
+
+The \(f\)-divergences unify multiple measures of discrepancy between distributions:
+\begin{itemize}
+	\item \textbf{KL divergence}: \(f(t) = t \log t\) produces \(D_{\text{KL}}(P \| Q)\)
+	\item \textbf{Reverse KL}: \(f(t) = -\log t\) produces \(D_{\text{KL}}(Q \| P)\)
+	\item \textbf{Jensen-Shannon}: \(f(t) = t \log t - (t+1) \log \frac{t+1}{2}\) produces a symmetric divergence
+	\item \textbf{Total variation}: \(f(t) = \frac{1}{2}|t - 1|\) produces \(\text{TV}(P, Q) = \frac{1}{2}\sum_x |P(x) - Q(x)|\)
+	\item \textbf{Chi-squared}: \(f(t) = (t-1)^2\) produces the \(\chi^2\) divergence
+\end{itemize}
+
+The key property of \(f\)-divergences is that \(D_f(P \| Q) \geq 0\) with equality if and only if \(P = Q\), which makes them suitable as loss functions for comparing distributions.
+
+\paragraph{For representation learning}
+
+\textit{Representation learning} seeks to build a function \(f: \mathcal{X} \to \mathbb{R}^d\) that maps input data to a space of \textit{embeddings} where the geometry reflects the semantics of the problem. A particular case is \textit{metric learning}, where the objective is for the distance in the embedding space to encode similarity: semantically similar elements (same class, same object, same speaker) should be close, while dissimilar elements should be separated. Typical applications include face recognition (verifying whether two images are of the same person), similar-image search, and recommendation systems. Loss functions for metric learning operate over pairs or triplets of examples, not over individual examples.
+
+\begin{definition}[Contrastive loss]\label{def:contrastive_loss}
+	The \textit{contrastive loss}~\citep{hadsell2006dimensionality} for a pair of embeddings \((f(x_1), f(x_2))\) with label \(y \in \{0, 1\}\) (0 = similar, 1 = dissimilar):
+	\[
+		\mathcal{L}(y, x_1, x_2) = (1-y) \frac{1}{2} d^2 + y \frac{1}{2} \max(0, m - d)^2
+	\]
+	where \(d = \|f(x_1) - f(x_2)\|_2\) is the Euclidean distance and \(m > 0\) is the margin.
+\end{definition}
+
+The contrastive loss penalizes similar pairs that are far apart and dissimilar pairs that are too close (within the margin \(m\)).
+
+\begin{definition}[Triplet loss]\label{def:triplet_loss}
+	The \textit{triplet loss}~\citep{schroff2015facenet} for a triplet (anchor \(a\), positive \(p\), negative \(n\)):
+	\[
+		\mathcal{L}(a, p, n) = \max(0, \|f(a) - f(p)\|_2 - \|f(a) - f(n)\|_2 + m)
+	\]
+	where \(m > 0\) is the margin that ensures separation between classes.
+\end{definition}
+
+The triplet loss forces the anchor to be closer to the positive than to the negative by a margin \(m\). It is widely used in face recognition and similarity verification.
+
+\subsubsection{Loss functions vs. metrics}
+
+To understand why many loss functions are not metrics, we first establish the formal definition of a metric.
+
+\begin{definition}[Metric]\label{def:metrica}
+	A \textit{metric} (or \textit{distance}) on a set \(X\) is a function \(d: X \times X \to \mathbb{R}_{\geq 0}\) that satisfies, for all \(x, y, z \in X\):
+	\begin{enumerate}
+		\item \textbf{Non-negativity}: \(d(x, y) \geq 0\)
+		\item \textbf{Identity of indiscernibles}: \(d(x, y) = 0 \iff x = y\)
+		\item \textbf{Symmetry}: \(d(x, y) = d(y, x)\)
+		\item \textbf{Triangle inequality}: \(d(x, z) \leq d(x, y) + d(y, z)\)
+	\end{enumerate}
+\end{definition}
+
+It is important to emphasize that many common loss functions \textbf{are not metrics} in the sense of \autoref{def:metrica}. For example:
+\begin{itemize}
+	\item The \textbf{cross-entropy} does not satisfy symmetry: \(\mathcal{L}(y, \hat{y}) \neq \mathcal{L}(\hat{y}, y)\)
+	\item The \textbf{mean squared error} (MSE) does define a metric when the square root is taken
+	\item The \textbf{Kullback-Leibler divergence} satisfies neither symmetry nor the triangle inequality
+\end{itemize}
+
+What is crucial for machine learning is not that \(\mathcal{L}\) be a metric, but that it:
+\begin{itemize}
+	\item Provides informative gradients for optimization
+	\item Penalizes large errors more than small ones
+	\item Is computationally efficient
+	\item Aligns with the objective of the task (classification, regression, etc.)
+\end{itemize}
+
+Both metrics and loss functions measure ``distance'' between values, but they have fundamentally different purposes:
+\begin{itemize}
+	\item \textbf{Metrics}: Define a topology over the space, allowing one to speak of convergence, continuity and completeness. They are essential in mathematical analysis.
+	\item \textbf{Loss functions}: Designed to guide gradient-based optimization, they prioritize the quality of the error signal over topological properties.
+\end{itemize}
+
+\subsection{Gradient descent}\label{subsec:descenso_gradiente}
+
+Once the loss function has been defined as a quantitative measure of the network's error, the next step is to determine how to adjust the parameters to minimize it. The most widespread method for training neural networks is supervised learning via error backpropagation\footnote{There also exist unsupervised and self-supervised training methods that fall outside the scope of this work. Nevertheless, the underlying idea is common: to have some loss function that provides a signal about the network's error. For example, \acrlong{GAN} (\gls{GAN})~\citep{goodfellow2014generative} employ an adversarial loss function in which two networks compete against each other.}. This procedure can be summarized in the following steps:
+
+\begin{enumerate}
+	\item \textbf{Parameter initialization}: The weights and biases of the network are typically initialized with small random values.
+	\item \textbf{Forward propagation (forward pass)}: For a given input, the information propagates from the input layer, through the hidden layers, to the output layer. This produces a prediction.
+	\item \textbf{Loss computation}: The prediction is compared with the true output and a loss value is computed.
+	\item \textbf{Backpropagation (backpropagation~\citep{backpropagation})}: The gradient of the loss function with respect to each of the network's weights is computed using the chain rule. This gradient indicates the direction in which the weights should be adjusted to reduce the loss. Currently, automatic differentiation techniques~\citep{Neidinger2010IntroductionTA} are used to compute these gradients efficiently.
+	\item \textbf{Weight update}: The weights are adjusted using optimization methods such as stochastic gradient descent (\gls{SGD}) or more advanced variants (\gls{Adam}, RMSProp, Adagrad). This adjustment is performed many times, iterating over the dataset, until the network converges to a set of parameters that minimize the loss.
+\end{enumerate}
+
+The result of this process is a network that, ideally, generalizes well to unseen data. This means that the network does not merely memorize the training samples, but learns underlying patterns that can be applied to new inputs.
+
+In general it is not feasible to apply one iteration of the above algorithm over the entire training dataset; instead it is performed in batches. A small subset of the training data is taken and one iteration is applied. And this is repeated until a predefined stopping criterion is reached (a sufficiently small error or a sufficient number of iterations). This algorithm is called \gls{SGD}.
+
+\subsubsection{Mathematical formalization}
+
+We now formalize the fundamental optimization algorithms~\citep{robbins1951stochastic, bottou2018optimization}.
+
+\begin{definition}[Gradient descent]\label{def:gradient_descent}
+	Let \(\mathcal{L}: \mathbb{R}^p \to \mathbb{R}\) be a differentiable loss function. \textit{Gradient descent} is the iterative algorithm defined by:
+	\[
+		\theta_{t+1} = \theta_t - \eta \nabla_\theta \mathcal{L}(\theta_t)
+	\]
+	where \(\eta > 0\) is the \textit{learning rate} and \(\nabla_\theta \mathcal{L}(\theta_t)\) is the gradient of the loss evaluated at \(\theta_t\).
+\end{definition}
+
+The gradient descent algorithm follows the direction of maximum decrease of the loss function. However, computing the exact gradient over all the training data is computationally expensive for large datasets.
+
+\autoref{fig:loss_landscapes} illustrates the fundamental difference between convex loss surfaces (with a single global minimum) and non-convex ones (typical in deep learning, with multiple local minima). This distinction has crucial implications for the convergence of optimization algorithms.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{images/loss_landscapes}
+\caption[Convex vs non-convex loss surfaces]{Comparison of loss surfaces. Left: Convex function with a single global minimum where any gradient descent trajectory converges to the optimum. Right: Non-convex function typical of deep neural networks, with multiple local minima. Recent studies suggest that in overparameterized networks, most local minima have loss values similar to the global one.}
+\label{fig:loss_landscapes}
+\end{figure}
+
+\begin{definition}[Stochastic gradient descent (SGD)]\label{def:sgd}
+	Let \(\{(x_i, y_i)\}_{i=1}^N\) be a dataset and \(\mathcal{L}(\theta) = \frac{1}{N}\sum_{i=1}^N \ell(f_\theta(x_i), y_i)\) the empirical loss. \textit{Stochastic gradient descent} approximates the gradient using a random subset (\textit{mini-batch}) \(\mathcal{B} \subset \{1,\ldots,N\}\):
+\[
+	\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{|\mathcal{B}|}\sum_{i \in \mathcal{B}} \nabla_\theta \ell(f_\theta(x_i), y_i)
+\]
+where \(|\mathcal{B}|\) is the mini-batch size.
+\end{definition}
+
+The gradient estimated by \gls{SGD} is an \textit{unbiased} estimator of the true gradient:
+\[
+	\mathbb{E}_{\mathcal{B}}\left[\frac{1}{|\mathcal{B}|}\sum_{i \in \mathcal{B}} \nabla_\theta \ell(f_\theta(x_i), y_i)\right] = \nabla_\theta \mathcal{L}(\theta)
+\]
+Although it has higher variance than the exact gradient, this variance can act as implicit regularization, helping to escape suboptimal local minima.
+
+\subsubsection{Backpropagation}\label{subsubsec:backpropagation}
+
+The backpropagation algorithm~\citep{backpropagation} is the standard method for computing the gradients needed in gradient descent. Its efficiency lies in exploiting the graph structure of the neural network.
+
+\begin{definition}[Computational graph]\label{def:computational_graph}
+	A \textit{computational graph} is a directed acyclic graph \(G = (V, E)\) where:
+	\begin{itemize}
+		\item Each node \(v \in V\) represents a variable or a differentiable operation \(f_v\)
+		\item The input nodes (with no incoming edges) correspond to parameters \(\theta\) and input data \(x\)
+		\item Each edge \((u, v) \in E\) indicates that \(v\) depends on \(u\)
+		\item The output node (unique, with no outgoing edges) produces the value of the loss \(\mathcal{L}\)
+	\end{itemize}
+\end{definition}
+
+The computational graph allows decomposing the gradient computation into local operations via the chain rule, as illustrated in \autoref{fig:computational_graph}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    inputnode/.style={circle, draw, thick, minimum size=0.8cm, fill=gdlblue!20},
+    opnode/.style={circle, draw, thick, minimum size=0.8cm, fill=gdlgreen!20},
+    lossnode/.style={circle, draw, thick, minimum size=0.8cm, fill=gdlred!20},
+    arrow/.style={->, thick, >=stealth}
+]
+
+% Nodos de entrada
+\node[inputnode] (x) at (0,0) {$x$};
+\node[inputnode] (w) at (0,1.5) {$w$};
+\node[inputnode] (b) at (0,-1.5) {$b$};
+
+% Operaciones intermedias
+\node[opnode] (mult) at (2,0.75) {$\times$};
+\node[opnode] (add) at (4,0) {$+$};
+\node[opnode] (sigma) at (6,0) {$\sigma$};
+\node[opnode] (diff) at (8,0) {$-$};
+\node[opnode] (sq) at (10,0) {$(\cdot)^2$};
+
+% Nodo de pérdida
+\node[lossnode] (L) at (12,0) {$\mathcal{L}$};
+
+% Target
+\node[inputnode] (y) at (8,1.5) {$y$};
+
+% Conexiones
+\draw[arrow] (x) -- (mult);
+\draw[arrow] (w) -- (mult);
+\draw[arrow] (mult) -- node[above, font=\scriptsize] {$wx$} (add);
+\draw[arrow] (b) -- (add);
+\draw[arrow] (add) -- node[above, font=\scriptsize] {$z$} (sigma);
+\draw[arrow] (sigma) -- node[above, font=\scriptsize] {$\hat{y}$} (diff);
+\draw[arrow] (y) -- (diff);
+\draw[arrow] (diff) -- node[above, font=\scriptsize] {$e$} (sq);
+\draw[arrow] (sq) -- node[above, font=\scriptsize] {$\frac{1}{2}$} (L);
+
+% Etiquetas de tipos de nodos
+\node[font=\footnotesize, gdlgray] at (0,-2.3) {Inputs};
+\node[font=\footnotesize, gdlgray] at (6,-1.5) {Operations};
+\node[font=\footnotesize, gdlgray] at (12,-1) {Loss};
+
+% Forward y Backward
+\draw[dashed, gdlgray, ->] (0.5,-2.8) -- (11.5,-2.8) node[midway, below, font=\scriptsize] {Forward pass};
+\draw[dashed, gdlgray, <-] (0.5,-3.3) -- (11.5,-3.3) node[midway, below, font=\scriptsize] {Backward pass};
+
+\end{tikzpicture}
+\caption[Computational graph for a neuron]{Computational graph for a simple neuron with MSE loss. The blue nodes represent inputs (parameters $w$, $b$ and datum $x$), the green ones represent differentiable operations ($\times$, $+$, $\sigma$, $-$, $(\cdot)^2$), and the red one represents the final loss $\mathcal{L}$. The edges indicate dependencies: $z = wx + b$, $\hat{y} = \sigma(z)$, $\mathcal{L} = \frac{1}{2}(y - \hat{y})^2$.}
+\label{fig:computational_graph}
+\end{figure}
+
+The three graphs defined in this section represent the same network at different levels of abstraction:
+\begin{itemize}
+	\item The \textbf{graph of layers} (\autoref{def:grafo_de_capas}) is the macroscopic view: each node is a complete layer ($L_1, L_2, \ldots$)
+	\item The \textbf{graph of neurons} $\mathcal{G}_{\text{neuronas}}$ is the mesoscopic view: each node is an individual neuron with its weighted connections
+	\item The \textbf{computational graph} (\autoref{def:computational_graph}) is the microscopic view: each node is an elementary operation ($\times$, $+$, $\sigma$, etc.)
+\end{itemize}
+The computational graph ``unfolds'' each neuron of the graph of neurons into its constituent operations (multiplication by weight, addition of the bias, application of the activation), allowing the chain rule to be applied systematically during backpropagation.
+
+\begin{theorem}[Chain rule on computational graphs]\label{thm:backprop}
+	Let \(G = (V, E)\) be a computational graph with output node \(\mathcal{L}\). For each intermediate node \(v\) with successors \(\{u_1, \ldots, u_k\}\) in the graph (that is, nodes that depend on \(v\)):
+	\[
+		\frac{\partial \mathcal{L}}{\partial v} = \sum_{i=1}^{k} \frac{\partial \mathcal{L}}{\partial u_i} \cdot \frac{\partial u_i}{\partial v}
+	\]
+	The backpropagation algorithm computes all the gradients \(\frac{\partial \mathcal{L}}{\partial v}\) for \(v \in V\) in time \(O(|V| + |E|)\), that is, linear in the size of the graph.
+\end{theorem}
+
+\begin{proof}
+	We prove the correctness of the algorithm and analyze its complexity.
+
+	\textbf{Existence of a topological ordering.}
+	Since \(G = (V, E)\) is a directed acyclic graph (DAG), there exists a topological ordering \(v_1, v_2, \ldots, v_n\) of the nodes such that if \((v_i, v_j) \in E\), then \(i < j\). This ordering can be computed in time \(O(|V| + |E|)\) by standard algorithms (for example, DFS or iterative removal of sources).
+
+	\textbf{Forward pass.}
+	We traverse the nodes in topological order. For each node \(v_i\):
+	\begin{itemize}
+		\item If \(v_i\) is an input node (parameter or datum), its value is already defined.
+		\item If \(v_i\) is an operation node with predecessors \(\{u_1, \ldots, u_k\}\), we compute \(v_i = f_{v_i}(u_1, \ldots, u_k)\).
+	\end{itemize}
+	By the property of the topological ordering, all predecessors of \(v_i\) have smaller indices and have already been evaluated. The cost of evaluating each node is \(O(\text{in-degree})\), summing in total to \(O(|V| + |E|)\).
+
+	\textbf{Backward pass: Correctness.}
+	To prove the chain-rule formula, let \(v\) be an intermediate node and let \(u_1, \ldots, u_k\) be its direct successors (nodes that depend on \(v\)). The loss \(\mathcal{L}\) depends on \(v\) only through these successors. By the multivariable chain rule:
+	\[
+		\frac{\partial \mathcal{L}}{\partial v} = \sum_{i=1}^{k} \frac{\partial \mathcal{L}}{\partial u_i} \cdot \frac{\partial u_i}{\partial v}
+	\]
+	where \(\frac{\partial u_i}{\partial v}\) is the local partial derivative of the operation at \(u_i\) with respect to its input \(v\).
+
+	\textbf{Backward pass: Algorithm.}
+	We traverse the nodes in reverse topological order \(v_n, v_{n-1}, \ldots, v_1\):
+	\begin{enumerate}
+		\item \textbf{Initialization}: For the output node \(\mathcal{L}\), we set \(\frac{\partial \mathcal{L}}{\partial \mathcal{L}} = 1\).
+		\item \textbf{Propagation}: For each node \(v_i\), we have already computed the gradients \(\frac{\partial \mathcal{L}}{\partial u_j}\) of all its successors \(u_j\) (they have larger indices). We compute:
+		\[
+			\frac{\partial \mathcal{L}}{\partial v_i} = \sum_{(v_i, u_j) \in E} \frac{\partial \mathcal{L}}{\partial u_j} \cdot \frac{\partial u_j}{\partial v_i}
+		\]
+	\end{enumerate}
+
+	\textbf{Complexity analysis.}
+	In the backward pass, each edge \((v_i, u_j) \in E\) contributes exactly once to the gradient sum of \(v_i\). The cost of computing each local partial derivative \(\frac{\partial u_j}{\partial v_i}\) is \(O(1)\) for elementary operations. Therefore:
+	\begin{itemize}
+		\item Each node is visited once: contribution \(O(|V|)\)
+		\item Each edge is processed once: contribution \(O(|E|)\)
+	\end{itemize}
+
+	The total complexity of the full algorithm (forward + backward) is \(O(|V| + |E|)\).
+\end{proof}
+
+\paragraph{Automatic differentiation}
+In practice, modern deep learning frameworks (PyTorch, TensorFlow, JAX) implement automatic differentiation~\citep{Neidinger2010IntroductionTA} transparently: during the forward pass, they dynamically build the computational graph by recording each operation; during the backward pass, they traverse this graph in reverse topological order applying the chain rule. This frees the user from computing derivatives manually, allowing them to concentrate on designing architectures.
+
+\subsubsection{Numerical example: XOR}
+
+To concretely illustrate the learning process, let us consider the XOR problem with a minimal neural network of architecture 2-2-1 (2 inputs, 2 hidden neurons, 1 output).
+
+\textbf{Training data:}
+\begin{center}
+	\begin{tabular}{cc|c}
+		\(x_1\) & \(x_2\) & \(y\) \\
+		\hline
+		0       & 0       & 0     \\
+		0       & 1       & 1     \\
+		1       & 0       & 1     \\
+		1       & 1       & 0     \\
+	\end{tabular}
+\end{center}
+
+\textbf{Architecture:}
+\begin{itemize}
+	\item Input layer: \(\mathbf{x} = [x_1, x_2]^T\)
+	\item Hidden layer: \(\mathbf{h} = \sigma(W^{(1)}\mathbf{x} + \mathbf{b}^{(1)})\) with \(W^{(1)} \in \mathbb{R}^{2 \times 2}\), \(\mathbf{b}^{(1)} \in \mathbb{R}^2\)
+	\item Output layer: \(\hat{y} = \sigma(W^{(2)}\mathbf{h} + b^{(2)})\) with \(W^{(2)} \in \mathbb{R}^{1 \times 2}\), \(b^{(2)} \in \mathbb{R}\)
+	\item Activation function: \(\sigma(z) = \frac{1}{1 + e^{-z}}\) (logistic sigmoid, see \autoref{tab:funciones_activacion})
+\end{itemize}
+
+\textbf{Example of forward propagation:}
+
+Suppose initial weights:
+\begin{gather*}
+    W^{(1)} = \begin{pmatrix}
+		          0.5 & -0.3 \\
+		          0.2 & 0.4
+	\end{pmatrix}, \quad
+	\mathbf{b}^{(1)} = \begin{pmatrix}
+		                   -0.1 \\
+		                   0.3
+	\end{pmatrix}\\
+    W^{(2)} = \begin{pmatrix}
+		          0.7 & -0.5
+	\end{pmatrix}, \quad
+	b^{(2)} = 0.2\\
+\end{gather*}
+
+For the input \(\mathbf{x} = [1, 0]^T\):
+
+1. Hidden layer:
+\begin{gather*}
+    \mathbf{z}^{(1)} = W^{(1)}\mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix}
+		                                                          0.5 \cdot 1 + (-0.3) \cdot 0 - 0.1 \\
+		                                                          0.2 \cdot 1 + 0.4 \cdot 0 + 0.3
+	\end{pmatrix} = \begin{pmatrix}
+		                0.4 \\
+		                0.5
+	\end{pmatrix}\\
+    \mathbf{h} = \sigma(\mathbf{z}^{(1)}) = \begin{pmatrix}
+		                                        \sigma(0.4) \\
+		                                        \sigma(0.5)
+	\end{pmatrix} = \begin{pmatrix}
+		                0.599 \\
+		                0.622
+	\end{pmatrix}\\
+\end{gather*}
+
+2. Output layer:
+\begin{gather*}
+    z^{(2)} = W^{(2)}\mathbf{h} + b^{(2)} = 0.7 \cdot 0.599 + (-0.5) \cdot 0.622 + 0.2 = 0.308\\
+    \hat{y} = \sigma(0.308) = 0.576\\
+\end{gather*}
+
+3. Error (using \gls{MSE}):
+\[
+	\mathcal{L} = \frac{1}{2}(y - \hat{y})^2 = \frac{1}{2}(1 - 0.576)^2 = 0.090
+\]
+
+\textbf{Backpropagation:}
+
+To compute the gradients systematically, we define the \textit{error signal} (or delta) of each layer. For the output layer:
+\[
+	\delta^{(2)} = \frac{\partial \mathcal{L}}{\partial z^{(2)}} = -(y - \hat{y}) \cdot \sigma'(z^{(2)}) = -(y - \hat{y}) \cdot \hat{y}(1 - \hat{y}) \in \mathbb{R}
+\]
+where we use that the derivative of the sigmoid is \(\sigma'(z) = \sigma(z)(1-\sigma(z))\).
+
+The gradient with respect to the weights of the output layer is then:
+\[
+	\frac{\partial \mathcal{L}}{\partial W^{(2)}} = \delta^{(2)} \cdot \mathbf{h}^T \in \mathbb{R}^{1 \times 2}
+\]
+For the hidden layer, the error signal propagates backward:
+\[
+	\boldsymbol{\delta}^{(1)} = \left( W^{(2)T} \cdot \delta^{(2)} \right) \odot \sigma'(\mathbf{z}^{(1)}) = \left( W^{(2)T} \cdot \delta^{(2)} \right) \odot \left[ \mathbf{h} \odot (1 - \mathbf{h}) \right] \in \mathbb{R}^{2}
+\]
+where \(\odot\) denotes the Hadamard product (element-wise).
+
+The gradient with respect to the weights of the hidden layer is:
+\[
+	\frac{\partial \mathcal{L}}{\partial W^{(1)}} = \boldsymbol{\delta}^{(1)} \cdot \mathbf{x}^T \in \mathbb{R}^{2 \times 2}
+\]
+This is an outer product between the vector of error signals and the input vector.
+
+\textbf{Numerical computations:}
+
+We compute the intermediate values step by step. First, the error signal of the output layer:
+\begin{gather*}
+	\delta^{(2)} = -(y - \hat{y}) \cdot \hat{y}(1 - \hat{y}) = -(1 - 0.576) \cdot 0.576 \cdot (1 - 0.576) = -0.424 \cdot 0.244 = -0.103
+\end{gather*}
+
+For the gradients of the output layer:
+\begin{gather*}
+	\frac{\partial \mathcal{L}}{\partial W^{(2)}} = \delta^{(2)} \cdot \mathbf{h}^T = -0.103 \cdot \begin{pmatrix} 0.599 & 0.622 \end{pmatrix} = \begin{pmatrix} -0.062 & -0.064 \end{pmatrix} \\[0.3em]
+	\frac{\partial \mathcal{L}}{\partial b^{(2)}} = \delta^{(2)} = -0.103
+\end{gather*}
+
+For the hidden layer, we propagate the error backward:
+\begin{gather*}
+	\boldsymbol{\delta}^{(1)} = \delta^{(2)} \cdot W^{(2)T} \odot \mathbf{h} \odot (1 - \mathbf{h}) \\
+	= -0.103 \cdot \begin{pmatrix} 0.7 \\ -0.5 \end{pmatrix} \odot \begin{pmatrix} 0.599 \cdot 0.401 \\ 0.622 \cdot 0.378 \end{pmatrix}
+	= \begin{pmatrix} -0.072 \\ 0.052 \end{pmatrix} \odot \begin{pmatrix} 0.240 \\ 0.235 \end{pmatrix}
+	= \begin{pmatrix} -0.017 \\ 0.012 \end{pmatrix}
+\end{gather*}
+
+\begin{gather*}
+	\frac{\partial \mathcal{L}}{\partial W^{(1)}} = \boldsymbol{\delta}^{(1)} \cdot \mathbf{x}^T = \begin{pmatrix} -0.017 \\ 0.012 \end{pmatrix} \cdot \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} -0.017 & 0 \\ 0.012 & 0 \end{pmatrix}
+\end{gather*}
+
+\textbf{Weight update:}
+
+With learning rate \(\eta = 0.5\), we update the weights of the output layer:
+\begin{gather*}
+	W^{(2)}_{\text{new}} = W^{(2)} - \eta \cdot \frac{\partial \mathcal{L}}{\partial W^{(2)}} = \begin{pmatrix} 0.7 & -0.5 \end{pmatrix} - 0.5 \cdot \begin{pmatrix} -0.062 & -0.064 \end{pmatrix} = \begin{pmatrix} 0.731 & -0.468 \end{pmatrix} \\[0.3em]
+	b^{(2)}_{\text{new}} = b^{(2)} - \eta \cdot \frac{\partial \mathcal{L}}{\partial b^{(2)}} = 0.2 - 0.5 \cdot (-0.103) = 0.252
+\end{gather*}
+
+\textbf{Verification:}
+
+We perform a new forward pass with the updated weights to verify that the loss has decreased:
+\begin{gather*}
+	z^{(2)}_{\text{new}} = W^{(2)}_{\text{new}} \cdot \mathbf{h} + b^{(2)}_{\text{new}} = 0.731 \cdot 0.599 + (-0.468) \cdot 0.622 + 0.252 = 0.399 \\
+	\hat{y}_{\text{new}} = \sigma(0.399) = 0.598 \\
+	\mathcal{L}_{\text{new}} = \frac{1}{2}(1 - 0.598)^2 = 0.081
+\end{gather*}
+
+Indeed, \(\mathcal{L}_{\text{new}} = 0.081 < 0.090 = \mathcal{L}_{\text{previous}}\), confirming that gradient descent reduces the loss. This process is repeated iteratively until the network learns to correctly classify all the inputs of the XOR problem.
+
+\begin{figure}[h]
+	\centering
+	\shorthandoff{>}
+	\begin{tikzpicture}[
+		node distance=2cm,
+		neuron/.style={circle, draw, thick, minimum size=1cm},
+		input/.style={circle, draw, thick, minimum size=0.9cm, fill=gdlblue!20},
+		hidden/.style={circle, draw, thick, minimum size=1.0cm, fill=gdlgreen!20},
+		output/.style={circle, draw, thick, minimum size=1.0cm, fill=gdlred!20},
+		bias/.style={circle, draw, thick, minimum size=0.7cm, fill=gdlgray!20},
+		weight/.style={midway, above, sloped, font=\small},
+		activation/.style={below=0.5cm, font=\small}
+	]
+
+% Input layer
+		\node[input] (x1) at (0,2) {\(x_1\)};
+		\node[input] (x2) at (0,0) {\(x_2\)};
+		\node[bias] (b0) at (2,-2) {\scriptsize\(+1\)};
+
+% Hidden layer (separada más de la entrada)
+		\node[hidden] (h1) at (4,2) {\(h_1\)};
+		\node[hidden] (h2) at (4,0) {\(h_2\)};
+		\node[bias] (b1) at (6,-2) {\scriptsize\(+1\)};
+
+% Output layer
+		\node[output] (y) at (7.5,0) {\(\hat{y}\)};
+
+% Connections with weights
+		\draw[->, thick] (x1) -- (h1) node[weight, pos=0.2] {\(0.5\)};
+		\draw[->, thick] (x1) -- (h2) node[weight, pos=0.2] {\(0.2\)};
+		\draw[->, thick] (x2) -- (h1) node[weight, pos=0.2] {\(-0.3\)};
+		\draw[->, thick] (x2) -- (h2) node[weight, pos=0.2] {\(0.4\)};
+		\draw[->, thick] (h1) -- (y) node[weight, pos=0.2] {\(0.7\)};
+		\draw[->, thick] (h2) -- (y) node[weight, pos=0.2] {\(-0.5\)};
+
+% Bias connections (pesos al inicio de la flecha)
+		\draw[->, dashed] (b0) -- (h1) node[weight, pos=0.2] {\(-0.1\)};
+		\draw[->, dashed] (b0) -- (h2) node[weight, pos=0.2] {\(0.3\)};
+		\draw[->, dashed] (b1) -- (y) node[weight, pos=0.2] {\(0.2\)};
+
+% Layer labels
+		\node[above=0.3cm of x1] {Input};
+		\node[above=0.3cm of h1] {Hidden layer};
+		\node[above=0.3cm of y] {Output};
+
+% Activation values for example x=[1,0]
+		\node[activation] at (x1) {\(1\)};
+		\node[activation] at (x2) {\(0\)};
+		\node[activation] at (h1) {\(0.599\)};
+		\node[activation] at (h2) {\(0.622\)};
+		\node[activation] at (y) {\(0.576\)};
+
+	\end{tikzpicture}
+	\shorthandon{>}
+	\caption[Neural network for the XOR problem]{Neural network for the XOR problem with architecture 2-2-1. The synaptic weights of the example and the activations for the input \([1,0]^T\) are shown. The bias nodes (+1) are shown with dashed connections.}
+	\label{fig:xor_network}
+\end{figure}
+
+\subsubsection{The vanishing gradient problem}\label{subsubsec:vanishing_gradient}
+
+A direct consequence of the chain rule is the \textit{vanishing gradient problem}. According to \autoref{thm:backprop}, the gradient of the loss with respect to the parameters of the first layers is proportional to the product of the derivatives of the activation functions along the entire network:
+\[
+\frac{\partial \mathcal{L}}{\partial \theta^{(1)}} \propto \prod_{\ell=1}^{L} \sigma'(z^{(\ell)})
+\]
+
+If each derivative $|\sigma'(z^{(\ell)})|$ is less than 1 (as happens with saturating functions such as the sigmoid, where $|\sigma'(z)| \leq 0.25$), this product decreases exponentially with the depth $L$. As a result, the gradients of the first layers become numerically zero, preventing their update during training.
+
+This phenomenon was one of the main obstacles to training deep networks in the 1990s. The solution came with the use of non-saturating activation functions such as \gls{ReLU}, where $\sigma'(z) = 1$ for $z > 0$, allowing gradients to flow without attenuation (see \autoref{prop:gradiente_no_saturante}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    layer/.style={rectangle, draw, thick, minimum width=1cm, minimum height=0.6cm, font=\small},
+    gradbar/.style={rectangle, minimum height=0.25cm},
+    arrow/.style={->, thick, >=stealth}
+]
+
+% === PANEL IZQUIERDO: Sigmoide ===
+\begin{scope}[xshift=-4cm]
+    % Título
+    \node[font=\bfseries] at (0.5, 2.8) {Sigmoid (saturating)};
+
+    % Capas con gradiente decreciente (numeración invertida: L_5 arriba, L_1 abajo)
+    \foreach \i/\layer/\grad/\col in {1/5/1.0/100, 2/4/0.65/75, 3/3/0.35/50, 4/2/0.15/30, 5/1/0.05/15} {
+        \node[layer, fill=gdlred!\col!white] (s\i) at (0.5, 2-\i*0.9) {$L_\layer$};
+        % Barra de gradiente a la izquierda
+        \fill[gdlblue!80] (-1.2, 1.85-\i*0.9) rectangle (-1.2+\grad, 2.15-\i*0.9);
+        \draw[gdlgray, thin] (-1.2, 1.85-\i*0.9) rectangle (-0.2, 2.15-\i*0.9);
+    }
+
+    % Etiqueta eje gradiente
+    \node[font=\scriptsize, rotate=90] at (-1.6, 0) {Magnitude $|\nabla|$};
+
+    % Flecha backprop (de arriba hacia abajo: desde la salida hacia la entrada)
+    \draw[arrow, color=gdlgray!70, line width=1.5pt] (1.3, 1.6) -- (1.3, -2.3);
+    \node[font=\scriptsize, color=gdlgray!70, rotate=90] at (1.7, -0.3) {backprop};
+
+    % Etiqueta resultado
+    \node[font=\small, align=center, color=gdlred!70!black] at (0.5, -3.25) {Gradient $\to 0$};
+\end{scope}
+
+% === PANEL DERECHO: ReLU ===
+\begin{scope}[xshift=4cm]
+    % Título
+    \node[font=\bfseries] at (0.5, 2.8) {ReLU (non-saturating)};
+
+    % Capas con gradiente estable (numeración invertida: L_5 arriba, L_1 abajo)
+    \foreach \i/\layer/\grad in {1/5/1.0, 2/4/0.95, 3/3/0.90, 4/2/0.85, 5/1/0.80} {
+        \node[layer, fill=gdlgreen!50!white] (r\i) at (0.5, 2-\i*0.9) {$L_\layer$};
+        % Barra de gradiente a la izquierda
+        \fill[gdlblue!80] (-1.2, 1.85-\i*0.9) rectangle (-1.2+\grad, 2.15-\i*0.9);
+        \draw[gdlgray, thin] (-1.2, 1.85-\i*0.9) rectangle (-0.2, 2.15-\i*0.9);
+    }
+
+    % Etiqueta eje gradiente
+    \node[font=\scriptsize, rotate=90] at (-1.6, 0) {Magnitude $|\nabla|$};
+
+    % Flecha backprop (de arriba hacia abajo: desde la salida hacia la entrada)
+    \draw[arrow, color=gdlgray!70, line width=1.5pt] (1.3, 1.6) -- (1.3, -2.3);
+    \node[font=\scriptsize, color=gdlgray!70, rotate=90] at (1.7, -0.3) {backprop};
+
+    % Etiqueta resultado
+    \node[font=\small, align=center, color=gdlgreen!50!black] at (0.5, -3.25) {Stable gradient};
+\end{scope}
+
+% === ECUACIÓN CENTRAL ===
+\node[font=\small, align=center, draw=gdlgray!30, rounded corners, fill=gdlgray!5, inner sep=6pt] at (0, -1.2) {
+    $\displaystyle\frac{\partial \mathcal{L}}{\partial \theta_1} \propto \prod_{\ell=1}^{L} \sigma'(z^{(\ell)})$
+};
+
+\end{tikzpicture}
+\caption[Vanishing gradient problem]{Comparison of the gradient flow during backpropagation. \textbf{Left}: With saturating functions such as the sigmoid, where $|\sigma'(z)| \leq 0.25$, the product of derivatives decreases exponentially. \textbf{Right}: With ReLU, where $\sigma'(z) = 1$ for $z > 0$, the gradient remains stable allowing deeper networks to be trained.}
+\label{fig:vanishing_gradient}
+\end{figure}
+
+\subsection{Universal approximation theorem}\label{sec:aproximacion_universal}
+
+The universal approximation theorem guarantees that any continuous function can be approximated arbitrarily well by an \gls{ANN} with a single hidden layer. Its proof requires tools from measure theory and functional analysis: the concepts of measure and $\sigma$-algebra underpin the representation (Riesz) and separation (Hahn-Banach) theorems that constitute the core of the proof. We first present the necessary preliminaries and then the statement with its complete proof. For an in-depth treatment of these foundations, see \citet{Folland1999} or \citet{Rudin1976}.
+
+\paragraph{Measure-theoretic preliminaries}
+
+\begin{definition}[$\sigma$-algebra]\label{def:sigma_algebra}
+	Let $X$ be a nonempty set. A \textit{$\sigma$-algebra} (or $\sigma$-field) over $X$ is a collection $\mathcal{F}$ of subsets of $X$ satisfying:
+	\begin{enumerate}
+		\item $X \in \mathcal{F}$
+		\item If $A \in \mathcal{F}$, then $A^c = X \setminus A \in \mathcal{F}$ (closed under complements)
+		\item If $\{A_n\}_{n=1}^\infty \subseteq \mathcal{F}$, then $\bigcup_{n=1}^\infty A_n \in \mathcal{F}$ (closed under countable unions)
+	\end{enumerate}
+	The elements of $\mathcal{F}$ are called \textit{measurable sets}.
+\end{definition}
+
+\begin{definition}[Measurable space]\label{def:espacio_medible}
+	A \textit{measurable space} is a pair $(X, \mathcal{F})$ where $X$ is a nonempty set and $\mathcal{F}$ is a $\sigma$-algebra over $X$.
+\end{definition}
+
+\begin{definition}[Borel $\sigma$-algebra]\label{def:sigma_algebra_borel}
+	Let $(X, \tau)$ be a topological space. The \textit{Borel $\sigma$-algebra} $\mathcal{B}(X)$ is the smallest $\sigma$-algebra that contains all the open sets of $X$. Its elements are called \textit{Borel sets}.
+\end{definition}
+
+In particular, for $\mathbb{R}^n$, the Borel $\sigma$-algebra $\mathcal{B}(\mathbb{R}^n)$ is generated by the open rectangles, or equivalently, by the half-spaces of the form $\{x \in \mathbb{R}^n : w^T x + b > 0\}$.
+
+\begin{definition}[Measure]\label{def:medida}
+	Let $(X, \mathcal{F})$ be a measurable space. A \textit{measure} is a function $\mu: \mathcal{F} \to [0, +\infty]$ satisfying:
+	\begin{enumerate}
+		\item $\mu(\emptyset) = 0$
+		\item \textbf{$\sigma$-additivity}: For any sequence $\{A_n\}_{n=1}^\infty$ of disjoint sets in $\mathcal{F}$:
+		\[
+			\mu\left(\bigcup_{n=1}^\infty A_n\right) = \sum_{n=1}^\infty \mu(A_n)
+		\]
+	\end{enumerate}
+\end{definition}
+
+\begin{definition}[Measure space]\label{def:espacio_medida}
+	A \textit{measure space} is a triple $(X, \mathcal{F}, \mu)$ where $X$ is a nonempty set, $\mathcal{F}$ is a $\sigma$-algebra over $X$, and $\mu: \mathcal{F} \to [0, +\infty]$ is a measure. If $\mu(X) < \infty$, we say that $\mu$ is a \textit{finite measure}. If $\mu(X) = 1$, we say that $\mu$ is a \textit{probability measure}.
+\end{definition}
+
+\begin{definition}[Finite signed measure]\label{def:medida_con_signo}
+	Let $(X, \mathcal{F})$ be a measurable space. A \textit{finite signed measure} is a function $\mu: \mathcal{F} \to \mathbb{R}$ satisfying $\mu(\emptyset) = 0$ and which is $\sigma$-additive: for any sequence $\{A_n\}_{n=1}^\infty$ of disjoint sets in $\mathcal{F}$,
+	\[
+		\mu\left(\bigcup_{n=1}^\infty A_n\right) = \sum_{n=1}^\infty \mu(A_n)
+	\]
+	where the series converges absolutely. The \textit{total variation} of $\mu$ is the measure $|\mu|$ defined by
+	\[
+		|\mu|(A) = \sup \left\{ \sum_{i=1}^n |\mu(A_i)| : \{A_i\}_{i=1}^n \text{ finite partition of } A \right\}
+	\]
+\end{definition}
+
+\begin{definition}[Lebesgue measure]\label{def:medida_lebesgue}
+	The \textit{Lebesgue measure} $\lambda$ on $\mathbb{R}^n$ is the unique measure on $(\mathbb{R}^n, \mathcal{B}(\mathbb{R}^n))$ that extends the notion of $n$-dimensional volume and satisfies:
+	\begin{itemize}
+		\item For a rectangle $R = [a_1, b_1] \times \cdots \times [a_n, b_n]$: $\lambda(R) = \prod_{i=1}^n (b_i - a_i)$
+		\item It is invariant under translations: $\lambda(A + x) = \lambda(A)$ for all $x \in \mathbb{R}^n$
+	\end{itemize}
+\end{definition}
+
+A set $A$ has \textit{Lebesgue measure zero} (or measure zero) if $\lambda(A) = 0$. Examples include: isolated points, finite sets, countable sets such as $\mathbb{Q}$, and the Cantor set.
+
+\begin{definition}[Measurable function]\label{def:funcion_medible}
+	Let $(X, \mathcal{F})$ and $(Y, \mathcal{G})$ be measurable spaces. A function $f: X \to Y$ is \textit{measurable} (or $\mathcal{F}$-$\mathcal{G}$-measurable) if the preimage of every measurable set is measurable:
+	\[
+		f^{-1}(B) = \{x \in X : f(x) \in B\} \in \mathcal{F} \quad \forall B \in \mathcal{G}
+	\]
+\end{definition}
+
+When $Y = \mathbb{R}$ with the Borel $\sigma$-algebra, it suffices to verify that $\{x : f(x) > \alpha\} \in \mathcal{F}$ for all $\alpha \in \mathbb{R}$. In particular, every continuous function is measurable with respect to the Borel $\sigma$-algebras.
+
+\begin{definition}[Lebesgue integral]\label{def:integral_lebesgue}
+	Let $(X, \mathcal{F}, \mu)$ be a measure space. The \textit{Lebesgue integral} is constructed in three steps:
+	\begin{enumerate}
+		\item \textbf{Simple functions}: For $s = \sum_{i=1}^n a_i \chi_{A_i}$ with $a_i \geq 0$ and $A_i \in \mathcal{F}$ disjoint, where $\chi_{A}$ is the characteristic function of $A$, we define
+		\[
+			\int_X s \, d\mu = \sum_{i=1}^n a_i \mu(A_i)
+		\]
+		\item \textbf{Non-negative functions}: For $f: X \to [0, +\infty]$ measurable,
+		\[
+			\int_X f \, d\mu = \sup\left\{\int_X s \, d\mu : s \text{ simple, } 0 \leq s \leq f\right\}
+		\]
+		\item \textbf{General functions}: For $f: X \to \mathbb{R}$ measurable, we write $f = f^+ - f^-$ with $f^+ = \max(f, 0)$ and $f^- = \max(-f, 0)$. We say that $f$ is \textit{integrable} (or $f \in L^1(\mu)$) if $\int_X f^+ \, d\mu < \infty$ and $\int_X f^- \, d\mu < \infty$, and we define
+		\[
+			\int_X f \, d\mu = \int_X f^+ \, d\mu - \int_X f^- \, d\mu
+		\]
+	\end{enumerate}
+\end{definition}
+
+\begin{definition}[Almost everywhere]\label{def:casi_por_doquier}
+	Let $(X, \mathcal{F}, \mu)$ be a measure space. A property $P(x)$ holds \textit{almost everywhere} (a.e.) or \textit{for almost every $x$} if the set of points where it does not hold has measure zero:
+	\[
+		\mu(\{x \in X : \neg P(x)\}) = 0
+	\]
+\end{definition}
+
+In the context of the Lebesgue measure on $\mathbb{R}^n$, ``almost everywhere'' means ``except on a set of Lebesgue measure zero''.
+
+\paragraph{Functional-analytic preliminaries}
+
+\begin{definition}[Vector space]\label{def:espacio_vectorial}
+	A \textit{vector space} over $\mathbb{R}$ is a set $V$ equipped with two operations, addition $+: V \times V \to V$ and scalar multiplication $\cdot: \mathbb{R} \times V \to V$, satisfying the following axioms for all $u, v, w \in V$ and $\alpha, \beta \in \mathbb{R}$:
+	\begin{enumerate}
+		\item \textbf{Associativity of addition:} $(u + v) + w = u + (v + w)$
+		\item \textbf{Commutativity of addition:} $u + v = v + u$
+		\item \textbf{Identity element:} there exists $0 \in V$ such that $v + 0 = v$
+		\item \textbf{Inverse element:} for each $v$ there exists $-v \in V$ such that $v + (-v) = 0$
+		\item \textbf{Compatibility of scalar multiplication:} $\alpha(\beta v) = (\alpha\beta)v$
+		\item \textbf{Unit element:} $1 \cdot v = v$
+		\item \textbf{Distributivity with respect to vector addition:} $\alpha(u + v) = \alpha u + \alpha v$
+		\item \textbf{Distributivity with respect to scalar addition:} $(\alpha + \beta)v = \alpha v + \beta v$
+	\end{enumerate}
+\end{definition}
+
+\begin{definition}[Normed vector space]\label{def:espacio_normado}
+	A \textit{normed vector space} is a pair $(X, \|\cdot\|)$ where $X$ is a real vector space and $\|\cdot\|: X \to [0, +\infty)$ is a \textit{norm}, that is, a function satisfying:
+	\begin{enumerate}
+		\item $\|x\| = 0$ if and only if $x = 0$
+		\item $\|\alpha x\| = |\alpha| \|x\|$ for all $\alpha \in \mathbb{R}$
+		\item $\|x + y\| \leq \|x\| + \|y\|$ (triangle inequality)
+	\end{enumerate}
+\end{definition}
+
+Fundamental examples include $\mathbb{R}^n$ with the Euclidean norm and the function spaces $L^p(\Omega)$.
+
+\begin{definition}[Cover]\label{def:recubrimiento}
+	Let $X$ be a topological space and $K \subseteq X$. A \textit{cover} of $K$ is a family of sets $\{U_\alpha\}_{\alpha \in A}$ such that $K \subseteq \bigcup_{\alpha \in A} U_\alpha$. If each $U_\alpha$ is an open set of $X$, it is called an \textit{open cover}. A \textit{subcover} is a subfamily that is still a cover of $K$.
+\end{definition}
+
+\begin{definition}[Compact space]\label{def:espacio_compacto}
+	A subset $K$ of a topological space is \textit{compact} if every open cover of $K$ admits a finite subcover.
+\end{definition}
+
+Intuitively, compactness generalizes the properties of closed and bounded sets in $\mathbb{R}^n$ to general topological spaces.
+
+\begin{theorem}[Heine-Borel]\label{thm:heine_borel}
+	A subset $K \subset \mathbb{R}^n$ is compact if and only if it is closed and bounded \citep[Theorem~2.41]{Rudin1976}.
+\end{theorem}
+
+In particular, the unit hypercube $I_m = [0,1]^m$ is compact, which is essential for the universal approximation theorem.
+
+\begin{definition}[Linear functional]\label{def:funcional_lineal}
+	Let $X$ be a real vector space. A \textit{linear functional} is a map $f: X \to \mathbb{R}$ satisfying:
+	\[
+		f(\alpha x + \beta y) = \alpha f(x) + \beta f(y) \quad \forall x, y \in X, \, \forall \alpha, \beta \in \mathbb{R}
+	\]
+	That is, a linear functional is an element of the algebraic dual space $X^*$.
+\end{definition}
+
+\begin{definition}[Continuous linear functional]\label{def:funcional_continuo}
+	Let $(X, \|\cdot\|)$ be a normed vector space. A linear functional $f: X \to \mathbb{R}$ is \textit{continuous} (or \textit{bounded}) if there exists a constant $M > 0$ such that:
+	\[
+		|f(x)| \leq M\|x\| \quad \forall x \in X
+	\]
+\end{definition}
+
+The set of all continuous linear functionals on $X$ forms the \textit{dual space} $X'$, which is a Banach space with the operator norm $\|f\| = \sup_{\|x\| \leq 1} |f(x)|$.
+
+\begin{definition}[The space $C(K)$]\label{def:espacio_CK}
+	Let $K$ be a compact space. The space $C(K)$ is the set of all continuous functions $f: K \to \mathbb{R}$ equipped with the \textit{supremum norm} (or uniform norm):
+	\[
+		\|f\|_\infty = \sup_{x \in K} |f(x)|
+	\]
+\end{definition}
+
+With this norm, $C(K)$ is a Banach space (complete normed vector space). In the context of the universal approximation theorem, we work with $C(I_m)$, the space of continuous functions over the unit hypercube.
+
+\begin{theorem}[Lebesgue dominated convergence]\label{thm:convergencia_dominada}
+	Let \((X, \mathcal{F}, \mu)\) be a measure space and \(\{f_n\}_{n=1}^\infty\) a sequence of measurable functions \(f_n: X \to \mathbb{R}\) such that:
+	\begin{enumerate}
+		\item \(f_n(x) \to f(x)\) for almost every \(x \in X\)
+		\item There exists an integrable function \(g: X \to \mathbb{R}\) such that \(|f_n(x)| \leq g(x)\) for almost every \(x \in X\) and all \(n \in \mathbb{N}\)
+	\end{enumerate}
+	Then \(f\) is integrable and:
+	\[
+		\lim_{n \to \infty} \int_X f_n \, d\mu = \int_X f \, d\mu = \int_X \lim_{n \to \infty} f_n \, d\mu
+	\]
+	\citep[Theorem~2.24]{Folland1999}.
+\end{theorem}
+
+This theorem is fundamental for interchanging limits and integrals, which will be necessary to prove that sigmoidal functions are discriminatory.
+
+\begin{definition}[Convex set]\label{def:conjunto_convexo}
+	A subset $C$ of a vector space $V$ is \textit{convex} if for all $x, y \in C$ and $\lambda \in [0,1]$, we have $\lambda x + (1-\lambda)y \in C$. Equivalently, $C$ contains the segment joining any pair of its points.
+\end{definition}
+
+\begin{theorem}[Hahn-Banach, geometric form]\label{thm:hahn_banach}
+	Let \(X\) be a real topological vector space, and \(A\) and \(B\) disjoint convex subsets of \(X\) with \(A\) open. Then there exist a continuous linear functional \(f: X \to \mathbb{R}\) and a constant \(\alpha \in \mathbb{R}\) such that:
+	\[
+		f(a) < \alpha \leq f(b) \quad \forall a \in A, b \in B
+	\]
+	\citep[Theorem~5.5]{Folland1999}.
+\end{theorem}
+
+\begin{corollary}[Characterization of density]\label{cor:caracterizacion_densidad}
+	Let \(X\) be a normed vector space and \(Y \subset X\) a subspace. Then \(Y\) is dense in \(X\) if and only if the only continuous linear functional that vanishes on \(Y\) is the zero functional.
+\end{corollary}
+
+\begin{proof}
+	\textbf{(\(\Rightarrow\))} Suppose that $Y$ is dense in $X$. Let $f: X \to \mathbb{R}$ be a continuous linear functional such that $f(y) = 0$ for all $y \in Y$. For any $x \in X$, there exists a sequence $\{y_n\} \subset Y$ with $y_n \to x$. By the continuity of $f$:
+	\[
+		f(x) = f\!\left(\lim_{n \to \infty} y_n\right) = \lim_{n \to \infty} f(y_n) = 0
+	\]
+	Therefore $f \equiv 0$.
+
+	\textbf{(\(\Leftarrow\))} Suppose that $Y$ is not dense in $X$. Then $\overline{Y} \neq X$, and there exists $x_0 \in X \setminus \overline{Y}$. Since $\overline{Y}$ is a closed subspace, we take an open ball $B_r(0) \subset X$ and define $A = \overline{Y} + B_r(0)$, which is open and convex, with $A \cap \{x_0\} = \emptyset$ for $r$ sufficiently small (since $x_0 \notin \overline{Y}$). By \autoref{thm:hahn_banach}, there exist a linear functional $f$ and $\alpha \in \mathbb{R}$ such that:
+	\[
+		f(a) < \alpha \leq f(x_0) \quad \forall a \in A
+	\]
+	Since $\overline{Y}$ is a subspace, $0 \in \overline{Y} \subset A$, hence $f(0) = 0 < \alpha$. Moreover, for any $y \in Y$ and $t \in \mathbb{R}$, we have $ty \in \overline{Y} \subset A$, so that $tf(y) = f(ty) < \alpha$ for all $t$. This is only possible if $f(y) = 0$. However, $f(x_0) \geq \alpha > 0$, so $f \not\equiv 0$.
+\end{proof}
+
+\begin{theorem}[Riesz representation for \(C(K)\)]\label{thm:riesz_representacion}
+	Let \(K\) be a compact space and \(C(K)\) the space of real continuous functions on \(K\) with the supremum norm. For every continuous linear functional \(L: C(K) \to \mathbb{R}\), there exists a unique finite signed regular Borel measure \(\mu\) on \(K\) such that:
+	\[
+		L(f) = \int_K f \, d\mu \quad \forall f \in C(K)
+	\]
+	Moreover, \(\|L\| = |\mu|(K)\), where \(|\mu|\) is the total variation of \(\mu\) \citep[Theorem~7.17]{Folland1999}.
+\end{theorem}
+
+\begin{theorem}[Stone-Weierstrass]\label{thm:stone_weierstrass}
+	Let \(K\) be a compact space and \(\mathcal{A} \subset C(K)\) a subalgebra that separates points of \(K\) and does not vanish at any point. Then \(\mathcal{A}\) is dense in \(C(K)\) with respect to the supremum norm \citep[Theorem~7.32]{Rudin1976}.
+\end{theorem}
+
+In particular, if \(\mathcal{A}\) contains the constant functions and separates points, then it is dense in \(C(K)\).
+
+There are two main approaches to proving the universal approximation theorem:
+\begin{itemize}
+	\item \textbf{Approach of \citet{cybenko1989}}: Uses the Hahn-Banach corollary together with the Riesz representation theorem. It proves that sigmoidal functions are ``discriminatory'' (they vanish on a measure only if the measure is zero). This is the proof we present below.
+	\item \textbf{Approach of \citet{hornik1989}}: Uses the Stone-Weierstrass theorem, proving that neural networks form a subalgebra that separates points.
+\end{itemize}
+We include Stone-Weierstrass in the preliminaries for its historical importance and its connection with the alternative approach.
+
+\paragraph{Statement and proof}
+
+The universal approximation theorem is a fundamental theoretical justification for the use of neural networks to approximate functions, proved independently by \citet{cybenko1989} and \citet{hornik1989}:
+
+\begin{definition}[Sigmoidal function]\label{def:funcion_sigmoidal}
+	A function \(\phi: \mathbb{R} \to \mathbb{R}\) is \textit{sigmoidal} if it is continuous, bounded and satisfies:
+	\[
+		\lim_{t \to -\infty} \phi(t) = 0 \quad \text{and} \quad \lim_{t \to +\infty} \phi(t) = 1
+	\]
+	Classical examples include the logistic function \(\sigma(t) = \frac{1}{1+e^{-t}}\) and the rescaled hyperbolic tangent, both described in detail in \autoref{subsubsec:funciones_activacion_capas}.
+\end{definition}
+
+\begin{theorem}[Universal Approximation - Cybenko, 1989]\label{thm:aproximacion_universal}
+	Let \(\phi: \mathbb{R} \to \mathbb{R}\) be a sigmoidal function. Let \(I_m = [0,1]^m\) be the \(m\)-dimensional unit hypercube. Then, the set of functions of the form:
+	\[
+		F(x) = \sum_{i=1}^{N} v_i \phi(w_i^T x + b_i)
+	\]
+	with \(N \in \mathbb{N}\), \(v_i, b_i \in \mathbb{R}\) and \(w_i \in \mathbb{R}^m\), is dense in \(C(I_m)\) with respect to the uniform norm.
+
+	That is, for any \(f \in C(I_m)\) and any \(\epsilon > 0\), there exist parameters such that:
+	\[
+		\sup_{x \in I_m} |F(x) - f(x)| < \epsilon
+	\]
+\end{theorem}
+
+\textbf{Why the unit hypercube.}
+The restriction to \(I_m = [0,1]^m\) is not a real limitation:
+\begin{itemize}
+	\item For any compact set \(K \subset \mathbb{R}^m\), by the Heine-Borel theorem (\autoref{thm:heine_borel}), \(K\) is bounded and therefore contained in a hypercube \([-M, M]^m\). By means of an affine transformation the problem can be translated to \(I_m\), so the result extends to \(C(K)\) for any compact set \(K \subset \mathbb{R}^m\)
+	\item Compactness is essential: it guarantees the uniform continuity of \(f\) and the existence of approximations
+	\item In practice, data is always bounded, so this restriction is natural
+\end{itemize}
+
+\textbf{Extensions of the theorem.}
+The theorem has been significantly extended since 1989:
+\begin{itemize}
+	\item \textbf{More general activation functions}: The theorem holds for any non-polynomial function \citep{leshno1993multilayer}
+	\item \textbf{ReLU}: For the \gls{ReLU} function (see \autoref{subsubsec:funciones_activacion_capas}), the result of Leshno et al. implies that one hidden layer is sufficient with arbitrary width. However, with bounded width, sufficient depth is required to achieve universal approximation \citep{lu2017expressive,hanin2019universal}
+	\item \textbf{Approximation in \(L^p\)}: Similar results hold for other norms \citep{hornik1991approximation}
+	\item \textbf{Approximation rates}: Bounds are known on the number of neurons \(N\) needed as a function of \(\epsilon\) and the regularity of \(f\) \citep{barron1993universal}
+\end{itemize}
+
+\begin{proof}
+	The proof follows the approach of \citet{cybenko1989} using functional analysis. We proceed in several steps:
+
+	The strategy is indirect: instead of explicitly constructing the approximation, we will prove that no continuous function can ``escape'' being approximated. To this end, we use duality in functional analysis. If neural networks were not dense in \(C(I_m)\), there would exist a nonzero continuous linear functional that vanishes on all of them (Hahn-Banach corollary). Translated into measures via the Riesz theorem, this would mean that there exists a nonzero measure ``invisible'' to all neurons. Proving that such a measure cannot exist (that is, that \(\phi\) is \textit{discriminatory}) is the heart of the proof.
+
+	\textbf{Step 1: Discriminatory functions.}
+	We define the set of discriminatory sigmoidal functions. A function \(\phi\) is discriminatory if for any finite signed measure \(\mu\) on \(I_m\):
+	\[
+		\int_{I_m} \phi(w^T x + b) \, d\mu(x) = 0 \quad \forall w \in \mathbb{R}^m, b \in \mathbb{R} \implies \mu = 0
+	\]
+
+	In other words, the family of functions \(\{\phi(w^T x + b)\}_{w,b}\) is rich enough to ``detect'' any nonzero measure: there is no nontrivial mass distribution that is invisible to all neurons simultaneously. The term ``discriminatory'' reflects this ability to discriminate between the zero measure and any other measure, analogously to how test functions in distribution theory distinguish distinct distributions.
+
+	\textbf{Step 2: Sigmoidal functions are discriminatory.}
+	Let \(\phi\) be a sigmoidal function (continuous, bounded, \(\lim_{t \to -\infty} \phi(t) = 0\), \(\lim_{t \to +\infty} \phi(t) = 1\)). Suppose that \(\mu\) is a measure such that \(\int_{I_m} \phi(w^T x + b) \, d\mu(x) = 0\) for all \(w, b\). We must prove that \(\mu = 0\).
+
+	For any \(w \in \mathbb{R}^m\), \(b \in \mathbb{R}\) and auxiliary parameter \(\alpha \in \mathbb{R}\), we define the family of functions:
+	\[
+		\psi_{\lambda}(x) = \phi(\lambda(w^T x + b) + \alpha)
+	\]
+
+	The idea is that by multiplying the argument of \(\phi\) by a large \(\lambda\), the smooth transition of the sigmoid is ``compressed'' until it becomes an abrupt jump at the hyperplane \(w^T x + b = 0\). Geometrically, each hyperplane divides \(I_m\) into two half-spaces, and the limit \(\lambda \to \infty\) turns the neuron into an indicator of the positive half-space.
+
+	When \(\lambda \to \infty\), we have pointwise convergence to a step function:
+	\[
+		\psi_{\lambda}(x) \to \begin{cases}
+			                        1 & \text{if } w^T x + b > 0 \\
+			                        0 & \text{if } w^T x + b < 0 \\
+			                        \phi(\alpha) & \text{if } w^T x + b = 0
+		\end{cases}
+	\]
+
+	Since \(|\psi_{\lambda}(x)| \leq \sup_{t \in \mathbb{R}} |\phi(t)| < \infty\) uniformly in \(\lambda\) and \(x\), and this bound is integrable over the compact set \(I_m\), we can apply the \textbf{Lebesgue dominated convergence theorem}:
+	\[
+		\int_{I_m} \psi_{\lambda}(x) \, d\mu(x) \to \mu(H^+_{w,b}) + \phi(\alpha) \cdot \mu(H_{w,b})
+	\]
+	where \(H^+_{w,b} = \{x \in I_m : w^T x + b > 0\}\) is the open half-space and \(H_{w,b} = \{x \in I_m : w^T x + b = 0\}\) is the hyperplane.
+
+	By hypothesis, the left-hand side is zero for all \(\lambda\). By continuity of the limit, we obtain:
+	\[
+		\mu(H^+_{w,b}) + \phi(\alpha) \cdot \mu(H_{w,b}) = 0 \quad \text{for all } \alpha \in \mathbb{R}
+	\]
+
+	To see why, observe that the equation \(\mu(H^+_{w,b}) + \phi(\alpha) \cdot \mu(H_{w,b}) = 0\) is an affine function of \(\phi(\alpha)\). If \(\mu(H_{w,b}) \neq 0\), this equation would determine a unique value of \(\phi(\alpha)\); but since \(\phi\) takes a continuous range of values (from 0 to 1), the equation could not be satisfied for all \(\alpha\). Thus, necessarily \(\mu(H_{w,b}) = 0\) and, substituting, \(\mu(H^+_{w,b}) = 0\).
+
+	Since this equation holds for all \(\alpha\) and \(\phi\) is not constant (since \(\phi(\alpha) \to 0\) when \(\alpha \to -\infty\) and \(\phi(\alpha) \to 1\) when \(\alpha \to +\infty\)), necessarily \(\mu(H_{w,b}) = 0\) and \(\mu(H^+_{w,b}) = 0\).
+
+	This holds for all \(w\) and \(b\), so \(\mu\) vanishes on all open half-spaces. Since the half-spaces generate the Borel \(\sigma\)-algebra and finite signed measures are determined by their values on a generating class stable under intersections, we conclude that \(\mu = 0\).
+
+	\textbf{Step 3: Density in \(C(I_m)\).}
+	Let \(\mathcal{S}\) be the set of functions of the form:
+	\[
+		G(x) = \sum_{i=1}^{N} v_i \phi(w_i^T x + b_i)
+	\]
+
+	The connection between the discriminatory property and density is established via two classical theorems of functional analysis. The Hahn-Banach corollary (\autoref{cor:caracterizacion_densidad}) reduces the density problem to verifying that no nonzero functional vanishes on \(\mathcal{S}\). The Riesz theorem (\autoref{thm:riesz_representacion}) translates functionals into measures, bringing the problem exactly to the condition in the definition of a discriminatory function.
+
+	By Step 2, \(\phi\) is discriminatory. We apply the \textbf{corollary of the Hahn-Banach theorem}: the set \(\mathcal{S}\) is dense in \(C(I_m)\) if and only if the only continuous linear functional that vanishes on \(\mathcal{S}\) is the zero functional.
+
+	Let \(L\) be a bounded linear functional on \(C(I_m)\) such that \(L(G) = 0\) for all \(G \in \mathcal{S}\). By the \textbf{Riesz representation theorem for \(C(K)\)}, there exists a unique finite signed measure \(\mu\) such that:
+	\[
+		L(h) = \int_{I_m} h(x) \, d\mu(x) \quad \forall h \in C(I_m)
+	\]
+
+	Since \(L(G) = 0\) for all \(G \in \mathcal{S}\), in particular:
+	\[
+		\int_{I_m} \phi(w^T x + b) \, d\mu(x) = 0 \quad \forall w \in \mathbb{R}^m, b \in \mathbb{R}
+	\]
+
+	By the definition of a discriminatory function and Step 2, this implies \(\mu = 0\), hence \(L = 0\).
+
+	\textbf{Step 4: Uniform approximation.}
+	By the previous step, \(\mathcal{S}\) is dense in \(C(I_m)\) with respect to the supremum norm. By the definition of density, for any \(f \in C(I_m)\) and \(\epsilon > 0\), there exists \(F \in \mathcal{S}\) such that:
+	\[
+		\|F - f\|_\infty = \sup_{x \in I_m} |F(x) - f(x)| < \epsilon
+	\]
+
+	This completes the proof. \(\square\)
+\end{proof}
+
+This theorem guarantees that a neural network with a single hidden layer can approximate any continuous function with arbitrary precision. However, it is a result of \textbf{existence}, not of \textbf{construction}: it proves that suitable weights exist, but it does not say how to find them. Moreover, the number of neurons needed can be prohibitively large, and deep networks (multiple layers) can represent complex functions more efficiently, allowing hierarchical representations of the data to be learned.
+
+\subsection{Convergence theory}\label{subsec:teoria_convergencia}
+
+The universal approximation theorem guarantees the existence of a weight configuration that approximates any target function. In \autoref{subsec:descenso_gradiente} we presented gradient descent and backpropagation as the mechanism for searching for those weights. We now formalize the conditions under which this process effectively converges and establish its convergence rates. For an in-depth treatment, see \citet{bottou2018optimization}.
+
+\subsubsection{Regularity conditions}
+
+The convergence theorems for gradient descent do not hold for arbitrary loss functions: they require certain regularity hypotheses. In this section we formalize the two fundamental conditions: \textit{$L$-smoothness}, which controls how much the gradient can vary and allows bounding the progress per iteration, and \textit{convexity}, which guarantees the absence of spurious local minima. These properties provide the analytic framework needed for the convergence results that we present below.
+
+\begin{definition}[$L$-smooth function]\label{def:L_smooth}
+	A differentiable function \(f: \mathbb{R}^n \to \mathbb{R}\) is \textit{\(L\)-smooth} (or has \(L\)-Lipschitz gradient) if there exists a constant \(L > 0\) such that:
+	\[
+		\|\nabla f(x) - \nabla f(y)\| \leq L\|x - y\| \quad \forall x, y \in \mathbb{R}^n
+	\]
+\end{definition}
+
+This condition is analogous to Lipschitz continuity (\autoref{prop:lipschitz_continuidad}), but applied to the gradient rather than to the function itself.
+
+\begin{proposition}[Equivalent characterization of $L$-smoothness]\label{prop:L_smooth_equiv}
+	Let \(f: \mathbb{R}^n \to \mathbb{R}\) be differentiable. The following statements are equivalent:
+	\begin{enumerate}
+		\item \(f\) is \(L\)-smooth (\(L\)-Lipschitz gradient)
+		\item For all \(x, y \in \mathbb{R}^n\): \(f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2}\|y - x\|^2\)
+	\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+	\textbf{(1) \(\Rightarrow\) (2):} We define \(g(t) = f(x + t(y-x))\) for \(t \in [0,1]\). By the fundamental theorem of calculus:
+	\[
+		f(y) - f(x) = g(1) - g(0) = \int_0^1 g'(t) \, dt = \int_0^1 \langle \nabla f(x + t(y-x)), y-x \rangle \, dt
+	\]
+	Subtracting \(\langle \nabla f(x), y-x \rangle\):
+	\begin{align*}
+		f(y) - f(x) - \langle \nabla f(x), y-x \rangle &= \int_0^1 \langle \nabla f(x + t(y-x)) - \nabla f(x), y-x \rangle \, dt \\
+		&\leq \int_0^1 \|\nabla f(x + t(y-x)) - \nabla f(x)\| \cdot \|y-x\| \, dt \\
+		&\leq \int_0^1 L \cdot t\|y-x\| \cdot \|y-x\| \, dt = \frac{L}{2}\|y-x\|^2
+	\end{align*}
+
+	\textbf{(2) \(\Rightarrow\) (1):} Applying (2) twice (interchanging \(x\) and \(y\)) and adding:
+	\begin{align*}
+		f(y) &\leq f(x) + \langle \nabla f(x), y-x \rangle + \frac{L}{2}\|y-x\|^2 \\
+		f(x) &\leq f(y) + \langle \nabla f(y), x-y \rangle + \frac{L}{2}\|x-y\|^2
+	\end{align*}
+	Adding: \(0 \leq \langle \nabla f(x) - \nabla f(y), y-x \rangle + L\|y-x\|^2\), that is:
+	\[
+		\langle \nabla f(x) - \nabla f(y), x-y \rangle \leq L\|x-y\|^2
+	\]
+	By Cauchy-Schwarz: \(\|\nabla f(x) - \nabla f(y)\| \cdot \|x-y\| \geq \langle \nabla f(x) - \nabla f(y), x-y \rangle\), but this inequality alone is not enough. To complete it rigorously, it is required that \(f\) be convex: in that case, the above inequality implies co-coercivity of the gradient, which in turn yields the Lipschitz condition. See \citet{Nesterov2018}, Theorem~2.1.5, for the details.
+\end{proof}
+
+\begin{remark}
+	The direction (1) \(\Rightarrow\) (2) holds for every differentiable function, without the need for convexity. The direction (2) \(\Rightarrow\) (1), by contrast, requires that \(f\) be convex \citep[Theorem~2.1.5]{Nesterov2018}. Since in the subsequent convergence theorems (\autoref{thm:gd_convergence_convex}, \autoref{thm:gd_nonconvex}) only the direction (1) \(\Rightarrow\) (2) is used, this restriction does not affect the results in the rest of the chapter.
+\end{remark}
+
+The constant \(L\) controls how much the gradient can vary locally. Intuitively, functions with small \(L\) are ``flatter'' and allow larger optimization steps.
+
+The rate \(\eta = 1/L\) is optimal in the following sense. The \(L\)-smoothness bound
+(\autoref{prop:L_smooth_equiv}) guarantees that for every pair of points:
+\[
+	f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2}\|y - x\|^2
+\]
+Substituting the gradient descent step with generic rate \(\eta > 0\),
+that is, \(x = \theta_t\) and \(y = \theta_{t+1} = \theta_t - \eta\nabla f(\theta_t)\),
+so that \(y - x = -\eta\nabla f(\theta_t)\):
+\begin{align*}
+	f(\theta_{t+1})
+		&\leq f(\theta_t) + \langle \nabla f(\theta_t),\, -\eta\nabla f(\theta_t) \rangle
+			+ \frac{L}{2}\|\!-\eta\nabla f(\theta_t)\|^2 \\
+		&= f(\theta_t) - \eta\|\nabla f(\theta_t)\|^2
+			+ \frac{L\eta^2}{2}\|\nabla f(\theta_t)\|^2 \\
+		&= f(\theta_t)
+			- \underbrace{\left(\eta - \frac{L\eta^2}{2}\right)}_{g(\eta)}
+			\|\nabla f(\theta_t)\|^2
+\end{align*}
+The coefficient \(g(\eta) = \eta - \frac{L\eta^2}{2}\) is a concave parabola that attains its maximum when \(g'(\eta) = 1 - L\eta = 0\), that is, \(\eta^* = 1/L\), with value \(g(1/L) = 1/(2L)\). Moreover, \(g(\eta) > 0\) requires \(\eta < 2/L\): for rates \(\eta \geq 2/L\) the bound no longer guarantees descent and the algorithm may diverge. For \(0 < \eta < 1/L\) the algorithm converges, but with suboptimal guaranteed decrease.
+
+\begin{definition}[Convex function]\label{def:convex_function}
+	A function \(f: \mathbb{R}^n \to \mathbb{R}\) is \textit{convex} if for all \(x, y \in \mathbb{R}^n\) and \(\lambda \in [0,1]\):
+	\[
+		f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y)
+	\]
+\end{definition}
+
+This definition is intimately related to the notion of a convex set (\autoref{def:conjunto_convexo}): a function is convex if and only if its epigraph $\{(x,y) \in \mathbb{R}^{n+1} : y \geq f(x)\}$ is a convex set.
+
+\begin{proposition}[Characterization of convexity for differentiable functions]\label{prop:convex_equiv}
+	Let \(f: \mathbb{R}^n \to \mathbb{R}\) be differentiable. Then \(f\) is convex if and only if:
+	\[
+		f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle \quad \forall x, y \in \mathbb{R}^n
+	\]
+	That is, the graph of \(f\) lies above all of its tangent hyperplanes.
+\end{proposition}
+
+\begin{proof}
+	\textbf{(\(\Rightarrow\)):} Suppose \(f\) is convex. For any \(x, y\) and \(\lambda \in (0,1]\):
+	\[
+		f(x + \lambda(y-x)) \leq (1-\lambda)f(x) + \lambda f(y)
+	\]
+	Rearranging: \(\frac{f(x + \lambda(y-x)) - f(x)}{\lambda} \leq f(y) - f(x)\).
+
+	Taking \(\lambda \to 0^+\), the left-hand side converges to the directional derivative \(\langle \nabla f(x), y-x \rangle\), obtaining \(\langle \nabla f(x), y-x \rangle \leq f(y) - f(x)\).
+
+	\textbf{(\(\Leftarrow\)):} Suppose the gradient condition holds. Let \(x, y \in \mathbb{R}^n\) and \(\lambda \in [0,1]\). We define \(z = \lambda x + (1-\lambda)y\). Applying the hypothesis:
+	\begin{align*}
+		f(x) &\geq f(z) + \langle \nabla f(z), x - z \rangle = f(z) + (1-\lambda)\langle \nabla f(z), x - y \rangle \\
+		f(y) &\geq f(z) + \langle \nabla f(z), y - z \rangle = f(z) - \lambda\langle \nabla f(z), x - y \rangle
+	\end{align*}
+	Multiplying the first by \(\lambda\) and the second by \((1-\lambda)\) and adding:
+	\[
+		\lambda f(x) + (1-\lambda)f(y) \geq f(z) = f(\lambda x + (1-\lambda)y)
+	\]
+\end{proof}
+
+\subsubsection{Convergence of gradient descent}
+
+\begin{theorem}[Convergence of \gls{GD} for convex functions]\label{thm:gd_convergence_convex}
+	Let \(f: \mathbb{R}^n \to \mathbb{R}\) be convex and \(L\)-smooth with global minimum \(f^* = f(\theta^*)\). If we apply gradient descent with learning rate \(\eta = 1/L\), then:
+	\[
+		f(\theta_T) - f^* \leq \frac{L\|\theta_0 - \theta^*\|^2}{2T}
+	\]
+	That is, gradient descent converges with rate \(O(1/T)\) to the optimum.
+\end{theorem}
+
+\begin{proof}
+	We proceed in several steps.
+
+	\textbf{Step 1: Descent inequality.}
+	By \autoref{prop:L_smooth_equiv}, for any pair of points:
+	\[
+		f(y) \leq f(x) + \langle \nabla f(x), y - x \rangle + \frac{L}{2}\|y - x\|^2
+	\]
+	Applying this inequality with \(x = \theta_t\) and \(y = \theta_{t+1} = \theta_t - \frac{1}{L}\nabla f(\theta_t)\):
+	\begin{align*}
+		f(\theta_{t+1}) &\leq f(\theta_t) + \left\langle \nabla f(\theta_t), -\frac{1}{L}\nabla f(\theta_t) \right\rangle + \frac{L}{2}\left\|-\frac{1}{L}\nabla f(\theta_t)\right\|^2 \\
+		&= f(\theta_t) - \frac{1}{L}\|\nabla f(\theta_t)\|^2 + \frac{1}{2L}\|\nabla f(\theta_t)\|^2 \\
+		&= f(\theta_t) - \frac{1}{2L}\|\nabla f(\theta_t)\|^2
+	\end{align*}
+	This inequality guarantees that the function value decreases at each iteration.
+
+	\textbf{Step 2: Bound on the distance to the optimum.}
+	We analyze how the distance \(\|\theta_{t+1} - \theta^*\|^2\) evolves:
+	\begin{align*}
+		\|\theta_{t+1} - \theta^*\|^2 &= \left\|\theta_t - \frac{1}{L}\nabla f(\theta_t) - \theta^*\right\|^2 \\
+		&= \|\theta_t - \theta^*\|^2 - \frac{2}{L}\langle \nabla f(\theta_t), \theta_t - \theta^* \rangle + \frac{1}{L^2}\|\nabla f(\theta_t)\|^2
+	\end{align*}
+
+	\textbf{Step 3: Use of convexity.}
+	By \autoref{prop:convex_equiv}:
+	\[
+		f(\theta^*) \geq f(\theta_t) + \langle \nabla f(\theta_t), \theta^* - \theta_t \rangle
+	\]
+	Rearranging:
+	\[
+		\langle \nabla f(\theta_t), \theta_t - \theta^* \rangle \geq f(\theta_t) - f^*
+	\]
+
+	\textbf{Step 4: Combination of the bounds.}
+	Substituting the inequality from Step 3 into the one from Step 2:
+	\[
+		\|\theta_{t+1} - \theta^*\|^2 \leq \|\theta_t - \theta^*\|^2 - \frac{2}{L}(f(\theta_t) - f^*) + \frac{1}{L^2}\|\nabla f(\theta_t)\|^2
+	\]
+
+	From Step 1, we have \(\|\nabla f(\theta_t)\|^2 \leq 2L(f(\theta_t) - f(\theta_{t+1}))\). Substituting:
+	\begin{align*}
+		\|\theta_{t+1} - \theta^*\|^2 &\leq \|\theta_t - \theta^*\|^2 - \frac{2}{L}(f(\theta_t) - f^*) + \frac{2}{L}(f(\theta_t) - f(\theta_{t+1})) \\
+		&= \|\theta_t - \theta^*\|^2 - \frac{2}{L}(f(\theta_{t+1}) - f^*)
+	\end{align*}
+
+	Rearranging:
+	\begin{equation}\label{eq:gd_telescopic}
+		f(\theta_{t+1}) - f^* \leq \frac{L}{2}\left(\|\theta_t - \theta^*\|^2 - \|\theta_{t+1} - \theta^*\|^2\right)
+	\end{equation}
+
+	\textbf{Step 5: Telescoping sum.}
+	Summing inequality~\eqref{eq:gd_telescopic} for \(t = 0, 1, \ldots, T-1\):
+	\[
+		\sum_{t=0}^{T-1} (f(\theta_{t+1}) - f^*) \leq \frac{L}{2} \sum_{t=0}^{T-1} \left(\|\theta_t - \theta^*\|^2 - \|\theta_{t+1} - \theta^*\|^2\right)
+	\]
+
+	The right-hand side is a telescoping sum:
+	\[
+		\sum_{t=0}^{T-1} (f(\theta_{t+1}) - f^*) \leq \frac{L}{2}\left(\|\theta_0 - \theta^*\|^2 - \|\theta_T - \theta^*\|^2\right) \leq \frac{L}{2}\|\theta_0 - \theta^*\|^2
+	\]
+
+	\textbf{Step 6: Conclusion.}
+	By Step 1, the sequence \(\{f(\theta_t)\}\) is decreasing, so \(f(\theta_T) \leq f(\theta_{t+1})\) for all \(t < T\). Then:
+	\[
+		T(f(\theta_T) - f^*) \leq \sum_{t=0}^{T-1} (f(\theta_{t+1}) - f^*) \leq \frac{L}{2}\|\theta_0 - \theta^*\|^2
+	\]
+
+	Dividing by \(T\):
+	\[
+		f(\theta_T) - f^* \leq \frac{L\|\theta_0 - \theta^*\|^2}{2T}
+	\]
+
+	This proves convergence with rate \(O(1/T)\).
+\end{proof}
+
+\begin{theorem}[Convergence of SGD]\label{thm:sgd_convergence}
+	Let \(f\) be convex and \(L\)-smooth, and let \(g_t\) be an unbiased estimator of the gradient with bounded variance:
+	\[
+		\mathbb{E}[g_t] = \nabla f(\theta_t), \quad \mathbb{E}[\|g_t - \nabla f(\theta_t)\|^2] \leq \sigma^2
+	\]
+	Suppose moreover that the gradients are uniformly bounded: \(\|\nabla f(\theta_t)\| \leq G\) for all \(t\). With decreasing learning rate \(\eta_t = \eta_0/\sqrt{t}\), SGD satisfies:
+	\[
+		\mathbb{E}[f(\bar{\theta}_T)] - f^* = O\!\left(\frac{(\sigma^2 + G^2)\log T}{\sqrt{T}} + \frac{\|\theta_0 - \theta^*\|^2}{\eta_0\sqrt{T}}\right)
+	\]
+	where \(\bar{\theta}_T = \frac{1}{T}\sum_{t=1}^T \theta_t\) is the average of the iterates.
+\end{theorem}
+
+\begin{proof}
+	We present a sketch of the proof following~\citet{bottou2018optimization}.
+
+	\textbf{Step 1: Decomposition of the stochastic gradient.}
+	We write \(g_t = \nabla f(\theta_t) + \xi_t\) where \(\xi_t = g_t - \nabla f(\theta_t)\) is the stochastic noise with:
+	\[
+		\mathbb{E}[\xi_t | \theta_t] = 0, \quad \mathbb{E}[\|\xi_t\|^2 | \theta_t] \leq \sigma^2
+	\]
+
+	\textbf{Step 2: Analysis of the expected progress.}
+	The update is \(\theta_{t+1} = \theta_t - \eta_t g_t\). By convexity:
+	\[
+		f(\theta^*) \geq f(\theta_t) + \langle \nabla f(\theta_t), \theta^* - \theta_t \rangle
+	\]
+	Rearranging: \(\langle \nabla f(\theta_t), \theta_t - \theta^* \rangle \geq f(\theta_t) - f^*\).
+
+	We analyze the distance to the optimum:
+	\begin{align*}
+		\|\theta_{t+1} - \theta^*\|^2 &= \|\theta_t - \eta_t g_t - \theta^*\|^2 \\
+		&= \|\theta_t - \theta^*\|^2 - 2\eta_t\langle g_t, \theta_t - \theta^* \rangle + \eta_t^2\|g_t\|^2
+	\end{align*}
+
+	Taking conditional expectation and using that \(\mathbb{E}[g_t|\theta_t] = \nabla f(\theta_t)\):
+	\[
+		\mathbb{E}[\|\theta_{t+1} - \theta^*\|^2 | \theta_t] \leq \|\theta_t - \theta^*\|^2 - 2\eta_t(f(\theta_t) - f^*) + \eta_t^2(\|\nabla f(\theta_t)\|^2 + \sigma^2)
+	\]
+
+	\textbf{Step 3: Telescoping sum and averaging.}
+	We rearrange the inequality from Step~2 to isolate the progress term:
+	\[
+		2\eta_t(f(\theta_t) - f^*) \leq \|\theta_t - \theta^*\|^2 - \mathbb{E}[\|\theta_{t+1} - \theta^*\|^2 | \theta_t] + \eta_t^2(\|\nabla f(\theta_t)\|^2 + \sigma^2)
+	\]
+	Taking total expectation and summing over \(t = 1, \ldots, T\):
+	\[
+		\sum_{t=1}^T 2\eta_t \mathbb{E}[f(\theta_t) - f^*] \leq \sum_{t=1}^T \Big(\mathbb{E}[\|\theta_t - \theta^*\|^2] - \mathbb{E}[\|\theta_{t+1} - \theta^*\|^2]\Big) + \sum_{t=1}^T \eta_t^2(\|\nabla f(\theta_t)\|^2 + \sigma^2)
+	\]
+	The first sum is telescoping: consecutive terms cancel, leaving only the endpoints,
+	\[
+		\sum_{t=1}^T \Big(\mathbb{E}[\|\theta_t - \theta^*\|^2] - \mathbb{E}[\|\theta_{t+1} - \theta^*\|^2]\Big) = \mathbb{E}[\|\theta_1 - \theta^*\|^2] - \mathbb{E}[\|\theta_{T+1} - \theta^*\|^2] \leq \|\theta_0 - \theta^*\|^2
+	\]
+	where the last inequality uses that \(\mathbb{E}[\|\theta_1 - \theta^*\|^2] \leq \|\theta_0 - \theta^*\|^2\) (by the result of Step~2 with \(t=0\) and \(f(\theta_0) \geq f^*\)) and that \(-\mathbb{E}[\|\theta_{T+1} - \theta^*\|^2] \leq 0\). Substituting:
+	\[
+		\sum_{t=1}^T 2\eta_t \mathbb{E}[f(\theta_t) - f^*] \leq \|\theta_0 - \theta^*\|^2 + \sum_{t=1}^T \eta_t^2(\|\nabla f(\theta_t)\|^2 + \sigma^2)
+	\]
+
+	\textbf{Step 4: Choice of decreasing rate.}
+	We choose \(\eta_t = \eta_0/\sqrt{t}\). Using the hypothesis \(\|\nabla f(\theta_t)\| \leq G\) and substituting into the inequality from Step~3:
+	\[
+		\sum_{t=1}^T \frac{2\eta_0}{\sqrt{t}}\, \mathbb{E}[f(\theta_t) - f^*] \leq \|\theta_0 - \theta^*\|^2 + \sum_{t=1}^T \frac{\eta_0^2}{t}(G^2 + \sigma^2)
+	\]
+
+	To bound the right-hand side, we use that the harmonic series satisfies \(\sum_{t=1}^T \frac{1}{t} \leq 1 + \log T\):
+	\[
+		\sum_{t=1}^T \frac{\eta_0^2}{t}(G^2 + \sigma^2) \leq \eta_0^2(G^2 + \sigma^2)(1 + \log T)
+	\]
+
+	To bound the left-hand side from below, we observe that \(\eta_t = \eta_0/\sqrt{t}\) is decreasing, so that \(\eta_t \geq \eta_T = \eta_0/\sqrt{T}\) for all \(t \leq T\). Since each term \(\mathbb{E}[f(\theta_t) - f^*] \geq 0\) by convexity:
+	\[
+		\sum_{t=1}^T \frac{2\eta_0}{\sqrt{t}}\, \mathbb{E}[f(\theta_t) - f^*] \geq \frac{2\eta_0}{\sqrt{T}} \sum_{t=1}^T \mathbb{E}[f(\theta_t) - f^*]
+	\]
+
+	Combining both bounds and dividing by \(T\):
+	\[
+		\frac{1}{T}\sum_{t=1}^T \mathbb{E}[f(\theta_t) - f^*] \leq \frac{\|\theta_0 - \theta^*\|^2 + \eta_0^2(G^2 + \sigma^2)(1 + \log T)}{2\eta_0\sqrt{T}}
+	\]
+
+	Finally, by convexity of \(f\) and Jensen's inequality applied to the average \(\bar{\theta}_T = \frac{1}{T}\sum_{t=1}^T \theta_t\):
+	\[
+		\mathbb{E}[f(\bar{\theta}_T)] \leq \frac{1}{T}\sum_{t=1}^T \mathbb{E}[f(\theta_t)]
+	\]
+	which, combined with the previous bound, gives:
+	\[
+		\mathbb{E}[f(\bar{\theta}_T)] - f^* \leq \frac{\|\theta_0 - \theta^*\|^2 + \eta_0^2(\sigma^2 + G^2)(1 + \log T)}{2\eta_0\sqrt{T}}
+	\]
+	This establishes the rate \(O(\log(T)/\sqrt{T})\).
+\end{proof}
+
+The \(O(\log(T)/\sqrt{T})\) rate of \gls{SGD} is slower than the \(O(1/T)\) rate of deterministic \gls{GD}, but \gls{SGD} processes \(T\) times less data per iteration, which can result in better total computational efficiency.
+
+\begin{theorem}[Convergence to stationary points (non-convex case)]\label{thm:gd_nonconvex}
+	Let \(f: \mathbb{R}^n \to \mathbb{R}\) be an \(L\)-smooth function (not necessarily convex) and bounded below by \(f^*\). With learning rate \(\eta \leq 1/L\), gradient descent satisfies:
+	\[
+		\min_{t=0,\ldots,T-1} \|\nabla f(\theta_t)\|^2 \leq \frac{2(f(\theta_0) - f^*)}{\eta T}
+	\]
+	That is, \gls{GD} finds an \(\epsilon\)-stationary point (with \(\|\nabla f\| \leq \epsilon\)) in \(O(1/\epsilon^2)\) iterations.
+\end{theorem}
+
+\begin{proof}
+	We use the characterization of \(L\)-smoothness from \autoref{def:L_smooth}.
+
+	\textbf{Step 1: Descent inequality.}
+	By \(L\)-smoothness, for the update \(\theta_{t+1} = \theta_t - \eta \nabla f(\theta_t)\):
+	\begin{align*}
+		f(\theta_{t+1}) &\leq f(\theta_t) + \langle \nabla f(\theta_t), \theta_{t+1} - \theta_t \rangle + \frac{L}{2}\|\theta_{t+1} - \theta_t\|^2 \\
+		&= f(\theta_t) - \eta \|\nabla f(\theta_t)\|^2 + \frac{L\eta^2}{2}\|\nabla f(\theta_t)\|^2 \\
+		&= f(\theta_t) - \eta\left(1 - \frac{L\eta}{2}\right)\|\nabla f(\theta_t)\|^2
+	\end{align*}
+	If \(\eta \leq 1/L\), then \(1 - \frac{L\eta}{2} \geq \frac{1}{2}\), so:
+	\[
+		f(\theta_{t+1}) \leq f(\theta_t) - \frac{\eta}{2}\|\nabla f(\theta_t)\|^2
+	\]
+
+	\textbf{Step 2: Telescoping sum.}
+	Summing over \(t = 0, \ldots, T-1\):
+	\[
+		\sum_{t=0}^{T-1} \frac{\eta}{2}\|\nabla f(\theta_t)\|^2 \leq \sum_{t=0}^{T-1} \left(f(\theta_t) - f(\theta_{t+1})\right) = f(\theta_0) - f(\theta_T) \leq f(\theta_0) - f^*
+	\]
+	where we use that \(f(\theta_T) \geq f^*\) by the lower bound.
+
+	\textbf{Step 3: Conclusion.}
+	Dividing both sides by \(\eta/2\):
+	\[
+		\sum_{t=0}^{T-1} \|\nabla f(\theta_t)\|^2 \leq \frac{2(f(\theta_0) - f^*)}{\eta}
+	\]
+	Since each term \(\|\nabla f(\theta_t)\|^2 \geq 0\), the minimum value of the collection cannot exceed its arithmetic mean (otherwise, all terms would exceed the mean, and their sum would exceed \(T\) times the mean, contradicting its definition):
+	\[
+		\min_{t=0,\ldots,T-1} \|\nabla f(\theta_t)\|^2 \leq \frac{1}{T}\sum_{t=0}^{T-1} \|\nabla f(\theta_t)\|^2
+	\]
+	Combining with the previous bound, divided by \(T\):
+	\[
+		\min_{t=0,\ldots,T-1} \|\nabla f(\theta_t)\|^2 \leq \frac{1}{T}\sum_{t=0}^{T-1} \|\nabla f(\theta_t)\|^2 \leq \frac{2(f(\theta_0) - f^*)}{\eta T}
+	\]
+\end{proof}
+
+The loss functions of neural networks are typically non-convex due to the nonlinearities. \autoref{thm:gd_nonconvex} guarantees convergence to stationary points, but not to global minima. However, in practice the overparameterization of modern networks creates many equivalent minima, the noise of \gls{SGD} helps to escape saddle points, and the local minima found tend to generalize well.
+
+\subsection{Advanced optimizers}\label{subsec:optimizadores_avanzados}
+
+Modern optimizers improve upon basic \gls{SGD} by incorporating historical information about the gradients~\citep{kingma2014adam, duchi2011adagrad}. In this section, all operations on parameter and gradient vectors are applied element-wise: we use \(\odot\) for the Hadamard product and \(\oslash\) for element-wise division, while the square-root and scalar-addition operations are also applied component-wise.
+
+\subsubsection{SGD with Momentum}
+
+\begin{definition}[SGD with Momentum]\label{def:sgd_momentum}
+	\textit{SGD with momentum}~\citep{polyak1964methods} introduces a velocity variable \(v_t\) that accumulates past gradients, with \(v_0 = 0\):
+	\begin{align*}
+		v_t &= \beta v_{t-1} + \nabla_\theta \mathcal{L}(\theta_{t-1}) \\
+		\theta_t &= \theta_{t-1} - \eta v_t
+	\end{align*}
+	where \(\beta \in [0,1)\) is the \textit{momentum coefficient} (typically \(\beta = 0.9\)).
+\end{definition}
+
+Momentum accumulates exponentially weighted past gradients, smoothing the oscillations in directions of high curvature and accelerating convergence in consistent directions. Note that the momentum formula is \textit{not} an exponential moving average (EMA), since it lacks the factor \((1-\beta)\): whereas an EMA normalizes so that the weights sum to one, the momentum accumulator grows by a factor \(1/(1-\beta)\) in steady state, and it is the learning rate \(\eta\) that absorbs this scale.
+
+\subsubsection{Adaptive methods}
+
+\begin{definition}[Adagrad]\label{def:adagrad}
+	The \textit{Adagrad}~\citep{duchi2011adagrad} optimizer adapts the learning rate per parameter according to the history of gradients, with \(G_0 = 0\):
+	\begin{align*}
+		G_t &= G_{t-1} + g_t \odot g_t \\
+		\theta_t &= \theta_{t-1} - \eta \cdot g_t \oslash (\sqrt{G_t} + \epsilon)
+	\end{align*}
+	where \(g_t = \nabla_\theta \mathcal{L}(\theta_{t-1})\) and \(\epsilon \approx 10^{-8}\) avoids division by zero. Parameters with historically large gradients receive smaller learning rates.
+\end{definition}
+
+\begin{definition}[RMSProp]\label{def:rmsprop}
+	\textit{RMSProp}~\citep{hinton2012rmsprop} corrects the monotonic decay of Adagrad by using an exponential moving average of the square of the gradients. We denote by \(v_t\) the accumulator of the second moment (reusing the symbol for the velocity in momentum, following the usual convention in the literature), with \(v_0 = 0\):
+	\begin{align*}
+		v_t &= \beta v_{t-1} + (1-\beta) (g_t \odot g_t) \\
+		\theta_t &= \theta_{t-1} - \eta \cdot g_t \oslash (\sqrt{v_t} + \epsilon)
+	\end{align*}
+	where typically \(\beta = 0.9\). Unlike Adagrad, the denominator does not grow indefinitely, allowing sustained learning in non-stationary problems.
+\end{definition}
+
+\begin{definition}[Adam]\label{def:adam}
+	The \textit{Adam}~\citep{kingma2014adam} optimizer (Adaptive Moment Estimation) combines momentum with adaptive rates, maintaining estimates of the first two moments of the gradient, with \(m_0 = v_0 = 0\):
+	\begin{align*}
+		m_t &= \beta_1 m_{t-1} + (1-\beta_1) g_t & \text{(first moment)} \\
+		v_t &= \beta_2 v_{t-1} + (1-\beta_2) (g_t \odot g_t) & \text{(second moment)} \\
+		\hat{m}_t &= m_t / (1 - \beta_1^t) & \text{(bias correction)} \\
+		\hat{v}_t &= v_t / (1 - \beta_2^t) & \\
+		\theta_t &= \theta_{t-1} - \eta \cdot \hat{m}_t \oslash (\sqrt{\hat{v}_t} + \epsilon)
+	\end{align*}
+	where typically \(\beta_1 = 0.9\), \(\beta_2 = 0.999\), \(\epsilon = 10^{-8}\).
+\end{definition}
+
+The corrections \(\hat{m}_t\) and \(\hat{v}_t\) compensate for the bias toward zero of the exponential moving averages when they are initialized at zero; for large \(t\), \((1 - \beta^t) \approx 1\) and the correction is negligible. It should be clarified that the terms ``first moment'' and ``second moment'' in \gls{Adam} refer to \textit{exponential moving averages} of the gradient and of its square, not to probabilistic moments in the strict sense. The terminology comes from the analogy with the estimation of the mean (\(\mathbb{E}[g_t]\)) and the uncentered variance (\(\mathbb{E}[g_t^2]\)) of the stochastic gradient, but \(m_t\) and \(v_t\) are biased estimators that require correction.
+
+The effective update in \gls{Adam} for each parameter \(\theta_i\) is approximately \(\Delta\theta_i \approx \eta \cdot \hat{m}_{t,i} / (\sqrt{\hat{v}_{t,i}} + \epsilon)\), which provides smaller steps for parameters with historically large gradients and relatively larger steps for parameters with small but consistent gradients.
+
+\section{Deep Learning}
+
+\subsection{From the multilayer perceptron to deep learning}
+
+Interest in neural models began when Rosenblatt showed that the perceptron could learn to classify patterns from data~\citep{rosenblatt1958perceptron}. However, Minsky and Papert~\citep{minsky1969perceptrons} proved that the simple perceptron can only represent linearly separable functions, which revealed fundamental limitations of the model and triggered a prolonged period of reduced interest and funding in this field.
+
+The introduction of the backpropagation algorithm~\citep{backpropagation} provided an efficient method for training multilayer networks via gradient descent. Nevertheless, this advance proved insufficient on its own: the computational barriers and the problems inherent in training networks with many layers persisted for years.
+
+In the previous sections we have seen mathematical tools for training neural networks. However, for decades deep networks remained impractical due to the vanishing gradient problem analyzed in \autoref{subsubsec:vanishing_gradient}: as layers are added, the product of derivatives decreases exponentially, preventing the first layers from learning. The alternative of increasing the width of the network (see \autoref{thm:aproximacion_universal}) was computationally too costly to truly see the usefulness of \glspl{ANN} in moderately complex problems.
+
+\gls{DL}, or deep learning, emerged as the convergence of multiple advances that overcame these limitations:
+\begin{itemize}
+	\item Initialization techniques that preserve the variance of the activations across the layers.
+	\item Activation functions such as \gls{ReLU} (see \autoref{subsubsec:funciones_activacion_capas}) that avoid saturation and maintain nonzero gradients.
+	\item Regularization methods such as Dropout (\autoref{def:dropout}) that control overfitting in high-capacity networks.
+	\item Specialized architectures that drastically reduce the computational cost by exploiting the structure of the data. For example, \glspl{CNN} exploit spatial locality to require orders of magnitude fewer parameters than equivalent dense networks.
+\end{itemize}
+
+The crystallization of these advances and their practical impact are documented in \autoref{ch:cnn}, where it is analyzed how convolutional networks materialized the deep learning revolution.
+
+These deeper networks have greater expressive capacity, but they require more data and computational resources. A common technique to compensate for the scarcity of data is \textit{data augmentation}, which artificially increases the training set by applying transformations that preserve the labels.
+
+\begin{definition}[Data augmentation]\label{def:data_augmentation}
+	Let $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$ be a training set and $G$ a group of transformations acting on the input space $\mathcal{X}$ preserving the labels, that is, such that the correct label of $g \cdot \mathbf{x}$ coincides with that of $\mathbf{x}$ for all $g \in G$. \textit{Data augmentation} consists of replacing the original set by the augmented set
+	\[
+		\{(g \cdot \mathbf{x}_i,\; y_i) : (\mathbf{x}_i, y_i) \in \{(\mathbf{x}_j, y_j)\}_{j=1}^N,\; g \in G\},
+	\]
+	whose cardinality is $|G| \cdot N$. In practice, a finite subset of $G$ is sampled in each training epoch.
+\end{definition}
+
+Data augmentation acts as a form of implicit regularization: it forces the model to learn representations invariant with respect to the group $G$. However, as will be analyzed in \autoref{subsec:equivarianza_invarianza}, this strategy is inefficient compared to the equivariant architectures of \gls{GDL}, which incorporate the symmetries directly into their structure.
+
+We next analyze the theoretical advantages that justify the use of deep architectures.
+
+\subsubsection{Advantages of depth}
+
+Deep networks offer several fundamental advantages over wide shallow networks, supported by both theoretical and empirical results:
+
+\begin{enumerate}
+	\item \textbf{Representation efficiency}:
+
+	There exist functions that exhibit an exponential separation between deep and shallow networks. A classic example is the parity function:
+
+	\begin{example}[Parity function]
+		The parity function \(f: \{0,1\}^n \to \{0,1\}\) defined as:
+		\[
+			f(x_1, \ldots, x_n) = \bigoplus_{i=1}^n x_i = \sum_{i=1}^n x_i \mod 2
+		\]
+		requires \(O(2^n)\) neurons in a 2-layer network, but only \(O(n)\) neurons in a network of \(O(\log n)\) layers.
+	\end{example}
+
+	\begin{theorem}[Exponential separation~\citep{telgarsky2016benefitsdepthneuralnetworks}]
+		For any integer \(k \geq 1\), there exist functions computable by networks of depth \(\Theta(k^3)\) with \(\Theta(1)\) neurons per layer, that any network of depth \(O(k)\) would need \(\Omega(2^k)\) neurons to approximate with constant error.
+	\end{theorem}
+
+	\begin{proof}[Sketch of the proof]
+		We define the base triangular function using ReLU neurons:
+		\[
+			\varphi(x) = 2\operatorname{ReLU}(x) - 4\operatorname{ReLU}\!\left(x - \tfrac{1}{2}\right) + 2\operatorname{ReLU}(x - 1),
+		\]
+		which forms a ``tent'' on $[0,1]$ with a peak at $x = \tfrac{1}{2}$. We consider the iterated compositions $\varphi_1 = \varphi$, $\varphi_{k+1} = \varphi \circ \varphi_k$. The key observation is that each composition doubles the number of oscillations: $\varphi_k$ has exactly $2^k$ oscillations on $[0,1]$, since $\varphi$ maps $[0,1] \to [0,1]$ and each arc of $\varphi_k$ generates two arcs in $\varphi_{k+1}$.
+
+		Since each composition requires $O(1)$ additional neurons, the function $\varphi_k$ is computable by a network of depth $O(k)$ and constant width. However, a network with ReLU activation and $p$ total neurons produces a piecewise-linear function with at most $O(p^L)$ segments for depth $L$. For a network of depth $O(k)$, approximating $2^k$ oscillations requires at least $\Omega(2^k)$ neurons. The construction extends to the $\Theta(k^3)$ vs $O(k)$ case of the statement by means of more refined techniques for counting linear segments. See \citet{telgarsky2016benefitsdepthneuralnetworks} for the complete proof.
+	\end{proof}
+
+	\autoref{fig:profundidad_vs_anchura} visually illustrates this exponential separation between shallow and deep networks.
+
+	\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}[
+	    neuron/.style={circle, draw, minimum size=0.3cm, fill=gdlblue!20},
+	    arrow/.style={->, thick, >=stealth}
+	]
+
+	% Red superficial (izquierda)
+	\node[font=\bfseries] at (-3, 3) {Shallow network (2 layers)};
+	\node[font=\footnotesize] at (-3, 2.5) {$O(2^n)$ neurons};
+
+	% Entrada
+	\foreach \i in {1,2,3} {
+	    \node[neuron, fill=gdlgreen!30] (si\i) at (-4.5, 1.5-\i*0.5) {};
+	}
+	\node at (-4.5, -0.7) {$\vdots$};
+
+	% Capa oculta (muchas neuronas)
+	\foreach \i in {1,...,8} {
+	    \node[neuron] (sh\i) at (-3, 2-\i*0.4) {};
+	}
+	\node at (-3, -1.5) {$\vdots$};
+	\node[font=\scriptsize] at (-3, -2) {$2^n$};
+
+	% Salida
+	\node[neuron, fill=gdlred!30] (so) at (-1.5, 0) {};
+
+	% Conexiones (simplificadas)
+	\draw[gdlgray, thin] (si1) -- (sh1);
+	\draw[gdlgray, thin] (si2) -- (sh4);
+	\draw[gdlgray, thin] (si3) -- (sh7);
+	\draw[gdlgray, thin] (sh1) -- (so);
+	\draw[gdlgray, thin] (sh8) -- (so);
+
+	% Red profunda (derecha)
+	\node[font=\bfseries] at (3, 3) {Deep network ($\log n$ layers)};
+	\node[font=\footnotesize] at (3, 2.5) {$O(n)$ neurons};
+
+	% Capas
+	\foreach \l in {0,...,4} {
+	    \foreach \i in {1,2,3} {
+	        \pgfmathsetmacro{\col}{ifthenelse(\l==0,"gdlgreen!30",ifthenelse(\l==4,"gdlred!30","gdlblue!20"))}
+	        \node[neuron, fill=\col] (d\l\i) at (1.5+\l*0.8, 1-\i*0.6) {};
+	    }
+	}
+
+	% Conexiones entre capas
+	\foreach \l in {0,...,3} {
+	    \pgfmathtruncatemacro{\nextl}{\l+1}
+	    \foreach \i in {1,2,3} {
+	        \foreach \j in {1,2,3} {
+	            \draw[gdlgray, very thin] (d\l\i) -- (d\nextl\j);
+	        }
+	    }
+	}
+
+	% Etiquetas de complejidad
+	\node[font=\small, align=center] at (-3, -3) {Complexity:\\exponential};
+	\node[font=\small, align=center] at (3, -3) {Complexity:\\polynomial};
+
+	\end{tikzpicture}
+	\caption[Depth vs width in neural networks]{Comparison between a wide shallow network and a narrow deep network for computing the same function. The shallow network requires exponentially more neurons, while the deep network achieves the same expressiveness with polynomial growth.}
+	\label{fig:profundidad_vs_anchura}
+	\end{figure}
+
+	\item \textbf{Hierarchical learning and compositionality}:
+
+	Deep networks exploit the natural compositional structure of many problems:
+
+	\begin{itemize}
+		\item \textbf{Vision}: pixels \(\to\) edges \(\to\) textures \(\to\) parts \(\to\) objects
+		\item \textbf{Language}: characters \(\to\) morphemes \(\to\) words \(\to\) phrases \(\to\) semantics
+		\item \textbf{Audio}: samples \(\to\) phonemes \(\to\) words \(\to\) concepts
+	\end{itemize}
+
+	This hierarchy is reflected mathematically in the composition of functions:
+	\[
+		f(x) = f_L \circ f_{L-1} \circ \cdots \circ f_1(x)
+	\]
+	where each \(f_i\) learns incrementally more abstract transformations.
+
+	\item \textbf{Feature reuse and parameter efficiency}:
+
+	Depth allows sharing computations between different processing paths. Consider a network that must compute \(m\) different functions \(\{g_1, \ldots, g_m\}\):
+
+	\begin{itemize}
+		\item Shallow network: \(O(m \cdot n)\) parameters (each function independent)
+		\item Deep network: \(O(n + m)\) parameters (shared features + specific heads)
+	\end{itemize}
+
+	\item \textbf{Implicit inductive bias}:
+
+	Deep networks have an implicit bias toward ``simple'' functions in the sense of Kolmogorov complexity:
+
+	\begin{definition}[Function complexity]\label{def:complejidad_funcion}
+		For a neural network \(f_\theta\) with fixed architecture, we define its complexity as:
+		\[
+			\mathcal{C}(f_\theta) = \|\theta\|_0 + \sum_{l=1}^L \log(\text{fan-in}_l \cdot \text{fan-out}_l)
+		\]
+	\end{definition}
+
+	Deep networks favor solutions with lower \(\mathcal{C}(f_\theta)\), which corresponds to more ``natural'' functions according to the distribution of real-world data.
+
+	\item \textbf{Optimization and geometry of the loss function}:
+
+	Counterintuitively, deeper networks can be easier to optimize:
+
+	\begin{itemize}
+		\item The local minima in overparameterized networks tend to have error similar to the global one
+		\item Depth induces a hierarchical structure in the geometry of the loss function
+		\item ``Lazy training'' phenomenon: deep networks find simple solutions first
+	\end{itemize}
+\end{enumerate}
+
+\subsection{Modern architectures}
+
+The development of deep learning has produced specialized architectures, each designed to exploit specific structures in the data. Many of these architectures have already been introduced in previous sections of this chapter; here we offer a comparative view focused on their distinctive characteristics and on how they relate to one another. In later chapters we will explore in depth how geometric ideas transform some of these architectures.
+
+\autoref{fig:arquitecturas_modernas} presents a visual comparison of the four main deep learning architectures, showing their distinctive characteristics in terms of information flow and connectivity structure.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[scale=1.05, every node/.style={scale=1.0}]
+% Estilos comunes
+\tikzset{
+    neuron/.style={circle, draw, minimum size=0.4cm, fill=#1!40},
+    layer/.style={rectangle, draw, rounded corners, minimum width=0.8cm, minimum height=1.8cm, fill=#1!20},
+    kernel/.style={rectangle, draw, minimum width=0.3cm, minimum height=0.3cm, fill=gdlorange!50},
+    arrow/.style={->, thick, >=stealth},
+    title/.style={font=\small\bfseries, above}
+}
+
+% === FEEDFORWARD ===
+\begin{scope}[shift={(-6,0)}]
+    \node[title] at (0.6,2.5) {Feedforward};
+    % Capas
+    \foreach \y in {0,0.6,1.2,1.8} {
+        \foreach \x in {0,0.4,0.8,1.2} {
+            \node[neuron=gdlblue] at (\x,\y) {};
+        }
+    }
+    % Conexiones (algunas representativas)
+    \foreach \x in {0,0.4,0.8,1.2} {
+        \draw[gdlgray!50, thin] (\x,0.15) -- (0.2,0.45);
+        \draw[gdlgray!50, thin] (\x,0.15) -- (0.6,0.45);
+        \draw[gdlgray!50, thin] (\x,0.15) -- (1.0,0.45);
+    }
+    \draw[arrow, gdlblue!70] (0.6,-0.3) -- (0.6,0) node[below, pos=0, font=\tiny] {input};
+    \draw[arrow, gdlblue!70] (0.6,1.95) -- (0.6,2.2) node[above, pos=1, font=\tiny] {output};
+    \node[below, font=\tiny, text=gdlgray] at (0.6,-0.6) {Unidirectional flow};
+\end{scope}
+
+% === CNN ===
+\begin{scope}[shift={(-2,0)}]
+    \node[title] at (0.8,2.5) {CNN};
+    % Feature maps (rectángulos apilados)
+    \draw[fill=gdlgreen!20, draw=gdlgreen!60] (0,0) rectangle (1.2,1.6);
+    \draw[fill=gdlgreen!30, draw=gdlgreen!60] (0.15,0.15) rectangle (1.05,1.35);
+    \draw[fill=gdlgreen!40, draw=gdlgreen!60] (0.3,0.3) rectangle (0.9,1.1);
+    % Kernel
+    \draw[fill=gdlorange!50, draw=gdlorange!80] (0.4,0.5) rectangle (0.7,0.8);
+    \node[font=\tiny] at (0.55,0.65) {$k$};
+    % Flecha de convolución
+    \draw[arrow, gdlorange!80, dashed] (0.55,0.9) -- (0.55,1.5);
+    \draw[arrow, gdlgreen!70] (0.6,-0.3) -- (0.6,0) node[below, pos=0, font=\tiny] {image};
+    \draw[arrow, gdlgreen!70] (0.6,1.7) -- (0.6,2.2) node[above, pos=1, font=\tiny] {features};
+    \node[below, font=\tiny, text=gdlgray] at (0.6,-0.6) {Weight sharing};
+\end{scope}
+
+% === RNN ===
+\begin{scope}[shift={(2,0)}]
+    \node[title] at (0.6,2.5) {RNN};
+    % Celdas en secuencia
+    \foreach \i/\x/\t in {0/0/$t{-}1$, 1/0.8/$t$, 2/1.6/$t{+}1$} {
+        \node[layer=gdlred, minimum height=1cm, minimum width=0.5cm] (rnn\i) at (\x,0.8) {};
+        \node[font=\tiny] at (\x,0.8) {\t};
+    }
+    % Conexiones recurrentes
+    \draw[arrow, gdlred!70] (0.3,0.8) -- (0.5,0.8);
+    \draw[arrow, gdlred!70] (1.1,0.8) -- (1.3,0.8);
+    % Loop
+    \draw[arrow, gdlred!70, thick] (rnn1.north) .. controls (0.8,1.6) and (1.2,1.6) .. (rnn2.north);
+    \node[font=\tiny, gdlred!70] at (1.2,1.8) {$h_t$};
+    % Entradas
+    \foreach \x in {0,0.8,1.6} {
+        \draw[arrow, gdlgray] (\x,0) -- (\x,0.3);
+    }
+    \node[below, font=\tiny] at (0.8,-0.3) {sequence};
+    \node[below, font=\tiny, text=gdlgray] at (0.8,-0.6) {Hidden state};
+\end{scope}
+
+% === TRANSFORMER ===
+\begin{scope}[shift={(6,0)}]
+    \node[title] at (0.8,2.5) {Transformer};
+    % Tokens
+    \foreach \x in {0,0.5,1,1.5} {
+        \node[neuron=gdlpurple, minimum size=0.3cm] (t\x) at (\x,0) {};
+    }
+    % Attention layer
+    \draw[fill=gdlpurple!20, draw=gdlpurple!60] (-0.2,0.6) rectangle (1.7,1.2);
+    \node[font=\tiny] at (0.75,0.9) {Attention};
+    % Attention connections (all-to-all)
+    \foreach \x in {0,0.5,1,1.5} {
+        \draw[gdlpurple!40, thin] (\x,0.15) -- (0.75,0.55);
+    }
+    % Output
+    \foreach \x in {0,0.5,1,1.5} {
+        \node[neuron=gdlpurple, minimum size=0.3cm] at (\x,1.6) {};
+        \draw[gdlpurple!40, thin] (0.75,1.25) -- (\x,1.45);
+    }
+    \draw[arrow, gdlpurple!70] (0.75,-0.5) -- (0.75,-0.15) node[below, pos=0, font=\tiny] {tokens};
+    \draw[arrow, gdlpurple!70] (0.75,1.75) -- (0.75,2.2) node[above, pos=1, font=\tiny] {output};
+    \node[below, font=\tiny, text=gdlgray] at (0.75,-0.8) {Global attention};
+\end{scope}
+
+\end{tikzpicture}
+\caption[Comparison of deep learning architectures]{Comparison of the four main deep learning architectures. \textbf{Feedforward}: fully connected layers with unidirectional flow. \textbf{CNN}: convolutions with shared kernels that preserve spatial structure. \textbf{RNN}: recurrent connections that maintain a temporal hidden state. \textbf{Transformer}: attention mechanisms that connect all elements simultaneously.}
+\label{fig:arquitecturas_modernas}
+\end{figure}
+
+\paragraph{Feedforward networks.}
+Feedforward networks, based on dense layers (\autoref{def:capa_densa}), represent the most basic architecture where information flows unidirectionally from the input to the output. A network with $L$ layers is defined as the composition $f(x) = f_L \circ f_{L-1} \circ \cdots \circ f_1(x)$, where each $f_i(x) = \sigma(W_i x + b_i)$ is an affine transformation followed by a nonlinearity. The absence of cycles guarantees that the computation is deterministic and efficient.
+
+\paragraph{Convolutional networks.}
+\glspl{CNN}, which we will study in detail in \autoref{ch:cnn}, exploit local structure and translational invariance by means of convolution operations. For an input $x$ and a kernel $k$, the discrete convolution (\autoref{def:discrete_convolution}) is defined as:
+\[
+	(x * k)[i] = \sum_j x[j] \cdot k[i-j].
+\]
+Convolutional layers preserve spatial locality and drastically reduce the number of parameters through weight sharing, resulting in translational equivariance: $T_a[f(x)] = f(T_a[x])$ where $T_a$ is a translation (\autoref{theorem:convolution_translation_equivariance}).
+
+\paragraph{Recurrent networks.}
+\glspl{RNN} (\autoref{subsubsec:rnn}) process sequences by means of a hidden state $h_t$ that evolves according to:
+\[
+	h_t = \sigma(W_{hh} h_{t-1} + W_{xh} x_t + b_h).
+\]
+This recurrence allows capturing temporal dependencies, although it suffers from the vanishing gradient problem (\autoref{subsubsec:vanishing_gradient}). Variants such as \gls{LSTM} (\autoref{subsubsec:lstm}) and \gls{GRU} introduce gating mechanisms that allow learning long-term dependencies.
+
+\paragraph{Attention mechanisms.}\label{par:atencion_arquitecturas}
+Attention mechanisms, which we formalize below and extend in \autoref{ch:attention}, allow modeling long-range dependencies without recurrence. The central idea is to dynamically weight the contributions of different parts of the input according to their relevance:
+\[
+	\text{Attention}(q, K, V) = \sum_{i=1}^n \alpha_i v_i, \quad \alpha_i = \frac{\exp(s(q, k_i))}{\sum_{j=1}^n \exp(s(q, k_j))}
+\]
+where $s(q, k_i)$ is a scoring function that measures the relevance between the query $q$ and the key $k_i$ (see \autoref{def:generalized_attention}). This formulation is invariant to permutations of the inputs and generalizes operations such as pooling and convolution. The quadratic complexity $O(n^2)$ in sequence length has motivated the development of efficient variants. Attention mechanisms form the basis of the \gls{Transformer} architecture.
+
+\begin{definition}[Self-Attention layer]\label{def:self_attention_basica}
+Let $\{h_1, \ldots, h_n\} \subset \mathbb{R}^d$ be a sequence of input vectors. A \textit{self-attention layer} with key dimension $d_k$ is defined by means of three linear projections $Q, K, V \in \mathbb{R}^{d \times d_k}$ (query, key, value) and computes:
+\[
+\mathrm{SelfAttention}(h_i) = \sum_{j=1}^n \alpha_{ij}\, V h_j, \quad \alpha_{ij} = \frac{\exp\!\left(\frac{(Qh_i)^T(Kh_j)}{\sqrt{d_k}}\right)}{\sum_{m=1}^n \exp\!\left(\frac{(Qh_i)^T(Kh_m)}{\sqrt{d_k}}\right)}
+\]
+where the coefficients $\alpha_{ij} \in (0,1)$ with $\sum_j \alpha_{ij} = 1$ are called \textit{attention weights}.
+\end{definition}
+
+\paragraph{Generative adversarial networks.}
+\glspl{GAN} consist of two competing networks: a generator $G: \mathcal{Z} \to \mathcal{X}$ and a discriminator $D: \mathcal{X} \to [0,1]$. The minimax objective is:
+\[
+	\min_G \max_D\; \mathbb{E}_{x \sim p_{\text{data}}}[\log D(x)] + \mathbb{E}_{z \sim p_z}[\log(1 - D(G(z)))].
+\]
+At the Nash equilibrium, $G$ generates samples indistinguishable from real data.
+
+\paragraph{Graph networks.}
+\glspl{GNN} generalize neural operations to non-Euclidean data, a central topic of \autoref{ch:gdl}. Message passing (\autoref{def:mpnn_unificador}) in a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ is expressed as:
+\[
+	h_v^{(k+1)} = \sigma\!\left(W_{\text{self}}h_v^{(k)} + \sum_{u \in \mathcal{N}(v)} W_{\text{msg}}h_u^{(k)}\right),
+\]
+where $\mathcal{N}(v)$ denotes the neighbors of node $v$. This formulation preserves the permutation invariance of the graph.
+
+\paragraph{Diffusion models.}
+Diffusion models learn to reverse a process of gradual degradation. Given a forward process that adds Gaussian noise:
+\[
+	q(x_t \mid x_{t-1}) = \mathcal{N}\!\left(x_t;\, \sqrt{1-\beta_t}\, x_{t-1},\, \beta_t \mathbf{I}\right),
+\]
+the neural network learns the inverse process $p_\theta(x_{t-1} \mid x_t)$ to generate samples from pure noise. The objective function is related to the estimation of the score $\nabla_x \log p(x)$.

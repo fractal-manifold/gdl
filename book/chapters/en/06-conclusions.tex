@@ -1,0 +1,83 @@
+\chapter{Discussion and Conclusions}\label{ch:conclusions}
+
+\TODO{These are only some ideas that need a lot of work}
+
+This work has developed a rigorous mathematical formalization of \gls{GDL}, establishing the theoretical foundations that unify modern deep learning architectures under a common geometric paradigm. Across four chapters, an arc has been constructed that starts from traditional neural networks, establishes the geometric framework of the ``5~Gs'', and shows how convolution and attention operations extend to non-Euclidean domains while preserving fundamental symmetries. The following sections synthesize the results obtained in relation to the four objectives set out in \autoref{sec:objetivos_trabajo}, identify the limitations that emerge from the theoretical development itself, and propose future directions grounded in the content of the thesis.
+
+
+\section{Synthesis of Results and Contributions}
+
+\subsection{Theoretical Foundations: The Framework of the 5~Gs}
+
+The first objective (developing the mathematical framework of the ``5~Gs'') has been addressed in Chapters~\ref{ch:neural_networks} and~\ref{ch:gdl}. In \autoref{ch:neural_networks} the notion of an artificial neural network has been formalized starting from the definition of a neuron (\autoref{def:neurona_artificial}), subsequently establishing the foundations of measure theory and functional analysis needed to prove the universal approximation theorem (\autoref{sec:aproximacion_universal}). This result, which guarantees the expressive capacity of single-hidden-layer networks, constitutes the theoretical starting point from which the more complex architectures are justified. \autoref{ch:neural_networks} has shown the limitations inherent to traditional architectures: their inability to exploit data symmetries and the resulting parametric inefficiency.
+
+\autoref{ch:gdl} has developed the complete framework of the 5~Gs (\autoref{subsec:cinco_gs}): differentiable manifolds as geometric domains, Lie groups as the algebraic description of symmetries, graphs as discretizations of these domains, geodesics as a mechanism for information propagation, and gauge theory to handle local invariances across coordinate systems. The key results of representation theory (the Peter-Weyl theorem (\autoref{thm:peter_weyl}) and Schur's lemma (\autoref{lem:schur})) provide the tools to decompose group representations into irreducible components, which is essential for constructing equivariant operators. The notions of equivariance (\autoref{def:equivariance_gdl}) and invariance (\autoref{def:invariance_gdl}) have been formalized as compatibility properties between functions and group actions, establishing the guiding principle of architectural design in \gls{GDL}. Gauge theory, developed through principal bundles (\autoref{def:fibrado_principal_formal}), has extended this principle to the case of local symmetries.
+
+\subsection{Architectural Unification}
+
+The second objective (showing that seemingly disparate architectures emerge as particular cases of the geometric paradigm) has been attained through the concept of equivariant \textit{message passing} as a unifying paradigm (\autoref{def:mpnn_unificador}). It has been formally shown that:
+
+\begin{itemize}
+	\item Traditional neural networks constitute \glspl{MPNN} over complete graphs (\autoref{prop:ann_mpnn}), where each neuron exchanges information with all the others.
+	\item \glspl{CNN} perform \gls{message_passing} over regular grids (\autoref{thm:equivalencia_constructiva_cnn_gnn}), with shared weights determined by the translation group.
+	\item \glspl{Transformer} implement adaptive \gls{message_passing} (\autoref{def:self_attention_basica}), where the communication weights are computed dynamically from the data.
+\end{itemize}
+
+This unification is not merely conceptual. The Weisfeiler-Leman test (\autoref{thm:wl_mpnn_equivalencia}) establishes precise expressive limits for \glspl{MPNN}, showing that their graph-distinguishing power coincides exactly with that of the combinatorial 1-WL algorithm. The generalization hierarchy (\autoref{rem:jerarquia_generalizacion}) formalizes the inclusion relations between the various architectural families, providing a complete theoretical map of their relative capabilities.
+
+\subsection{Geometric Extensions}
+
+The third objective (analyzing the extensions of convolutions and attention mechanisms to non-Euclidean domains) has been developed in Chapters~\ref{ch:cnn} and~\ref{ch:attention}.
+
+\autoref{ch:cnn} has constructed a progression of convolutional generalizations of increasing complexity: group convolutions, steerable networks, spherical convolutions, $\text{E}(3)$/$\text{SE}(3)$-equivariant networks, gauge equivariant networks, and Clifford-valued convolutions. This chain culminates in the equivariant universality theorem (\autoref{theorem:equivariant_universality_cnns}), which guarantees that equivariant \glspl{CNN} can approximate any continuous equivariant function, thus extending the classical universal approximation result to the geometric context. The topological extensions, developed through the Hodge Laplacians (\autoref{def:hodge_laplacians_cnn}), have provided tools for operating over higher-order structures (simplicial and cellular complexes).
+
+\autoref{ch:attention} has extended attention mechanisms to diverse geometric domains. Equivariant attention via Clifford algebra (\autoref{sec:clifford_attention}) allows operating directly on multivectors, preserving the symmetries of geometric algebra. Hyperbolic attention (\autoref{def:atencion_hiperbolica}) extends attention mechanisms to spaces of constant negative curvature, suitable for data with hierarchical structure. Harmonic analysis has acted as a unifying tool throughout both chapters, connecting the spatial and spectral perspectives of geometric operations.
+
+\subsection{Theory-Architecture Connection}
+
+The fourth objective (illustrating how the formalized geometric principles manifest in modern models) has been addressed through the analysis of representative architectures. AlphaFold~\citep{jumper2021alphafold} exemplifies $\text{SE}(3)$ equivariance in protein structure prediction. DeepSets and PointNet illustrate permutation invariance, with the corresponding universality theorem (\autoref{thm:deepsets_universal}) guaranteeing their expressive capacity over set functions. \gls{GATr} demonstrate the applicability of Clifford algebras in attention architectures.
+
+The \gls{CNN}-attention equivalence table (\autoref{tab:cnn_attention_equivalencias_fundamentales}) synthesizes the formal correspondences between both paradigms, showing that they share mathematical structure despite their apparent differences. The correspondence theorem (\autoref{thm:correspondencia_cnn_attention}) and the convergence conjecture (\autoref{conj:convergencia_cnn_attention}) formalize this relation, suggesting that under appropriate conditions the convolutional and attention operations converge to the same operator.
+
+
+\section{Limitations and Open Problems}
+
+\subsection{Expressive Power and the Weisfeiler-Leman Barrier}
+
+The equivalence between \glspl{MPNN} and the 1-WL test (\autoref{thm:wl_mpnn_equivalencia}) establishes a fundamental expressive barrier: standard \glspl{MPNN} cannot distinguish graphs that the 1-WL test does not distinguish. The $k$-WL extensions overcome this limitation, but at a computational cost that grows exponentially with $k$, which makes them impractical for graphs of moderate size. A central open problem is the design of architectures with polynomial cost that surpass the 1-WL barrier, possibly through the use of additional structural features or higher-order attention mechanisms.
+
+\subsection{Tension between Rigidity and Adaptability}
+
+The trade-off between rigidity and adaptability (\autoref{rem:tradeoff_rigidez_adaptabilidad}), formalized in \autoref{ch:attention}, identifies a fundamental tension in the design of geometric architectures. Equivariant \glspl{CNN} incorporate symmetries in a rigid manner, which provides data efficiency and theoretical guarantees, but limits their adaptability when the symmetries are only approximate. Attention mechanisms offer flexibility to learn context-dependent relations, but at the cost of greater data demand and weaker structural regularization. The \gls{CNN}-attention convergence conjecture (\autoref{conj:convergencia_cnn_attention}) suggests that both paradigms converge under appropriate conditions, but the optimal point on the rigidity-adaptability spectrum for each concrete domain remains an open problem.
+
+\subsection{Gauge Equivariance and Global Topology}
+
+The gauge theory developed in \autoref{ch:cnn} through principal bundles (\autoref{def:fibrado_principal_formal}) provides a rigorous framework for local symmetries. However, the global topological obstructions (nontrivial bundles, nontrivial holonomy around cycles) pose both theoretical and computational difficulties. The gap between the elegance of the gauge formalism and the implementation of efficient architectures at scale constitutes a significant practical challenge: current gauge equivariant \glspl{CNN} require careful discretizations that may not preserve the global topological properties of the underlying space.
+
+\subsection{Higher-Order Structures}
+
+The topological tools developed in this work (Hodge Laplacians (\autoref{def:hodge_laplacians_cnn}), persistent homology, simplicial complexes) provide a mathematically rigorous framework for capturing higher-order relations. Nevertheless, the architectures that operate over these structures are at an early stage of maturity compared to architectures over graphs. The design of efficient convolution and attention operations over general cellular complexes, which preserve the algebraic properties of the underlying topology without incurring prohibitive computational costs, remains a relevant open problem.
+
+
+\section{Future Directions}
+
+The following lines of research are grounded directly in the results and limitations identified in this work.
+
+\subsection{Hybrid CNN-Attention Architectures}
+
+The correspondence theorem (\autoref{thm:correspondencia_cnn_attention}) and the convergence conjecture (\autoref{conj:convergencia_cnn_attention}) between convolutions and attention, together with the analysis of the rigidity-adaptability spectrum (\autoref{rem:tradeoff_rigidez_adaptabilidad}), suggest that a natural direction is the design of architectures that combine both paradigms in a controlled manner. The theoretical framework established in \autoref{ch:attention} provides the formal tools to interpolate between the rigidity of equivariant convolutions and the adaptability of attention, potentially combining the data efficiency of the former with the expressiveness of the latter.
+
+\subsection{Complex Geometric Domains}
+
+The framework of the 5~Gs (\autoref{subsec:cinco_gs}) admits natural extensions to product spaces that combine geometries of different curvature (hyperbolic, spherical, and Euclidean) in a single model. These structures arise naturally in data with simultaneous hierarchical and cyclic components. In the topological direction, the results on simplicial complexes and cellular sheaves of \autoref{ch:cnn} provide a basis for the development of \textit{sheaf neural networks}, which would generalize graph networks by incorporating the algebraic structure of sheaves over cellular complexes.
+
+\subsection{Generalized Harmonic Analysis}
+
+The central role of harmonic analysis in this work (from spectral convolutions to spherical harmonics and the Chebyshev decomposition of \autoref{ch:cnn}) suggests the exploration of extensions to broader classes of groups. The Peter-Weyl theorem (\autoref{thm:peter_weyl}), the cornerstone of group convolutions, requires compactness of the group; extending the framework to non-compact groups (such as the Lorentz group or the affine groups) demands tools of non-commutative harmonic analysis that go beyond those developed in this work. An advance in this direction would broaden the scope of applicability of equivariant \glspl{CNN} to symmetries relevant in relativistic physics and general signal processing.
+
+
+\section{Final Reflection}
+
+The development presented in this work shows that geometry is not merely a tool for improving the performance of deep learning models, but an organizing principle that allows explaining why certain architectures work for certain types of data. The synthesis of \autoref{ch:gdl} (\autoref{sec:sintesis_marco_unificador}) has shown that the differences between \glspl{ANN}, \glspl{CNN}, \glspl{GNN}, and \glspl{Transformer} reflect choices about three fundamental aspects: the geometric domain, the symmetry group, and the connectivity structure.
+
+The mathematical framework that underpins this unification (Lie theory, Riemannian geometry, gauge theory, algebraic topology) possesses a power that transcends the mere retrospective description of existing architectures. The equivariant universality results and the convergence theorems between paradigms provide tools with predictive capacity: they allow anticipating which geometric constraints are necessary for a given domain and which expressive guarantees the resulting architecture will offer. In this sense, \gls{GDL} constitutes not only a taxonomy of current architectures, but a theoretical framework for the principled design of future ones.

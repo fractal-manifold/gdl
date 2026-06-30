@@ -1,0 +1,244 @@
+% Glossary and acronyms using the glossaries package
+\newacronym{GDL}{GDL}{Geometric Deep Learning}
+\newacronym{ANN}{ANN}{Artificial Neural Network}
+\newacronym{RNA}{RNA}{Artificial Neural Networks}
+\newacronym{CNN}{CNN}{Convolutional Neural Network}
+\newacronym{RNN}{RNN}{Recurrent Neural Network}
+\newacronym{LSTM}{LSTM}{Long Short-Term Memory}
+\newacronym{GNN}{GNN}{Graph Neural Network}
+\newacronym{SNN}{SNN}{Spiking Neural Network}
+\newacronym{GD}{GD}{Gradient Descent}
+\newacronym{SGD}{SGD}{Stochastic Gradient Descent}
+\newacronym{GAN}{GAN}{Generative Adversarial Network}
+\newacronym{GCNN}{G-CNN}{Group-Equivariant Convolutional Neural Network}
+\newacronym{GCN}{GCN}{Graph Convolutional Network}
+\newacronym{ReLU}{ReLU}{Rectified Linear Unit}
+\newacronym{GPU}{GPU}{Graphics Processing Unit}
+\newacronym{ViT}{ViT}{Vision Transformer}
+\newacronym{MLP}{MLP}{Multi-Layer Perceptron}
+\newacronym{SE}{SE(3)}{Special Euclidean Group}
+\newacronym{SO}{SO(3)}{Special Orthogonal Group}
+\newacronym{SO2}{SO(2)}{Special Orthogonal Group in 2D}
+\newacronym{GRU}{GRU}{Gated Recurrent Unit}
+\newacronym{FFT}{FFT}{Fast Fourier Transform}
+\newacronym{BN}{BN}{Batch Normalization}
+\newacronym{Adam}{Adam}{Adaptive Moment Estimation}
+\newacronym{DL}{DL}{Deep Learning}
+\newacronym{Transformer}{Transformer}{Transformer Architecture}
+\newacronym{GAT}{GAT}{Graph Attention Networks}
+\newacronym{MPNN}{MPNN}{Message Passing Neural Networks}
+\newacronym{PDE}{PDE}{Partial Differential Equations}
+\newacronym{BERT}{BERT}{Bidirectional Encoder Representations from Transformers}
+\newacronym{GPT}{GPT}{Generative Pre-trained Transformer}
+\newacronym{EPT}{EPT}{Equivariant Pretrained Transformer}
+\newacronym{GATr}{GATr}{Geometric Algebra Transformers}
+\newacronym{SAT}{SAT}{Simplicial Attention Networks}
+\newacronym{HAN}{HAN}{Hyperbolic Attention Networks}
+\newacronym{TDL}{TDL}{Topological Deep Learning}
+\newacronym{WL}{WL}{Weisfeiler-Lehman}
+\newacronym{GeoCNN}{GeoCNN}{Geodesic Convolutional Neural Network}
+\newacronym{SphericalCNN}{Spherical CNN}{Spherical Convolutional Neural Network}
+\newacronym{GaugeCNN}{Gauge CNN}{Gauge Equivariant Convolutional Neural Network}
+\newacronym{MSE}{MSE}{Mean Squared Error}
+\newacronym{MAE}{MAE}{Mean Absolute Error}
+\newacronym{KL}{KL}{Kullback-Leibler}
+\newacronym{DAG}{DAG}{Directed Acyclic Graph}
+\newacronym{BPTT}{BPTT}{Backpropagation Through Time}
+\newacronym{PCA}{PCA}{Principal Component Analysis}
+
+% Measure theory terms
+\newglossaryentry{sigma_algebra}{
+    name={$\sigma$-algebra},
+    description={Collection of subsets of a set $X$ closed under complements and countable unions. It defines which sets are ``measurable'' and on which a measure can be defined}
+}
+
+\newglossaryentry{espacio_medida}{
+    name={measure space},
+    description={Triple $(X, \mathcal{F}, \mu)$ formed by a set $X$, a $\sigma$-algebra $\mathcal{F}$ on $X$, and a measure $\mu: \mathcal{F} \to [0, +\infty]$. Fundamental framework for the Lebesgue integral}
+}
+
+\newglossaryentry{medida_lebesgue}{
+    name={Lebesgue measure},
+    description={Natural extension of the concept of length, area and volume to $\mathbb{R}^n$, invariant under translations. A set has zero Lebesgue measure if it can be covered by intervals of arbitrarily small total length}
+}
+
+\newglossaryentry{funcion_medible}{
+    name={measurable function},
+    description={Function $f: X \to Y$ between measurable spaces such that the preimage of every measurable set is measurable. Necessary condition for a function to be integrable in the Lebesgue sense}
+}
+
+\newglossaryentry{integral_lebesgue}{
+    name={Lebesgue integral},
+    description={Extension of the Riemann integral that allows integrating a broader class of functions. It is constructed by approximating functions with simple functions and allows interchanging limits and integrals under suitable conditions}
+}
+
+% Functional analysis terms
+\newglossaryentry{espacio_normado}{
+    name={normed vector space},
+    description={Real vector space equipped with a norm that measures the ``length'' of vectors and satisfies the triangle inequality. Foundation of modern functional analysis}
+}
+
+\newglossaryentry{funcional_lineal}{
+    name={linear functional},
+    description={Linear map from a vector space to the real numbers. When it is continuous (bounded) it belongs to the dual space, fundamental in the Hahn-Banach and Riesz theorems}
+}
+
+\newglossaryentry{espacio_CK}{
+    name={$C(K)$ space},
+    description={Space of all continuous functions on a compact set $K$ equipped with the supremum norm. It is a Banach space and the natural context for the universal approximation theorem}
+}
+
+% Differential geometry terms
+\newglossaryentry{espacio_cotangente}{
+    name={cotangent space},
+    description={Algebraic dual of the tangent space $T_p^*\mathcal{M} = (T_p\mathcal{M})^*$, whose elements are linear functionals on tangent vectors called covectors. Basis of differential forms and tensor calculus on manifolds}
+}
+
+\newglossaryentry{forma_diferencial}{
+    name={differential form},
+    plural={differential forms},
+    description={Smooth assignment associating to each point of a manifold an antisymmetric tensor. A $k$-form $\omega \in \Omega^k(\mathcal{M})$ acts on $k$ tangent vectors and generalizes concepts such as the gradient (1-form) and the volume element ($m$-form)}
+}
+
+\newglossaryentry{derivada_exterior}{
+    name={exterior derivative},
+    description={Operator $d: \Omega^k(\mathcal{M}) \to \Omega^{k+1}(\mathcal{M})$ that generalizes the differential of functions to higher-degree forms. It satisfies the graded Leibniz rule and the nilpotency property $d \circ d = 0$, fundamental for the de Rham complex and the definition of curvature}
+}
+
+% Specialized GDL terms
+\newglossaryentry{aumentacion_datos}{
+    name={data augmentation},
+    description={Technique that generates transformed versions of the training data through rotations, translations, scalings and other transformations, with the goal of improving model generalization and reducing overfitting}
+}
+
+\newglossaryentry{espacio_homogeneo}{
+    name={homogeneous space},
+    description={Space of the form $G/H$ where $G$ is a Lie group and $H$ a closed subgroup. It allows modeling geometries where the group $G$ acts transitively}
+}
+
+\newglossaryentry{representacion_grupo}{
+    name={group representation},
+    description={Homomorphism $\rho: G \rightarrow GL(V)$ that associates to each group element an invertible linear transformation, preserving the group structure}
+}
+
+\newglossaryentry{fibrado_principal}{
+    name={principal bundle},
+    description={Geometric structure $(P, M, \pi, G)$ where a group $G$ acts freely and transitively on the fibers of the projection $\pi: P \rightarrow M$}
+}
+
+\newglossaryentry{gauge_equivarianza}{
+    name={gauge equivariance},
+    description={Invariance property under gauge transformations, ensuring that representations are intrinsic to the geometric domain}
+}
+
+\newglossaryentry{laplaciano_grafo}{
+    name={graph Laplacian},
+    description={Operator $L = D - A$ where $D$ is the degree matrix and $A$ the adjacency matrix. It generalizes the continuous Laplacian operator to discrete structures}
+}
+
+\newglossaryentry{filtro_espectral}{
+    name={spectral filter},
+    description={Function that acts on signals on graphs via $g \star f = U g(\Lambda) U^T f$, where $U$ and $\Lambda$ come from the spectral decomposition of the Laplacian}
+}
+
+\newglossaryentry{oversmoothing}{
+    name={oversmoothing},
+    description={Phenomenon by which node representations in a GNN converge to a uniform value as the number of layers increases, losing discriminative power. Formally, the Dirichlet energy $E(H^{(\ell)}) \to 0$ exponentially with depth $\ell$}
+}
+
+\newglossaryentry{oversquashing}{
+    name={oversquashing},
+    description={Phenomenon by which information from distant nodes is exponentially compressed as it propagates through topological bottlenecks of the graph, limiting the ability of GNNs to capture long-range dependencies}
+}
+
+\newglossaryentry{message_passing}{
+    name={message passing},
+    description={Computational paradigm where the nodes of a graph exchange information with their neighbors through message and aggregation functions}
+}
+
+\newglossaryentry{equivarianza}{
+    name={equivariance},
+    description={Property of a function $f$ such that $f(g \cdot x) = g \cdot f(x)$ for every transformation $g$ in a group $G$, preserving the geometric structure of the data}
+}
+
+\newglossaryentry{invarianza}{
+    name={invariance},
+    description={Property of a function $f$ such that $f(g \cdot x) = f(x)$ for every transformation $g$ in a group $G$, keeping the output constant under symmetric transformations}
+}
+
+\newglossaryentry{metrica_gram}{
+    name={Gram metric},
+    description={Matrix $\mathbf{G} = \mathbf{Q}\mathbf{K}^T$ that encodes all geometric relations between queries and keys in attention mechanisms}
+}
+
+\newglossaryentry{convolucion_grupo}{
+    name={group convolution},
+    description={Extension of the standard convolution to general groups $G$, defined as $(f \star \psi)(g) = \sum_{h \in G} f(h) \psi(g^{-1}h)$}
+}
+
+\newglossaryentry{analisis_armonico}{
+    name={harmonic analysis},
+    description={Branch of mathematics that studies the representation of functions as a superposition of sinusoidal waves or other basic oscillators, fundamental for spectral convolutions}
+}
+
+\newglossaryentry{marco_unificador}{
+    name={unifying framework},
+    description={Mathematical formalization that demonstrates how ANNs, CNNs, Transformers and GNNs emerge as special cases of the geometric message passing paradigm}
+}
+
+\newglossaryentry{grafo}{
+    name={graph},
+    description={Mathematical structure $\mathcal{G} = (V, E)$ composed of a set of vertices $V$ and a set of edges $E$ that connect pairs of vertices, used to model relations between objects}
+}
+
+\newglossaryentry{grafo_dirigido}{
+    name={directed graph},
+    description={Graph in which the edges have a specific direction, represented as ordered pairs $(u, v)$ where $u$ is the source vertex and $v$ the target vertex}
+}
+
+\newglossaryentry{grafo_aciclico_dirigido}{
+    name={directed acyclic graph},
+    description={Directed graph without cycles (DAG), which allows a topological ordering of its vertices. Fundamental in feedforward neural networks to guarantee the computability of the computation graph}
+}
+
+\newglossaryentry{grafo_de_capas}{
+    name={layer graph},
+    description={Directed graph that represents the architecture of a neural network at a macro level, where the nodes are entire layers and the edges represent the data flow between layers. High-level abstraction of the computation graph}
+}
+
+\newglossaryentry{grafo_computacional}{
+    name={computation graph},
+    description={Representation of a computation as a directed graph where the nodes represent operations or variables and the edges represent the data flow. Fundamental for automatic differentiation and backpropagation}
+}
+
+\newglossaryentry{composicion_funcional}{
+    name={function composition},
+    description={Operation that combines functions sequentially, denoted as $(f \circ g)(x) = f(g(x))$. In neural networks, each layer is composed with the previous one forming a complex hierarchical function}
+}
+
+\newglossaryentry{softmax}{
+    name={softmax},
+    description={Normalization function that transforms a vector of real values into a probability distribution, defined as $\sigma(z)_i = e^{z_i} / \sum_j e^{z_j}$. Used in the output layer for multiclass classification}
+}
+
+\newglossaryentry{metric_learning}{
+    name={metric learning},
+    description={Learning paradigm whose goal is to learn a distance function or embedding space such that similar elements are close and dissimilar elements are far apart}
+}
+
+% Combinatorial topology terms
+\newglossaryentry{simplicio}{
+    name={simplex},
+    plural={simplices},
+    description={Convex hull of $k+1$ affinely independent points in $\mathbb{R}^n$. A $k$-simplex generalizes the notion of triangle: a 0-simplex is a point, a 1-simplex an edge, a 2-simplex a triangle, a 3-simplex a tetrahedron, etc.}
+}
+
+\newglossaryentry{complejo_simplicial}{
+    name={simplicial complex},
+    description={Finite collection of simplices closed under the operation of taking faces and with well-defined intersections. It generalizes triangulations and allows encoding higher-order topological information}
+}
+
+\newglossaryentry{triangulacion}{
+    name={triangulation},
+    description={Decomposition of a compact topological manifold $M$ into simplices, given by a simplicial complex $\mathcal{K}$ together with a homeomorphism from its geometric realization $|\mathcal{K}|$ to $M$}
+}

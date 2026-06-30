@@ -1,0 +1,665 @@
+\chapter*{Notación}
+\addcontentsline{toc}{chapter}{Notación}
+\markboth{NOTACIÓN}{}
+
+A lo largo de este trabajo utilizaremos la siguiente notación matemática.
+Dado que la tesis abarca múltiples áreas (análisis funcional, álgebra,
+topología, geometría diferencial y aprendizaje profundo), algunos símbolos
+admiten varios significados según el contexto (por ejemplo, $G$ puede denotar
+un grupo o un grafo, $K$ un núcleo convolucional o una matriz de claves).
+En general, el contexto matemático circundante determina la
+interpretación correcta de cada símbolo.
+
+\section*{Fundamentos Matemáticos}
+
+\subsection*{Convenciones Notacionales}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbf{x}, \mathbf{y}, \mathbf{z}$ & Vectores (negrita minúscula) \\
+$\mathbf{A}, \mathbf{B}, \mathbf{C}$ & Matrices (negrita mayúscula) \\
+$\mathcal{M}, \mathcal{N}$ & Variedades (caligráficas mayúsculas) \\
+$G, H$ & Grupos (mayúsculas); para grafos preferir $\mathcal{G} = (V, E)$ \\
+$f, g, h$ & Funciones (minúsculas) \\
+$\theta, \phi, \psi$ & Parámetros o coordenadas (griegas minúsculas) \\
+$\mathbb{R}$ & Números reales \\
+$\mathbb{C}$ & Números complejos \\
+$\mathbb{N}$ & Números naturales \\
+$\mathbb{Z}$ & Números enteros \\
+$x_i, w_{ij}$ & Componentes de vectores y matrices \\
+$f^{(\ell)}$ & Función o capa $\ell$ en una red profunda (se usa $\ell$ para evitar confusión visual con $1$) \\
+$\theta_t$ & Parámetros en el paso temporal $t$ \\
+$\mathcal{M}_p$ & Estructura local en el punto $p$ \\
+$h_v^{(\ell)}$ & Características del nodo $v$ en la capa $\ell$ \\
+$h^{(\ell)}$ & Representación oculta en la capa $\ell$ (abreviación de $h_v^{(\ell)}$ cuando el nodo es claro del contexto) \\
+$d_i$ & Grado del vértice $i$ \\
+$\lambda_i$ & $i$-ésimo valor propio \\
+$A \succeq 0$ & Matriz simétrica semidefinida positiva \\
+$A \succ 0$ & Matriz simétrica definida positiva \\
+\end{longtable}
+
+\subsection*{Análisis Funcional y Espacios}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$L^p(\Omega)$ & Espacios de Lebesgue \\
+$L^2(\mathbb{R}^d)$ & Espacio de funciones de cuadrado integrable \\
+$\|f\|_{L^2}$ & Norma $L^2$ de la función $f$ \\
+$C^k(\mathcal{M})$ & Funciones $k$-veces diferenciables en $\mathcal{M}$ \\
+$C(\mathcal{M})$ & Funciones continuas en la variedad $\mathcal{M}$ \\
+$\mu$ & Medida \\
+$(X, \mathcal{F}, \mu)$ & Espacio de medida (conjunto, $\sigma$-álgebra, medida) \\
+$\mathcal{B}(X)$ & $\sigma$-álgebra de Borel de $X$ \\
+$\lambda$ & Medida de Lebesgue \\
+$\int_\Omega f \, d\mu$ & Integral de Lebesgue respecto a la medida $\mu$ \\
+a.e. (c.p.d.) & Casi por doquier (almost everywhere) \\
+$|\mu|$ & Variación total de la medida $\mu$ \\
+$C(X)$ & Espacio de funciones continuas sobre compacto $X$ \\
+$\|f\|_\infty$ & Norma supremo (uniforme) de la función $f$ \\
+$X'$ & Espacio dual de $X$ (funcionales lineales continuos) \\
+$\text{supp}(f)$ & Soporte de la función $f$ \\
+$\text{span}(\{v_1, \ldots, v_n\})$ & Espacio vectorial generado por $\{v_1, \ldots, v_n\}$ \\
+$\langle \cdot, \cdot \rangle$ & Producto interior \\
+$\| \cdot \|$ & Norma euclidiana \\
+$\nabla$ & Operador gradiente \\
+$\nabla^2$ & Laplaciano euclidiano (operador de Laplace en $\mathbb{R}^m$) \\
+$\Delta$ & Operador de Laplace-Beltrami (laplaciano continuo) \\
+$L_G$ & Laplaciano discreto de un grafo $G$ \\
+$f'(x)$ & Derivada de la función $f$ (notación prima) \\
+$\partial$ & Derivada parcial \\
+$\circ$ & Composición de funciones \\
+$\arg\min$, $\arg\max$ & Argumento del mínimo/máximo \\
+\end{longtable}
+
+\subsection*{Distribuciones de Probabilidad}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathcal{N}(\mu, \sigma^2)$ & Distribución normal (gaussiana) con media $\mu$ y varianza $\sigma^2$ \\
+$\text{Bernoulli}(p)$ & Distribución de Bernoulli con probabilidad de éxito $p$ \\
+$\mathbb{E}[X]$ & Esperanza matemática de la variable aleatoria $X$ \\
+$\text{Var}(X)$ & Varianza de la variable aleatoria $X$ \\
+$p(x)$, $P(X=x)$ & Función de densidad/masa de probabilidad \\
+$X \sim \mathcal{D}$ & La variable $X$ sigue la distribución $\mathcal{D}$ \\
+$\sigma$ & Desviación estándar o parámetro de escala \\
+\end{longtable}
+
+\section*{Estructuras Algebraicas}
+
+\subsection*{Teoría de Grupos}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$H \leq G$ & $H$ es subgrupo de $G$ \\
+$H \triangleleft G$ & $H$ es subgrupo normal de $G$ \\
+$|G|$ & Orden (cardinalidad) del grupo $G$ \\
+$[G:H]$ & Índice de $H$ en $G$ (número de clases laterales) \\
+$\text{Stab}(x)$ & Subgrupo estabilizador del elemento $x$ \\
+$\text{Orb}(x)$ & Órbita del elemento $x$ bajo la acción de grupo \\
+$\ker(\phi)$ & Núcleo del homomorfismo $\phi$ \\
+$\text{Im}(\phi)$ & Imagen del homomorfismo $\phi$ \\
+$G \cong H$ & Los grupos $G$ y $H$ son isomorfos \\
+$g \cdot x$ & Acción del elemento $g$ sobre $x$ \\
+$C_4$ & Grupo cíclico de orden 4 \\
+$D_4$ & Grupo diédrico del cuadrado (orden 8 = 4 rotaciones + 4 reflexiones) \\
+$\mathbb{Z}_n$ & Grupo cíclico de enteros módulo $n$ \\
+$S_n$ & Grupo de permutaciones de $n$ elementos \\
+$\operatorname{sgn}(\sigma)$ & Signo (paridad) de la permutación $\sigma \in S_n$ \\
+$\operatorname{Alt}$ & Operador de alternación (antisimetrización) de tensores \\
+$p4, p4m$ & Grupos de simetría planar \\
+\end{longtable}
+
+\subsection*{Grupos de Lie y Álgebras de Lie}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$SO(n)$ & Grupo de rotaciones en $n$ dimensiones \\
+$SO(2)$ & Grupo de rotaciones en 2D (isomorfo a $U(1)$) \\
+$SO(3)$ & Grupo de rotaciones en 3D \\
+$O(n)$ & Grupo ortogonal en $n$ dimensiones \\
+$E(n)$ & Grupo euclidiano en $n$ dimensiones \\
+$SE(2), SE(3)$ & Grupo euclidiano especial en 2D y 3D \\
+$GL(n, \mathbb{R})$ & Grupo de matrices invertibles $n \times n$ \\
+$GL(\mathcal{F})$ & Grupo lineal general sobre espacio de características $\mathcal{F}$ \\
+$SU(2)$ & Grupo especial unitario $2 \times 2$ \\
+$\mathbb{H}$ & Álgebra de cuaterniones de Hamilton \\
+$G/H$ & Espacio homogéneo (clases laterales de $H$ en $G$) \\
+$St(k,n)$ & Variedad de Stiefel (marcos ortonormales de $k$ vectores en $\mathbb{R}^n$) \\
+$Gr(k,n)$ & Grassmannian de $k$-planos en $\mathbb{R}^n$ \\
+$\mathfrak{g}$ & Álgebra de Lie del grupo de Lie $G$ \\
+$T_e G$ & Espacio tangente al grupo $G$ en la identidad \\
+$[\cdot, \cdot]$ & Corchete de Lie \\
+$\exp: \mathfrak{g} \rightarrow G$ & Mapa exponencial \\
+$\mathfrak{so}(n)$ & Álgebra de Lie de $SO(n)$ (matrices antisimétricas) \\
+$\mathfrak{se}(n)$ & Álgebra de Lie de $SE(n)$ \\
+$\mathfrak{gl}(n, \mathbb{R})$ & Álgebra de Lie de $GL(n, \mathbb{R})$ \\
+$[\mathbf{v}]_\times$ & Matriz antisimétrica asociada al vector $\mathbf{v} \in \mathbb{R}^3$ \\
+$\operatorname{Ad}_g: \mathfrak{g} \to \mathfrak{g}$ & Representación adjunta del grupo \\
+$\rtimes$ & Producto semidirecto de grupos \\
+$\oplus$ & Suma directa de espacios vectoriales o álgebras \\
+$\mu: G \times G \to G$ & Multiplicación del grupo de Lie \\
+\end{longtable}
+
+\subsection*{Representaciones de Grupos}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\rho: G \rightarrow GL(V)$ & Representación de grupo $G$ en espacio $V$ \\
+$\widehat{G}$ & Conjunto de representaciones irreducibles de $G$ \\
+$\mathcal{H}_\lambda$ & Espacio de representación irreducible $\lambda$ \\
+$n_\lambda$ & Multiplicidad de la representación $\lambda$ \\
+$Y_\ell^m$ & Armónicos esféricos de grado $\ell$ y orden $m$ \\
+$C_{l_1 m_1, l_2 m_2}^{l m}$ & Coeficientes de Clebsch-Gordan \\
+$D^{(\ell)}(g)$ & Matriz de Wigner-D (representación irreducible de $SO(3)$ de grado $\ell$) \\
+\end{longtable}
+
+\subsection*{Álgebras de Clifford}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\text{Cl}(p,q)$ & Álgebra de Clifford con signatura $(p,q)$ \\
+$\text{Cl}(3,0,1)$ & Álgebra geométrica proyectiva \\
+$\text{Cl}(1,3)$ & Álgebra de Minkowski \\
+$\mathbf{e}_i$ & Vectores base del álgebra \\
+$a \wedge b$ & Producto exterior \\
+$a \cdot b$ & Producto interior \\
+$ab$ & Producto geométrico ($ab = a \cdot b + a \wedge b$) \\
+$\tilde{a}$ & Reverso de $a$ \\
+$|a|$ & Norma en el álgebra de Clifford \\
+$\langle a \rangle_k$ & Parte de grado $k$ del multivector $a$ \\
+$\eta_{ij}$ & Métrica del álgebra de Clifford \\
+\end{longtable}
+
+\section*{Geometría y Topología}
+
+\subsection*{Variedades y Geometría Diferencial}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathcal{M}$ & Variedad diferenciable \\
+$T_p\mathcal{M}$ & Espacio tangente a la variedad $\mathcal{M}$ en el punto $p$ \\
+$T_p^*\mathcal{M}$ & Espacio cotangente (dual del espacio tangente) en el punto $p$ \\
+$dF_p$ & Diferencial (pushforward) de la aplicación $F$ en el punto $p$ \\
+$(df)_p$ & Diferencial de una función $f$ en $p$ (covector en $T_p^*\mathcal{M}$) \\
+$dx^i$ & Elemento de la base dual del espacio cotangente (diferencial de la coordenada $x^i$) \\
+$T\mathcal{M}$ & Fibrado tangente (unión disjunta de todos los espacios tangentes) \\
+$\Gamma(TM)$ & Espacio de campos vectoriales en $\mathcal{M}$ \\
+$\text{FM}(\mathcal{M})$ & Fibrado de marcos de la variedad $\mathcal{M}$ \\
+$(U, \phi)$ & Carta local: $U \subset \mathcal{M}$ abierto, $\phi: U \to \mathbb{R}^m$ homeomorfismo \\
+$g_{ij}$ & Componentes del tensor métrico en coordenadas locales \\
+$g_p(v,w)$ & Producto interno de $v, w \in T_p\mathcal{M}$ inducido por la métrica \\
+$\nabla_X Y$ & Derivada covariante del campo $Y$ en dirección $X$ \\
+$\Gamma^k_{ij}$ & Símbolos de Christoffel de la conexión de Levi-Civita \\
+$T(X,Y)$ & Tensor de torsión de una conexión: $T(X,Y) = \nabla_X Y - \nabla_Y X - [X,Y]$ \\
+$R(X,Y)Z$ & Tensor de curvatura de Riemann \\
+$\mathrm{Ric}$, $R_{ij}$ & Tensor de Ricci (contracción del tensor de Riemann) \\
+$\mathcal{R}$ & Curvatura escalar ($\mathcal{R} = g^{ij}R_{ij}$) \\
+$\exp_p: T_p\mathcal{M} \to \mathcal{M}$ & Mapa exponencial Riemanniano en el punto $p$ \\
+$\log_p: \mathcal{M} \to T_p\mathcal{M}$ & Mapa logarítmico Riemanniano (inverso local de $\exp_p$) \\
+$d_g(p,q)$ & Distancia geodésica entre puntos $p$ y $q$ \\
+$\gamma: I \to \mathcal{M}$ & Curva en la variedad \\
+$R \in SO(3)$ & Matriz de rotación en 3D \\
+$\psi: S^2 \rightarrow \mathbb{R}^{d \times d'}$ & Kernel esférico para convolución en $S^2$ \\
+$(P, \mathcal{M}, \pi, G)$ & Fibrado principal con espacio total $P$, base $\mathcal{M}$, proyección $\pi$ y grupo estructural $G$ \\
+$\pi^{-1}(p)$ & Fibra sobre el punto $p \in \mathcal{M}$ \\
+$A^*_u$ & Campo vectorial fundamental generado por $A \in \mathfrak{g}$ en el punto $u \in P$ \\
+$\sigma_u: \mathfrak{g} \to V_u P$ & Isomorfismo canónico del álgebra de Lie al espacio vertical \\
+$\omega \in \Omega^1(P, \mathfrak{g})$ & 1-forma de conexión en un fibrado principal (con valores en el álgebra de Lie) \\
+$\Omega_\omega$ & 2-forma de curvatura de la conexión $\omega$ \\
+$\Gamma_\gamma$ & Transporte paralelo a lo largo del camino $\gamma$ \\
+$\text{Hol}_p(\omega)$ & Grupo de holonomía de la conexión $\omega$ en el punto $p$ \\
+$K$ & Curvatura seccional (gaussiana en superficies) \\
+\end{longtable}
+
+\subsection*{Espacios Simétricos y Curvados}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbb{R}^n$ & Espacio euclidiano $n$-dimensional \\
+$\mathbb{Z}^d$ & Retículo entero $d$-dimensional \\
+$S^n$ & Esfera $n$-dimensional \\
+$\mathbb{RP}^{n-1}$ & Espacio proyectivo real $(n-1)$-dimensional \\
+$\mathbb{CP}^{n-1}$ & Espacio proyectivo complejo $(n-1)$-dimensional \\
+$T^n$ & Toro $n$-dimensional \\
+$\text{Sym}^+(n)$ & Variedad de matrices simétricas positivas definidas $n \times n$ \\
+$\mathbb{H}^n$ & Espacio hiperbólico $n$-dimensional \\
+$\mathbb{D}^n$ & Disco de Poincaré (modelo conforme del espacio hiperbólico) \\
+$d_{\mathbb{H}}(\mathbf{x}, \mathbf{y})$ & Distancia hiperbólica entre puntos \\
+$\exp_{\mathbf{0}}^{\mathbb{H}}(\cdot)$ & Mapa exponencial hiperbólico en el origen \\
+$\log_{\mathbf{0}}^{\mathbb{H}}(\cdot)$ & Mapa logarítmico hiperbólico en el origen \\
+$\text{arcosh}(\cdot)$ & Función arcocoseno hiperbólico \\
+$\langle \cdot, \cdot \rangle_{\mathcal{L}}$ & Producto interior de Lorentz \\
+$\oplus_{\mathbb{H}}$ & Suma de Möbius en espacio hiperbólico \\
+$\odot_{\mathbb{H}}$ & Multiplicación escalar de Möbius / agregación hiperbólica \\
+\end{longtable}
+
+\subsection*{Topología Algebraica}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\partial_k$ & Operador frontera de $k$-cadenas \\
+$\partial_k^T$ & Operador cofrontera (adjunto del operador frontera) \\
+$H_k(X)$ & $k$-ésimo grupo de homología \\
+$H^k(X)$ & $k$-ésimo grupo de cohomología \\
+$L_k$ & $k$-ésimo Laplaciano de Hodge \\
+$\Omega^k$ & Espacio de $k$-formas diferenciales \\
+$\sigma$ & Símplice \\
+$\mathcal{K}$ & Complejo simplicial \\
+$\text{pers}(b,d)$ & Persistencia de un par birth-death \\
+\end{longtable}
+
+\section*{Grafos y Estructuras Discretas}
+
+\subsection*{Teoría de Grafos}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$V, E$ & Vértices y aristas de un grafo \\
+$\mathcal{G} = (V, E)$ & Grafo con vértices $V$ y aristas $E$ \\
+$|V|$ & Número de vértices en el grafo \\
+$|E|$ & Número de aristas en el grafo \\
+$\mathcal{N}(v)$ & Vecindario del nodo $v$ en un grafo \\
+$N_k(i)$ & Vecindario de tamaño $k$ del nodo $i$ (en grillas regulares) \\
+$K_n$ & Grafo completo con $n$ nodos \\
+$\vec{E}$ & Conjunto de aristas dirigidas \\
+$(u, v) \in \vec{E}$ & Arista dirigida del vértice $u$ al vértice $v$ \\
+$\text{DAG}$ & Grafo acíclico dirigido (Directed Acyclic Graph) \\
+$\deg(v)$ & Grado del vértice $v$ \\
+$A$ & Matriz de adyacencia \\
+$D$ & Matriz de grados \\
+$L$ & Matriz laplaciana del grafo ($L = D - A$) \\
+$\tilde{L}$ & Matriz laplaciana normalizada \\
+$\hat{f}$ & Transformada de Fourier en grafos de la señal $f$ \\
+\end{longtable}
+
+\section*{Redes Neuronales}
+
+\subsection*{Arquitectura de Redes Neuronales}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbf{W}$ & Matriz de pesos \\
+$b$ & Vector de sesgos \\
+$\boldsymbol{\theta}$ & Vector de parámetros del modelo \\
+$\eta$ & Tasa de aprendizaje \\
+$\sigma$ & Función de activación \\
+$\tanh(\cdot)$ & Función tangente hiperbólica \\
+$\text{ReLU}(\cdot)$ & Función de activación ReLU \\
+$\text{softmax}(\cdot)$ & Función softmax \\
+$\text{sigmoid}(\cdot)$ & Función sigmoide \\
+$\mathcal{L}$ & Función de pérdida (loss) \\
+$\mathcal{L}(\theta)$ & Función de pérdida parametrizada por $\theta$ \\
+$\frac{\partial \mathcal{L}}{\partial \theta}$ & Gradiente de la pérdida respecto a parámetros \\
+$\mathcal{N} = f^{(\ell)} \circ f^{(\ell-1)} \circ \cdots \circ f^{(1)}$ & Red neuronal como composición de capas \\
+$\mathcal{G}_{\mathcal{N}} = (V_L, E_L)$ & Grafo de arquitectura de red (capas como vértices) \\
+$\epsilon, \varepsilon$ & Parámetros de regularización \\
+$\odot$ & Producto elemento a elemento (producto de Hadamard o Schur) \\
+$\oslash$ & División elemento a elemento (división de Hadamard) \\
+\end{longtable}
+
+\subsection*{Parámetros de Capas}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$c_{\text{in}}, c_{\text{out}}$ & Número de canales de entrada y salida \\
+$N$ & Tamaño del batch (número de muestras) \\
+$C$ & Número de canales en tensores \\
+$H, W$ & Altura y anchura de tensores espaciales \\
+$\Omega'$ & Dominio transformado (cuando difiere de $\Omega$) \\
+$\alpha$ & Parámetro de pendiente en LeakyReLU \\
+$n_{\text{classes}}$ & Número de clases en clasificación \\
+$\gamma, \beta$ & Parámetros de escala y desplazamiento en normalización \\
+$\mu$ & Media o estadística de centralización \\
+$\sigma^2$ & Varianza (con subíndices $\mathcal{B}$, $L$, $G$, $IN$ según tipo de normalización) \\
+$\mathcal{B}$ & Mini-batch de muestras \\
+$m$ & Tamaño del mini-batch \\
+$G$ & Número de grupos en Group Normalization \\
+$p_{\text{drop}}$ & Probabilidad de dropout \\
+$\mathbf{r}$ & Vector de máscaras binarias aleatorias (dropout) \\
+$V_{\text{vocab}}$ & Tamaño del vocabulario (embeddings) \\
+$E_{\text{emb}}$ & Matriz de embeddings \\
+$d_{\text{emb}}$ & Dimensión del espacio de embeddings \\
+$\mathbf{h}_t$ & Estado oculto en el tiempo $t$ (RNNs) \\
+$\mathbf{x}_t$ & Entrada en el tiempo $t$ (secuencias) \\
+$W_{\text{pool}}$ & Ventana de pooling \\
+\end{longtable}
+
+\subsection*{Redes Neuronales Convolucionales}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$*$ & Operación de convolución estándar \\
+$\star$ & Convolución en grupos (group convolution) \\
+$K$ & Núcleo o filtro convolucional \\
+$s$ & Stride (paso) de la convolución \\
+$p$ & Padding (relleno) \\
+$\text{pool}(\cdot)$ & Operación de pooling \\
+$K_x, K_y$ & Kernels de gradiente (Sobel) en direcciones $x$ e $y$ \\
+$(I * K)(x,y)$ & Operación de convolución discreta 2D \\
+$\psi: \mathbb{Z}^2 \to \mathbb{R}$ & Filtro convolucional discreto \\
+$\hat{f}(\omega)$ & Transformada de Fourier de la señal $f$ \\
+$\mathcal{F}\{f\}$ & Operador de transformada de Fourier \\
+$\mathcal{F}^{-1}\{F\}$ & Transformada de Fourier inversa \\
+$\operatorname{sinc}(x)$ & Función sinc: $\sin(\pi x)/(\pi x)$ \\
+$T_k(\lambda)$ & Polinomio de Chebyshev de grado $k$ \\
+$\mathcal{R}[f]$ & Transformada de Radón de la función $f$ \\
+\end{longtable}
+
+\subsection*{Mecanismos de Atención}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbf{Q}$ & Matriz de consultas (queries) \\
+$\mathbf{K}$ & Matriz de claves (keys) \\
+$\mathbf{V}$ & Matriz de valores (values) \\
+$\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V$ & Matrices de pesos para Q, K, V \\
+$\mathbf{W}_O$ & Matriz de proyección de salida \\
+$d_k$ & Dimensión de las claves \\
+$d_v$ & Dimensión de los valores \\
+$d_{\text{model}}$ & Dimensión del modelo Transformer \\
+$h$ & Número de cabezas de atención \\
+$e_{ij}$ & Score de atención sin normalizar \\
+$\alpha_{ij}$ & Peso de atención entre elementos $i$ y $j$ \\
+$\boldsymbol{\alpha}_i$ & Vector de pesos de atención para consulta $i$ \\
+$\mathbf{G}$ & Matriz de Gram en atención ($\mathbf{Q}\mathbf{K}^T$) \\
+$\mathbf{S}$ & Matriz de scores de atención (sin normalizar) \\
+$\text{Attention}(Q,K,V)$ & Mecanismo de atención básico \\
+$\text{MultiHead}(Q,K,V)$ & Atención multi-cabeza \\
+$\text{sim}(\mathbf{q}_i, \mathbf{k}_j)$ & Función de similaridad entre consulta $i$ y clave $j$ \\
+$\mathcal{T}$ & Operador de atención (continuo o discreto según contexto) \\
+$K(x,y)$ & Núcleo/kernel de atención entre puntos $x$ e $y$ \\
+$\text{Spec}(A)$ & Espectro de la matriz $A$ (conjunto de eigenvalores) \\
+$\operatorname{tr}(A)$ & Traza de la matriz $A$ \\
+\end{longtable}
+
+\section*{Geometric Deep Learning}
+
+\subsection*{Marco Teórico del GDL}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\Omega$ & Dominio de datos (conjunto de posiciones donde se observan datos) \\
+$\mathcal{S}$ & Estructura del dominio (relaciones topológicas, métricas o algebraicas) \\
+$\tau$ & Topología (colección de conjuntos abiertos) \\
+$\mathcal{D}$ & Geometría del dominio (par $(\Omega, \mathcal{S})$ de dominio y estructura) \\
+$f$ & Señal (atributos observados sobre el dominio $\Omega$) \\
+$f: \Omega \to \mathcal{C}$ & Señal como función del dominio al espacio de canales \\
+$\mathcal{C}$ & Espacio de canales o atributos de la señal \\
+$\mathcal{F}(\Omega, \mathcal{C})$ & Espacio de señales sobre $\Omega$ con valores en $\mathcal{C}$ \\
+$(\Omega, \mathcal{S}, f)$ & Triple dominio-estructura-señal (representación completa de datos) \\
+$(\mathcal{D}, f)$ & Par geometría-atributos (representación equivalente) \\
+$\mathcal{X}, \mathcal{Y}$ & Espacios de entrada y salida \\
+$\mathcal{F}$ & Espacio de características \\
+$\mathcal{F}_\ell$ & Espacio de características en la capa $\ell$ \\
+$\rho$ & Representación del grupo \\
+$\phi$ & Función de mapeo de características \\
+$\phi: X \rightarrow Y$ & Función equivariante entre espacios \\
+$\psi$ & Función de agregación \\
+$\oplus$ & Operación de agregación \\
+\end{longtable}
+
+\subsection*{Arquitecturas Equivariantes}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Símbolo} & \textbf{Descripción} {\small(continuación)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continúa en la siguiente página}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$M_\ell$ & Función de mensaje en la capa $\ell$ \\
+$U_\ell$ & Función de actualización en la capa $\ell$ \\
+$m_v^{(\ell)}$ & Mensaje agregado al nodo $v$ en la capa $\ell$ \\
+$\alpha_{ij}^{(\ell)}$ & Peso de atención entre nodos $i$ y $j$ en la capa $\ell$ \\
+$Q^{(\ell)}, K^{(\ell)}, V^{(\ell)}$ & Matrices query, key, value en la capa $\ell$ \\
+\end{longtable}

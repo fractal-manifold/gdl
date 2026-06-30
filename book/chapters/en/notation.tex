@@ -1,0 +1,665 @@
+\chapter*{Notation}
+\addcontentsline{toc}{chapter}{Notation}
+\markboth{NOTATION}{}
+
+Throughout this work we use the following mathematical notation.
+Since the thesis spans multiple areas (functional analysis, algebra,
+topology, differential geometry, and deep learning), some symbols
+admit several meanings depending on the context (for example, $G$ may denote
+a group or a graph, $K$ a convolutional kernel or a key matrix).
+In general, the surrounding mathematical context determines the
+correct interpretation of each symbol.
+
+\section*{Mathematical Foundations}
+
+\subsection*{Notational Conventions}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbf{x}, \mathbf{y}, \mathbf{z}$ & Vectors (lowercase boldface) \\
+$\mathbf{A}, \mathbf{B}, \mathbf{C}$ & Matrices (uppercase boldface) \\
+$\mathcal{M}, \mathcal{N}$ & Manifolds (uppercase calligraphic) \\
+$G, H$ & Groups (uppercase); for graphs prefer $\mathcal{G} = (V, E)$ \\
+$f, g, h$ & Functions (lowercase) \\
+$\theta, \phi, \psi$ & Parameters or coordinates (lowercase Greek) \\
+$\mathbb{R}$ & Real numbers \\
+$\mathbb{C}$ & Complex numbers \\
+$\mathbb{N}$ & Natural numbers \\
+$\mathbb{Z}$ & Integers \\
+$x_i, w_{ij}$ & Components of vectors and matrices \\
+$f^{(\ell)}$ & Function or layer $\ell$ in a deep network (we use $\ell$ to avoid visual confusion with $1$) \\
+$\theta_t$ & Parameters at time step $t$ \\
+$\mathcal{M}_p$ & Local structure at the point $p$ \\
+$h_v^{(\ell)}$ & Features of node $v$ in layer $\ell$ \\
+$h^{(\ell)}$ & Hidden representation in layer $\ell$ (abbreviation of $h_v^{(\ell)}$ when the node is clear from context) \\
+$d_i$ & Degree of vertex $i$ \\
+$\lambda_i$ & $i$-th eigenvalue \\
+$A \succeq 0$ & Symmetric positive semidefinite matrix \\
+$A \succ 0$ & Symmetric positive definite matrix \\
+\end{longtable}
+
+\subsection*{Functional Analysis and Spaces}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$L^p(\Omega)$ & Lebesgue spaces \\
+$L^2(\mathbb{R}^d)$ & Space of square-integrable functions \\
+$\|f\|_{L^2}$ & $L^2$ norm of the function $f$ \\
+$C^k(\mathcal{M})$ & $k$-times differentiable functions on $\mathcal{M}$ \\
+$C(\mathcal{M})$ & Continuous functions on the manifold $\mathcal{M}$ \\
+$\mu$ & Measure \\
+$(X, \mathcal{F}, \mu)$ & Measure space (set, $\sigma$-algebra, measure) \\
+$\mathcal{B}(X)$ & Borel $\sigma$-algebra of $X$ \\
+$\lambda$ & Lebesgue measure \\
+$\int_\Omega f \, d\mu$ & Lebesgue integral with respect to the measure $\mu$ \\
+a.e. (c.p.d.) & Almost everywhere \\
+$|\mu|$ & Total variation of the measure $\mu$ \\
+$C(X)$ & Space of continuous functions on compact $X$ \\
+$\|f\|_\infty$ & Supremum (uniform) norm of the function $f$ \\
+$X'$ & Dual space of $X$ (continuous linear functionals) \\
+$\text{supp}(f)$ & Support of the function $f$ \\
+$\text{span}(\{v_1, \ldots, v_n\})$ & Vector space spanned by $\{v_1, \ldots, v_n\}$ \\
+$\langle \cdot, \cdot \rangle$ & Inner product \\
+$\| \cdot \|$ & Euclidean norm \\
+$\nabla$ & Gradient operator \\
+$\nabla^2$ & Euclidean Laplacian (Laplace operator on $\mathbb{R}^m$) \\
+$\Delta$ & Laplace-Beltrami operator (continuous Laplacian) \\
+$L_G$ & Discrete Laplacian of a graph $G$ \\
+$f'(x)$ & Derivative of the function $f$ (prime notation) \\
+$\partial$ & Partial derivative \\
+$\circ$ & Composition of functions \\
+$\arg\min$, $\arg\max$ & Argument of the minimum/maximum \\
+\end{longtable}
+
+\subsection*{Probability Distributions}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathcal{N}(\mu, \sigma^2)$ & Normal (Gaussian) distribution with mean $\mu$ and variance $\sigma^2$ \\
+$\text{Bernoulli}(p)$ & Bernoulli distribution with success probability $p$ \\
+$\mathbb{E}[X]$ & Expectation of the random variable $X$ \\
+$\text{Var}(X)$ & Variance of the random variable $X$ \\
+$p(x)$, $P(X=x)$ & Probability density/mass function \\
+$X \sim \mathcal{D}$ & The variable $X$ follows the distribution $\mathcal{D}$ \\
+$\sigma$ & Standard deviation or scale parameter \\
+\end{longtable}
+
+\section*{Algebraic Structures}
+
+\subsection*{Group Theory}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$H \leq G$ & $H$ is a subgroup of $G$ \\
+$H \triangleleft G$ & $H$ is a normal subgroup of $G$ \\
+$|G|$ & Order (cardinality) of the group $G$ \\
+$[G:H]$ & Index of $H$ in $G$ (number of cosets) \\
+$\text{Stab}(x)$ & Stabilizer subgroup of the element $x$ \\
+$\text{Orb}(x)$ & Orbit of the element $x$ under the group action \\
+$\ker(\phi)$ & Kernel of the homomorphism $\phi$ \\
+$\text{Im}(\phi)$ & Image of the homomorphism $\phi$ \\
+$G \cong H$ & The groups $G$ and $H$ are isomorphic \\
+$g \cdot x$ & Action of the element $g$ on $x$ \\
+$C_4$ & Cyclic group of order 4 \\
+$D_4$ & Dihedral group of the square (order 8 = 4 rotations + 4 reflections) \\
+$\mathbb{Z}_n$ & Cyclic group of integers modulo $n$ \\
+$S_n$ & Permutation group of $n$ elements \\
+$\operatorname{sgn}(\sigma)$ & Sign (parity) of the permutation $\sigma \in S_n$ \\
+$\operatorname{Alt}$ & Alternation (antisymmetrization) operator of tensors \\
+$p4, p4m$ & Planar symmetry groups \\
+\end{longtable}
+
+\subsection*{Lie Groups and Lie Algebras}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$SO(n)$ & Group of rotations in $n$ dimensions \\
+$SO(2)$ & Group of rotations in 2D (isomorphic to $U(1)$) \\
+$SO(3)$ & Group of rotations in 3D \\
+$O(n)$ & Orthogonal group in $n$ dimensions \\
+$E(n)$ & Euclidean group in $n$ dimensions \\
+$SE(2), SE(3)$ & Special Euclidean group in 2D and 3D \\
+$GL(n, \mathbb{R})$ & Group of invertible $n \times n$ matrices \\
+$GL(\mathcal{F})$ & General linear group over the feature space $\mathcal{F}$ \\
+$SU(2)$ & Special unitary group $2 \times 2$ \\
+$\mathbb{H}$ & Hamilton's quaternion algebra \\
+$G/H$ & Homogeneous space (cosets of $H$ in $G$) \\
+$St(k,n)$ & Stiefel manifold (orthonormal frames of $k$ vectors in $\mathbb{R}^n$) \\
+$Gr(k,n)$ & Grassmannian of $k$-planes in $\mathbb{R}^n$ \\
+$\mathfrak{g}$ & Lie algebra of the Lie group $G$ \\
+$T_e G$ & Tangent space to the group $G$ at the identity \\
+$[\cdot, \cdot]$ & Lie bracket \\
+$\exp: \mathfrak{g} \rightarrow G$ & Exponential map \\
+$\mathfrak{so}(n)$ & Lie algebra of $SO(n)$ (skew-symmetric matrices) \\
+$\mathfrak{se}(n)$ & Lie algebra of $SE(n)$ \\
+$\mathfrak{gl}(n, \mathbb{R})$ & Lie algebra of $GL(n, \mathbb{R})$ \\
+$[\mathbf{v}]_\times$ & Skew-symmetric matrix associated with the vector $\mathbf{v} \in \mathbb{R}^3$ \\
+$\operatorname{Ad}_g: \mathfrak{g} \to \mathfrak{g}$ & Adjoint representation of the group \\
+$\rtimes$ & Semidirect product of groups \\
+$\oplus$ & Direct sum of vector spaces or algebras \\
+$\mu: G \times G \to G$ & Lie group multiplication \\
+\end{longtable}
+
+\subsection*{Group Representations}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\rho: G \rightarrow GL(V)$ & Representation of group $G$ on the space $V$ \\
+$\widehat{G}$ & Set of irreducible representations of $G$ \\
+$\mathcal{H}_\lambda$ & Irreducible representation space $\lambda$ \\
+$n_\lambda$ & Multiplicity of the representation $\lambda$ \\
+$Y_\ell^m$ & Spherical harmonics of degree $\ell$ and order $m$ \\
+$C_{l_1 m_1, l_2 m_2}^{l m}$ & Clebsch-Gordan coefficients \\
+$D^{(\ell)}(g)$ & Wigner-D matrix (irreducible representation of $SO(3)$ of degree $\ell$) \\
+\end{longtable}
+
+\subsection*{Clifford Algebras}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\text{Cl}(p,q)$ & Clifford algebra with signature $(p,q)$ \\
+$\text{Cl}(3,0,1)$ & Projective geometric algebra \\
+$\text{Cl}(1,3)$ & Minkowski algebra \\
+$\mathbf{e}_i$ & Basis vectors of the algebra \\
+$a \wedge b$ & Exterior product \\
+$a \cdot b$ & Inner product \\
+$ab$ & Geometric product ($ab = a \cdot b + a \wedge b$) \\
+$\tilde{a}$ & Reverse of $a$ \\
+$|a|$ & Norm in the Clifford algebra \\
+$\langle a \rangle_k$ & Grade-$k$ part of the multivector $a$ \\
+$\eta_{ij}$ & Metric of the Clifford algebra \\
+\end{longtable}
+
+\section*{Geometry and Topology}
+
+\subsection*{Manifolds and Differential Geometry}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathcal{M}$ & Differentiable manifold \\
+$T_p\mathcal{M}$ & Tangent space to the manifold $\mathcal{M}$ at the point $p$ \\
+$T_p^*\mathcal{M}$ & Cotangent space (dual of the tangent space) at the point $p$ \\
+$dF_p$ & Differential (pushforward) of the map $F$ at the point $p$ \\
+$(df)_p$ & Differential of a function $f$ at $p$ (covector in $T_p^*\mathcal{M}$) \\
+$dx^i$ & Element of the dual basis of the cotangent space (differential of the coordinate $x^i$) \\
+$T\mathcal{M}$ & Tangent bundle (disjoint union of all tangent spaces) \\
+$\Gamma(TM)$ & Space of vector fields on $\mathcal{M}$ \\
+$\text{FM}(\mathcal{M})$ & Frame bundle of the manifold $\mathcal{M}$ \\
+$(U, \phi)$ & Local chart: $U \subset \mathcal{M}$ open, $\phi: U \to \mathbb{R}^m$ homeomorphism \\
+$g_{ij}$ & Components of the metric tensor in local coordinates \\
+$g_p(v,w)$ & Inner product of $v, w \in T_p\mathcal{M}$ induced by the metric \\
+$\nabla_X Y$ & Covariant derivative of the field $Y$ in the direction $X$ \\
+$\Gamma^k_{ij}$ & Christoffel symbols of the Levi-Civita connection \\
+$T(X,Y)$ & Torsion tensor of a connection: $T(X,Y) = \nabla_X Y - \nabla_Y X - [X,Y]$ \\
+$R(X,Y)Z$ & Riemann curvature tensor \\
+$\mathrm{Ric}$, $R_{ij}$ & Ricci tensor (contraction of the Riemann tensor) \\
+$\mathcal{R}$ & Scalar curvature ($\mathcal{R} = g^{ij}R_{ij}$) \\
+$\exp_p: T_p\mathcal{M} \to \mathcal{M}$ & Riemannian exponential map at the point $p$ \\
+$\log_p: \mathcal{M} \to T_p\mathcal{M}$ & Riemannian logarithmic map (local inverse of $\exp_p$) \\
+$d_g(p,q)$ & Geodesic distance between points $p$ and $q$ \\
+$\gamma: I \to \mathcal{M}$ & Curve on the manifold \\
+$R \in SO(3)$ & Rotation matrix in 3D \\
+$\psi: S^2 \rightarrow \mathbb{R}^{d \times d'}$ & Spherical kernel for convolution on $S^2$ \\
+$(P, \mathcal{M}, \pi, G)$ & Principal bundle with total space $P$, base $\mathcal{M}$, projection $\pi$, and structure group $G$ \\
+$\pi^{-1}(p)$ & Fiber over the point $p \in \mathcal{M}$ \\
+$A^*_u$ & Fundamental vector field generated by $A \in \mathfrak{g}$ at the point $u \in P$ \\
+$\sigma_u: \mathfrak{g} \to V_u P$ & Canonical isomorphism from the Lie algebra to the vertical space \\
+$\omega \in \Omega^1(P, \mathfrak{g})$ & Connection 1-form on a principal bundle (Lie-algebra-valued) \\
+$\Omega_\omega$ & Curvature 2-form of the connection $\omega$ \\
+$\Gamma_\gamma$ & Parallel transport along the path $\gamma$ \\
+$\text{Hol}_p(\omega)$ & Holonomy group of the connection $\omega$ at the point $p$ \\
+$K$ & Sectional curvature (Gaussian on surfaces) \\
+\end{longtable}
+
+\subsection*{Symmetric and Curved Spaces}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbb{R}^n$ & $n$-dimensional Euclidean space \\
+$\mathbb{Z}^d$ & $d$-dimensional integer lattice \\
+$S^n$ & $n$-dimensional sphere \\
+$\mathbb{RP}^{n-1}$ & $(n-1)$-dimensional real projective space \\
+$\mathbb{CP}^{n-1}$ & $(n-1)$-dimensional complex projective space \\
+$T^n$ & $n$-dimensional torus \\
+$\text{Sym}^+(n)$ & Manifold of $n \times n$ symmetric positive definite matrices \\
+$\mathbb{H}^n$ & $n$-dimensional hyperbolic space \\
+$\mathbb{D}^n$ & Poincaré disk (conformal model of hyperbolic space) \\
+$d_{\mathbb{H}}(\mathbf{x}, \mathbf{y})$ & Hyperbolic distance between points \\
+$\exp_{\mathbf{0}}^{\mathbb{H}}(\cdot)$ & Hyperbolic exponential map at the origin \\
+$\log_{\mathbf{0}}^{\mathbb{H}}(\cdot)$ & Hyperbolic logarithmic map at the origin \\
+$\text{arcosh}(\cdot)$ & Inverse hyperbolic cosine function \\
+$\langle \cdot, \cdot \rangle_{\mathcal{L}}$ & Lorentz inner product \\
+$\oplus_{\mathbb{H}}$ & Möbius addition in hyperbolic space \\
+$\odot_{\mathbb{H}}$ & Möbius scalar multiplication / hyperbolic aggregation \\
+\end{longtable}
+
+\subsection*{Algebraic Topology}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\partial_k$ & Boundary operator of $k$-chains \\
+$\partial_k^T$ & Coboundary operator (adjoint of the boundary operator) \\
+$H_k(X)$ & $k$-th homology group \\
+$H^k(X)$ & $k$-th cohomology group \\
+$L_k$ & $k$-th Hodge Laplacian \\
+$\Omega^k$ & Space of differential $k$-forms \\
+$\sigma$ & Simplex \\
+$\mathcal{K}$ & Simplicial complex \\
+$\text{pers}(b,d)$ & Persistence of a birth-death pair \\
+\end{longtable}
+
+\section*{Graphs and Discrete Structures}
+
+\subsection*{Graph Theory}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$V, E$ & Vertices and edges of a graph \\
+$\mathcal{G} = (V, E)$ & Graph with vertices $V$ and edges $E$ \\
+$|V|$ & Number of vertices in the graph \\
+$|E|$ & Number of edges in the graph \\
+$\mathcal{N}(v)$ & Neighborhood of node $v$ in a graph \\
+$N_k(i)$ & Neighborhood of size $k$ of node $i$ (in regular grids) \\
+$K_n$ & Complete graph with $n$ nodes \\
+$\vec{E}$ & Set of directed edges \\
+$(u, v) \in \vec{E}$ & Directed edge from vertex $u$ to vertex $v$ \\
+$\text{DAG}$ & Directed Acyclic Graph \\
+$\deg(v)$ & Degree of vertex $v$ \\
+$A$ & Adjacency matrix \\
+$D$ & Degree matrix \\
+$L$ & Graph Laplacian matrix ($L = D - A$) \\
+$\tilde{L}$ & Normalized Laplacian matrix \\
+$\hat{f}$ & Graph Fourier transform of the signal $f$ \\
+\end{longtable}
+
+\section*{Neural Networks}
+
+\subsection*{Neural Network Architecture}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbf{W}$ & Weight matrix \\
+$b$ & Bias vector \\
+$\boldsymbol{\theta}$ & Model parameter vector \\
+$\eta$ & Learning rate \\
+$\sigma$ & Activation function \\
+$\tanh(\cdot)$ & Hyperbolic tangent function \\
+$\text{ReLU}(\cdot)$ & ReLU activation function \\
+$\text{softmax}(\cdot)$ & Softmax function \\
+$\text{sigmoid}(\cdot)$ & Sigmoid function \\
+$\mathcal{L}$ & Loss function \\
+$\mathcal{L}(\theta)$ & Loss function parameterized by $\theta$ \\
+$\frac{\partial \mathcal{L}}{\partial \theta}$ & Gradient of the loss with respect to the parameters \\
+$\mathcal{N} = f^{(\ell)} \circ f^{(\ell-1)} \circ \cdots \circ f^{(1)}$ & Neural network as a composition of layers \\
+$\mathcal{G}_{\mathcal{N}} = (V_L, E_L)$ & Network architecture graph (layers as vertices) \\
+$\epsilon, \varepsilon$ & Regularization parameters \\
+$\odot$ & Element-wise product (Hadamard or Schur product) \\
+$\oslash$ & Element-wise division (Hadamard division) \\
+\end{longtable}
+
+\subsection*{Layer Parameters}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$c_{\text{in}}, c_{\text{out}}$ & Number of input and output channels \\
+$N$ & Batch size (number of samples) \\
+$C$ & Number of channels in tensors \\
+$H, W$ & Height and width of spatial tensors \\
+$\Omega'$ & Transformed domain (when it differs from $\Omega$) \\
+$\alpha$ & Slope parameter in LeakyReLU \\
+$n_{\text{classes}}$ & Number of classes in classification \\
+$\gamma, \beta$ & Scale and shift parameters in normalization \\
+$\mu$ & Mean or centering statistic \\
+$\sigma^2$ & Variance (with subscripts $\mathcal{B}$, $L$, $G$, $IN$ according to the normalization type) \\
+$\mathcal{B}$ & Mini-batch of samples \\
+$m$ & Mini-batch size \\
+$G$ & Number of groups in Group Normalization \\
+$p_{\text{drop}}$ & Dropout probability \\
+$\mathbf{r}$ & Vector of random binary masks (dropout) \\
+$V_{\text{vocab}}$ & Vocabulary size (embeddings) \\
+$E_{\text{emb}}$ & Embedding matrix \\
+$d_{\text{emb}}$ & Dimension of the embedding space \\
+$\mathbf{h}_t$ & Hidden state at time $t$ (RNNs) \\
+$\mathbf{x}_t$ & Input at time $t$ (sequences) \\
+$W_{\text{pool}}$ & Pooling window \\
+\end{longtable}
+
+\subsection*{Convolutional Neural Networks}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$*$ & Standard convolution operation \\
+$\star$ & Group convolution \\
+$K$ & Convolutional kernel or filter \\
+$s$ & Stride of the convolution \\
+$p$ & Padding \\
+$\text{pool}(\cdot)$ & Pooling operation \\
+$K_x, K_y$ & Gradient kernels (Sobel) in the $x$ and $y$ directions \\
+$(I * K)(x,y)$ & 2D discrete convolution operation \\
+$\psi: \mathbb{Z}^2 \to \mathbb{R}$ & Discrete convolutional filter \\
+$\hat{f}(\omega)$ & Fourier transform of the signal $f$ \\
+$\mathcal{F}\{f\}$ & Fourier transform operator \\
+$\mathcal{F}^{-1}\{F\}$ & Inverse Fourier transform \\
+$\operatorname{sinc}(x)$ & Sinc function: $\sin(\pi x)/(\pi x)$ \\
+$T_k(\lambda)$ & Chebyshev polynomial of degree $k$ \\
+$\mathcal{R}[f]$ & Radon transform of the function $f$ \\
+\end{longtable}
+
+\subsection*{Attention Mechanisms}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\mathbf{Q}$ & Query matrix (queries) \\
+$\mathbf{K}$ & Key matrix (keys) \\
+$\mathbf{V}$ & Value matrix (values) \\
+$\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V$ & Weight matrices for Q, K, V \\
+$\mathbf{W}_O$ & Output projection matrix \\
+$d_k$ & Dimension of the keys \\
+$d_v$ & Dimension of the values \\
+$d_{\text{model}}$ & Dimension of the Transformer model \\
+$h$ & Number of attention heads \\
+$e_{ij}$ & Unnormalized attention score \\
+$\alpha_{ij}$ & Attention weight between elements $i$ and $j$ \\
+$\boldsymbol{\alpha}_i$ & Vector of attention weights for query $i$ \\
+$\mathbf{G}$ & Gram matrix in attention ($\mathbf{Q}\mathbf{K}^T$) \\
+$\mathbf{S}$ & Matrix of attention scores (unnormalized) \\
+$\text{Attention}(Q,K,V)$ & Basic attention mechanism \\
+$\text{MultiHead}(Q,K,V)$ & Multi-head attention \\
+$\text{sim}(\mathbf{q}_i, \mathbf{k}_j)$ & Similarity function between query $i$ and key $j$ \\
+$\mathcal{T}$ & Attention operator (continuous or discrete depending on context) \\
+$K(x,y)$ & Attention kernel between points $x$ and $y$ \\
+$\text{Spec}(A)$ & Spectrum of the matrix $A$ (set of eigenvalues) \\
+$\operatorname{tr}(A)$ & Trace of the matrix $A$ \\
+\end{longtable}
+
+\section*{Geometric Deep Learning}
+
+\subsection*{Theoretical Framework of GDL}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$\Omega$ & Data domain (set of positions where data are observed) \\
+$\mathcal{S}$ & Structure of the domain (topological, metric, or algebraic relations) \\
+$\tau$ & Topology (collection of open sets) \\
+$\mathcal{D}$ & Geometry of the domain (pair $(\Omega, \mathcal{S})$ of domain and structure) \\
+$f$ & Signal (attributes observed over the domain $\Omega$) \\
+$f: \Omega \to \mathcal{C}$ & Signal as a function from the domain to the channel space \\
+$\mathcal{C}$ & Space of channels or signal attributes \\
+$\mathcal{F}(\Omega, \mathcal{C})$ & Space of signals over $\Omega$ with values in $\mathcal{C}$ \\
+$(\Omega, \mathcal{S}, f)$ & Domain-structure-signal triple (complete data representation) \\
+$(\mathcal{D}, f)$ & Geometry-attributes pair (equivalent representation) \\
+$\mathcal{X}, \mathcal{Y}$ & Input and output spaces \\
+$\mathcal{F}$ & Feature space \\
+$\mathcal{F}_\ell$ & Feature space at layer $\ell$ \\
+$\rho$ & Group representation \\
+$\phi$ & Feature mapping function \\
+$\phi: X \rightarrow Y$ & Equivariant function between spaces \\
+$\psi$ & Aggregation function \\
+$\oplus$ & Aggregation operation \\
+\end{longtable}
+
+\subsection*{Equivariant Architectures}
+\begin{longtable}{>{\centering\arraybackslash}p{4cm}p{10cm}}
+% Primera página
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+% Páginas siguientes
+\toprule
+\textbf{Symbol} & \textbf{Description} {\small(continued)} \\
+\midrule
+\endhead
+% Pie en páginas intermedias
+\midrule
+\multicolumn{2}{r}{\small\textit{Continued on the next page}} \\
+\endfoot
+% Pie en la última página
+\bottomrule
+\endlastfoot
+$M_\ell$ & Message function in layer $\ell$ \\
+$U_\ell$ & Update function in layer $\ell$ \\
+$m_v^{(\ell)}$ & Message aggregated at node $v$ in layer $\ell$ \\
+$\alpha_{ij}^{(\ell)}$ & Attention weight between nodes $i$ and $j$ in layer $\ell$ \\
+$Q^{(\ell)}, K^{(\ell)}, V^{(\ell)}$ & Query, key, value matrices in layer $\ell$ \\
+\end{longtable}

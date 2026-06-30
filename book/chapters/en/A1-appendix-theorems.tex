@@ -1,777 +1,471 @@
-\chapter{Auxiliary Theorems and Proofs}
-\label{ch:appendix}
+\chapter{Complementary Theorems and Proofs}\label{ch:teoremas_complementarios}
 
-\providecommand{\Q}{\mathbb{Q}}
-\providecommand{\GL}{\operatorname{GL}}
-\providecommand{\SO}{\operatorname{SO}}
-\providecommand{\Orth}{\operatorname{O}}
-\providecommand{\SU}{\operatorname{SU}}
-\providecommand{\Sym}{\operatorname{Sym}}
-\providecommand{\rank}{\operatorname{rank}}
-\providecommand{\tr}{\operatorname{tr}}
-\providecommand{\Img}{\operatorname{Im}}
-\providecommand{\Ric}{\operatorname{Ric}}
-\providecommand{\Vol}{\operatorname{Vol}}
-\providecommand{\diag}{\operatorname{diag}}
-\providecommand{\II}{\mathrm{II}}
-\providecommand{\dvol}{\,dA}
+This appendix contains classical theorems of differential geometry and their proofs which, although fundamental for the mathematical rigor of this work, are not central to the theory of Geometric Deep Learning developed in the main chapters.
 
-This appendix collects classical theorems of differential geometry, linear
-algebra, group theory, measure theory, and functional analysis, together with
-their proofs. Although these results are fundamental to the mathematical rigour
-of the main text, they are not central to the theory of geometric deep learning
-developed in the principal chapters, and gathering them here keeps the exposition
-focused. Each section presents a theorem with the preliminaries it requires, a
-formal statement, and a complete proof or a proof sketch with references to the
-original sources. The measure-theoretic and functional-analytic machinery in the
-final two sections supports the universal approximation theorem, whose statement
-remains in \Cref{ch:foundations} and which refers back to this appendix for its
-heavy prerequisites.
+Each section presents a theorem with its necessary preliminaries, the formal statement, and a complete proof or a proof sketch with references to the original sources.
 
-%=======================================================================
-\section{The Gauss--Bonnet Theorem}
-\label{sec:app:gauss-bonnet}
-%=======================================================================
+\section{Gauss-Bonnet Theorem}\label{sec:gauss_bonnet}
 
-The Gauss--Bonnet theorem is one of the deepest results in differential
-geometry, establishing a fundamental link between the local geometry (curvature)
-and the global topology (Euler characteristic) of a surface. It shows that
-certain geometric quantities are determined solely by the topology of the
-surface.
+The Gauss-Bonnet theorem is one of the most profound results of differential geometry, establishing a fundamental connection between local geometry (curvature) and the global topology (Euler characteristic) of a surface.  This theorem shows that certain geometric quantities are determined  solely by the topology of the surface.
 
-\subsection{Preliminaries}
-\label{subsec:app:gauss-bonnet-prelim}
+\subsection{Preliminaries}\label{subsec:gauss_bonnet_preliminares}
 
-Before stating the theorem we introduce the necessary notions.
+Before stating the theorem, we introduce the necessary concepts.
 
-\begin{definition}[Gaussian curvature]
-\label{def:app:gaussian-curvature}
-Let $\mathcal{M}$ be a regular surface immersed in $\R^3$. At each point
-$p \in \mathcal{M}$ consider the \emph{principal curvatures} $\kappa_1$ and
-$\kappa_2$, the eigenvalues of the second fundamental form. The \emph{Gaussian
-curvature} $K \colon \mathcal{M} \to \R$ is the product of the principal
-curvatures:
-\begin{equation}
-\label{eq:app:gaussian-curvature}
-K = \kappa_1 \kappa_2 .
+\begin{definition}[Gaussian curvature]\label{def:curvatura_gaussiana_apendice}
+Let $\mathcal{M}$ be a regular surface immersed in $\mathbb{R}^3$. At each point $p \in \mathcal{M}$, we consider the \textit{principal curvatures} $\kappa_1$ and $\kappa_2$, which are the eigenvalues of the second fundamental form. The \textit{Gaussian curvature} $K: \mathcal{M} \to \mathbb{R}$ is defined as the product of the principal curvatures:
+\begin{equation}\label{eq:curvatura_gaussiana}
+K = \kappa_1 \kappa_2
 \end{equation}
 \end{definition}
 
 \begin{remark}
-Gauss's \emph{Theorema Egregium} states that the Gaussian curvature $K$ is an
-\emph{isometric invariant}: it depends only on the first fundamental form (the
-metric) and not on how the surface is immersed in $\R^3$. Thus $K$ is an
-intrinsic property of the surface.
+Gauss's \textit{Theorema Egregium} states that the Gaussian curvature $K$ is an \textit{isometric invariant}: it depends solely on the first fundamental form (the metric) and not on how the surface is immersed in $\mathbb{R}^3$. This means that $K$ is an intrinsic property of the surface.
 \end{remark}
 
-\begin{definition}[Geodesic curvature]
-\label{def:app:geodesic-curvature}
-Let $\gamma \colon [a,b] \to \mathcal{M}$ be a regular curve parametrized by arc
-length on an oriented surface $\mathcal{M}$. Let $\mathbf{n}$ be the unit normal
-to the surface and $\mathbf{T} = \gamma'$ the unit tangent to the curve. The
-\emph{geodesic curvature} $\kappa_g$ of $\gamma$ is
-\begin{equation}
-\label{eq:app:geodesic-curvature}
-\kappa_g = \inner{\gamma''}{\mathbf{n} \times \mathbf{T}} ,
+\begin{definition}[Geodesic curvature]\label{def:curvatura_geodesica}
+Let $\gamma: [a,b] \to \mathcal{M}$ be a regular curve parametrized by arc  length on an oriented surface $\mathcal{M}$. Let $\mathbf{n}$ be the unit  normal vector to the surface and $\mathbf{T} = \gamma'$ the unit tangent  vector to the curve. The \textit{geodesic curvature} $\kappa_g$ of $\gamma$ is defined as:
+\begin{equation}\label{eq:curvatura_geodesica}
+\kappa_g = \langle \gamma'', \mathbf{n} \times \mathbf{T} \rangle
 \end{equation}
-where $\mathbf{n} \times \mathbf{T}$ is the normal to the curve lying in the
-tangent plane to the surface.
+where $\mathbf{n} \times \mathbf{T}$ is the normal vector to the curve lying in the plane tangent to the surface.
 \end{definition}
 
 \begin{remark}
-The geodesic curvature $\kappa_g$ measures how far a curve deviates from being a
-geodesic within the surface. A curve is a geodesic if and only if $\kappa_g = 0$
-at every point. Intuitively, $\kappa_g$ captures the component of curvature that
-is ``visible'' from within the surface.
+The geodesic curvature $\kappa_g$ measures how much a curve deviates from being a geodesic within the surface. A curve is a geodesic if and only if $\kappa_g = 0$ at all its points. Intuitively, $\kappa_g$ captures the component of curvature that is ``visible'' from within the surface.
 \end{remark}
 
-\begin{definition}[Euler characteristic]
-\label{def:app:euler-characteristic}
-Let $\mathcal{M}$ be a compact surface. The \emph{Euler characteristic}
-$\chi(\mathcal{M})$ is a topological invariant defined equivalently as follows:
+\begin{definition}[Euler characteristic]\label{def:caracteristica_euler}
+Let $\mathcal{M}$ be a compact surface. The \textit{Euler characteristic} $\chi(\mathcal{M})$ is a topological invariant defined in the following equivalent ways:
 \begin{enumerate}
-    \item \textbf{Triangulation.} If $\mathcal{M}$ admits a triangulation with
-          $V$ vertices, $E$ edges, and $F$ faces, then
-          \begin{equation}
-          \label{eq:app:euler-triangulation}
-          \chi(\mathcal{M}) = V - E + F .
+    \item \textbf{Triangulation}: If $\mathcal{M}$ admits a triangulation with $V$ vertices, $E$ edges and $F$ faces, then:
+          \begin{equation}\label{eq:euler_triangulacion}
+          \chi(\mathcal{M}) = V - E + F
           \end{equation}
-    \item \textbf{Genus.} For an orientable surface of genus $g$ (number of
-          ``handles''),
-          \begin{equation}
-          \label{eq:app:euler-genus}
-          \chi(\mathcal{M}) = 2 - 2g .
+
+    \item \textbf{Genus}: For an orientable surface of genus $g$ (number of ``handles''):
+          \begin{equation}\label{eq:euler_genero}
+          \chi(\mathcal{M}) = 2 - 2g
           \end{equation}
 \end{enumerate}
 \end{definition}
 
-\begin{example}
-\label{ex:app:euler-surfaces}
-Some values of the Euler characteristic for familiar surfaces:
+\begin{example}\label{ex:euler_superficies}
+Some values of the Euler characteristic for well-known surfaces:
 \begin{itemize}
-    \item Sphere $S^2$: $\chi(S^2) = 2$ (genus $g = 0$).
-    \item Torus $T^2$: $\chi(T^2) = 0$ (genus $g = 1$).
-    \item Double torus: $\chi = -2$ (genus $g = 2$).
-    \item Disc: $\chi = 1$ (a surface with boundary).
+    \item Sphere $S^2$: $\chi(S^2) = 2$ (genus $g = 0$)
+    \item Torus $T^2$: $\chi(T^2) = 0$ (genus $g = 1$)
+    \item Double torus: $\chi = -2$ (genus $g = 2$)
+    \item Disk: $\chi = 1$ (surface with boundary)
 \end{itemize}
 \end{example}
 
-\subsection{Statement of the theorem}
-\label{subsec:app:gauss-bonnet-statement}
+%-----------------------------------------------------------------------
+\subsection{Statement of the theorem}\label{subsec:gauss_bonnet_enunciado}
+%-----------------------------------------------------------------------
 
-We present first the general version for surfaces with boundary and then derive
-important special cases.
+We first present the general version of the theorem for surfaces with boundary, and then derive important particular cases.
 
-\begin{theorem}[Gauss--Bonnet for surfaces with boundary]
-\label{thm:app:gauss-bonnet-general}
-Let $\mathcal{M}$ be a compact oriented Riemannian surface with piecewise-smooth
-boundary $\partial \mathcal{M}$. Suppose $\partial \mathcal{M}$ consists of
-regular curves meeting at vertices where they form exterior angles
-$\alpha_1, \ldots, \alpha_n$. Then
-\begin{equation}
-\label{eq:app:gauss-bonnet-general}
-\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds
-+ \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M}) ,
+\begin{theorem}[Gauss-Bonnet for surfaces with boundary]\label{thm:gauss_bonnet_general}
+Let $\mathcal{M}$ be a compact oriented Riemannian surface with piecewise smooth boundary $\partial \mathcal{M}$. Suppose that $\partial \mathcal{M}$ consists of regular curves joined at vertices where they form exterior angles $\alpha_1, \ldots, \alpha_n$. Then:
+\begin{equation}\label{eq:gauss_bonnet_general}
+\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds + \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M})
 \end{equation}
-where $K$ is the Gaussian curvature, $dA$ the area element induced by the
-Riemannian metric, $\kappa_g$ the geodesic curvature of the boundary, $ds$ the
-arc-length element, and $\alpha_i$ the exterior angle at the $i$-th boundary
-vertex.
+where:
+\begin{itemize}
+    \item $K$ is the Gaussian curvature
+    \item $dA$ is the area element induced by the Riemannian metric
+    \item $\kappa_g$ is the geodesic curvature of the boundary
+    \item $ds$ is the arc length element
+    \item $\alpha_i$ is the exterior angle at the $i$-th vertex of the boundary
+\end{itemize}
 \end{theorem}
 
-\begin{corollary}[Gauss--Bonnet for closed surfaces]
-\label{cor:app:gauss-bonnet-closed}
-If $\mathcal{M}$ is a compact surface without boundary (closed), then
-\begin{equation}
-\label{eq:app:gauss-bonnet-closed}
-\int_{\mathcal{M}} K \, dA = 2\pi \chi(\mathcal{M}) .
+\begin{corollary}[Gauss-Bonnet for closed surfaces]\label{cor:gauss_bonnet_cerradas}
+If $\mathcal{M}$ is a compact surface without boundary (closed), then:
+\begin{equation}\label{eq:gauss_bonnet_cerradas}
+\int_{\mathcal{M}} K \, dA = 2\pi \chi(\mathcal{M})
 \end{equation}
 \end{corollary}
 
 \begin{proof}
-If $\partial \mathcal{M} = \emptyset$, the boundary integral and the sum of
-exterior angles both vanish, and the result follows directly from
-\Cref{thm:app:gauss-bonnet-general}.
+If $\partial \mathcal{M} = \emptyset$, the integral over the boundary and the sum of exterior angles are both zero, and the result follows directly from \autoref{thm:gauss_bonnet_general}.
 \end{proof}
 
-\begin{corollary}[Angle sum in geodesic triangles]
-\label{cor:app:gauss-bonnet-triangle}
-Let $T \subset \mathcal{M}$ be a geodesic triangle (a region bounded by three
-geodesics) on a Riemannian surface, with interior angles $\alpha$, $\beta$,
-$\gamma$. Then
-\begin{equation}
-\label{eq:app:gauss-bonnet-triangle}
-\alpha + \beta + \gamma = \pi + \int_T K \, dA .
+\begin{corollary}[Sum of angles in geodesic triangles]\label{cor:gauss_bonnet_triangulo}
+Let $T \subset \mathcal{M}$ be a geodesic triangle (region bounded by three geodesics) on a Riemannian surface, with interior angles $\alpha$,$\beta$, $\gamma$. Then:
+\begin{equation}\label{eq:gauss_bonnet_triangulo_apendice}
+\alpha + \beta + \gamma = \pi + \int_T K \, dA
 \end{equation}
 \end{corollary}
 
 \begin{proof}
-Apply \Cref{thm:app:gauss-bonnet-general} to the triangle $T$:
+We apply \autoref{thm:gauss_bonnet_general} to the triangle $T$:
 \begin{enumerate}
-    \item Since $T$ is homeomorphic to a disc, $\chi(T) = 1$.
-    \item Since the sides are geodesics, $\kappa_g = 0$ along the whole
-          boundary, so $\int_{\partial T} \kappa_g \, ds = 0$.
-    \item The exterior angles at the vertices satisfy
-          $\alpha_i^{\text{ext}} = \pi - \alpha_i^{\text{int}}$, where
-          $\alpha_i^{\text{int}}$ is the corresponding interior angle.
+    \item Since $T$ is homeomorphic to the disk, $\chi(T) = 1$.
+    \item Since the sides are geodesics, $\kappa_g = 0$ along the entire boundary, so  that $\int_{\partial T} \kappa_g \, ds = 0$.
+    \item The exterior angles at the vertices satisfy $\alpha_i^{\text{ext}} = \pi - \alpha_i^{\text{int}}$, where $\alpha_i^{\text{int}}$ is the corresponding interior angle.
 \end{enumerate}
-The theorem therefore gives
+
+Therefore, the theorem gives:
 \[
-\int_T K \, dA + 0 + \sum_{i=1}^3 (\pi - \theta_i) = 2\pi ,
+\int_T K \, dA + 0 + \sum_{i=1}^3 (\pi - \theta_i) = 2\pi
 \]
-where $\theta_1, \theta_2, \theta_3$ are the interior angles
-$\alpha, \beta, \gamma$. Simplifying,
+where $\theta_1, \theta_2, \theta_3$ are the interior angles $\alpha, \beta, \gamma$. Simplifying:
 \[
-\int_T K \, dA + 3\pi - (\alpha + \beta + \gamma) = 2\pi ,
-\qquad\text{hence}\qquad
-\alpha + \beta + \gamma = \pi + \int_T K \, dA . \qedhere
+\int_T K \, dA + 3\pi - (\alpha + \beta + \gamma) = 2\pi
+\]
+\[
+\alpha + \beta + \gamma = \pi + \int_T K \, dA
 \]
 \end{proof}
 
 \begin{remark}[Geometric interpretation]
-\Cref{cor:app:gauss-bonnet-triangle} has profound implications:
+\autoref{cor:gauss_bonnet_triangulo} has profound implications:
 \begin{itemize}
-    \item \textbf{Euclidean geometry} ($K = 0$): $\alpha + \beta + \gamma = \pi$
-          (the classical result of Euclid).
-    \item \textbf{Spherical geometry} ($K > 0$):
-          $\alpha + \beta + \gamma > \pi$ (angular excess proportional to area).
-    \item \textbf{Hyperbolic geometry} ($K < 0$):
-          $\alpha + \beta + \gamma < \pi$ (angular defect proportional to area).
+    \item \textbf{Euclidean geometry} ($K = 0$): $\alpha + \beta + \gamma = \pi$ (the classical result of Euclid)
+    \item \textbf{Spherical geometry} ($K > 0$): $\alpha + \beta + \gamma > \pi$ (angular excess proportional to the area)
+    \item \textbf{Hyperbolic geometry} ($K < 0$): $\alpha + \beta + \gamma < \pi$ (angular defect proportional to the area)
 \end{itemize}
-This shows that Euclid's fifth (parallel) postulate is equivalent to the
-condition $K = 0$.
+This shows that Euclid's fifth postulate (on parallels) is equivalent to the condition $K = 0$.
 \end{remark}
 
-\subsection{Proof of the theorem}
-\label{subsec:app:gauss-bonnet-proof}
+\subsection{Proof of the theorem}\label{subsec:gauss_bonnet_demostracion}
 
-We present a proof sketch following the classical
-approach~\citep{do1976differential,lee2018introduction}.
+We present a sketch of the proof following the classical approach \citep{do1976differential,lee2018introduction}.
 
-\begin{lemma}[Formula for geodesic polygons]
-\label{lem:app:geodesic-polygon}
-Let $P$ be a simple geodesic polygon on a surface $\mathcal{M}$ with $n$ vertices
-and interior angles $\theta_1, \ldots, \theta_n$. Then
-\begin{equation}
-\label{eq:app:geodesic-polygon}
-\sum_{i=1}^n \theta_i = (n-2)\pi + \int_P K \, dA .
+\begin{lemma}[Formula for geodesic polygons]\label{lem:poligono_geodesico}
+Let $P$ be a simple geodesic polygon on a surface $\mathcal{M}$ with $n$ vertices and interior angles $\theta_1, \ldots, \theta_n$. Then:
+\begin{equation}\label{eq:poligono_geodesico}
+\sum_{i=1}^n \theta_i = (n-2)\pi + \int_P K \, dA
 \end{equation}
 \end{lemma}
 
-\begin{proof}
-Triangulate the polygon $P$ into $n-2$ geodesic triangles
-$T_1, \ldots, T_{n-2}$ (always possible for simple polygons). Applying
-\Cref{cor:app:gauss-bonnet-triangle} to each triangle and summing,
+\begin{proof}[Proof of \autoref{lem:poligono_geodesico}]We triangulate the polygon $P$ into $n-2$ geodesic triangles $T_1, \ldots, T_{n-2}$(this is always possible for simple polygons). Applying \autoref{cor:gauss_bonnet_triangulo} to each triangle and summing:
 \[
-\sum_{j=1}^{n-2} (\alpha_j + \beta_j + \gamma_j)
-= (n-2)\pi + \sum_{j=1}^{n-2} \int_{T_j} K \, dA .
+\sum_{j=1}^{n-2} (\alpha_j + \beta_j + \gamma_j) = (n-2)\pi + \sum_{j=1}^{n-2} \int_{T_j} K \, dA
 \]
-On the left-hand side, the angles at interior vertices each sum to $2\pi$ (a full
-angle), while the angles at boundary vertices are exactly the $\theta_i$ of the
-original polygon. On the right-hand side, the sum of integrals is the integral
-over all of $P$:
+
+On the left-hand side, the angles at interior vertices sum to $2\pi$ each(complete angle), and the angles at the boundary vertices are exactly the$\theta_i$ of the original polygon. On the right-hand side, the sum of integrals is the integral over all of $P$:
 \[
-\sum_{i=1}^n \theta_i + 2\pi \cdot (\text{interior vertices})
-= (n-2)\pi + \int_P K \, dA .
+\sum_{i=1}^n \theta_i + 2\pi \cdot (\text{interior vertices}) = (n-2)\pi + \int_P K \, dA
 \]
-A careful count of the triangulation (using Euler's formula for planar graphs)
-shows that the contribution of the interior vertices cancels, yielding the
-desired result.
+
+A careful count of the triangulation (using Euler's formula for planar graphs) shows that the contribution of the interior vertices cancels,yielding the desired result.
 \end{proof}
 
-\begin{proof}[Proof sketch of \Cref{thm:app:gauss-bonnet-general}]
-The proof proceeds in several steps.
+\begin{proof}[Proof sketch of \autoref{thm:gauss_bonnet_general}]
+The proof proceeds in several steps:
 
 \textbf{Step 1: Triangulation of the surface.}
-By \Cref{thm:app:rado}, every compact surface admits a triangulation. Refining
-if necessary, we obtain a geodesic triangulation
-$\mathcal{T} = \{T_1, \ldots, T_F\}$ in which every triangle has geodesic sides.
+By \autoref{thm:rado_apendice}, every compact surface admits a triangulation. Refining if necessary, we obtain a geodesic triangulation $\mathcal{T} = \{T_1, \ldots, T_F\}$ where each triangle has geodesic sides.
 
-\textbf{Step 2: Apply the lemma to each triangle.}
-Apply \Cref{lem:app:geodesic-polygon} (case $n = 3$) to each triangle:
+\textbf{Step 2: Application of the lemma to each triangle.}
+We apply \autoref{lem:poligono_geodesico} (case $n=3$) to each triangle:
 \[
-\alpha_j + \beta_j + \gamma_j = \pi + \int_{T_j} K \, dA ,
-\qquad j = 1, \ldots, F .
+\alpha_j + \beta_j + \gamma_j = \pi + \int_{T_j} K \, dA
 \]
+for $j = 1, \ldots, F$.
 
 \textbf{Step 3: Sum over all triangles.}
-Summing over all triangles,
+Summing over all triangles:
 \[
-\sum_{j=1}^F (\alpha_j + \beta_j + \gamma_j) = F\pi + \int_{\mathcal{M}} K \, dA .
+\sum_{j=1}^F (\alpha_j + \beta_j + \gamma_j) = F\pi + \int_{\mathcal{M}} K \, dA
 \]
 
-\textbf{Step 4: Analysis of the angle sum.}
-The angle sum on the left decomposes according to the location of the vertices:
+\textbf{Step 4: Analysis of the sum of angles.}
+The sum of angles on the left-hand side can be decomposed according to the location of the vertices:
 \begin{itemize}
-    \item \textit{Interior vertices}: each contributes $2\pi$ (a full angle
-          around the point). If there are $V_{\text{int}}$ interior vertices,
-          they contribute $2\pi V_{\text{int}}$.
-    \item \textit{Smooth boundary vertices}: each on a smooth part of the
-          boundary contributes $\pi$ (a half angle).
-    \item \textit{Corner boundary vertices}: each corner with interior angle
-          $\theta_i$ contributes exactly $\theta_i = \pi - \alpha_i$.
+    \item \textit{Interior vertices}: Each interior vertex contributes $2\pi$(complete angle around the point). If there are $V_{\text{int}}$ interior vertices, they contribute $2\pi V_{\text{int}}$.
+    \item \textit{Boundary vertices (smooth)}: Each vertex on a smooth part of the boundary contributes $\pi$ (half angle).
+    \item \textit{Boundary vertices (corners)}: Each corner with interior angle $\theta_i$ contributes exactly $\theta_i = \pi - \alpha_i$.
 \end{itemize}
 
-\textbf{Step 5: Apply Euler's formula.}
-Let $V$, $E$, $F$ denote the total numbers of vertices, edges, and faces in the
-triangulation. By Euler's formula, $V - E + F = \chi(\mathcal{M})$. Moreover,
-counting edges: each triangle has three edges, each interior edge is shared by
-two triangles, and boundary edges belong to a single triangle, which yields
-relations among $V$, $E$, $F$ and the boundary quantities.
-
-\textbf{Step 6: Combine terms.}
-Combining the identities of Steps 3--5 with careful algebra, the terms rearrange
-to give
+\textbf{Step 5: Application of Euler's formula.} Let $V$ be the total number of vertices, $E$ the number of edges and $F$ the number  of faces in the triangulation. By Euler's formula:
 \[
-\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds
-+ \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M}) .
+V - E + F = \chi(\mathcal{M})
 \]
-The geodesic-curvature integral appears naturally on passing to the limit as the
-triangulation is refined near the boundary.
+
+Moreover, counting edges: each triangle has 3 edges, and each interior edge is shared by 2 triangles, whereas boundary edges belong to a single triangle. This gives relations between $V$, $E$, $F$ and the boundary quantities.
+
+\textbf{Step 6: Combination of terms.}
+Combining the identities from steps 3-5 with careful algebra, the terms rearrange to give:
+\[
+\int_{\mathcal{M}} K \, dA + \int_{\partial \mathcal{M}} \kappa_g \, ds + \sum_{i=1}^n \alpha_i = 2\pi \chi(\mathcal{M})
+\]
+
+The geodesic curvature integral appears naturally when considering the limit as the triangulation is refined near the boundary.
 \end{proof}
 
 \begin{remark}
-A complete and rigorous proof can be found in \citet[Chapter~4]{do1976differential}
-or in \citet[Chapter~9]{lee2018introduction}. The version for abstract Riemannian
-manifolds (not necessarily immersed in $\R^3$) requires connections and parallel
-transport.
+A complete and rigorous proof can be found in \citet{do1976differential}(Chapter 4) or in \citet{lee2018introduction} (Chapter 9). The version for abstract Riemannian manifolds (not necessarily immersed in $\mathbb{R}^3$)requires the use of connections and parallel transport.
 \end{remark}
 
-\subsection{Generalizations}
-\label{subsec:app:gauss-bonnet-generalizations}
+%-----------------------------------------------------------------------
+\subsection{Generalizations}\label{subsec:gauss_bonnet_generalizaciones}
+%-----------------------------------------------------------------------
 
-The Gauss--Bonnet theorem admits several important generalizations:
+The Gauss-Bonnet theorem admits several important generalizations:
+
 \begin{enumerate}
-    \item \textbf{Gauss--Bonnet--Chern theorem.} For Riemannian manifolds of
-          even dimension $2n$, the theorem generalizes using the Pfaffian form of
-          the curvature~\citep{chern1944simple}.
-    \item \textbf{Atiyah--Singer index theorem.} A deep generalization
-          connecting analytic invariants (the index of elliptic operators) with
-          topological invariants.
-    \item \textbf{Discrete version.} For polygonal meshes there is a discrete
-          version of the theorem, useful in computational geometry and geometry
-          processing.
+    \item \textbf{Gauss-Bonnet-Chern theorem}: For Riemannian manifolds of dimension $2n$, the theorem generalizes using the Pfaffian form of the curvature \citep{chern1944simple}.
+
+    \item \textbf{Atiyah-Singer index theorem}: A profound generalization connecting analytic invariants (the index of elliptic operators) with topological invariants.
+
+    \item \textbf{Discrete version}: For polygonal meshes, there exists a discrete version of the theorem that is useful in computational geometry and geometry processing.
 \end{enumerate}
 
-%=======================================================================
-\section{Sard's Theorem}
-\label{sec:app:sard}
-%=======================================================================
+\section{Sard's Theorem}\label{sec:sard}
 
-Sard's theorem is a fundamental tool of analysis on manifolds that enables
-``general position'' arguments: it guarantees that, in a precise sense, most
-points in the codomain of a smooth map are regular values. This result is
-essential in the proof of the Whitney embedding theorem.
+Sard's theorem is a fundamental tool of analysis on manifolds that enables ``general position'' arguments: it guarantees that, in a certain sense, most points of the codomain of a smooth map are regular values. This result is essential in the proof of the Whitney Embedding Theorem (\autoref{thm:whitney_embedding}).
 
-\begin{definition}[Critical point and critical value]
-\label{def:app:critical-point}
-Let $F \colon \mathcal{M} \to \mathcal{N}$ be a smooth map between smooth
-manifolds. A point $p \in \mathcal{M}$ is a \emph{critical point} of $F$ if the
-differential $dF_p \colon T_p\mathcal{M} \to T_{F(p)}\mathcal{N}$ is not
-surjective. A point $y \in \mathcal{N}$ is a \emph{critical value} if it is the
-image of some critical point, that is, if $y = F(p)$ for some critical point $p$.
+\begin{definition}[Critical point and critical value]\label{def:punto_critico}
+Let $F: \mathcal{M} \to \mathcal{N}$ be a smooth map between differentiable manifolds. A point $p \in \mathcal{M}$ is a \textit{critical point} of $F$ if the differential $dF_p: T_p\mathcal{M} \to T_{F(p)}\mathcal{N}$ is not surjective. A point $y \in \mathcal{N}$ is a \textit{critical value} if it is the image of some critical point, that is, if $y = F(p)$ for some critical point $p$.
 \end{definition}
 
-\begin{definition}[Regular value]
-\label{def:app:regular-value}
-A point $y \in \mathcal{N}$ is a \emph{regular value} of
-$F \colon \mathcal{M} \to \mathcal{N}$ if it is not a critical value, that is, if
-for every $p \in F^{-1}(y)$ the differential $dF_p$ is surjective. In particular,
-if $y \notin F(\mathcal{M})$, then $y$ is trivially a regular value.
+\begin{definition}[Regular value]\label{def:valor_regular}
+A point $y \in \mathcal{N}$ is a \textit{regular value} of $F: \mathcal{M} \to \mathcal{N}$ if it is not a critical value, that is, if for all $p \in F^{-1}(y)$ the differential $dF_p$ is surjective. In particular, if $y \notin F(\mathcal{M})$, then $y$ is trivially a regular value.
 \end{definition}
 
-\begin{theorem}[Sard's theorem]
-\label{thm:app:sard}
-Let $F \colon \mathcal{M} \to \mathcal{N}$ be a smooth map between smooth
-manifolds. Then the set of critical values of $F$ has Lebesgue measure zero in
-$\mathcal{N}$. Equivalently, the set of regular values is dense in $\mathcal{N}$.
+\begin{theorem}[Sard's Theorem]\label{thm:sard}
+Let $F: \mathcal{M} \to \mathcal{N}$ be a smooth map between differentiable manifolds. Then the set of critical values of $F$ has Lebesgue measure zero in $\mathcal{N}$. Equivalently, the set of regular values is dense in $\mathcal{N}$.
 \end{theorem}
 
-The complete proof, which proceeds by induction on the dimension and uses measure
-estimates based on the Taylor expansion of $F$, can be found in
-\citet[Chapter~6, Theorem~6.10]{lee2012introduction} or in
-\citet[Chapter~3]{milnor1965topology}.
+The complete proof, which proceeds by induction on the dimension and uses measure estimates based on the Taylor expansion of $F$, can be found in \citet[Chapter 6, Theorem 6.10]{lee2012introduction} or in \citet[Chapter 3]{milnor1965topology}.
 
 \begin{remark}
-The power of Sard's theorem is that it lets one conclude the existence of objects
-with good properties (regular values) without constructing them explicitly: it
-suffices to show that the ``bad'' ones form a set of measure zero. In the proof
-of Whitney's theorem this argument guarantees the existence of projection
-directions that preserve the embedding.
+The power of Sard's Theorem lies in the fact that it allows one to conclude the existence of objects with good properties (regular values) without constructing them explicitly: it suffices to show that the ``bad'' ones form a set of measure zero. In the proof of Whitney's Theorem, this argument is applied to guarantee the existence of projection directions that preserve the embedding.
 \end{remark}
 
-%=======================================================================
-\section{The Regular Level Set Theorem}
-\label{sec:app:regular-level}
-%=======================================================================
+\section{Regular Level Set Theorem}\label{sec:nivel_regular}
 
-The regular level set theorem connects the theory of smooth maps between
-manifolds with the submanifold structure of their level sets. It is a
-fundamental tool of differential geometry: it constructs submanifolds as
-preimages of regular values, and it is the theoretical basis for the structure of
-the fibres of a submersion.
+The Regular Level Set Theorem connects the theory of smooth maps between manifolds with the submanifold structure of their level sets. It is a fundamental tool in differential geometry: it allows one to construct submanifolds as preimages of regular values, and it is the theoretical basis for the structure of the fibers of a submersion.
 
-\begin{theorem}[Regular level set theorem]
-\label{thm:app:regular-level}
-Let $F \colon \mathcal{M} \to \mathcal{N}$ be a smooth map between smooth
-manifolds of dimensions $m = \dim \mathcal{M}$ and $n = \dim \mathcal{N}$, with
-$m \geq n$. If $q \in \mathcal{N}$ is a regular value of $F$
-(\Cref{def:app:regular-value}) with $F^{-1}(q) \neq \emptyset$, then $F^{-1}(q)$
-is a smooth submanifold of $\mathcal{M}$ of dimension $m - n$.
+\begin{theorem}[Regular Level Set Theorem]\label{thm:nivel_regular}
+Let $F: \mathcal{M} \to \mathcal{N}$ be a smooth map between differentiable manifolds of dimensions $m = \dim \mathcal{M}$ and $n = \dim \mathcal{N}$, with $m \geq n$. If $q \in \mathcal{N}$ is a regular value of $F$ (\autoref{def:valor_regular}) with $F^{-1}(q) \neq \emptyset$, then $F^{-1}(q)$ is a smooth submanifold of $\mathcal{M}$ of dimension $m - n$.
 \end{theorem}
 
 \begin{proof}
-Let $p \in F^{-1}(q)$. Since $q$ is a regular value, the differential
-$dF_p \colon T_p\mathcal{M} \to T_q\mathcal{N}$ is surjective, hence of rank $n$.
-Choose charts $(U, \varphi)$ centred at $p$ and $(V, \psi)$ centred at $q$ with
-$F(U) \subseteq V$. In these coordinates the local representation
-$\hat{F} = \psi \circ F \circ \varphi^{-1} \colon \varphi(U) \subseteq \R^m \to
-\R^n$ has Jacobian $D\hat{F}_{\varphi(p)}$ of rank $n$.
+Let $p \in F^{-1}(q)$. Since $q$ is a regular value, the differential $dF_p: T_p\mathcal{M} \to T_q\mathcal{N}$ is surjective, and therefore has rank $n$. We choose charts $(U, \varphi)$ centered at $p$ and $(V, \psi)$ centered at $q$ such that $F(U) \subseteq V$. In these coordinates, the local representation $\hat{F} = \psi \circ F \circ \varphi^{-1}: \varphi(U) \subseteq \mathbb{R}^m \to \mathbb{R}^n$ satisfies that its Jacobian $D\hat{F}_{\varphi(p)}$ has rank $n$.
 
-Reordering coordinates if necessary, we may assume the last $n$ columns of
-$D\hat{F}_{\varphi(p)}$ form an invertible $n \times n$ block. Write
-$\R^m = \R^{m-n} \times \R^n$ with coordinates $(x', x'')$, where
-$x' = (x_1, \ldots, x_{m-n})$ and $x'' = (x_{m-n+1}, \ldots, x_m)$.
+Reordering coordinates if necessary, we may assume that the last $n$ columns of $D\hat{F}_{\varphi(p)}$ form an invertible $n \times n$ submatrix. We write $\mathbb{R}^m = \mathbb{R}^{m-n} \times \mathbb{R}^n$ with coordinates $(x', x'')$ where $x' = (x_1, \ldots, x_{m-n})$ and $x'' = (x_{m-n+1}, \ldots, x_m)$.
 
-Consider the map $\Phi \colon \varphi(U) \to \R^m$ given by
-$\Phi(x', x'') = (x', \hat{F}(x', x''))$. Its Jacobian at $\varphi(p)$ is
+We consider the map $\Phi: \varphi(U) \to \mathbb{R}^m$ defined by $\Phi(x', x'') = (x', \hat{F}(x', x''))$. Its Jacobian at $\varphi(p)$ is:
 \[
-D\Phi_{\varphi(p)} = \begin{pmatrix} I_{m-n} & 0 \\[2pt]
-\frac{\partial \hat{F}}{\partial x'} & \frac{\partial \hat{F}}{\partial x''}
-\end{pmatrix} ,
+D\Phi_{\varphi(p)} = \begin{pmatrix} I_{m-n} & 0 \\ \frac{\partial \hat{F}}{\partial x'} & \frac{\partial \hat{F}}{\partial x''} \end{pmatrix}
 \]
-which is invertible, being block lower triangular with invertible diagonal blocks
-$I_{m-n}$ and $\frac{\partial \hat{F}}{\partial x''}$. By the inverse function
-theorem (\Cref{thm:app:inverse-function}), $\Phi$ is a local diffeomorphism on a
-neighbourhood $W$ of $\varphi(p)$.
+which is invertible since it is block lower triangular with $I_{m-n}$ and $\frac{\partial \hat{F}}{\partial x''}$ invertible in the diagonal block. By the inverse function theorem (\autoref{thm:funcion_inversa}), $\Phi$ is a local diffeomorphism on a neighborhood $W$ of $\varphi(p)$.
 
-In the new coordinates $\Phi$, the map $F$ reads
+In the new coordinates $\Phi$, the map $F$ reads as:
 \[
-\hat{F} \circ \Phi^{-1}(y', y'') = y'' ,
+\hat{F} \circ \Phi^{-1}(y', y'') = y''
 \]
-that is, $\hat{F}$ becomes the projection onto the last $n$ coordinates.
-Therefore
+that is, $\hat{F}$ becomes the projection onto the last $n$ coordinates. Therefore:
 \[
-(\hat{F} \circ \Phi^{-1})^{-1}(\psi(q))
-= \{(y', y'') \in \Phi(W) : y'' = \psi(q)\}
-= \{(y', \psi(q)) : y' \in U'\}
+(\hat{F} \circ \Phi^{-1})^{-1}(\psi(q)) = \{(y', y'') \in \Phi(W) : y'' = \psi(q)\} = \{(y', \psi(q)) : y' \in U'\}
 \]
-for some open $U' \subseteq \R^{m-n}$. This shows that, near each point $p$,
-$F^{-1}(q)$ is locally the graph of a smooth function of $m - n$ variables, which
-endows it with the structure of a smooth submanifold of dimension $m - n$.
+for some open set $U' \subseteq \mathbb{R}^{m-n}$. This shows that $F^{-1}(q)$ is locally, in a neighborhood of each point $p$, the graph of a smooth function of $m - n$ variables, which gives it the structure of a smooth submanifold of dimension $m - n$.
 \end{proof}
 
-\begin{corollary}[Fibres of a submersion]
-\label{cor:app:submersion-fibres}
-If $F \colon \mathcal{M} \to \mathcal{N}$ is a smooth submersion, then for every
-$q \in F(\mathcal{M})$ the fibre $F^{-1}(q)$ is a smooth submanifold of
-$\mathcal{M}$ of dimension $\dim \mathcal{M} - \dim \mathcal{N}$.
+\begin{corollary}[Fibers of a submersion]\label{cor:fibras_submersion}
+If $F: \mathcal{M} \to \mathcal{N}$ is a smooth submersion (\autoref{def:submersion_suave}), then for each $q \in F(\mathcal{M})$, the fiber $F^{-1}(q)$ is a smooth submanifold of $\mathcal{M}$ of dimension $\dim \mathcal{M} - \dim \mathcal{N}$.
 \end{corollary}
 
 \begin{proof}
-Since $F$ is a submersion, $dF_p$ is surjective for every $p \in \mathcal{M}$. In
-particular, every point $q \in F(\mathcal{M})$ is a regular value of $F$, and the
-result follows from \Cref{thm:app:regular-level}.
+Since $F$ is a submersion, $dF_p$ is surjective for all $p \in \mathcal{M}$. In particular, every point $q \in F(\mathcal{M})$ is a regular value of $F$, and the result follows from \autoref{thm:nivel_regular}.
 \end{proof}
 
 \begin{remark}
-A complete reference for the regular level set theorem and its applications can
-be found in \citet[Chapter~5, Theorem~5.12]{lee2012introduction}. The classical
-formulation in $\R^n$ is obtained as a special case by taking
-$\mathcal{M} = \R^m$ and $\mathcal{N} = \R^n$ with the identity charts.
+A complete reference for the Regular Level Set Theorem and its applications can be found in \citet[Chapter~5, Theorem~5.12]{lee2012introduction}. The classical formulation in $\mathbb{R}^n$ is obtained as a particular case by taking $\mathcal{M} = \mathbb{R}^m$ and $\mathcal{N} = \mathbb{R}^n$ with the identity charts.
 \end{remark}
 
-%=======================================================================
-\section{Area of Geodesic Discs in Surfaces of Constant Curvature}
-\label{sec:app:geodesic-disc}
-%=======================================================================
+\section{Area of geodesic disks on surfaces of constant curvature}\label{sec:area_disco_geodesico}
 
-The area of a geodesic disc of radius $R$ in a surface of constant Gaussian
-curvature $K$ satisfies a formula that generalizes the Euclidean result
-$\pi R^2$. We derive this formula from the Jacobi equation in geodesic polar
-coordinates.
+In \autoref{rem:significado_curvatura} it is claimed that the area of a geodesic disk of radius $R$ on a surface of constant Gaussian curvature $K$ satisfies a formula that generalizes the Euclidean result $\pi R^2$. Here we derive this formula from the Jacobi equation in geodesic polar coordinates.
 
-\begin{proposition}[Metric in geodesic polar coordinates]
-\label{prop:app:geodesic-polar-metric}
-Let $(\mathcal{M}, g)$ be a Riemannian surface of constant Gaussian curvature $K$,
-and let $p \in \mathcal{M}$. In geodesic polar coordinates $(r, \theta)$ centred
-at $p$ (where $r = d_g(p, \cdot)$ and $\theta \in [0, 2\pi)$ is the angle in
-$T_p\mathcal{M}$), the Riemannian metric takes the form
-\begin{equation}
-\label{eq:app:geodesic-polar-metric}
-ds^2 = dr^2 + f_K(r)^2 \, d\theta^2 ,
+\begin{proposition}[Metric in geodesic polar coordinates]\label{prop:metrica_polar_geodesica}
+Let $(\mathcal{M}, g)$ be a Riemannian surface of constant Gaussian curvature $K$, and let $p \in \mathcal{M}$. In geodesic polar coordinates $(r, \theta)$ centered at $p$ (where $r = d_g(p, \cdot)$ and $\theta \in [0, 2\pi)$ is the angle in $T_p\mathcal{M}$), the Riemannian metric takes the form:
+\begin{equation}\label{eq:metrica_polar_geodesica}
+ds^2 = dr^2 + f_K(r)^2 \, d\theta^2
 \end{equation}
-where the function $f_K \colon [0, \infty) \to \R$ satisfies the \textbf{Jacobi
-equation}
-\begin{equation}
-\label{eq:app:jacobi-radial}
-f_K''(r) + K \, f_K(r) = 0 , \qquad f_K(0) = 0 , \quad f_K'(0) = 1 .
+where the function $f_K: [0, \infty) \to \mathbb{R}$ satisfies the \textbf{Jacobi equation}:
+\begin{equation}\label{eq:jacobi_radial}
+f_K''(r) + K \, f_K(r) = 0, \qquad f_K(0) = 0, \quad f_K'(0) = 1
 \end{equation}
 \end{proposition}
 
 \begin{proof}
-In geodesic polar coordinates, the radial geodesics from $p$ correspond to
-$\theta = \text{const}$, with natural arc-length parametrization $r$. The metric
-coefficient $g_{rr} = 1$ reflects this parametrization. The angular coefficient
-$g_{\theta\theta} = f_K(r)^2$ measures how adjacent radial geodesics spread
-apart; the function $f_K(r)$ is the norm of the Jacobi field $J(r)$ along a
-radial geodesic with initial conditions $J(0) = 0$ and $\norm{J'(0)} = 1$. The
-Jacobi equation $J'' + R(\dot{\gamma}, J)\dot{\gamma} = 0$, in the constant
-curvature case $K$ in dimension $2$, reduces to the scalar equation
-$f_K'' + K f_K = 0$ \citep[Chapter~10]{lee2018introduction}.
+In geodesic polar coordinates, the radial geodesics from $p$ correspond to $\theta = \text{const}$, and their natural parametrization is by arc length $r$. The metric coefficient $g_{rr} = 1$ reflects this parametrization. The angular coefficient $g_{\theta\theta} = f_K(r)^2$ measures how adjacent radial geodesics separate; the function $f_K(r)$ is the norm of the Jacobi field $J(r)$ along a radial geodesic with initial conditions $J(0) = 0$ and $\|J'(0)\| = 1$. The Jacobi equation $J'' + R(\dot{\gamma}, J)\dot{\gamma} = 0$, in the case of constant curvature $K$ in dimension 2, reduces to the scalar equation $f_K'' + K f_K = 0$ \citep[Chapter~10]{lee2018introduction}.
 \end{proof}
 
-The solution of equation~\eqref{eq:app:jacobi-radial} depends on the sign of $K$:
-\begin{equation}
-\label{eq:app:fK-solutions}
+The solution of equation~\eqref{eq:jacobi_radial} depends on the sign of $K$:
+
+\begin{equation}\label{eq:soluciones_fK}
 f_K(r) = \begin{cases}
 \dfrac{1}{\sqrt{K}} \sin(\sqrt{K} \, r) & \text{if } K > 0, \\[8pt]
 r & \text{if } K = 0, \\[8pt]
-\dfrac{1}{\sqrt{\abs{K}}} \sinh(\sqrt{\abs{K}} \, r) & \text{if } K < 0.
+\dfrac{1}{\sqrt{|K|}} \sinh(\sqrt{|K|} \, r) & \text{if } K < 0.
 \end{cases}
 \end{equation}
-The verification is immediate: for $K > 0$,
-$f_K(r) = \frac{1}{\sqrt{K}} \sin(\sqrt{K} r)$ satisfies $f_K(0) = 0$,
-$f_K'(0) = \cos(0) = 1$, and $f_K''(r) = -K f_K(r)$. The cases $K = 0$ and
-$K < 0$ are checked analogously.
 
-\begin{theorem}[Area of a geodesic disc]
-\label{thm:app:geodesic-disc-area}
-Let $(\mathcal{M}, g)$ be a surface of constant Gaussian curvature $K$, and let
-$B_R(p) = \{q \in \mathcal{M} : d_g(p,q) \leq R\}$ be the geodesic disc of radius
-$R$ centred at $p$ (with $R$ smaller than the injectivity radius). Then
-\begin{equation}
-\label{eq:app:geodesic-disc-area}
+The verification is immediate: for $K > 0$, $f_K(r) = \frac{1}{\sqrt{K}} \sin(\sqrt{K} r)$ satisfies $f_K(0) = 0$, $f_K'(0) = \cos(0) = 1$ and $f_K''(r) = -K f_K(r)$. The cases $K = 0$ and $K < 0$ are checked analogously.
+
+\begin{theorem}[Area of a geodesic disk]\label{thm:area_disco_geodesico}
+Let $(\mathcal{M}, g)$ be a surface of constant Gaussian curvature $K$, and let $B_R(p) = \{q \in \mathcal{M} : d_g(p,q) \leq R\}$ be the geodesic disk of radius $R$ centered at $p$ (with $R$ less than the injectivity radius). Then:
+\begin{equation}\label{eq:area_disco_geodesico}
 A(R) = \begin{cases}
 \dfrac{2\pi}{K}\bigl(1 - \cos(\sqrt{K} \, R)\bigr) & \text{if } K > 0, \\[8pt]
 \pi R^2 & \text{if } K = 0, \\[8pt]
-\dfrac{2\pi}{\abs{K}}\bigl(\cosh(\sqrt{\abs{K}} \, R) - 1\bigr) & \text{if } K < 0.
+\dfrac{2\pi}{|K|}\bigl(\cosh(\sqrt{|K|} \, R) - 1\bigr) & \text{if } K < 0.
 \end{cases}
 \end{equation}
 Moreover, $\lim_{K \to 0} A(R) = \pi R^2$ in all cases.
 \end{theorem}
 
 \begin{proof}
-The area element in geodesic polar coordinates is
-$dA = f_K(r) \, dr \, d\theta$ (by~\eqref{eq:app:geodesic-polar-metric}, since
-$\sqrt{\det(g)} = f_K(r)$). Therefore
+The area element in geodesic polar coordinates is $dA = f_K(r) \, dr \, d\theta$ (by~\eqref{eq:metrica_polar_geodesica}, since $\sqrt{\det(g)} = f_K(r)$). Therefore:
 \[
-A(R) = \int_0^{2\pi} \int_0^R f_K(r) \, dr \, d\theta
-= 2\pi \int_0^R f_K(r) \, dr .
+A(R) = \int_0^{2\pi} \int_0^R f_K(r) \, dr \, d\theta = 2\pi \int_0^R f_K(r) \, dr
 \]
 
 \textbf{Case $K > 0$:}
 \[
-A(R) = 2\pi \int_0^R \frac{1}{\sqrt{K}} \sin(\sqrt{K} \, r) \, dr
-= 2\pi \left[ \frac{-\cos(\sqrt{K} \, r)}{K} \right]_0^R
-= \frac{2\pi}{K} \bigl(1 - \cos(\sqrt{K} \, R)\bigr) .
+A(R) = 2\pi \int_0^R \frac{1}{\sqrt{K}} \sin(\sqrt{K} \, r) \, dr = 2\pi \left[ \frac{-\cos(\sqrt{K} \, r)}{K} \right]_0^R = \frac{2\pi}{K} \bigl(1 - \cos(\sqrt{K} \, R)\bigr)
 \]
 
 \textbf{Case $K = 0$:}
 \[
-A(R) = 2\pi \int_0^R r \, dr = \pi R^2 .
+A(R) = 2\pi \int_0^R r \, dr = \pi R^2
 \]
 
-\textbf{Case $K < 0$:} writing $K = -\abs{K}$,
+\textbf{Case $K < 0$:} Writing $K = -|K|$:
 \[
-A(R) = 2\pi \int_0^R \frac{1}{\sqrt{\abs{K}}} \sinh(\sqrt{\abs{K}} \, r) \, dr
-= 2\pi \left[ \frac{\cosh(\sqrt{\abs{K}} \, r)}{\abs{K}} \right]_0^R
-= \frac{2\pi}{\abs{K}} \bigl(\cosh(\sqrt{\abs{K}} \, R) - 1\bigr) .
+A(R) = 2\pi \int_0^R \frac{1}{\sqrt{|K|}} \sinh(\sqrt{|K|} \, r) \, dr = 2\pi \left[ \frac{\cosh(\sqrt{|K|} \, r)}{|K|} \right]_0^R = \frac{2\pi}{|K|} \bigl(\cosh(\sqrt{|K|} \, R) - 1\bigr)
 \]
 
-\textbf{Limit $K \to 0$:} using the Taylor expansion
-$\cos(x) = 1 - \frac{x^2}{2} + \frac{x^4}{24} - \cdots$,
+\textbf{Limit $K \to 0$:} Using the Taylor expansion $\cos(x) = 1 - \frac{x^2}{2} + \frac{x^4}{24} - \cdots$:
 \[
-\frac{1 - \cos(\sqrt{K} R)}{K}
-= \frac{1 - \bigl(1 - \frac{KR^2}{2} + \frac{K^2 R^4}{24} - \cdots\bigr)}{K}
-= \frac{R^2}{2} - \frac{K R^4}{24} + \cdots
-\xrightarrow{K \to 0} \frac{R^2}{2} .
+\frac{1 - \cos(\sqrt{K} R)}{K} = \frac{1 - \left(1 - \frac{KR^2}{2} + \frac{K^2 R^4}{24} - \cdots\right)}{K} = \frac{R^2}{2} - \frac{K R^4}{24} + \cdots \xrightarrow{K \to 0} \frac{R^2}{2}
 \]
-Multiplying by $2\pi$ gives $\pi R^2$. The case $K < 0$ is analogous using
-$\cosh(x) = 1 + \frac{x^2}{2} + \cdots$.
+Multiplying by $2\pi$ yields $\pi R^2$. The case $K < 0$ is analogous using $\cosh(x) = 1 + \frac{x^2}{2} + \cdots$.
 \end{proof}
 
-\begin{remark}[Geometric interpretation]
-\label{rem:app:geodesic-disc-interpretation}
-\Cref{thm:app:geodesic-disc-area} quantifies the effect of curvature on area
-growth:
+\begin{remark}[Geometric interpretation]\label{rem:area_disco_interpretacion}
+\autoref{thm:area_disco_geodesico} quantifies the effect of curvature on the growth of area:
 \begin{itemize}
-    \item \textbf{Positive curvature} ($K > 0$): $A(R) < \pi R^2$. Area grows
-          more slowly than in the Euclidean case. On the sphere $S^2$ ($K = 1$),
-          $A(R) = 2\pi(1 - \cos R)$; for $R = \pi/2$ (a quarter of the sphere),
-          $A = 2\pi$.
-    \item \textbf{Negative curvature} ($K < 0$): $A(R) > \pi R^2$. Since
-          $\cosh(x) \sim \frac{1}{2}e^x$ for large $x$, area grows
-          \emph{exponentially}: $A(R) \sim \frac{\pi}{\abs{K}} e^{\sqrt{\abs{K}} R}$.
-    \item \textbf{Connection with the Jacobi equation.} The function $f_K(r)$
-          appearing in the metric is exactly the one describing the deviation of
-          parallel geodesics, showing that area growth and the
-          divergence/convergence of geodesics are manifestations of the same
-          geometric phenomenon.
+    \item \textbf{Positive curvature} ($K > 0$): $A(R) < \pi R^2$. The area grows more slowly than in the Euclidean case. On the sphere $S^2$ ($K = 1$), $A(R) = 2\pi(1 - \cos R)$; for $R = \pi/2$ (a quarter of the sphere), $A = 2\pi$.
+    \item \textbf{Negative curvature} ($K < 0$): $A(R) > \pi R^2$. Since $\cosh(x) \sim \frac{1}{2}e^x$ for large $x$, the area grows \textit{exponentially}: $A(R) \sim \frac{\pi}{|K|} e^{\sqrt{|K|} R}$.
+    \item \textbf{Connection with the Jacobi equation}: The function $f_K(r)$ appearing in the metric is exactly the same one that describes the deviation of parallel geodesics in \autoref{subsec:espacios_no_euclidianos}, showing that the growth of area and the divergence/convergence of geodesics are manifestations of the same geometric phenomenon.
 \end{itemize}
-An alternative proof can be found in
-\citet[Chapter~4, Section~4.6]{do1976differential} for surfaces and in
-\citet[Theorem~11.9]{lee2018introduction} for the general Riemannian case.
+An alternative proof can be found in \citet[Chapter~4, Section~4.6]{do1976differential} for surfaces and in \citet[Theorem~11.9]{lee2018introduction} for the general Riemannian case.
 \end{remark}
 
-%=======================================================================
-\section{Sample Complexity on Manifolds}
-\label{sec:app:sample-complexity}
-%=======================================================================
+\section{Sample complexity on manifolds}\label{sec:complejidad_muestral}
 
-The number of samples required to approximate a Lipschitz function on a manifold
-scales with the intrinsic dimension $m$, not with the ambient dimension $d$. We
-present the necessary preliminaries and a proof sketch based on the results of
-\citet{niyogi2008finding}.
+\autoref{prop:complejidad_muestral_variedades} establishes that the number of samples needed to approximate a Lipschitz function on a manifold scales with the intrinsic dimension $m$, not with the ambient dimension $d$. In this section we present the necessary preliminaries and a sketch of the proof based on the results of \citet{niyogi2008finding}.
 
-\subsection{Preliminaries}
-\label{subsec:app:sample-complexity-prelim}
+\subsection{Preliminaries}\label{subsec:complejidad_muestral_preliminares}
 
-\begin{definition}[Covering number]
-\label{def:app:covering-number}
-Let $(X, d)$ be a metric space and $\epsilon > 0$. An \emph{$\epsilon$-cover}
-(or $\epsilon$-net) of $X$ is a subset $S \subseteq X$ such that for every
-$x \in X$ there exists $s \in S$ with $d(x, s) \leq \epsilon$. The
-\emph{covering number} $\mathcal{N}(X, d, \epsilon)$ is the smallest cardinality
-of an $\epsilon$-cover of $X$.
+\begin{definition}[Covering number]\label{def:numero_recubrimiento}
+Let $(X, d)$ be a metric space and $\epsilon > 0$. An \textit{$\epsilon$-covering} (or $\epsilon$-net) of $X$ is a subset $S \subseteq X$ such that for all $x \in X$ there exists $s \in S$ with $d(x, s) \leq \epsilon$. The \textit{covering number} $\mathcal{N}(X, d, \epsilon)$ is the minimum cardinality of an $\epsilon$-covering of $X$.
 \end{definition}
 
-\begin{remark}
-\label{rem:app:covering-vs-topological}
-The notion of a metric $\epsilon$-cover should not be confused with a topological
-cover. An $\epsilon$-cover is a set of \emph{points} whose balls of radius
-$\epsilon$ cover the space, whereas a topological cover is a family of open sets
-whose union contains the space. The two are related: if $S$ is an
-$\epsilon$-cover of $(X,d)$, then $\{B(s, \epsilon)\}_{s \in S}$ is an open cover
-of $X$ in the topological sense.
+\begin{remark}\label{rem:recubrimiento_vs_topologico}
+The concept of a metric $\epsilon$-covering should not be confused with the topological cover (\autoref{def:recubrimiento}). An $\epsilon$-covering is a set of \textit{points} whose balls of radius $\epsilon$ cover the space, whereas a topological cover is a family of open sets whose union contains the space. Both concepts are related: if $S$ is an $\epsilon$-covering of $(X,d)$, then $\{B(s, \epsilon)\}_{s \in S}$ is an open cover of $X$ in the topological sense.
 \end{remark}
 
-\begin{lemma}[Volumetric bound on the covering number]
-\label{lem:app:volumetric-covering}
+\begin{lemma}[Volumetric bound on the covering number]\label{lem:cota_volumetrica_recubrimiento}
 Let $(\mathcal{M}, g)$ be a compact Riemannian manifold and $\epsilon > 0$. Then
 \[
-\mathcal{N}(\mathcal{M}, d_g, \epsilon) \geq
-\frac{\Vol(\mathcal{M})}{\sup_{p \in \mathcal{M}} \Vol(B_g(p, \epsilon))} ,
+\mathcal{N}(\mathcal{M}, d_g, \epsilon) \geq \frac{\operatorname{Vol}(\mathcal{M})}{\sup_{p \in \mathcal{M}} \operatorname{Vol}(B_g(p, \epsilon))},
 \]
-where $B_g(p, \epsilon)$ denotes the geodesic ball of centre $p$ and radius
-$\epsilon$.
+where $B_g(p, \epsilon)$ denotes the geodesic ball of center $p$ and radius $\epsilon$.
 \end{lemma}
 
 \begin{proof}
-Let $S = \{s_1, \ldots, s_N\}$ be an optimal $\epsilon$-cover, that is,
-$\abs{S} = \mathcal{N}(\mathcal{M}, d_g, \epsilon)$. By definition,
-$\mathcal{M} \subseteq \bigcup_{i=1}^N B_g(s_i, \epsilon)$, so that
+Let $S = \{s_1, \ldots, s_N\}$ be an optimal $\epsilon$-covering, that is, $|S| = \mathcal{N}(\mathcal{M}, d_g, \epsilon)$. By definition, $\mathcal{M} \subseteq \bigcup_{i=1}^N B_g(s_i, \epsilon)$, so that
 \[
-\Vol(\mathcal{M}) \leq \sum_{i=1}^N \Vol(B_g(s_i, \epsilon))
-\leq N \cdot \sup_{p \in \mathcal{M}} \Vol(B_g(p, \epsilon)) .
+\operatorname{Vol}(\mathcal{M}) \leq \sum_{i=1}^N \operatorname{Vol}(B_g(s_i, \epsilon)) \leq N \cdot \sup_{p \in \mathcal{M}} \operatorname{Vol}(B_g(p, \epsilon)).
 \]
-Solving for $N$ gives the claimed bound.
+Solving for $N$ yields the desired bound.
 \end{proof}
 
-\begin{theorem}[Bishop--G\"unther comparison]
-\label{thm:app:bishop-gunther}
-Let $(\mathcal{M}^m, g)$ be a complete Riemannian manifold of dimension $m$ whose
-Ricci curvature satisfies $\Ric \geq (m-1)\kappa_0 \, g$ for some
-$\kappa_0 \in \R$. Let $\mathbb{M}^m_{\kappa_0}$ be the model space of constant
-sectional curvature $\kappa_0$. Then, for every $p \in \mathcal{M}$ and $r > 0$
-(with $r < \pi/\sqrt{\kappa_0}$ if $\kappa_0 > 0$),
+\begin{theorem}[Bishop-Günther comparison]\label{thm:bishop_gunther}
+Let $(\mathcal{M}^m, g)$ be a complete Riemannian manifold of dimension $m$ whose Ricci curvature satisfies $\operatorname{Ric} \geq (m-1)\kappa_0 \, g$ for some $\kappa_0 \in \mathbb{R}$. Let $\mathbb{M}^m_{\kappa_0}$ be the model space of constant sectional curvature $\kappa_0$. Then, for all $p \in \mathcal{M}$ and $r > 0$ (with $r < \pi/\sqrt{\kappa_0}$ if $\kappa_0 > 0$),
 \[
-\Vol(B_g(p, r)) \leq \Vol(B_{\kappa_0}(r)) ,
+\operatorname{Vol}(B_g(p, r)) \leq \operatorname{Vol}(B_{\kappa_0}(r)),
 \]
-where $B_{\kappa_0}(r)$ denotes the geodesic ball of radius $r$ in
-$\mathbb{M}^m_{\kappa_0}$.
+where $B_{\kappa_0}(r)$ denotes the geodesic ball of radius $r$ in $\mathbb{M}^m_{\kappa_0}$.
 \end{theorem}
 
-\begin{remark}
-\label{rem:app:bishop-gunther-context}
-This theorem generalizes the area comparison of
-\Cref{thm:app:geodesic-disc-area}, which treats the two-dimensional case, to
-arbitrary dimension. In the model space, the volume of the ball of radius $r$ is
-$\Vol(B_{\kappa_0}(r)) = \omega_m \int_0^r \operatorname{sn}_{\kappa_0}(t)^{m-1}
-\, dt$, where $\omega_m$ is the volume of the unit ball in $\R^m$ and
-$\operatorname{sn}_{\kappa_0}$ is the comparison function
-($\sin(\sqrt{\kappa_0}\,t)/\sqrt{\kappa_0}$ if $\kappa_0 > 0$, $t$ if
-$\kappa_0 = 0$, $\sinh(\sqrt{\abs{\kappa_0}}\,t)/\sqrt{\abs{\kappa_0}}$ if
-$\kappa_0 < 0$). For small radii,
-$\Vol(B_{\kappa_0}(r)) = \omega_m r^m (1 + O(\kappa_0 r^2))$. For a complete
-proof, see \citet[Theorem~11.10]{lee2018introduction}.
+\begin{remark}\label{rem:bishop_gunther_contexto}
+This theorem generalizes to arbitrary dimension the area comparison of \autoref{thm:area_disco_geodesico}, which deals with the two-dimensional case. In the model space, the volume of the ball of radius $r$ is $\operatorname{Vol}(B_{\kappa_0}(r)) = \omega_m \int_0^r \operatorname{sn}_{\kappa_0}(t)^{m-1} \, dt$, where $\omega_m$ is the volume of the unit ball in $\mathbb{R}^m$ and $\operatorname{sn}_{\kappa_0}$ is the comparison function ($\sin(\sqrt{\kappa_0}\,t)/\sqrt{\kappa_0}$ if $\kappa_0 > 0$, $t$ if $\kappa_0 = 0$, $\sinh(\sqrt{|\kappa_0|}\,t)/\sqrt{|\kappa_0|}$ if $\kappa_0 < 0$). For small radii, $\operatorname{Vol}(B_{\kappa_0}(r)) = \omega_m r^m (1 + O(\kappa_0 r^2))$. For a complete proof, see \citet[Theorem~11.10]{lee2018introduction}.
 \end{remark}
 
-\subsection{Proof sketch}
-\label{subsec:app:sample-complexity-proof}
+\subsection{Sketch of the proof}\label{subsec:complejidad_muestral_demo}
 
-We sketch the proof of the manifold sample-complexity bound in three steps.
+We sketch the proof of \autoref{prop:complejidad_muestral_variedades} in three steps.
 
 \paragraph{Step 1: Reduction to covering numbers.}
-Let $f \colon \mathcal{M} \to \R$ be an $L$-Lipschitz function and let
-$\{x_1, \ldots, x_N\} \subset \mathcal{M}$ be a set of samples. If we wish to
-approximate $f$ uniformly with error $\epsilon$ using only the values
-$f(x_1), \ldots, f(x_N)$, then for any point $q \in \mathcal{M}$ there must exist
-a sample $x_i$ with $d_g(q, x_i) \leq \epsilon/L$. Indeed, if
-$d_g(q, x_i) > \epsilon/L$ for all $i$, the Lipschitz condition only guarantees
-$\abs{f(q) - f(x_i)} \leq L \cdot d_g(q, x_i)$, which cannot be bounded by
-$\epsilon$. Hence the samples must form an $(\epsilon/L)$-cover of $\mathcal{M}$,
-and at least $\mathcal{N}(\mathcal{M}, d_g, \epsilon/L)$ samples are required.
+Let $f: \mathcal{M} \to \mathbb{R}$ be an $L$-Lipschitz function and let $\{x_1, \ldots, x_N\} \subset \mathcal{M}$ be a set of samples. If we want to approximate $f$ uniformly with error $\epsilon$ using only the values $f(x_1), \ldots, f(x_N)$, then for any point $q \in \mathcal{M}$ there must exist some sample $x_i$ with $d_g(q, x_i) \leq \epsilon/L$. Indeed, if $d_g(q, x_i) > \epsilon/L$ for all $i$, then the Lipschitz condition only guarantees $|f(q) - f(x_i)| \leq L \cdot d_g(q, x_i)$, which cannot be bounded by $\epsilon$. Therefore, the samples must form an $(\epsilon/L)$-covering of $\mathcal{M}$, and at least $\mathcal{N}(\mathcal{M}, d_g, \epsilon/L)$ samples are required.
 
 \paragraph{Step 2: Lower bound on the covering number.}
-Applying \Cref{lem:app:volumetric-covering} with radius $\epsilon/L$,
+Applying \autoref{lem:cota_volumetrica_recubrimiento} with radius $\epsilon/L$:
 \[
-N \geq \mathcal{N}\!\left(\mathcal{M}, d_g, \frac{\epsilon}{L}\right)
-\geq \frac{\Vol(\mathcal{M})}{\sup_{p} \Vol\!\left(B_g\!\left(p,
-\frac{\epsilon}{L}\right)\right)} .
+N \geq \mathcal{N}\!\left(\mathcal{M}, d_g, \frac{\epsilon}{L}\right) \geq \frac{\operatorname{Vol}(\mathcal{M})}{\sup_{p} \operatorname{Vol}\!\left(B_g\!\left(p, \frac{\epsilon}{L}\right)\right)}.
 \]
 
-\paragraph{Step 3: Volume estimate.}
-The sectional curvature of $\mathcal{M}$ is bounded in absolute value by
-$\kappa$, which implies $\Ric \geq -(m-1)\kappa \, g$. By the Bishop--G\"unther
-theorem (\Cref{thm:app:bishop-gunther}) with $\kappa_0 = -\kappa$,
+\paragraph{Step 3: Volume estimation.}
+The sectional curvature of $\mathcal{M}$ is bounded in absolute value by $\kappa$, which implies $\operatorname{Ric} \geq -(m-1)\kappa \, g$. By the Bishop-Günther Theorem (\autoref{thm:bishop_gunther}) with $\kappa_0 = -\kappa$:
 \[
-\Vol\!\left(B_g\!\left(p, \frac{\epsilon}{L}\right)\right)
-\leq \omega_m \left(\frac{\epsilon}{L}\right)^m
-\left(1 + O\!\left(\kappa \cdot \frac{\epsilon^2}{L^2}\right)\right) .
+\operatorname{Vol}\!\left(B_g\!\left(p, \frac{\epsilon}{L}\right)\right) \leq \omega_m \left(\frac{\epsilon}{L}\right)^m \left(1 + O\!\left(\kappa \cdot \frac{\epsilon^2}{L^2}\right)\right).
 \]
-The total volume $\Vol(\mathcal{M})$ admits a lower bound depending on the reach
-$\tau$ and on $\kappa$ (by results of \citet{niyogi2008finding} on the geometry
-of the reach). Combining,
+The total volume $\operatorname{Vol}(\mathcal{M})$ admits a lower bound that depends on $\tau$ and $\kappa$ (by results of \citet{niyogi2008finding} on the geometry of the reach). Combining:
 \[
-N \geq \frac{\Vol(\mathcal{M})}{\omega_m (\epsilon/L)^m
-(1 + O(\kappa \epsilon^2/L^2))}
-= \Omega\!\left(\left(\frac{L}{\epsilon}\right)^m \cdot
-\operatorname{poly}(\tau^{-1}, \kappa)\right) .
+N \geq \frac{\operatorname{Vol}(\mathcal{M})}{\omega_m (\epsilon/L)^m (1 + O(\kappa \epsilon^2/L^2))} = \Omega\!\left(\left(\frac{L}{\epsilon}\right)^m \cdot \operatorname{poly}(\tau^{-1}, \kappa)\right).
 \]
-Absorbing the Lipschitz constant $L$ into the $\operatorname{poly}$ factor yields
-the bound.
+Absorbing the Lipschitz constant $L$ into the $\operatorname{poly}$ factor, we obtain the bound of \autoref{prop:complejidad_muestral_variedades}.
 
-\begin{remark}[Intrinsic vs.\ ambient dimension]
-\label{rem:app:intrinsic-complexity}
-The key result is that the exponent in $1/\epsilon$ is the intrinsic dimension
-$m$, not the ambient dimension $d$. For data in $\R^d$ that lie on an
-$m$-dimensional manifold with $m \ll d$, the bound $\Omega((1/\epsilon)^m)$ is
-exponentially smaller than the bound $\Omega((1/\epsilon)^d)$ that would be
-obtained by ignoring the geometric structure. This is the mathematical
-formalization of the curse of dimensionality alleviated by the manifold
-hypothesis.
+\begin{remark}[Intrinsic vs.\ ambient dimension]\label{rem:complejidad_intrinseca}
+The key result is that the exponent in $1/\epsilon$ is the intrinsic dimension $m$, not the ambient dimension $d$. For data in $\mathbb{R}^d$ residing on an $m$-dimensional manifold with $m \ll d$, the bound $\Omega((1/\epsilon)^m)$ is exponentially smaller than the bound $\Omega((1/\epsilon)^d)$ that would be obtained by ignoring the geometric structure. This is the mathematical formalization of the ``curse of dimensionality'' reduced by the manifold hypothesis.
 \end{remark}
 
 %=======================================================================
-\section{Isometries Between Models of Hyperbolic Space}
-\label{sec:app:hyperbolic-isometries}
+\section{Isometries between Models of Hyperbolic Space}\label{sec:isometrias_hiperbolico}
 %=======================================================================
 
-There are three models of hyperbolic space (hyperboloid, Poincar\'e disc, upper
-half-plane), and they are isometric as Riemannian manifolds. We prove the
-isometries between them explicitly via stereographic projection and the Cayley
-transform.
+In the main chapters, three models of hyperbolic space are presented (hyperboloid, Poincaré disk, upper half-plane) and it is claimed that they are isometric as Riemannian manifolds. In this section we explicitly demonstrate the isometries between them by means of the stereographic projection and the Cayley transform.
 
-\subsection{Preliminaries}
-\label{subsec:app:hyperbolic-prelim}
+\subsection{Preliminaries}\label{subsec:isometrias_preliminares}
 
-\begin{definition}[Riemannian isometry]
-\label{def:app:riemannian-isometry}
-Let $(\mathcal{M}, g)$ and $(\mathcal{N}, h)$ be Riemannian manifolds. A
-diffeomorphism $F \colon \mathcal{M} \to \mathcal{N}$ is a \emph{Riemannian
-isometry} if it preserves the metric, that is, if $F^*h = g$, where the
-\emph{pullback} of the metric is defined by
-\begin{equation}
-\label{eq:app:metric-pullback}
+\begin{definition}[Riemannian isometry]\label{def:isometria_riemanniana}
+Let $(\mathcal{M}, g)$ and $(\mathcal{N}, h)$ be Riemannian manifolds. A diffeomorphism $F: \mathcal{M} \to \mathcal{N}$ is a \textit{Riemannian isometry} if it preserves the metric, that is, if $F^*h = g$, where the \textit{pullback} of the metric is defined by:
+\begin{equation}\label{eq:pullback_metrica}
 (F^*h)_p(v, w) = h_{F(p)}(dF_p(v), dF_p(w))
 \end{equation}
 for all $p \in \mathcal{M}$ and $v, w \in T_p\mathcal{M}$.
 \end{definition}
 
-\begin{remark}
-\label{rem:app:conformal-isometry}
-When both metrics are \emph{conformal}, that is, of the form
-$g_{ij} = \lambda(x)^2 \delta_{ij}$ and $h_{ij} = \mu(y)^2 \delta_{ij}$, checking
-the condition $F^*h = g$ simplifies: it suffices to verify that
+\begin{remark}\label{rem:isometria_conforme}
+When both metrics are \textit{conformal}, that is, of the form $g_{ij} = \lambda(x)^2 \delta_{ij}$ and $h_{ij} = \mu(y)^2 \delta_{ij}$, verifying the condition $F^*h = g$ simplifies: it suffices to check that
 \[
-\mu(F(x))^2 \cdot \norm{dF_x(v)}^2 = \lambda(x)^2 \cdot \norm{v}^2
+\mu(F(x))^2 \cdot \|dF_x(v)\|^2 = \lambda(x)^2 \cdot \|v\|^2
 \]
-for every tangent vector $v$, where $\norm{\cdot}$ is the Euclidean norm. This
-reduces the verification to a scalar identity between the conformal factors. See
-\citet[Chapter~3]{lee2018introduction}.
+for every tangent vector $v$, where $\|\cdot\|$ denotes the Euclidean norm. This reduces the verification to a scalar identity between the conformal factors. See \citet[Chapter~3]{lee2018introduction}.
 \end{remark}
 
-\subsection{From the hyperboloid to the Poincar\'e disc}
-\label{subsec:app:hyperboloid-poincare}
+%-----------------------------------------------------------------------
+\subsection{From the hyperboloid to the Poincaré disk}\label{subsec:isometria_hiperboloide_poincare}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Hyperboloid--Poincar\'e disc isometry]
-\label{thm:app:hyperboloid-poincare}
-Stereographic projection from the south pole of the hyperboloid,
-\begin{equation}
-\label{eq:app:stereographic-hyperboloid}
-\pi \colon \mathbb{H}^n \to \mathbb{D}^n , \qquad
-\pi(x_0, x_1, \ldots, x_n) = \frac{(x_1, \ldots, x_n)}{1 + x_0} ,
+\begin{theorem}[Hyperboloid--Poincaré disk isometry]\label{thm:isometria_hiperboloide_poincare}
+The stereographic projection from the south pole of the hyperboloid:
+\begin{equation}\label{eq:proyeccion_estereografica_hiperboloide}
+\pi: \mathbb{H}^n \to \mathbb{D}^n, \qquad \pi(x_0, x_1, \ldots, x_n) = \frac{(x_1, \ldots, x_n)}{1 + x_0}
 \end{equation}
-is a Riemannian isometry
-$(\mathbb{H}^n, g_{\mathcal{L}}) \to (\mathbb{D}^n, g_{\mathbb{D}})$, where
-$g_{\mathcal{L}}$ is the metric induced by the Lorentz product on the hyperboloid
-and $g_{\mathbb{D}} = \frac{4}{(1-\norm{\mathbf{y}}^2)^2}\delta_{ij}$ is the
-Poincar\'e metric. Its inverse is
-\begin{equation}
-\label{eq:app:inverse-stereographic}
-\pi^{-1}(y_1, \ldots, y_n) = \frac{1}{1 - \norm{\mathbf{y}}^2}
-\bigl(1 + \norm{\mathbf{y}}^2,\; 2y_1,\; \ldots,\; 2y_n\bigr) .
+is a Riemannian isometry $(\mathbb{H}^n, g_{\mathcal{L}}) \to (\mathbb{D}^n, g_{\mathbb{D}})$, where $g_{\mathcal{L}}$ is the metric induced by the Lorentz product on the hyperboloid and $g_{\mathbb{D}} = \frac{4}{(1-\|\mathbf{y}\|^2)^2}\delta_{ij}$ is the Poincaré metric. Its inverse is:
+\begin{equation}\label{eq:inversa_proyeccion_estereografica}
+\pi^{-1}(y_1, \ldots, y_n) = \frac{1}{1 - \|\mathbf{y}\|^2}\bigl(1 + \|\mathbf{y}\|^2,\; 2y_1,\; \ldots,\; 2y_n\bigr)
 \end{equation}
 \end{theorem}
 
@@ -779,132 +473,91 @@ Poincar\'e metric. Its inverse is
 We proceed in several steps.
 
 \textbf{Step 1: Geometric interpretation.}
-The map $\pi$ is the stereographic projection from the point
-$(-1, 0, \ldots, 0)$ (the south pole of the hyperboloid in Minkowski space) onto
-the hyperplane $\{x_0 = 0\} \cong \R^n$. The line joining $(-1, \mathbf{0})$ with
-$(x_0, \mathbf{x}) \in \mathbb{H}^n$ is
-$t \mapsto (-1, \mathbf{0}) + t\bigl((x_0+1), \mathbf{x}\bigr)$, and it meets the
-hyperplane $x_0 = 0$ when $t = \frac{1}{1+x_0}$, giving the point
-$\frac{\mathbf{x}}{1+x_0}$.
+The map $\pi$ is the stereographic projection from the point $(-1, 0, \ldots, 0)$ (south pole of the hyperboloid in Minkowski space) onto the hyperplane $\{x_0 = 0\} \cong \mathbb{R}^n$. The line joining $(-1, \mathbf{0})$ with $(x_0, \mathbf{x}) \in \mathbb{H}^n$ is $t \mapsto (-1, \mathbf{0}) + t\bigl((x_0+1), \mathbf{x}\bigr)$, and it meets the hyperplane $x_0 = 0$ when $t = \frac{1}{1+x_0}$, giving the point $\frac{\mathbf{x}}{1+x_0}$.
 
 \textbf{Step 2: Bijectivity and smoothness.}
-Both $\pi$ and $\pi^{-1}$ are rational functions of their arguments, hence smooth
-on their domains. We verify that $\pi^{-1}$ is well defined: if
-$\norm{\mathbf{y}} < 1$, we must check $\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$.
-Let $s = \norm{\mathbf{y}}^2 < 1$. Then
+Both maps $\pi$ and $\pi^{-1}$ are rational functions of their arguments, so they are smooth on their domains. Let us verify that $\pi^{-1}$ is well defined: if $\|\mathbf{y}\| < 1$, we need to check that $\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$. Let $s = \|\mathbf{y}\|^2 < 1$. Then:
 \[
-\inner{\pi^{-1}(\mathbf{y})}{\pi^{-1}(\mathbf{y})}_{\mathcal{L}}
-= \frac{1}{(1-s)^2}\bigl(-(1+s)^2 + 4s\bigr)
-= \frac{-(1-s)^2}{(1-s)^2} = -1 ,
+\langle \pi^{-1}(\mathbf{y}), \pi^{-1}(\mathbf{y}) \rangle_{\mathcal{L}} = \frac{1}{(1-s)^2}\left(-(1+s)^2 + 4s\right) = \frac{-(1+s)^2 + 4s}{(1-s)^2} = \frac{-(1-s)^2}{(1-s)^2} = -1
 \]
-and the component $x_0 = \frac{1+s}{1-s} > 0$, so
-$\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$.
+and the component $x_0 = \frac{1+s}{1-s} > 0$, so that $\pi^{-1}(\mathbf{y}) \in \mathbb{H}^n$.
 
-For the composition $\pi \circ \pi^{-1}$: given $\mathbf{y} \in \mathbb{D}^n$,
-$\pi^{-1}(\mathbf{y})$ has component
-$x_0 = \frac{1+\norm{\mathbf{y}}^2}{1-\norm{\mathbf{y}}^2}$ and spatial components
-$\frac{2y_i}{1-\norm{\mathbf{y}}^2}$. Then
+For the composition $\pi \circ \pi^{-1}$: given $\mathbf{y} \in \mathbb{D}^n$, $\pi^{-1}(\mathbf{y})$ has component $x_0 = \frac{1+\|\mathbf{y}\|^2}{1-\|\mathbf{y}\|^2}$ and spatial components $\frac{2y_i}{1-\|\mathbf{y}\|^2}$. Then:
 \[
-\pi(\pi^{-1}(\mathbf{y}))
-= \frac{(2y_1, \ldots, 2y_n)/(1-\norm{\mathbf{y}}^2)}
-{1 + (1+\norm{\mathbf{y}}^2)/(1-\norm{\mathbf{y}}^2)}
-= \frac{(2y_1, \ldots, 2y_n)/(1-\norm{\mathbf{y}}^2)}
-{2/(1-\norm{\mathbf{y}}^2)} = \mathbf{y} .
+\pi(\pi^{-1}(\mathbf{y})) = \frac{(2y_1, \ldots, 2y_n)/(1-\|\mathbf{y}\|^2)}{1 + (1+\|\mathbf{y}\|^2)/(1-\|\mathbf{y}\|^2)} = \frac{(2y_1, \ldots, 2y_n)/(1-\|\mathbf{y}\|^2)}{2/(1-\|\mathbf{y}\|^2)} = \mathbf{y}
 \]
 The verification of $\pi^{-1} \circ \pi = \mathrm{id}$ is analogous.
 
 \textbf{Step 3: Relation between norm and coordinates.}
-Let $(x_0, \mathbf{x}) \in \mathbb{H}^n$ and
-$\mathbf{y} = \pi(x_0, \mathbf{x}) = \frac{\mathbf{x}}{1+x_0}$. Using the
-hyperboloid relation $x_0^2 - \norm{\mathbf{x}}^2 = 1$,
-\begin{equation}
-\label{eq:app:norm-y-hyperboloid}
-\norm{\mathbf{y}}^2 = \frac{\norm{\mathbf{x}}^2}{(1+x_0)^2}
-= \frac{x_0^2 - 1}{(1+x_0)^2} = \frac{x_0 - 1}{x_0 + 1} .
+Let $(x_0, \mathbf{x}) \in \mathbb{H}^n$ and $\mathbf{y} = \pi(x_0, \mathbf{x}) = \frac{\mathbf{x}}{1+x_0}$. Using the hyperboloid relation $x_0^2 - \|\mathbf{x}\|^2 = 1$, we compute:
+\begin{equation}\label{eq:norma_y_hiperboloide}
+\|\mathbf{y}\|^2 = \frac{\|\mathbf{x}\|^2}{(1+x_0)^2} = \frac{x_0^2 - 1}{(1+x_0)^2} = \frac{x_0 - 1}{x_0 + 1}
 \end{equation}
-This yields the key identity
-\begin{equation}
-\label{eq:app:conformal-factor-key}
-1 - \norm{\mathbf{y}}^2 = 1 - \frac{x_0 - 1}{x_0 + 1} = \frac{2}{1 + x_0} .
+From this the key identity follows:
+\begin{equation}\label{eq:factor_conforme_clave}
+1 - \|\mathbf{y}\|^2 = 1 - \frac{x_0 - 1}{x_0 + 1} = \frac{2}{1 + x_0}
 \end{equation}
 
 \textbf{Step 4: Computation of the differential.}
-To compute $d\pi$, use intrinsic coordinates $(x_1, \ldots, x_n)$ on
-$\mathbb{H}^n$. The component $x_0$ satisfies $x_0 = \sqrt{1 + \norm{\mathbf{x}}^2}$,
-whence
+To compute $d\pi$, we use intrinsic coordinates $(x_1, \ldots, x_n)$ on $\mathbb{H}^n$. The component $x_0$ satisfies $x_0 = \sqrt{1 + \|\mathbf{x}\|^2}$, whence:
 \[
-dx_0 = \frac{\sum_{i=1}^n x_i \, dx_i}{x_0} .
+dx_0 = \frac{\sum_{i=1}^n x_i \, dx_i}{x_0}
 \]
-Differentiating $y_j = \frac{x_j}{1+x_0}$,
+Differentiating $y_j = \frac{x_j}{1+x_0}$:
 \begin{align}
 dy_j &= \frac{dx_j(1+x_0) - x_j \, dx_0}{(1+x_0)^2} \nonumber \\
-&= \frac{dx_j}{1+x_0} - \frac{x_j}{(1+x_0)^2} \cdot
-\frac{\sum_i x_i \, dx_i}{x_0} . \label{eq:app:differential-pi}
+&= \frac{dx_j}{1+x_0} - \frac{x_j}{(1+x_0)^2} \cdot \frac{\sum_i x_i \, dx_i}{x_0} \label{eq:diferencial_pi}
 \end{align}
 
 \textbf{Step 5: Verification of the isometry.}
-We must check that $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$. The Lorentz-induced
-metric on $\mathbb{H}^n$ with intrinsic coordinates $(x_1, \ldots, x_n)$ is
+We must check that $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$. The metric induced by Lorentz on $\mathbb{H}^n$ with intrinsic coordinates $(x_1, \ldots, x_n)$ is:
 \[
-g_{\mathcal{L}} = -dx_0^2 + \sum_{i=1}^n dx_i^2
-= -\frac{(\sum_i x_i \, dx_i)^2}{x_0^2} + \sum_{i=1}^n dx_i^2 ,
+(g_{\mathcal{L}})_{ij} = \delta_{ij} - \frac{\partial x_0}{\partial x_i} \frac{\partial x_0}{\partial x_j}
 \]
-that is, in components $(g_{\mathcal{L}})_{ij} = \delta_{ij} - \frac{x_i x_j}{x_0^2}$.
-The pullback of the Poincar\'e metric is
+Let us compute directly. The induced Lorentz product gives:
 \[
-(\pi^* g_{\mathbb{D}})_{ij} = \frac{4}{(1-\norm{\mathbf{y}}^2)^2}
-\sum_{k=1}^n \frac{\partial y_k}{\partial x_i} \frac{\partial y_k}{\partial x_j} .
+g_{\mathcal{L}} = -dx_0^2 + \sum_{i=1}^n dx_i^2 = -\frac{(\sum_i x_i \, dx_i)^2}{x_0^2} + \sum_{i=1}^n dx_i^2
 \]
-Using~\eqref{eq:app:conformal-factor-key}, the conformal factor is
-$\frac{4}{(1-\norm{\mathbf{y}}^2)^2} = (1+x_0)^2$. From~\eqref{eq:app:differential-pi},
+In components: $(g_{\mathcal{L}})_{ij} = \delta_{ij} - \frac{x_i x_j}{x_0^2}$.
+
+The pullback of the Poincaré metric is:
 \[
-\frac{\partial y_k}{\partial x_i} = \frac{\delta_{ki}}{1+x_0}
-- \frac{x_k x_i}{x_0(1+x_0)^2} ,
+(\pi^* g_{\mathbb{D}})_{ij} = \frac{4}{(1-\|\mathbf{y}\|^2)^2} \sum_{k=1}^n \frac{\partial y_k}{\partial x_i} \frac{\partial y_k}{\partial x_j}
 \]
-so that
+Using~\eqref{eq:factor_conforme_clave}, the conformal factor is $\frac{4}{(1-\|\mathbf{y}\|^2)^2} = (1+x_0)^2$. We compute $\sum_k \frac{\partial y_k}{\partial x_i}\frac{\partial y_k}{\partial x_j}$ from~\eqref{eq:diferencial_pi}:
 \begin{align*}
-\sum_{k} \frac{\partial y_k}{\partial x_i}\frac{\partial y_k}{\partial x_j}
-&= \frac{\delta_{ij}}{(1+x_0)^2}
-- \frac{2 x_i x_j}{x_0(1+x_0)^3}
-+ \frac{x_i x_j (x_0^2 - 1)}{x_0^2(1+x_0)^4} \\
-&= \frac{\delta_{ij}}{(1+x_0)^2}
-- \frac{2 x_i x_j}{x_0(1+x_0)^3}
-+ \frac{x_i x_j (x_0 - 1)}{x_0^2(1+x_0)^3} \\
-&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i x_j}{x_0^2(1+x_0)^2} ,
+\frac{\partial y_k}{\partial x_i} &= \frac{\delta_{ki}}{1+x_0} - \frac{x_k x_i}{x_0(1+x_0)^2}
 \end{align*}
-where the last step uses
+Then:
+\begin{align*}
+\sum_{k} \frac{\partial y_k}{\partial x_i}\frac{\partial y_k}{\partial x_j} &= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i \sum_k x_k \delta_{kj}}{x_0(1+x_0)^3} - \frac{x_j \sum_k x_k \delta_{ki}}{x_0(1+x_0)^3} + \frac{x_i x_j \|\mathbf{x}\|^2}{x_0^2(1+x_0)^4} \\
+&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{2 x_i x_j}{x_0(1+x_0)^3} + \frac{x_i x_j (x_0^2 - 1)}{x_0^2(1+x_0)^4} \\
+&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{2 x_i x_j}{x_0(1+x_0)^3} + \frac{x_i x_j (x_0 - 1)}{x_0^2(1+x_0)^3} \\
+&= \frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i x_j}{x_0^2(1+x_0)^2}
+\end{align*}
+where in the last step we have used:
 \[
--\frac{2}{x_0(1+x_0)} + \frac{x_0-1}{x_0^2(1+x_0)}
-= \frac{-2x_0 + x_0 - 1}{x_0^2(1+x_0)}
-= \frac{-(x_0+1)}{x_0^2(1+x_0)} = \frac{-1}{x_0^2} .
+-\frac{2}{x_0(1+x_0)} + \frac{x_0-1}{x_0^2(1+x_0)} = \frac{-2x_0 + x_0 - 1}{x_0^2(1+x_0)} = \frac{-(x_0+1)}{x_0^2(1+x_0)} = \frac{-1}{x_0^2}
 \]
-Multiplying by $(1+x_0)^2$,
+Multiplying by $(1+x_0)^2$:
 \[
-(\pi^* g_{\mathbb{D}})_{ij} = (1+x_0)^2 \left(\frac{\delta_{ij}}{(1+x_0)^2}
-- \frac{x_i x_j}{x_0^2(1+x_0)^2}\right)
-= \delta_{ij} - \frac{x_i x_j}{x_0^2} = (g_{\mathcal{L}})_{ij} .
+(\pi^* g_{\mathbb{D}})_{ij} = (1+x_0)^2 \left(\frac{\delta_{ij}}{(1+x_0)^2} - \frac{x_i x_j}{x_0^2(1+x_0)^2}\right) = \delta_{ij} - \frac{x_i x_j}{x_0^2} = (g_{\mathcal{L}})_{ij}
 \]
-This shows $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$, that is, $\pi$ is an
-isometry.
+This shows that $\pi^* g_{\mathbb{D}} = g_{\mathcal{L}}$, that is, $\pi$ is an isometry.
 \end{proof}
 
-\subsection{From the Poincar\'e disc to the upper half-plane}
-\label{subsec:app:poincare-halfplane}
+%-----------------------------------------------------------------------
+\subsection{From the Poincaré disk to the upper half-plane}\label{subsec:isometria_poincare_semiplano}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Poincar\'e disc--upper half-plane isometry]
-\label{thm:app:poincare-halfplane}
-In dimension $n = 2$, the Cayley transform
-\begin{equation}
-\label{eq:app:cayley-transform}
-C \colon \mathbb{D}^2 \to \mathbb{H}^2 , \qquad C(w) = i\,\frac{1+w}{1-w} ,
+\begin{theorem}[Poincaré disk--upper half-plane isometry]\label{thm:isometria_poincare_semiplano}
+In dimension $n = 2$, the Cayley transform:
+\begin{equation}\label{eq:transformada_cayley}
+C: \mathbb{D}^2 \to \mathbb{H}^2, \qquad C(w) = i\,\frac{1+w}{1-w}
 \end{equation}
-is a Riemannian isometry from the Poincar\'e disc
-$(\mathbb{D}^2, g_{\mathbb{D}})$ to the upper half-plane
-$(\mathbb{H}^2, g_{\mathbb{H}})$, where $g_{\mathbb{H}} = \frac{dx^2 + dy^2}{y^2}$.
-Its inverse is
-\begin{equation}
-\label{eq:app:cayley-inverse}
-C^{-1} \colon \mathbb{H}^2 \to \mathbb{D}^2 , \qquad C^{-1}(z) = \frac{z - i}{z + i} .
+is a Riemannian isometry from the Poincaré disk $(\mathbb{D}^2, g_{\mathbb{D}})$ to the upper half-plane $(\mathbb{H}^2, g_{\mathbb{H}})$, where $g_{\mathbb{H}} = \frac{dx^2 + dy^2}{y^2}$. Its inverse is:
+\begin{equation}\label{eq:cayley_inversa}
+C^{-1}: \mathbb{H}^2 \to \mathbb{D}^2, \qquad C^{-1}(z) = \frac{z - i}{z + i}
 \end{equation}
 \end{theorem}
 
@@ -912,1019 +565,721 @@ C^{-1} \colon \mathbb{H}^2 \to \mathbb{D}^2 , \qquad C^{-1}(z) = \frac{z - i}{z 
 We proceed in four steps.
 
 \textbf{Step 1: Well-definedness ($C(\mathbb{D}^2) \subseteq \mathbb{H}^2$).}
-Let $w \in \mathbb{D}^2$, that is, $\abs{w} < 1$. We must verify
-$\Img(C(w)) > 0$. A direct computation gives
+Let $w \in \mathbb{D}^2$, that is, $|w| < 1$. We need to verify that $\operatorname{Im}(C(w)) > 0$. Writing $w = u + iv$:
+\begin{equation}\label{eq:parte_imaginaria_cayley}
+\operatorname{Im}(C(w)) = \operatorname{Im}\!\left(i\,\frac{1+w}{1-w}\right) = \operatorname{Re}\!\left(\frac{1+w}{1-w}\right)
+\end{equation}
+To simplify, we compute directly:
 \[
-\frac{1+w}{1-w} = \frac{(1+w)(1-\bar{w})}{\abs{1-w}^2}
-= \frac{1 - \bar{w} + w - \abs{w}^2}{\abs{1-w}^2} ,
+\frac{1+w}{1-w} = \frac{(1+w)\overline{(1-w)}}{|1-w|^2} = \frac{(1+w)(1-\bar{w})}{|1-w|^2} = \frac{1 - \bar{w} + w - |w|^2}{|1-w|^2}
 \]
-hence
+Then:
 \[
-\Img(C(w)) = \operatorname{Re}\!\left(\frac{1+w}{1-w}\right)
-= \frac{1 - \abs{w}^2}{\abs{1-w}^2} .
+\operatorname{Im}(C(w)) = \operatorname{Re}\!\left(\frac{1+w}{1-w}\right) = \frac{1 - |w|^2}{|1-w|^2}
 \]
-Since $\abs{w} < 1$, we have $1 - \abs{w}^2 > 0$ and $\abs{1-w}^2 > 0$, so
-$\Img(C(w)) > 0$.
+Since $|w| < 1$, we have $1 - |w|^2 > 0$ and $|1-w|^2 > 0$, so that $\operatorname{Im}(C(w)) > 0$.
 
 \textbf{Step 2: Bijectivity.}
-For $C^{-1}(z) = \frac{z-i}{z+i}$ with $\Img(z) > 0$, writing $z = a + bi$ with
-$b > 0$,
+For $C^{-1}(z) = \frac{z-i}{z+i}$ with $\operatorname{Im}(z) > 0$, we write $z = a + bi$ with $b > 0$:
 \[
-\abs{C^{-1}(z)}^2 = \frac{\abs{z-i}^2}{\abs{z+i}^2}
-= \frac{a^2 + (b-1)^2}{a^2 + (b+1)^2}
-= \frac{a^2 + b^2 - 2b + 1}{a^2 + b^2 + 2b + 1} < 1 ,
+|C^{-1}(z)|^2 = \frac{|z-i|^2}{|z+i|^2} = \frac{a^2 + (b-1)^2}{a^2 + (b+1)^2} = \frac{a^2 + b^2 - 2b + 1}{a^2 + b^2 + 2b + 1} < 1
 \]
-since $-2b < 2b$ when $b > 0$. Hence $C^{-1}(z) \in \mathbb{D}^2$. The
-compositions $C \circ C^{-1} = \mathrm{id}$ and $C^{-1} \circ C = \mathrm{id}$
-are verified by direct computation.
+since $-2b < 2b$ when $b > 0$. Hence $C^{-1}(z) \in \mathbb{D}^2$. The compositions $C \circ C^{-1} = \mathrm{id}$ and $C^{-1} \circ C = \mathrm{id}$ are verified by direct computation.
 
 \textbf{Step 3: Differential.}
-The complex derivative of $C$ is
-\begin{equation}
-\label{eq:app:cayley-derivative}
-C'(w) = i \cdot \frac{(1-w) - (1+w)(-1)}{(1-w)^2} = \frac{2i}{(1-w)^2} .
+The complex derivative of $C$ is:
+\begin{equation}\label{eq:derivada_cayley}
+C'(w) = i \cdot \frac{(1-w) - (1+w)(-1)}{(1-w)^2} = \frac{2i}{(1-w)^2}
 \end{equation}
 
 \textbf{Step 4: Verification of the isometry.}
-For a holomorphic map $C$ between surfaces with conformal metrics, the pullback is
+For a holomorphic transformation $C$ between surfaces with conformal metrics, the pullback is computed by:
 \[
-(C^* g_{\mathbb{H}})_w = \frac{\abs{C'(w)}^2}{(\Img C(w))^2} \cdot (du^2 + dv^2) ,
+(C^* g_{\mathbb{H}})_w = \frac{|C'(w)|^2}{(\operatorname{Im}\, C(w))^2} \cdot (du^2 + dv^2)
 \]
-where $w = u + iv$. Substituting the results of the previous steps,
+where $w = u + iv$. Substituting the results of the previous steps:
 \[
-\frac{\abs{C'(w)}^2}{(\Img C(w))^2}
-= \frac{4/\abs{1-w}^4}{(1-\abs{w}^2)^2/\abs{1-w}^4}
-= \frac{4}{(1-\abs{w}^2)^2} ,
+\frac{|C'(w)|^2}{(\operatorname{Im}\, C(w))^2} = \frac{4/|1-w|^4}{(1-|w|^2)^2/|1-w|^4} = \frac{4}{(1-|w|^2)^2}
 \]
-which is exactly the conformal factor of the Poincar\'e metric
-$g_{\mathbb{D}} = \frac{4}{(1-\abs{w}^2)^2}(du^2 + dv^2)$. Therefore
-$C^* g_{\mathbb{H}} = g_{\mathbb{D}}$.
+which is exactly the conformal factor of the Poincaré metric $g_{\mathbb{D}} = \frac{4}{(1-|w|^2)^2}(du^2 + dv^2)$. Therefore $C^* g_{\mathbb{H}} = g_{\mathbb{D}}$.
 \end{proof}
 
-\subsection{Equivalence of the three models}
-\label{subsec:app:three-models}
+%-----------------------------------------------------------------------
+\subsection{Equivalence of the three models}\label{subsec:equivalencia_modelos}
+%-----------------------------------------------------------------------
 
-\begin{corollary}[Equivalence of the three hyperbolic models]
-\label{cor:app:hyperbolic-equivalence}
-The three models of hyperbolic space (hyperboloid, Poincar\'e disc, and upper
-half-plane) are Riemannian isometric. In particular, the composition
-$C \circ \pi$ provides an explicit isometry from the hyperboloid model to the
-upper half-plane.
+\begin{corollary}[Equivalence of the three hyperbolic models]\label{cor:equivalencia_modelos_hiperbolicos}
+The three models of hyperbolic space (hyperboloid, Poincaré disk and upper half-plane) are Riemannianly isometric. In particular, the composition $C \circ \pi$ provides an explicit isometry from the hyperboloid model to the upper half-plane.
 \end{corollary}
 
 \begin{proof}
-A composition of the isometries of
-\Cref{thm:app:hyperboloid-poincare,thm:app:poincare-halfplane}: since the
-composition of isometries is an isometry,
-$C \circ \pi \colon (\mathbb{H}^n, g_{\mathcal{L}}) \to
-(\mathbb{D}^n, g_{\mathbb{D}}) \to (\mathbb{H}^2, g_{\mathbb{H}})$ is an isometry
-(in dimension $n = 2$ for the half-plane).
+Composition of Theorems~\ref{thm:isometria_hiperboloide_poincare} and~\ref{thm:isometria_poincare_semiplano}: since the composition of isometries is an isometry, $C \circ \pi: (\mathbb{H}^n, g_{\mathcal{L}}) \to (\mathbb{D}^n, g_{\mathbb{D}}) \to (\mathbb{H}^2, g_{\mathbb{H}})$ is an isometry (in dimension $n = 2$ for the half-plane).
 \end{proof}
 
-\begin{remark}[Implications for geometric deep learning]
-\label{rem:app:models-gdl}
-The isometric equivalence of the three models justifies treating the choice of
-model in GDL applications as a matter of computational convenience:
+\begin{remark}[Implications for Geometric Deep Learning]\label{rem:modelos_gdl}
+The isometric equivalence of the three models justifies that the choice of model in GDL applications is a matter of computational convenience:
 \begin{itemize}
-    \item The \textbf{Poincar\'e disc} $\mathbb{D}^n$ is preferred for
-          gradient-based optimization, since the exponential and logarithmic maps
-          admit closed-form expressions~\citep{nickel2017poincare}.
-    \item The \textbf{hyperboloid model} offers greater numerical stability,
-          since the conformal factor $\frac{4}{(1-\norm{\mathbf{x}}^2)^2}$ of the
-          Poincar\'e disc diverges as $\norm{\mathbf{x}} \to 1$ (near the boundary
-          of the disc), whereas the induced Lorentz metric has no such
-          singularity.
-    \item The transformation $\pi$ of \Cref{thm:app:hyperboloid-poincare} is
-          precisely the map used in practice to convert between representations.
+    \item The \textbf{Poincaré disk} $\mathbb{D}^n$ is preferred for gradient optimization, since the exponential and logarithmic maps admit closed-form expressions \citep{nickel2017poincare}.
+    \item The \textbf{hyperboloid model} offers greater numerical stability, since the conformal factor $\frac{4}{(1-\|\mathbf{x}\|^2)^2}$ of the Poincaré disk diverges as $\|\mathbf{x}\| \to 1$ (near the boundary of the disk), whereas the induced Lorentz metric does not exhibit this singularity.
+    \item The transformation $\pi$ of \autoref{thm:isometria_hiperboloide_poincare} is precisely the mapping used in practice to convert between representations (\autoref{def:modelo_poincare}).
 \end{itemize}
 \end{remark}
 
 %=======================================================================
-\section{Sectional Curvature of the Model Spaces}
-\label{sec:app:model-curvature}
+\section{Sectional Curvature of the Model Spaces}\label{sec:curvatura_espacios_modelo}
 %=======================================================================
 
-The sphere $S^n$ has constant sectional curvature $+1$ and hyperbolic space
-$\mathbb{H}^n$ has constant sectional curvature $-1$. We prove both results by
-applying the definition of sectional curvature to the explicit metrics of these
-spaces.
+In the main chapters it is claimed that the sphere $S^n$ has constant sectional curvature $+1$ and that the hyperbolic space $\mathbb{H}^n$ has constant sectional curvature $-1$. In this section we demonstrate both results by applying the definition of sectional curvature (\autoref{def:curvatura_seccional}) to the explicit metrics of these spaces.
 
-\subsection{Preliminaries}
-\label{subsec:app:model-curvature-prelim}
+\subsection{Preliminaries}\label{subsec:curvatura_espacios_preliminares}
 
-\begin{lemma}[Gauss equation for hypersurfaces]
-\label{lem:app:gauss-equation}
-Let $M^n \subset \R^{n+1}$ be an oriented hypersurface with unit normal $\nu$,
-and let $S_p \colon T_pM \to T_pM$ be the \emph{shape operator} (Weingarten map)
-$S_p(v) = -d\nu_p(v)$. The second fundamental form is
-$\II(u, v) = \inner{S_p(u)}{v}$. If $u, v \in T_pM$ are orthonormal, then the
-sectional curvature of $M$ in the plane spanned by $\{u, v\}$ satisfies
-\begin{equation}
-\label{eq:app:gauss-equation}
-K_M(u,v) = K_{\R^{n+1}}(u,v) + \II(u,u)\,\II(v,v) - \II(u,v)^2 .
+\begin{lemma}[Gauss equation for hypersurfaces]\label{lem:ecuacion_gauss}
+Let $M^n \subset \mathbb{R}^{n+1}$ be an oriented hypersurface with unit normal vector $\nu$, and let $S_p: T_pM \to T_pM$ be the \textit{shape operator} (or Weingarten operator) defined by $S_p(v) = -d\nu_p(v)$. The second fundamental form is $\mathrm{II}(u, v) = \langle S_p(u), v \rangle$. If $u, v \in T_pM$ are orthonormal, then the sectional curvature of $M$ on the plane spanned by $\{u, v\}$ satisfies:
+\begin{equation}\label{eq:ecuacion_gauss}
+K_M(u,v) = K_{\mathbb{R}^{n+1}}(u,v) + \mathrm{II}(u,u)\,\mathrm{II}(v,v) - \mathrm{II}(u,v)^2
 \end{equation}
-Since $\R^{n+1}$ is flat ($K_{\R^{n+1}} \equiv 0$), this reduces to
-\begin{equation}
-\label{eq:app:gauss-simplified}
-K_M(u,v) = \II(u,u)\,\II(v,v) - \II(u,v)^2 .
+Since $\mathbb{R}^{n+1}$ is flat ($K_{\mathbb{R}^{n+1}} \equiv 0$), it reduces to:
+\begin{equation}\label{eq:gauss_simplificada}
+K_M(u,v) = \mathrm{II}(u,u)\,\mathrm{II}(v,v) - \mathrm{II}(u,v)^2
 \end{equation}
 \end{lemma}
 
-The proof can be found in \citet[Theorem~8.4]{lee2018introduction} or in
-\citet[Chapter~3, Proposition~4]{do1976differential}.
+The proof can be found in \citet[Theorem~8.4]{lee2018introduction} or in \citet[Chapter~3, Proposition~4]{do1976differential}.
 
-\begin{lemma}[Curvature of conformal metrics in dimension 2]
-\label{lem:app:conformal-curvature-2d}
-Let $g = \lambda(x,y)^2(dx^2 + dy^2)$ be a conformal metric on a domain of
-$\R^2$, where $\lambda > 0$ is smooth. Then the Gaussian curvature of
-$(\R^2, g)$ is
-\begin{equation}
-\label{eq:app:conformal-curvature}
-K = -\frac{\Delta(\ln \lambda)}{\lambda^2} ,
+\begin{lemma}[Curvature of conformal metrics in dimension 2]\label{lem:curvatura_conforme_2d}
+Let $g = \lambda(x,y)^2(dx^2 + dy^2)$ be a conformal metric on a domain of $\mathbb{R}^2$, where $\lambda > 0$ is a smooth function. Then the Gaussian curvature of $(\mathbb{R}^2, g)$ is:
+\begin{equation}\label{eq:curvatura_conforme}
+K = -\frac{\Delta(\ln \lambda)}{\lambda^2}
 \end{equation}
 where $\Delta = \partial_{xx} + \partial_{yy}$ is the Euclidean Laplacian.
 \end{lemma}
 
 \begin{proof}
-For the metric $g_{ij} = \lambda^2 \delta_{ij}$, the Christoffel symbols are
+For the metric $g_{ij} = \lambda^2 \delta_{ij}$, the Christoffel symbols are:
 \[
-\Gamma^k_{ij} = (\partial_i \ln\lambda)\,\delta_{jk}
-+ (\partial_j \ln\lambda)\,\delta_{ik} - (\partial_k \ln\lambda)\,\delta_{ij} .
+\Gamma^k_{ij} = (\partial_i \ln\lambda)\,\delta_{jk} + (\partial_j \ln\lambda)\,\delta_{ik} - (\partial_k \ln\lambda)\,\delta_{ij}
 \]
-Substituting into the expression for the Riemann tensor $R^l{}_{ijk}$ and
-contracting to obtain the Gaussian curvature $K = R^1{}_{212}/\lambda^2$, a direct
-computation gives~\eqref{eq:app:conformal-curvature}. The details can be found in
-\citet[Proposition~8.32]{lee2018introduction}.
+Substituting into the expression for the Riemann tensor $R^l{}_{ijk}$ and contracting to obtain the Gaussian curvature $K = R^1{}_{212}/\lambda^2$, a direct computation gives~\eqref{eq:curvatura_conforme}. The details can be consulted in \citet[Proposition~8.32]{lee2018introduction}.
 \end{proof}
 
-\subsection{Curvature of the sphere \texorpdfstring{$S^n$}{Sn}}
-\label{subsec:app:sphere-curvature}
+%-----------------------------------------------------------------------
+\subsection{Curvature of the sphere \texorpdfstring{$S^n$}{Sn}}\label{subsec:curvatura_esfera}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Sectional curvature of the sphere]
-\label{thm:app:sphere-curvature}
-The unit sphere $S^n \subset \R^{n+1}$ with the Riemannian metric induced by the
-ambient Euclidean metric has constant sectional curvature $K = +1$.
+\begin{theorem}[Sectional curvature of the sphere]\label{thm:curvatura_esfera}
+The unit sphere $S^n \subset \mathbb{R}^{n+1}$ with the Riemannian metric induced by the ambient Euclidean metric has constant sectional curvature $K = +1$.
 \end{theorem}
 
 \begin{proof}
-Consider $S^n = \{p \in \R^{n+1} : \norm{p} = 1\}$ with the metric induced by
-$\R^{n+1}$.
+We consider $S^n = \{p \in \mathbb{R}^{n+1} : \|p\| = 1\}$ with the metric induced by $\mathbb{R}^{n+1}$.
 
 \textbf{Step 1: Unit normal.}
 The outward unit normal field is $\nu(p) = p$ for all $p \in S^n$.
 
 \textbf{Step 2: Shape operator.}
-For $v \in T_pS^n$, consider the curve
-$\gamma(t) = \frac{p + tv}{\norm{p + tv}}$ on $S^n$ with $\gamma(0) = p$ and
-$\gamma'(0) = v$ (since $\inner{p}{v} = 0$). Then
-$\nu(\gamma(t)) = \gamma(t) = \frac{p + tv}{\norm{p + tv}}$, and differentiating
-at $t = 0$,
+For $v \in T_pS^n$, we consider the curve $\gamma(t) = \frac{p + tv}{\|p + tv\|}$ in $S^n$ with $\gamma(0) = p$ and $\gamma'(0) = v$ (since $\langle p, v \rangle = 0$). Then:
 \[
-d\nu_p(v) = \frac{d}{dt}\bigg|_{t=0} \frac{p + tv}{\norm{p + tv}} = v ,
+\nu(\gamma(t)) = \gamma(t) = \frac{p + tv}{\|p + tv\|}
 \]
-since $\norm{p + tv}^2 = 1 + t^2\norm{v}^2$ implies
-$\frac{d}{dt}\norm{p+tv}\big|_{t=0} = 0$. Hence the shape operator is
-$S_p = -d\nu_p = -\operatorname{Id}_{T_pS^n}$.
+Differentiating at $t = 0$:
+\[
+d\nu_p(v) = \frac{d}{dt}\bigg|_{t=0} \frac{p + tv}{\|p + tv\|} = v
+\]
+since $\|p + tv\|^2 = 1 + t^2\|v\|^2$ implies $\frac{d}{dt}\|p+tv\|\big|_{t=0} = 0$. Therefore, the shape operator is $S_p = -d\nu_p = -\operatorname{Id}_{T_pS^n}$.
 
 \textbf{Step 3: Second fundamental form.}
-For orthonormal $u, v \in T_pS^n$,
+For $u, v \in T_pS^n$ orthonormal:
 \[
-\II(u,u) = \inner{S_p(u)}{u} = \inner{-u}{u} = -1 , \quad
-\II(v,v) = -1 , \quad \II(u,v) = \inner{-u}{v} = 0 .
+\mathrm{II}(u,u) = \langle S_p(u), u \rangle = \langle -u, u \rangle = -1, \qquad \mathrm{II}(v,v) = -1, \qquad \mathrm{II}(u,v) = \langle -u, v \rangle = 0
 \]
 
 \textbf{Step 4: Gauss equation.}
-Applying \Cref{lem:app:gauss-equation},
+Applying \autoref{lem:ecuacion_gauss}:
 \[
-K(u,v) = (-1)(-1) - 0^2 = 1 .
+K(u,v) = (-1)(-1) - 0^2 = 1
 \]
-Since the choice of $p \in S^n$ and of the $2$-plane $\{u,v\}$ is arbitrary,
-$K \equiv +1$.
+Since the choice of $p \in S^n$ and of the 2-plane $\{u,v\}$ is arbitrary, $K \equiv +1$.
 \end{proof}
 
-\subsection{Curvature of hyperbolic space \texorpdfstring{$\mathbb{H}^n$}{Hn}}
-\label{subsec:app:hyperbolic-curvature}
+%-----------------------------------------------------------------------
+\subsection{Curvature of hyperbolic space \texorpdfstring{$\mathbb{H}^n$}{Hn}}\label{subsec:curvatura_hiperbolico}
+%-----------------------------------------------------------------------
 
-\begin{theorem}[Sectional curvature of hyperbolic space]
-\label{thm:app:hyperbolic-curvature}
-The Poincar\'e disc $(\mathbb{D}^n, g_{\mathbb{D}})$ with metric
-$g_{\mathbb{D}} = \frac{4}{(1-\norm{\mathbf{x}}^2)^2}\delta_{ij}$ has constant
-sectional curvature $K = -1$.
+\begin{theorem}[Sectional curvature of hyperbolic space]\label{thm:curvatura_hiperbolico}
+The Poincaré disk $(\mathbb{D}^n, g_{\mathbb{D}})$ with the metric $g_{\mathbb{D}} = \frac{4}{(1-\|\mathbf{x}\|^2)^2}\delta_{ij}$ has constant sectional curvature $K = -1$.
 \end{theorem}
 
 \begin{proof}
-We proceed in two parts: first an explicit computation of the curvature in
-dimension $2$, then an extension to arbitrary dimension.
+We proceed in two parts: first we explicitly compute the curvature in dimension 2 and then we extend the result to arbitrary dimension.
 
 \textbf{Part 1: Dimension 2 (explicit computation).}
-On $\mathbb{D}^2$ the metric is conformal with factor
-$\lambda(x,y) = \frac{2}{1 - r^2}$, where $r^2 = x^2 + y^2$. We compute
-$\ln\lambda = \ln 2 - \ln(1 - r^2)$ and
+In $\mathbb{D}^2$, the metric is conformal with factor $\lambda(x,y) = \frac{2}{1 - r^2}$, where $r^2 = x^2 + y^2$. We compute:
 \[
-\partial_x(\ln\lambda) = \frac{2x}{1 - r^2} , \qquad
-\partial_{xx}(\ln\lambda) = \frac{2(1-r^2) + 4x^2}{(1-r^2)^2} .
+\ln\lambda = \ln 2 - \ln(1 - r^2)
 \]
-By symmetry, $\partial_{yy}(\ln\lambda) = \frac{2(1-r^2) + 4y^2}{(1-r^2)^2}$.
-Summing,
+Differentiating with respect to $x$:
 \[
-\Delta(\ln\lambda) = \frac{4(1-r^2) + 4r^2}{(1-r^2)^2} = \frac{4}{(1-r^2)^2} .
+\partial_x(\ln\lambda) = \frac{2x}{1 - r^2}
 \]
-Applying \Cref{lem:app:conformal-curvature-2d},
 \[
-K = -\frac{\Delta(\ln\lambda)}{\lambda^2}
-= -\frac{4/(1-r^2)^2}{4/(1-r^2)^2} = -1 .
+\partial_{xx}(\ln\lambda) = \frac{2(1-r^2) + 4x^2}{(1-r^2)^2}
+\]
+By symmetry, $\partial_{yy}(\ln\lambda) = \frac{2(1-r^2) + 4y^2}{(1-r^2)^2}$. Summing:
+\[
+\Delta(\ln\lambda) = \frac{4(1-r^2) + 4r^2}{(1-r^2)^2} = \frac{4}{(1-r^2)^2}
+\]
+Applying \autoref{lem:curvatura_conforme_2d}:
+\[
+K = -\frac{\Delta(\ln\lambda)}{\lambda^2} = -\frac{4/(1-r^2)^2}{4/(1-r^2)^2} = -1
 \]
 
 \textbf{Part 2: Extension to dimension $n$ (symmetry argument).}
-The metric $g_{\mathbb{D}}$ is invariant under the action of $\Orth(n)$ by
-rotations of $\mathbf{x}$ (since $g_{\mathbb{D}}$ depends only on
-$\norm{\mathbf{x}}$). At any point $p \in \mathbb{D}^n$, the stabilizer of $p$
-under this action acts transitively on the $2$-planes of $T_p\mathbb{D}^n$ that
-contain the radial direction, and by composition with rotations, on all
-$2$-planes. Hence all sectional curvatures at $p$ are equal.
+The metric $g_{\mathbb{D}}$ is invariant under the action of $O(n)$ by rotations of $\mathbf{x}$ (since $g_{\mathbb{D}}$ depends only on $\|\mathbf{x}\|$). At any point $p \in \mathbb{D}^n$, the stabilizer of $p$ under this action acts transitively on the 2-planes of $T_p\mathbb{D}^n$ that contain the radial direction, and by composition with rotations, on all 2-planes. This implies that all sectional curvatures at $p$ are equal.
 
-The subspace $\Pi = \{x \in \mathbb{D}^n : x_3 = \cdots = x_n = 0\}$ is a totally
-geodesic submanifold isometric to $(\mathbb{D}^2, g_{\mathbb{D}^2})$: the
-reflection $\sigma \colon x_i \mapsto -x_i$ for $i \geq 3$ is an isometry of
-$(\mathbb{D}^n, g_{\mathbb{D}})$ whose fixed-point set is $\Pi$, and the
-fixed-point set of an isometry is totally geodesic
-\citep[Proposition~5.21]{lee2018introduction}. By Part~1, the sectional curvature
-on $\Pi$ is $-1$, so $K = -1$ for all $2$-planes at each point of $\Pi$.
+The subspace $\Pi = \{x \in \mathbb{D}^n : x_3 = \cdots = x_n = 0\}$ is a totally geodesic submanifold isometric to $(\mathbb{D}^2, g_{\mathbb{D}^2})$: the reflection $\sigma: x_i \mapsto -x_i$ for $i \geq 3$ is an isometry of $(\mathbb{D}^n, g_{\mathbb{D}})$ whose fixed point set is $\Pi$, and the fixed point set of an isometry is totally geodesic \citep[Proposition~5.21]{lee2018introduction}. By Part~1, the sectional curvature on $\Pi$ is $-1$, hence $K = -1$ for all 2-planes at each point of $\Pi$.
 
-Finally, the Poincar\'e metric is homogeneous: M\"obius transformations provide
-isometries carrying any point of $\mathbb{D}^n$ to any other
-\citep{nickel2017poincare}. Therefore $K = -1$ throughout $\mathbb{D}^n$.
+Finally, the Poincaré metric is homogeneous: Möbius transformations provide isometries that take any point of $\mathbb{D}^n$ to any other \citep{nickel2017poincare}. Therefore, $K = -1$ throughout $\mathbb{D}^n$.
 \end{proof}
 
-\begin{corollary}
-\label{cor:app:hyperbolic-models-curvature}
-By \Cref{thm:app:hyperboloid-poincare,thm:app:poincare-halfplane}, the
-hyperboloid model $(\mathbb{H}^n, g_{\mathcal{L}})$ and the upper half-plane
-$(\mathbb{H}^2, g_{\mathbb{H}})$ also have constant sectional curvature
-$K = -1$.
+\begin{corollary}\label{cor:curvatura_modelos_hiperbolicos}
+By Theorems~\ref{thm:isometria_hiperboloide_poincare} and~\ref{thm:isometria_poincare_semiplano}, the hyperboloid model $(\mathbb{H}^n, g_{\mathcal{L}})$ and the upper half-plane model $(\mathbb{H}^2, g_{\mathbb{H}})$ also have constant sectional curvature $K = -1$.
 \end{corollary}
 
 \begin{proof}
-Isometries preserve sectional curvature: if $F \colon (M, g) \to (N, h)$ is a
-Riemannian isometry, then $K_M(\sigma) = K_N(dF(\sigma))$ for every $2$-plane
-$\sigma \subset T_pM$. The result follows from
-\Cref{thm:app:hyperbolic-curvature} and the explicit isometries of
-\Cref{sec:app:hyperbolic-isometries}.
+Isometries preserve sectional curvature: if $F: (M, g) \to (N, h)$ is a Riemannian isometry, then $K_M(\sigma) = K_N(dF(\sigma))$ for every 2-plane $\sigma \subset T_pM$. The result follows from \autoref{thm:curvatura_hiperbolico} and the explicit isometries of Appendix~\ref{sec:isometrias_hiperbolico}.
 \end{proof}
 
 %=======================================================================
-\section{Lagrange's Theorem}
-\label{sec:app:lagrange}
+\section{Lagrange's Theorem}\label{sec:lagrange}
 %=======================================================================
 
-Lagrange's theorem is a fundamental result of finite group theory relating the
-order of a group to the orders of its subgroups. Although its proof is
-elementary, we include the details for completeness.
+Lagrange's theorem is a fundamental result of finite group theory that relates the order of a group to the order of its subgroups. Although its proof is elementary, we include the details for completeness.
 
-\begin{theorem}[Lagrange]
-\label{thm:app:lagrange}
-Let $\group$ be a finite group and $H \leq \group$ a subgroup. Then $\abs{H}$
-divides $\abs{\group}$, and
+\begin{theorem}[Lagrange]\label{thm:lagrange}
+Let $G$ be a finite group and $H \leq G$ a subgroup. Then $|H|$ divides $|G|$, and it holds that:
 \begin{equation}
-\label{eq:app:lagrange}
-\abs{\group} = \abs{H} \cdot [\group:H] ,
+|G| = |H| \cdot [G:H]
 \end{equation}
-where $[\group:H]$ denotes the index of $H$ in $\group$ (the number of left
-cosets of $H$ in $\group$).
+where $[G:H]$ denotes the index of $H$ in $G$ (the number of left cosets of $H$ in $G$).
 \end{theorem}
 
 \begin{proof}
-Define an equivalence relation on $\group$ by $a \sim b$ if and only if
-$a^{-1}b \in H$. The equivalence classes are the left cosets
-$g H = \{gh : h \in H\}$ for $g \in \group$.
+We define the equivalence relation on $G$: $a \sim b$ if and only if $a^{-1}b \in H$. The equivalence classes are the left cosets $gH = \{gh : h \in H\}$ for $g \in G$.
 
-\textbf{Step 1.} Each coset has exactly $\abs{H}$ elements. Indeed, the map
-$\varphi_g \colon H \to gH$ given by $\varphi_g(h) = gh$ is bijective: surjective
-by construction, and injective because $gh_1 = gh_2$ implies $h_1 = h_2$ by the
-cancellation law.
+\textbf{Step 1:} Each coset has exactly $|H|$ elements. Indeed, the map $\varphi_g: H \to gH$ defined by $\varphi_g(h) = gh$ is bijective: it is surjective by construction, and injective because $gh_1 = gh_2$ implies $h_1 = h_2$ by the cancellation law.
 
-\textbf{Step 2.} The cosets partition $\group$. This is a direct consequence of
-$\sim$ being an equivalence relation.
+\textbf{Step 2:} The cosets form a partition of $G$. This is a direct consequence of the fact that $\sim$ is an equivalence relation.
 
-\textbf{Step 3.} If $[\group:H]$ denotes the number of distinct cosets, then
+\textbf{Step 3:} If we denote by $[G:H]$ the number of distinct cosets, then:
 \[
-\abs{\group} = [\group:H] \cdot \abs{H} ,
+|G| = [G:H] \cdot |H|
 \]
-since $\group$ decomposes into exactly $[\group:H]$ disjoint sets, each of
-cardinality $\abs{H}$. In particular, $\abs{H}$ divides $\abs{\group}$.
+since $G$ decomposes into exactly $[G:H]$ disjoint sets, each of cardinality $|H|$.
+
+In particular, $|H|$ divides $|G|$.
 \end{proof}
 
 %=======================================================================
-\section{Rad\'o's Theorem (Triangulability of Surfaces)}
-\label{sec:app:rado}
+\section{Quaternions and their Relation to SU(2)}\label{sec:cuaterniones}
 %=======================================================================
 
-Rad\'o's theorem states that every compact surface admits a triangulation, a
-result fundamental both for the proof of the Gauss--Bonnet theorem
-(\Cref{thm:app:gauss-bonnet-general}) and for applications of geometric deep
-learning on triangulated meshes.
+Quaternions, discovered by W.\,R.\ Hamilton in 1843, constitute the first non-commutative extension of the real numbers with a division algebra structure. Their relation to $SU(2)$ and three-dimensional rotations makes them a fundamental tool both in physics and in geometric neural networks.
 
-\subsection{Preliminaries}
-\label{subsec:app:rado-prelim}
+\begin{definition}[Quaternion algebra]\label{def:cuaterniones}
+The \textit{quaternion algebra} $\mathbb{H}$ is the associative $\mathbb{R}$-algebra of dimension $4$ with basis $\{1, \mathbf{i}, \mathbf{j}, \mathbf{k}\}$ and multiplication relations:
+\begin{equation}\label{eq:relaciones_cuaterniones}
+\mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1
+\end{equation}
+A general quaternion is written as $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k}$ with $a, b, c, d \in \mathbb{R}$. The part $a = \operatorname{Re}(q)$ is called the \textit{real part} and $b\mathbf{i} + c\mathbf{j} + d\mathbf{k} = \operatorname{Im}(q)$ the \textit{imaginary part}.
+\end{definition}
 
-Recall that a \emph{topological $2$-manifold} (or \emph{surface}) is a
-topological space $M$ that is Hausdorff, second countable, and such that every
-point $p \in M$ has a neighbourhood homeomorphic to an open subset of $\R^2$. The
-following classical result of planar topology is a key tool in the proof.
+From relations~\eqref{eq:relaciones_cuaterniones} the multiplication rules of the generators follow:
+\[
+\mathbf{i}\mathbf{j} = \mathbf{k}, \quad \mathbf{j}\mathbf{k} = \mathbf{i}, \quad \mathbf{k}\mathbf{i} = \mathbf{j}, \qquad \mathbf{j}\mathbf{i} = -\mathbf{k}, \quad \mathbf{k}\mathbf{j} = -\mathbf{i}, \quad \mathbf{i}\mathbf{k} = -\mathbf{j}.
+\]
+Thus, quaternion multiplication is associative but \emph{not commutative}.
 
-\begin{theorem}[Jordan--Schoenflies theorem]
-\label{thm:app:jordan-schoenflies}
-Every homeomorphism $h \colon S^1 \to \R^2$ whose image is a Jordan curve
-$\mathcal{C}$ extends to a homeomorphism
-$H \colon \overline{D}^2 \to \overline{U}$, where $D^2$ is the open unit disc and
-$U$ is the bounded component of $\R^2 \setminus \mathcal{C}$.
-\end{theorem}
-
-For a proof, see \citet[Chapter~4]{moise1977geometric}.
-
-\subsection{Formal statement}
-\label{subsec:app:rado-statement}
-
-\begin{theorem}[Rad\'o's theorem, 1925]
-\label{thm:app:rado}
-Every compact topological $2$-manifold admits a triangulation. That is, if $M$
-is a compact surface, there exist a simplicial complex $\mathcal{K}$ and a
-homeomorphism $h \colon \abs{\mathcal{K}} \to M$.
-\end{theorem}
-
-\begin{remark}[Triangulability in higher dimensions]
-\label{rem:app:triangulability-dimensions}
-Triangulability of manifolds depends crucially on the dimension:
+\begin{definition}[Conjugation and norm]\label{def:conjugacion_norma_cuaterniones}
+For $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k} \in \mathbb{H}$, we define:
 \begin{itemize}
-    \item \textbf{Dimension 2}: Every compact surface is triangulable
-          (\Cref{thm:app:rado}).
-    \item \textbf{Dimension 3}: \citet{moise1977geometric} proved in 1952 that
-          every compact $3$-manifold admits a triangulation, a considerably
-          harder result.
-    \item \textbf{Dimension $\geq 4$}: There exist non-triangulable compact
-          topological manifolds. Casson's result (based on Freedman's work on
-          $4$-manifolds) shows that the manifold $E_8$ admits no triangulation at
-          all.
+    \item The \textit{conjugate}: $\bar{q} = a - b\mathbf{i} - c\mathbf{j} - d\mathbf{k}$.
+    \item The \textit{norm}: $|q|^2 = q\bar{q} = \bar{q}q = a^2 + b^2 + c^2 + d^2$.
+\end{itemize}
+For every $q \neq 0$, the multiplicative inverse is $q^{-1} = \bar{q}/|q|^2$.
+\end{definition}
+
+The norm is multiplicative ($|pq| = |p||q|$), which implies that $\mathbb{H}$ is a \textbf{division algebra}: every nonzero element has an inverse. Together with $\mathbb{R}$ and $\mathbb{C}$, it is one of the only three associative division algebras over $\mathbb{R}$ (Frobenius's theorem).
+
+\begin{proposition}[Unit quaternions and isomorphism with $SU(2)$]\label{prop:cuaterniones_su2}
+The set of unit quaternions
+\[
+S^3 = \{q \in \mathbb{H} : |q| = 1\} = \{a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k} : a^2 + b^2 + c^2 + d^2 = 1\}
+\]
+is a Lie group under quaternion multiplication, diffeomorphic to the sphere $S^3 \subset \mathbb{R}^4$. Moreover, the map
+\begin{equation}\label{eq:iso_cuaterniones_su2}
+\varphi: S^3 \longrightarrow SU(2), \qquad q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k} \longmapsto \begin{pmatrix} a + d\,i & -c + b\,i \\ c + b\,i & a - d\,i \end{pmatrix}
+\end{equation}
+(where $i = \sqrt{-1} \in \mathbb{C}$) is an isomorphism of Lie groups.
+\end{proposition}
+
+\begin{proof}
+\textbf{Group structure.} Since $|pq| = |p||q|$, the product of unit quaternions is unit. Likewise, $|\bar{q}| = |q| = 1$ and $q^{-1} = \bar{q}$ for $|q| = 1$, so that $S^3$ is closed under inverses. Associativity is inherited from $\mathbb{H}$.
+
+\textbf{$\varphi$ is well defined.} For $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k}$ with $|q| = 1$, we write $\alpha = a + di$ and $\beta = c + bi$ (with $i \in \mathbb{C}$). Then $|\alpha|^2 + |\beta|^2 = a^2 + d^2 + c^2 + b^2 = 1$, and the matrix
+\[
+\varphi(q) = \begin{pmatrix} \alpha & -\bar{\beta} \\ \beta & \bar{\alpha} \end{pmatrix}
+\]
+satisfies $\det(\varphi(q)) = |\alpha|^2 + |\beta|^2 = 1$, hence $\varphi(q) \in SU(2)$.
+
+\textbf{$\varphi$ is a homomorphism.} For $q_1, q_2 \in S^3$ with $\varphi(q_\ell) = \bigl(\begin{smallmatrix} \alpha_\ell & -\bar{\beta}_\ell \\ \beta_\ell & \bar{\alpha}_\ell \end{smallmatrix}\bigr)$, it is verified by direct computation that the components of the product $\varphi(q_1)\varphi(q_2)$ coincide with those of $\varphi(q_1 q_2)$: the correspondence $\mathbf{i} \mapsto \bigl(\begin{smallmatrix} 0 & i \\ i & 0 \end{smallmatrix}\bigr)$, $\mathbf{j} \mapsto \bigl(\begin{smallmatrix} 0 & -1 \\ 1 & 0 \end{smallmatrix}\bigr)$, $\mathbf{k} \mapsto \bigl(\begin{smallmatrix} i & 0 \\ 0 & -i \end{smallmatrix}\bigr)$ preserves relations~\eqref{eq:relaciones_cuaterniones}.
+
+\textbf{$\varphi$ is bijective.} Injectivity is immediate: if $\varphi(q_1) = \varphi(q_2)$ then $(a_1, b_1, c_1, d_1) = (a_2, b_2, c_2, d_2)$. For surjectivity, every matrix $\bigl(\begin{smallmatrix} \alpha & -\bar{\beta} \\ \beta & \bar{\alpha} \end{smallmatrix}\bigr) \in SU(2)$ with $\alpha = a + di$, $\beta = c + bi$ is the image of $q = a + b\mathbf{i} + c\mathbf{j} + d\mathbf{k}$.
+\end{proof}
+
+\begin{proposition}[Rotations by means of quaternions]\label{prop:rotaciones_cuaterniones}
+For $q \in S^3$, the map $\rho_q: \operatorname{Im}(\mathbb{H}) \to \operatorname{Im}(\mathbb{H})$ defined by
+\begin{equation}\label{eq:rotacion_cuaterniones}
+\rho_q(\mathbf{v}) = q\mathbf{v}\bar{q}
+\end{equation}
+is a rotation in $SO(3)$ under the identification $\operatorname{Im}(\mathbb{H}) \cong \mathbb{R}^3$ given by $x\mathbf{i} + y\mathbf{j} + z\mathbf{k} \mapsto (x, y, z)$. Moreover, the homomorphism $q \mapsto \rho_q$ coincides with the adjoint representation $\pi: SU(2) \to SO(3)$ of \autoref{ex:su2_so3} via the isomorphism $\varphi$ of Proposition~\ref{prop:cuaterniones_su2}: the diagram
+\[
+\begin{tikzcd}
+S^3 \arrow{r}{\varphi} \arrow[swap]{dr}{q \mapsto \rho_q} & SU(2) \arrow{d}{\pi} \\
+ & SO(3)
+\end{tikzcd}
+\]
+commutes, that is, $\pi \circ \varphi = \rho$.
+\end{proposition}
+
+\begin{proof}
+For $q \in S^3$ and $\mathbf{v} \in \operatorname{Im}(\mathbb{H})$, the product $q\mathbf{v}\bar{q}$ is purely imaginary: $\overline{q\mathbf{v}\bar{q}} = q\bar{\mathbf{v}}\bar{q} = -q\mathbf{v}\bar{q}$, where we use that $\bar{\mathbf{v}} = -\mathbf{v}$ for purely imaginary quaternions. Moreover, $|q\mathbf{v}\bar{q}| = |q||\mathbf{v}||\bar{q}| = |\mathbf{v}|$, so that $\rho_q$ is a linear isometry of $\mathbb{R}^3$. Since $\rho_q$ is continuous in $q$ and $\rho_1 = \operatorname{Id}$, the connectedness of $S^3$ guarantees that $\det(\rho_q) = +1$, that is, $\rho_q \in SO(3)$. The commutativity of the diagram is verified by checking that, for the generators $\mathbf{i}, \mathbf{j}, \mathbf{k}$, the action by quaternionic conjugation produces the same rotation matrix as $\pi(\varphi(q))$.
+\end{proof}
+
+\begin{remark}[Connection with the Clifford algebra $\text{Cl}(0,2)$]\label{rem:cuaterniones_clifford}
+The Clifford algebra $\text{Cl}(0,2)$, generated by $\{e_1, e_2\}$ with $e_1^2 = e_2^2 = -1$ and $e_1 e_2 = -e_2 e_1$, has basis $\{1, e_1, e_2, e_1 e_2\}$. The correspondence
+\[
+e_1 \mapsto \mathbf{i}, \quad e_2 \mapsto \mathbf{j}, \quad e_1 e_2 \mapsto \mathbf{k}
+\]
+defines an algebra isomorphism $\text{Cl}(0,2) \cong \mathbb{H}$, verifying that the Clifford relations transform exactly into the quaternionic relations~\eqref{eq:relaciones_cuaterniones}. This isomorphism appears in \autoref{def:clifford_cnn} of \autoref{ch:cnn}.
+\end{remark}
+
+%% ─────────────────────────────────────────────────
+%%  Teorema de Radó
+%% ─────────────────────────────────────────────────
+\section{Radó's Theorem (Triangulability of Surfaces)}\label{sec:rado}
+
+Radó's theorem establishes that every compact surface admits a triangulation, a result that is fundamental both for the proof of the Gauss-Bonnet theorem (\autoref{thm:gauss_bonnet_general}) and for the applications of \gls{GDL} on triangulated meshes (\autoref{sec:grafos_discretizacion}).
+
+\subsection*{Preliminaries}
+
+We recall that a \textit{topological 2-manifold} (or \textit{surface}) is a topological space $M$ that is Hausdorff, second countable, and such that every point $p \in M$ has a neighborhood homeomorphic to an open set of $\mathbb{R}^2$. The following classical result of planar topology is a key tool in the proof:
+
+\begin{theorem}[Jordan-Schoenflies Theorem]\label{thm:jordan_schoenflies}
+Every homeomorphism $h: S^1 \to \mathbb{R}^2$ whose image is a Jordan curve $\mathcal{C}$ extends to a homeomorphism $H: \overline{D}^2 \to \overline{U}$, where $D^2$ is the open unit disk and $U$ is the bounded component of $\mathbb{R}^2 \setminus \mathcal{C}$.
+\end{theorem}
+
+For a proof, see \citet[Ch.~4]{moise1977geometric}.
+
+\subsection*{Formal statement}
+
+\begin{theorem}[Radó's Theorem, 1925]\label{thm:rado_apendice}
+Every compact topological 2-manifold admits a triangulation. That is, if $M$ is a compact surface, there exist a simplicial complex $\mathcal{K}$ and a homeomorphism $h: |\mathcal{K}| \to M$.
+\end{theorem}
+
+\begin{remark}[Triangulability in higher dimensions]\label{rem:triangulabilidad_dimensiones}
+The triangulability of manifolds depends crucially on the dimension:
+\begin{itemize}
+	\item \textbf{Dimension 2}: Every compact surface is triangulable (\autoref{thm:rado_apendice}).
+	\item \textbf{Dimension 3}: \citet{moise1977geometric} proved in 1952 that every compact 3-manifold admits a triangulation, a considerably more difficult result.
+	\item \textbf{Dimension $\geq 4$}: There exist non-triangulable compact topological manifolds. Casson's result (based on Freedman's work on 4-dimensional manifolds) shows that the manifold $E_8$ admits no triangulation whatsoever.
 \end{itemize}
 \end{remark}
 
-\subsection{Proof sketch}
-\label{subsec:app:rado-proof}
+\subsection*{Proof sketch}
 
-We present the main ideas of the proof, following the exposition of
-\citet[Chapter~8]{moise1977geometric}. See also \citet[\S77]{munkres2000topology}
-for an alternative treatment.
+We present the main ideas of the proof, following the exposition of \citet[Ch.~8]{moise1977geometric}. See also \citet[§77]{munkres2000topology} for an alternative treatment.
 
-\begin{proof}[Proof sketch of \Cref{thm:app:rado}]
-The proof proceeds in four steps.
+\begin{proof}[Proof sketch of \autoref{thm:rado_apendice}]
+The proof proceeds in four steps:
 
 \textbf{Step 1: Local triangulability.}
-Since $M$ is a $2$-manifold, each point $p \in M$ has a neighbourhood $U_p$
-homeomorphic to an open subset of $\R^2$ via a chart $(U_p, \phi_p)$. In $\R^2$,
-every bounded region admits a triangulation (for example, by barycentric
-subdivision of a grid). Hence each $U_p$ can be triangulated locally by
-transporting this triangulation via $\phi_p^{-1}$.
+Since $M$ is a 2-manifold, each point $p \in M$ has a neighborhood $U_p$ homeomorphic to an open set of $\mathbb{R}^2$ via a chart $(U_p, \phi_p)$. In $\mathbb{R}^2$, every bounded region admits a triangulation (for example, by barycentric subdivision of a grid). Therefore, each $U_p$ can be triangulated locally by transporting this triangulation via $\phi_p^{-1}$.
 
 \textbf{Step 2: Finite cover.}
-By compactness of $M$, there is a finite subcover $\{U_1, \ldots, U_N\}$ with
-local triangulations $\mathcal{T}_1, \ldots, \mathcal{T}_N$.
+By the compactness of $M$, there exists a finite subcover $\{U_1, \ldots, U_N\}$ with local triangulations $\mathcal{T}_1, \ldots, \mathcal{T}_N$.
 
-\textbf{Step 3: Compatibility via Jordan--Schoenflies.}
-The essential step is to make the local triangulations compatible on the overlap
-regions $U_i \cap U_j$. The \Cref{thm:app:jordan-schoenflies} allows one to
-extend homeomorphisms between simple closed curves in $\R^2$ to homeomorphisms of
-their interiors, which guarantees that the local triangulations can be adjusted to
-be compatible on the intersections.
+\textbf{Step 3: Compatibility via Jordan-Schoenflies.}
+The essential step consists in making the local triangulations compatible on the overlap regions $U_i \cap U_j$. \autoref{thm:jordan_schoenflies} allows one to extend homeomorphisms between simple closed curves in $\mathbb{R}^2$ to homeomorphisms of their interiors, which guarantees that the local triangulations can be adjusted to be compatible on the intersections.
 
 \textbf{Step 4: Refinement and gluing.}
-By successive subdivisions (refinements) of the local triangulations, one obtains
-triangulations fine enough to be compatible on all intersections. Gluing produces
-a global simplicial complex $\mathcal{K}$ whose geometric realization
-$\abs{\mathcal{K}}$ is homeomorphic to $M$.
+By successive subdivisions (refinements) of the local triangulations, one obtains triangulations fine enough to be compatible on all intersections. The gluing produces a global simplicial complex $\mathcal{K}$ whose geometric realization $|\mathcal{K}|$ is homeomorphic to $M$.
 \end{proof}
 
-%=======================================================================
-\section{The Spectral Theorem for Real Symmetric Matrices}
-\label{sec:app:spectral}
-%=======================================================================
+%% ─────────────────────────────────────────────────────────────────────────────
+%% Teorema Espectral para Matrices Simétricas Reales
+%% ─────────────────────────────────────────────────────────────────────────────
 
-The spectral theorem is a fundamental result of linear algebra guaranteeing the
-orthogonal diagonalization of every real symmetric matrix. In the context of
-geometric deep learning, this theorem underlies the spectral decomposition of the
-graph Laplacian, the graph Fourier transform, and the definition of
-positive-semidefinite matrices. For a detailed exposition, see
-\citet[Chapter~7]{Axler2015}.
+\section{Spectral Theorem for Real Symmetric Matrices}\label{sec:teorema_espectral}
 
-\begin{theorem}[Spectral theorem for real symmetric matrices]
-\label{thm:app:spectral}
-Let $A \in \R^{n \times n}$ be a symmetric matrix ($A = A^T$). Then:
-\begin{enumerate}
-    \item All eigenvalues of $A$ are real.
-    \item Eigenvectors corresponding to distinct eigenvalues are orthogonal.
-    \item There exists an orthogonal matrix $U \in \Orth(n)$ such that
-          \[
-          A = U \Lambda U^T , \quad
-          \Lambda = \diag(\lambda_1, \ldots, \lambda_n) ,
-          \]
-          where $\lambda_1, \ldots, \lambda_n$ are the eigenvalues of $A$.
-\end{enumerate}
+The spectral theorem is a fundamental result of linear algebra that guarantees the orthogonal diagonalization of every real symmetric matrix. In the context of Geometric Deep Learning, this theorem underpins the spectral decomposition of the graph Laplacian (\autoref{prop:propiedades_espectrales_laplaciano_grafos}), the Fourier transform on graphs (\autoref{def:transformada_fourier_grafos}) and the definition of positive semidefinite matrices (\autoref{def:semidefinida_positiva}). For a detailed exposition, see \citet[Ch.~7]{Axler2015}.
+
+\begin{theorem}[Spectral Theorem for real symmetric matrices]\label{thm:espectral_matrices_simetricas}
+	Let $A \in \mathbb{R}^{n \times n}$ be a symmetric matrix ($A = A^T$). Then:
+	\begin{enumerate}
+		\item All eigenvalues of $A$ are real.
+		\item Eigenvectors corresponding to distinct eigenvalues are orthogonal.
+		\item There exists an orthogonal matrix $U \in O(n)$ such that
+		\[
+			A = U \Lambda U^T, \quad \Lambda = \operatorname{diag}(\lambda_1, \ldots, \lambda_n),
+		\]
+		where $\lambda_1, \ldots, \lambda_n$ are the eigenvalues of $A$.
+	\end{enumerate}
 \end{theorem}
 
 \begin{proof}
-We proceed by induction on $n$.
+	We proceed by induction on $n$.
 
-\textbf{Base case $n = 1$.} Every matrix $A = (a) \in \R^{1 \times 1}$ has a
-single eigenvalue $\lambda_1 = a \in \R$, and $U = (1)$ satisfies
-$A = U \Lambda U^T$ trivially.
+	\textbf{Base case $n = 1$}. Every matrix $A = (a) \in \mathbb{R}^{1 \times 1}$ has a unique eigenvalue $\lambda_1 = a \in \mathbb{R}$, and $U = (1)$ satisfies $A = U \Lambda U^T$ trivially.
 
-\textbf{Inductive step.} Assume the result holds for symmetric matrices of size
-$(n-1) \times (n-1)$ and let $A \in \R^{n \times n}$ be symmetric.
+	\textbf{Inductive step}. Suppose the result holds for symmetric matrices of size $(n-1) \times (n-1)$ and let $A \in \mathbb{R}^{n \times n}$ be symmetric.
 
-\textbf{(1) Real eigenvalues.} Let $\lambda$ be an eigenvalue of $A$ (possibly
-complex) with eigenvector $\mathbf{v} \in \C^n \setminus \{\mathbf{0}\}$. Using
-the standard Hermitian product
-$\inner{\mathbf{u}}{\mathbf{w}}_{\C} = \overline{\mathbf{u}}^T \mathbf{w}$,
-\[
-\lambda \inner{\mathbf{v}}{\mathbf{v}}_{\C}
-= \inner{\mathbf{v}}{A\mathbf{v}}_{\C}
-= \inner{A^T \mathbf{v}}{\mathbf{v}}_{\C}
-= \inner{A\mathbf{v}}{\mathbf{v}}_{\C}
-= \overline{\inner{\mathbf{v}}{A\mathbf{v}}_{\C}}
-= \bar{\lambda} \inner{\mathbf{v}}{\mathbf{v}}_{\C} ,
-\]
-where we used that $A = A^T$ implies $A = \bar{A}^T = A^*$ (since $A$ is real).
-As $\inner{\mathbf{v}}{\mathbf{v}}_{\C} = \norm{\mathbf{v}}^2 > 0$, we get
-$\lambda = \bar{\lambda}$, that is, $\lambda \in \R$.
+	\textbf{(1) Real eigenvalues.} Let $\lambda$ be an eigenvalue of $A$ (possibly complex) with eigenvector $\mathbf{v} \in \mathbb{C}^n \setminus \{\mathbf{0}\}$. Using the standard Hermitian product $\langle \mathbf{u}, \mathbf{w} \rangle_{\mathbb{C}} = \overline{\mathbf{u}}^T \mathbf{w}$:
+	\[
+		\lambda \langle \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \langle \mathbf{v}, A\mathbf{v} \rangle_{\mathbb{C}} = \langle A^T \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \langle A\mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \overline{\langle \mathbf{v}, A\mathbf{v} \rangle_{\mathbb{C}}} = \bar{\lambda} \langle \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}},
+	\]
+	where we have used that $A = A^T$ implies $A = \bar{A}^T = A^*$ (since $A$ is real). As $\langle \mathbf{v}, \mathbf{v} \rangle_{\mathbb{C}} = \|\mathbf{v}\|^2 > 0$, we obtain $\lambda = \bar{\lambda}$, that is, $\lambda \in \mathbb{R}$.
 
-\textbf{(2) Orthogonality of eigenvectors.} Let $A\mathbf{v} = \lambda \mathbf{v}$
-and $A\mathbf{w} = \mu \mathbf{w}$ with $\lambda \neq \mu$ (both real by (1), and
-$\mathbf{v}, \mathbf{w} \in \R^n$). Then
-\[
-\lambda \inner{\mathbf{v}}{\mathbf{w}} = \inner{A\mathbf{v}}{\mathbf{w}}
-= \inner{\mathbf{v}}{A\mathbf{w}} = \mu \inner{\mathbf{v}}{\mathbf{w}} ,
-\]
-where $\inner{\cdot}{\cdot}$ is the Euclidean inner product on $\R^n$ and the
-second equality uses the symmetry of $A$. Hence
-$(\lambda - \mu)\inner{\mathbf{v}}{\mathbf{w}} = 0$, and since
-$\lambda \neq \mu$, we conclude $\inner{\mathbf{v}}{\mathbf{w}} = 0$.
+	\textbf{(2) Orthogonality of eigenvectors.} Let $A\mathbf{v} = \lambda \mathbf{v}$ and $A\mathbf{w} = \mu \mathbf{w}$ with $\lambda \neq \mu$ (both real by (1), and $\mathbf{v}, \mathbf{w} \in \mathbb{R}^n$). Then:
+	\[
+		\lambda \langle \mathbf{v}, \mathbf{w} \rangle = \langle A\mathbf{v}, \mathbf{w} \rangle = \langle \mathbf{v}, A\mathbf{w} \rangle = \mu \langle \mathbf{v}, \mathbf{w} \rangle,
+	\]
+	where $\langle \cdot, \cdot \rangle$ denotes the Euclidean inner product on $\mathbb{R}^n$ and the second equality uses the symmetry of $A$. Hence $(\lambda - \mu)\langle \mathbf{v}, \mathbf{w} \rangle = 0$, and since $\lambda \neq \mu$, we conclude $\langle \mathbf{v}, \mathbf{w} \rangle = 0$.
 
-\textbf{(3) Orthogonal diagonalization.} By (1), $A$ has a real eigenvalue
-$\lambda_1$ with unit eigenvector $\mathbf{v}_1 \in \R^n$ ($\norm{\mathbf{v}_1} = 1$).
-Consider the orthogonal complement
-$W = \mathbf{v}_1^\perp = \{\mathbf{w} \in \R^n : \inner{\mathbf{w}}{\mathbf{v}_1}
-= 0\}$, a subspace of dimension $n - 1$.
+	\textbf{(3) Orthogonal diagonalization.} By (1), $A$ has a real eigenvalue $\lambda_1$ with unit eigenvector $\mathbf{v}_1 \in \mathbb{R}^n$ ($\|\mathbf{v}_1\| = 1$). Consider the orthogonal complement $W = \mathbf{v}_1^\perp = \{\mathbf{w} \in \mathbb{R}^n : \langle \mathbf{w}, \mathbf{v}_1 \rangle = 0\}$, which is a subspace of dimension $n - 1$.
 
-\textit{Claim}: $W$ is $A$-invariant, that is, $A\mathbf{w} \in W$ for all
-$\mathbf{w} \in W$. Indeed, if $\mathbf{w} \in W$,
-\[
-\inner{A\mathbf{w}}{\mathbf{v}_1} = \inner{\mathbf{w}}{A\mathbf{v}_1}
-= \lambda_1 \inner{\mathbf{w}}{\mathbf{v}_1} = 0 ,
-\]
-so $A\mathbf{w} \in \mathbf{v}_1^\perp = W$.
+	\textit{Claim}: $W$ is $A$-invariant, that is, $A\mathbf{w} \in W$ for all $\mathbf{w} \in W$. Indeed, if $\mathbf{w} \in W$:
+	\[
+		\langle A\mathbf{w}, \mathbf{v}_1 \rangle = \langle \mathbf{w}, A\mathbf{v}_1 \rangle = \lambda_1 \langle \mathbf{w}, \mathbf{v}_1 \rangle = 0,
+	\]
+	so that $A\mathbf{w} \in \mathbf{v}_1^\perp = W$.
 
-Let $\{\mathbf{e}_2, \ldots, \mathbf{e}_n\}$ be an orthonormal basis of $W$ and
-$P = [\mathbf{e}_2 \mid \cdots \mid \mathbf{e}_n] \in \R^{n \times (n-1)}$. The
-restriction $A|_W$ is represented by the symmetric matrix
-$B = P^T A P \in \R^{(n-1) \times (n-1)}$. By the inductive hypothesis, there is
-an orthogonal matrix $\tilde{U} \in \Orth(n-1)$ with
-$B = \tilde{U} \tilde{\Lambda} \tilde{U}^T$, where
-$\tilde{\Lambda} = \diag(\lambda_2, \ldots, \lambda_n)$. Define
-\[
-U = \begin{pmatrix} \mathbf{v}_1 & P\tilde{U} \end{pmatrix} \in \R^{n \times n} .
-\]
-Then $U$ is orthogonal (its columns form an orthonormal basis of $\R^n$) and
-\[
-U^T A U = \diag(\lambda_1, \lambda_2, \ldots, \lambda_n) ,
-\]
-which is equivalent to $A = U \Lambda U^T$, completing the induction.
+	Let $\{\mathbf{e}_2, \ldots, \mathbf{e}_n\}$ be an orthonormal basis of $W$ and $P = [\mathbf{e}_2 \mid \cdots \mid \mathbf{e}_n] \in \mathbb{R}^{n \times (n-1)}$. The restriction $A|_W$ is represented by the symmetric matrix $B = P^T A P \in \mathbb{R}^{(n-1) \times (n-1)}$. By the inductive hypothesis, there exists an orthogonal matrix $\tilde{U} \in O(n-1)$ such that $B = \tilde{U} \tilde{\Lambda} \tilde{U}^T$, with $\tilde{\Lambda} = \operatorname{diag}(\lambda_2, \ldots, \lambda_n)$.
+
+	We define
+	\[
+		U = \begin{pmatrix} \mathbf{v}_1 & P\tilde{U} \end{pmatrix} \in \mathbb{R}^{n \times n}.
+	\]
+	Then $U$ is orthogonal (its columns form an orthonormal basis of $\mathbb{R}^n$) and
+	\[
+		U^T A U = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n),
+	\]
+	which is equivalent to $A = U \Lambda U^T$, completing the induction.
 \end{proof}
 
-\begin{corollary}[Characterization of positive-semidefinite matrices]
-\label{cor:app:psd-characterization}
-Let $A \in \R^{n \times n}$ be symmetric with eigenvalues
-$\lambda_1, \ldots, \lambda_n$. Then $A$ is positive semidefinite
-($A \succeq 0$) if and only if $\lambda_i \geq 0$ for all
-$i \in \{1, \ldots, n\}$.
+\begin{corollary}[Characterization of positive semidefinite matrices]\label{cor:caracterizacion_semidefinida}
+	Let $A \in \mathbb{R}^{n \times n}$ be symmetric with eigenvalues $\lambda_1, \ldots, \lambda_n$. Then $A$ is positive semidefinite ($A \succeq 0$) if and only if $\lambda_i \geq 0$ for all $i \in \{1, \ldots, n\}$.
 \end{corollary}
 
 \begin{proof}
-By \Cref{thm:app:spectral}, $A = U \Lambda U^T$ with $U$ orthogonal and
-$\Lambda = \diag(\lambda_1, \ldots, \lambda_n)$. For any $\mathbf{x} \in \R^n$,
-let $\mathbf{y} = U^T \mathbf{x}$. Then
-\[
-\mathbf{x}^T A \mathbf{x} = \mathbf{x}^T U \Lambda U^T \mathbf{x}
-= \mathbf{y}^T \Lambda \mathbf{y} = \sum_{i=1}^n \lambda_i y_i^2 .
-\]
-Since $U$ is orthogonal, the map $\mathbf{x} \mapsto \mathbf{y} = U^T \mathbf{x}$
-is a bijection of $\R^n$. If all $\lambda_i \geq 0$, the sum is clearly $\geq 0$
-for every $\mathbf{x}$. Conversely, if some $\lambda_j < 0$, taking
-$\mathbf{x} = U\mathbf{e}_j$ (where $\mathbf{e}_j$ is the $j$-th standard basis
-vector) gives $\mathbf{x}^T A \mathbf{x} = \lambda_j < 0$.
+	By \autoref{thm:espectral_matrices_simetricas}, $A = U \Lambda U^T$ with $U$ orthogonal and $\Lambda = \operatorname{diag}(\lambda_1, \ldots, \lambda_n)$. For any $\mathbf{x} \in \mathbb{R}^n$, let $\mathbf{y} = U^T \mathbf{x}$. Then:
+	\[
+		\mathbf{x}^T A \mathbf{x} = \mathbf{x}^T U \Lambda U^T \mathbf{x} = \mathbf{y}^T \Lambda \mathbf{y} = \sum_{i=1}^n \lambda_i y_i^2.
+	\]
+	Since $U$ is orthogonal, the map $\mathbf{x} \mapsto \mathbf{y} = U^T \mathbf{x}$ is bijective on $\mathbb{R}^n$. If all $\lambda_i \geq 0$, the sum is clearly $\geq 0$ for every $\mathbf{x}$. Conversely, if some $\lambda_j < 0$, taking $\mathbf{x} = U\mathbf{e}_j$ (where $\mathbf{e}_j$ is the $j$-th canonical vector) yields $\mathbf{x}^T A \mathbf{x} = \lambda_j < 0$.
 \end{proof}
 
-%=======================================================================
-\section{The Inverse Function Theorem}
-\label{sec:app:inverse-function}
-%=======================================================================
+%% ─────────────────────────────────────────────────────────
+%% Teorema de la Función Inversa
+%% ─────────────────────────────────────────────────────────
 
-The inverse function theorem is a fundamental tool of analysis that guarantees the
-local existence of differentiable inverses. In the context of smooth manifolds it
-is used repeatedly to construct local diffeomorphisms, in particular to show that
-the Riemannian exponential map is a local diffeomorphism.
+\section{Inverse Function Theorem}\label{sec:funcion_inversa}
 
-\subsection{Preliminary: the Banach fixed-point theorem}
-\label{subsec:app:banach-fixed-point}
+The inverse function theorem is a fundamental tool of analysis that guarantees the local existence of differentiable inverses. In the context of differentiable manifolds, this result is used repeatedly to construct local diffeomorphisms, in particular to prove that the Riemannian exponential map is a local diffeomorphism (\autoref{prop:propiedades_exp}).
 
-\begin{theorem}[Banach fixed-point theorem]
-\label{thm:app:banach-fixed-point}
-Let $(X, d)$ be a complete metric space and $T \colon X \to X$ a
-\emph{contraction}, that is, there exists $\lambda \in [0, 1)$ such that
+\subsection{Preliminary: Banach Fixed Point Theorem}\label{subsec:punto_fijo_banach}
+
+\begin{theorem}[Banach Fixed Point Theorem]\label{thm:punto_fijo_banach}
+Let $(X, d)$ be a complete metric space and $T: X \to X$ a \textit{contraction}, that is, there exists $\lambda \in [0, 1)$ such that
 \[
-d(T(x), T(y)) \leq \lambda \, d(x, y) \quad \text{for all } x, y \in X .
+d(T(x), T(y)) \leq \lambda \, d(x, y) \quad \text{for all } x, y \in X.
 \]
-Then $T$ has a unique fixed point $x^* \in X$ (i.e.\ $T(x^*) = x^*$). Moreover,
-for any $x_0 \in X$, the sequence $x_{n+1} = T(x_n)$ converges to $x^*$, with the
-estimate
+Then $T$ has a unique fixed point $x^* \in X$ (that is, $T(x^*) = x^*$). Moreover, for any $x_0 \in X$, the sequence $x_{n+1} = T(x_n)$ converges to $x^*$ and the estimate holds:
 \[
-d(x_n, x^*) \leq \frac{\lambda^n}{1 - \lambda} \, d(x_0, x_1) .
+d(x_n, x^*) \leq \frac{\lambda^n}{1 - \lambda} \, d(x_0, x_1).
 \]
 \end{theorem}
 
 \begin{proof}
-\textbf{Existence.} Let $x_0 \in X$ be arbitrary and set $x_{n+1} = T(x_n)$. For
-$n \geq 1$,
+\textbf{Existence.} Let $x_0 \in X$ be arbitrary and define $x_{n+1} = T(x_n)$. For $n \geq 1$:
 \[
-d(x_{n+1}, x_n) = d(T(x_n), T(x_{n-1})) \leq \lambda \, d(x_n, x_{n-1})
-\leq \cdots \leq \lambda^n \, d(x_1, x_0) .
+d(x_{n+1}, x_n) = d(T(x_n), T(x_{n-1})) \leq \lambda \, d(x_n, x_{n-1}) \leq \cdots \leq \lambda^n \, d(x_1, x_0).
 \]
-For $m > n$, the triangle inequality gives
+For $m > n$, the triangle inequality gives:
 \[
-d(x_m, x_n) \leq \sum_{k=n}^{m-1} d(x_{k+1}, x_k)
-\leq \sum_{k=n}^{m-1} \lambda^k \, d(x_1, x_0)
-\leq \frac{\lambda^n}{1 - \lambda} \, d(x_1, x_0) .
+d(x_m, x_n) \leq \sum_{k=n}^{m-1} d(x_{k+1}, x_k) \leq \sum_{k=n}^{m-1} \lambda^k \, d(x_1, x_0) \leq \frac{\lambda^n}{1 - \lambda} \, d(x_1, x_0).
 \]
-Since $\lambda < 1$, the right-hand side tends to $0$ as $n \to \infty$, so
-$(x_n)$ is a Cauchy sequence. By completeness of $(X, d)$, there is a limit
-$x^* = \lim_{n \to \infty} x_n$.
+Since $\lambda < 1$, the right-hand side tends to $0$ as $n \to \infty$, hence $(x_n)$ is a Cauchy sequence. By the completeness of $(X, d)$, there exists $x^* = \lim_{n \to \infty} x_n$.
 
-By continuity of $T$ (every contraction is Lipschitz, hence continuous),
+By the continuity of $T$ (every contraction is Lipschitz, hence continuous):
 \[
-T(x^*) = T\!\left(\lim_{n \to \infty} x_n\right)
-= \lim_{n \to \infty} T(x_n) = \lim_{n \to \infty} x_{n+1} = x^* .
+T(x^*) = T\!\left(\lim_{n \to \infty} x_n\right) = \lim_{n \to \infty} T(x_n) = \lim_{n \to \infty} x_{n+1} = x^*.
 \]
 
-\textbf{Uniqueness.} If $T(y^*) = y^*$ for another point $y^* \in X$, then
+\textbf{Uniqueness.} If $T(y^*) = y^*$ for another point $y^* \in X$, then:
 \[
-d(x^*, y^*) = d(T(x^*), T(y^*)) \leq \lambda \, d(x^*, y^*) .
+d(x^*, y^*) = d(T(x^*), T(y^*)) \leq \lambda \, d(x^*, y^*).
 \]
-Since $\lambda < 1$, this forces $d(x^*, y^*) = 0$, that is, $x^* = y^*$.
+Since $\lambda < 1$, this implies $d(x^*, y^*) = 0$, that is, $x^* = y^*$.
 
-\textbf{Estimate.} Letting $m \to \infty$ in the inequality
-$d(x_m, x_n) \leq \frac{\lambda^n}{1-\lambda} d(x_1, x_0)$ yields the result.
+\textbf{Estimate.} Taking $m \to \infty$ in the inequality $d(x_m, x_n) \leq \frac{\lambda^n}{1-\lambda} d(x_1, x_0)$ yields the result.
 \end{proof}
 
-\subsection{Statement and proof of the inverse function theorem}
-\label{subsec:app:inverse-function-proof}
+\subsection{Statement and proof of the Inverse Function Theorem}
 
-\begin{theorem}[Inverse function theorem]
-\label{thm:app:inverse-function}
-Let $U \subseteq \R^n$ be open, $F \colon U \to \R^n$ a map of class $C^k$
-($k \geq 1$), and $p \in U$ a point such that the differential
-$DF_p \colon \R^n \to \R^n$ is invertible. Then there exist open neighbourhoods
-$V$ of $p$ and $W$ of $F(p)$ such that $F|_V \colon V \to W$ is a $C^k$
-diffeomorphism.
+\begin{theorem}[Inverse Function Theorem]\label{thm:funcion_inversa}
+Let $U \subseteq \mathbb{R}^n$ be an open set, $F: U \to \mathbb{R}^n$ a map of class $C^k$ ($k \geq 1$), and $p \in U$ a point such that the differential $DF_p: \mathbb{R}^n \to \mathbb{R}^n$ is invertible. Then there exist open neighborhoods $V$ of $p$ and $W$ of $F(p)$ such that $F|_V: V \to W$ is a diffeomorphism of class $C^k$.
 \end{theorem}
 
 \begin{proof}
-The proof follows the classical strategy of \citet[Theorem~9.24]{Rudin1976},
-presented in four steps.
+The proof follows the classical strategy of \citet[Theorem~9.24]{Rudin1976}, which we present in four steps.
 
 \textbf{Step 1: Reduction to the case $DF_p = I$.}
-Consider $G = (DF_p)^{-1} \circ F$. Then $G$ is of class $C^k$,
-$G(p) = (DF_p)^{-1}(F(p))$, and $DG_p = (DF_p)^{-1} \circ DF_p = I$. If we prove
-the theorem for $G$, composing with the invertible linear map $DF_p$ (a global
-diffeomorphism) yields the result for $F$. Thus we may assume without loss of
-generality that $DF_p = I$ and, after translating, that $p = 0$ and $F(0) = 0$.
+We consider $G = (DF_p)^{-1} \circ F$. Then $G$ is of class $C^k$, $G(p) = (DF_p)^{-1}(F(p))$, and $DG_p = (DF_p)^{-1} \circ DF_p = I$. If we prove the theorem for $G$, the composition with the invertible linear transformation $DF_p$ (which is a global diffeomorphism) provides the result for $F$. Thus, we may assume without loss of generality that $DF_p = I$ and, after translating, that $p = 0$ and $F(0) = 0$.
 
-\textbf{Step 2: Local surjectivity via the Banach fixed point.}
-Define $\varphi(x) = x - F(x)$, so that $D\varphi_0 = I - DF_0 = 0$. By continuity
-of $D\varphi$, there is $r > 0$ with $\norm{D\varphi_x} \leq \tfrac{1}{2}$ for all
-$x \in \overline{B}(0, r)$. By the mean value theorem, for
-$x_1, x_2 \in \overline{B}(0, r)$,
+\textbf{Step 2: Local surjectivity via Banach Fixed Point.}
+We define $\varphi(x) = x - F(x)$, so that $D\varphi_0 = I - DF_0 = 0$. By the continuity of $D\varphi$, there exists $r > 0$ such that $\|D\varphi_x\| \leq \tfrac{1}{2}$ for all $x \in \overline{B}(0, r)$. By the mean value theorem, for $x_1, x_2 \in \overline{B}(0, r)$:
 \[
-\norm{\varphi(x_1) - \varphi(x_2)} \leq \tfrac{1}{2} \norm{x_1 - x_2} .
+\|\varphi(x_1) - \varphi(x_2)\| \leq \tfrac{1}{2} \|x_1 - x_2\|.
 \]
-For each $y \in B(0, r/2)$, define
-$T_y \colon \overline{B}(0, r) \to \R^n$ by
-$T_y(x) = y + \varphi(x) = y + x - F(x)$. Then
+For each $y \in B(0, r/2)$, we define $T_y: \overline{B}(0, r) \to \mathbb{R}^n$ by $T_y(x) = y + \varphi(x) = y + x - F(x)$. Then:
 \[
-\norm{T_y(x)} \leq \norm{y} + \norm{\varphi(x) - \varphi(0)}
-\leq \tfrac{r}{2} + \tfrac{1}{2}\norm{x} \leq r ,
+\|T_y(x)\| \leq \|y\| + \|\varphi(x) - \varphi(0)\| \leq \tfrac{r}{2} + \tfrac{1}{2}\|x\| \leq r,
 \]
-so $T_y$ maps $\overline{B}(0, r)$ into itself. Moreover, $T_y$ is a contraction
-with constant $\tfrac{1}{2}$, since
-$T_y(x_1) - T_y(x_2) = \varphi(x_1) - \varphi(x_2)$. As $\overline{B}(0, r)$ is
-complete, \Cref{thm:app:banach-fixed-point} guarantees a unique
-$x \in \overline{B}(0, r)$ with $T_y(x) = x$, equivalently $F(x) = y$. This shows
-that $F$ is surjective onto $W = B(0, r/2)$.
+hence $T_y$ maps $\overline{B}(0, r)$ into itself. Moreover, $T_y$ is a contraction with constant $\tfrac{1}{2}$, since $T_y(x_1) - T_y(x_2) = \varphi(x_1) - \varphi(x_2)$. As $\overline{B}(0, r)$ is complete, \autoref{thm:punto_fijo_banach} guarantees the existence of a unique $x \in \overline{B}(0, r)$ with $T_y(x) = x$, equivalently $F(x) = y$. This shows that $F$ is surjective onto $W = B(0, r/2)$.
 
 \textbf{Step 3: Injectivity.}
-If $F(x_1) = F(x_2)$ with $x_1, x_2 \in \overline{B}(0, r)$, then
+If $F(x_1) = F(x_2)$ with $x_1, x_2 \in \overline{B}(0, r)$, then:
 \[
-\norm{x_1 - x_2} = \norm{\varphi(x_1) - \varphi(x_2) + F(x_1) - F(x_2)}
-= \norm{\varphi(x_1) - \varphi(x_2)} \leq \tfrac{1}{2}\norm{x_1 - x_2} ,
+\|x_1 - x_2\| = \|\varphi(x_1) - \varphi(x_2) + F(x_1) - F(x_2)\| = \|\varphi(x_1) - \varphi(x_2)\| \leq \tfrac{1}{2}\|x_1 - x_2\|,
 \]
-whence $x_1 = x_2$. Let $V = F^{-1}(W) \cap B(0, r)$; then
-$F|_V \colon V \to W$ is bijective.
+whence $x_1 = x_2$. Let $V = F^{-1}(W) \cap B(0, r)$; then $F|_V: V \to W$ is bijective.
 
 \textbf{Step 4: Differentiability of $F^{-1}$.}
-Let $g = (F|_V)^{-1} \colon W \to V$. We must show $g$ is of class $C^k$. For
-$y, y + k \in W$ with $x = g(y)$ and $x + h = g(y + k)$,
+Let $g = (F|_V)^{-1}: W \to V$. We must show that $g$ is of class $C^k$. For $y, y + k \in W$ with $x = g(y)$ and $x + h = g(y + k)$:
 \[
-k = F(x + h) - F(x) = DF_x(h) + \norm{h} \cdot \varepsilon(h) ,
+k = F(x + h) - F(x) = DF_x(h) + \|h\| \cdot \varepsilon(h)
 \]
-where $\varepsilon(h) \to 0$ as $h \to 0$. From the contraction estimate,
-$\norm{h} \leq 2\norm{k}$, so $h \to 0$ as $k \to 0$. Since $DF_x$ is invertible
-(its determinant is a continuous nonzero function),
+where $\varepsilon(h) \to 0$ as $h \to 0$. From the contraction estimate, $\|h\| \leq 2\|k\|$, so that $h \to 0$ as $k \to 0$. Since $DF_x$ is invertible (its determinant is a continuous nonzero function):
 \[
-g(y + k) - g(y) = h = (DF_x)^{-1}(k) + \norm{k} \cdot \tilde{\varepsilon}(k) ,
+g(y + k) - g(y) = h = (DF_x)^{-1}(k) + \|k\| \cdot \tilde{\varepsilon}(k)
 \]
-with $\tilde{\varepsilon}(k) \to 0$, so $Dg_y = (DF_{g(y)})^{-1}$. Since matrix
-inversion and composition are $C^\infty$ operations, an inductive argument shows
-that $g$ is of class $C^k$.
+with $\tilde{\varepsilon}(k) \to 0$, hence $Dg_y = (DF_{g(y)})^{-1}$. Since matrix inversion and composition are $C^\infty$ operations, an inductive argument shows that $g$ is of class $C^k$.
 \end{proof}
 
 %=======================================================================
-\section{Preliminaries for the Universal Approximation Theorem}
-\label{sec:app:uat-preliminaries}
+% TEOREMAS COMPLEMENTARIOS PARA EL CAPÍTULO CNN
 %=======================================================================
 
-The universal approximation theorem of \Cref{ch:foundations} guarantees that any
-continuous function can be approximated arbitrarily well by an artificial neural
-network with a single hidden layer. Its proof requires tools from measure theory
-and functional analysis: the notions of measure and $\sigma$-algebra underpin the
-representation (Riesz) and separation (Hahn--Banach) theorems that form the core
-of the proof. We collect here the necessary preliminaries, leaving the statement
-and proof of the theorem itself to \Cref{ch:foundations}. For an in-depth
-treatment of these foundations, see \citet{Folland1999} or \citet{Rudin1976}.
+\section{Wavelet Reconstruction Formula}\label{sec:reconstruccion_wavelet}
 
-\subsection{Measure-theoretic preliminaries}
-\label{subsec:app:measure-theory}
-
-\begin{definition}[$\sigma$-algebra]
-\label{def:app:sigma-algebra}
-Let $X$ be a nonempty set. A \emph{$\sigma$-algebra} (or $\sigma$-field) on $X$ is
-a collection $\mathcal{F}$ of subsets of $X$ such that:
-\begin{enumerate}
-    \item $X \in \mathcal{F}$;
-    \item if $A \in \mathcal{F}$, then $A^c = X \setminus A \in \mathcal{F}$
-          (closed under complements);
-    \item if $\{A_n\}_{n=1}^\infty \subseteq \mathcal{F}$, then
-          $\bigcup_{n=1}^\infty A_n \in \mathcal{F}$ (closed under countable
-          unions).
-\end{enumerate}
-The elements of $\mathcal{F}$ are called \emph{measurable sets}.
-\end{definition}
-
-\begin{definition}[Measurable space]
-\label{def:app:measurable-space}
-A \emph{measurable space} is a pair $(X, \mathcal{F})$ where $X$ is a nonempty
-set and $\mathcal{F}$ is a $\sigma$-algebra on $X$.
-\end{definition}
-
-\begin{definition}[Borel $\sigma$-algebra]
-\label{def:app:borel-sigma-algebra}
-Let $(X, \tau)$ be a topological space. The \emph{Borel $\sigma$-algebra}
-$\mathcal{B}(X)$ is the smallest $\sigma$-algebra containing all open sets of $X$.
-Its elements are called \emph{Borel sets}.
-\end{definition}
-
-In particular, for $\R^n$ the Borel $\sigma$-algebra $\mathcal{B}(\R^n)$ is
-generated by the open rectangles, or equivalently by the half-spaces of the form
-$\{x \in \R^n : w^T x + b > 0\}$.
-
-\begin{definition}[Measure]
-\label{def:app:measure}
-Let $(X, \mathcal{F})$ be a measurable space. A \emph{measure} is a function
-$\mu \colon \mathcal{F} \to [0, +\infty]$ such that:
-\begin{enumerate}
-    \item $\mu(\emptyset) = 0$;
-    \item \textbf{$\sigma$-additivity}: for any sequence
-          $\{A_n\}_{n=1}^\infty$ of pairwise disjoint sets in $\mathcal{F}$,
-          \[
-          \mu\!\left(\bigcup_{n=1}^\infty A_n\right) = \sum_{n=1}^\infty \mu(A_n) .
-          \]
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Measure space]
-\label{def:app:measure-space}
-A \emph{measure space} is a triple $(X, \mathcal{F}, \mu)$ where $X$ is a nonempty
-set, $\mathcal{F}$ is a $\sigma$-algebra on $X$, and
-$\mu \colon \mathcal{F} \to [0, +\infty]$ is a measure. If $\mu(X) < \infty$, we
-say $\mu$ is a \emph{finite measure}. If $\mu(X) = 1$, we say $\mu$ is a
-\emph{probability measure}.
-\end{definition}
-
-\begin{definition}[Signed finite measure]
-\label{def:app:signed-measure}
-Let $(X, \mathcal{F})$ be a measurable space. A \emph{signed finite measure} is a
-function $\mu \colon \mathcal{F} \to \R$ with $\mu(\emptyset) = 0$ that is
-$\sigma$-additive: for any sequence $\{A_n\}_{n=1}^\infty$ of pairwise disjoint
-sets in $\mathcal{F}$,
+\begin{theorem}[Wavelet Reconstruction Formula]\label{thm:reconstruccion_wavelet_apendice}
+Let $\psi \in L^2(\mathbb{R})$ be a mother wavelet satisfying the admissibility condition:
 \[
-\mu\!\left(\bigcup_{n=1}^\infty A_n\right) = \sum_{n=1}^\infty \mu(A_n) ,
+C_\psi = \int_0^\infty \frac{|\hat{\psi}(\omega)|^2}{\omega} \, d\omega < \infty
 \]
-where the series converges absolutely. The \emph{total variation} of $\mu$ is the
-measure $\abs{\mu}$ defined by
+Then, for every $f \in L^2(\mathbb{R})$, the reconstruction formula holds:
 \[
-\abs{\mu}(A) = \sup\!\left\{ \sum_{i=1}^n \abs{\mu(A_i)} :
-\{A_i\}_{i=1}^n \text{ a finite partition of } A \right\} .
+f(t) = \frac{1}{C_\psi} \int_0^\infty \int_{-\infty}^{\infty} W_f(a, b) \, \psi_{a,b}(t) \, \frac{db \, da}{a^2}
 \]
-\end{definition}
-
-\begin{definition}[Lebesgue measure]
-\label{def:app:lebesgue-measure}
-The \emph{Lebesgue measure} $\lambda$ on $\R^n$ is the unique measure on
-$(\R^n, \mathcal{B}(\R^n))$ that extends the notion of $n$-dimensional volume and
-satisfies:
-\begin{itemize}
-    \item for a rectangle $R = [a_1, b_1] \times \cdots \times [a_n, b_n]$,
-          $\lambda(R) = \prod_{i=1}^n (b_i - a_i)$;
-    \item it is translation invariant: $\lambda(A + x) = \lambda(A)$ for all
-          $x \in \R^n$.
-\end{itemize}
-\end{definition}
-
-A set $A$ has \emph{Lebesgue measure zero} (or measure zero) if $\lambda(A) = 0$.
-Examples include isolated points, finite sets, countable sets such as $\Q$, and
-the Cantor set.
-
-\begin{definition}[Measurable function]
-\label{def:app:measurable-function}
-Let $(X, \mathcal{F})$ and $(Y, \mathcal{G})$ be measurable spaces. A function
-$f \colon X \to Y$ is \emph{measurable} (or $\mathcal{F}$-$\mathcal{G}$-measurable)
-if the preimage of every measurable set is measurable:
-\[
-f^{-1}(B) = \{x \in X : f(x) \in B\} \in \mathcal{F}
-\quad \forall B \in \mathcal{G} .
-\]
-\end{definition}
-
-When $Y = \R$ with the Borel $\sigma$-algebra, it suffices to verify that
-$\{x : f(x) > \alpha\} \in \mathcal{F}$ for every $\alpha \in \R$. In particular,
-every continuous function is measurable with respect to the Borel
-$\sigma$-algebras.
-
-\begin{definition}[Lebesgue integral]
-\label{def:app:lebesgue-integral}
-Let $(X, \mathcal{F}, \mu)$ be a measure space. The \emph{Lebesgue integral} is
-constructed in three steps:
-\begin{enumerate}
-    \item \textbf{Simple functions}: for $s = \sum_{i=1}^n a_i \chi_{A_i}$ with
-          $a_i \geq 0$ and $A_i \in \mathcal{F}$ disjoint, where $\chi_A$ is the
-          characteristic function of $A$, set
-          \[
-          \int_X s \, d\mu = \sum_{i=1}^n a_i \mu(A_i) .
-          \]
-    \item \textbf{Nonnegative functions}: for $f \colon X \to [0, +\infty]$
-          measurable,
-          \[
-          \int_X f \, d\mu = \sup\!\left\{\int_X s \, d\mu :
-          s \text{ simple, } 0 \leq s \leq f\right\} .
-          \]
-    \item \textbf{General functions}: for $f \colon X \to \R$ measurable, write
-          $f = f^+ - f^-$ with $f^+ = \max(f, 0)$ and $f^- = \max(-f, 0)$. We say
-          $f$ is \emph{integrable} (or $f \in L^1(\mu)$) if
-          $\int_X f^+ \, d\mu < \infty$ and $\int_X f^- \, d\mu < \infty$, and set
-          \[
-          \int_X f \, d\mu = \int_X f^+ \, d\mu - \int_X f^- \, d\mu .
-          \]
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Almost everywhere]
-\label{def:app:almost-everywhere}
-Let $(X, \mathcal{F}, \mu)$ be a measure space. A property $P(x)$ holds
-\emph{almost everywhere} (a.e.) if the set of points where it fails has measure
-zero:
-\[
-\mu(\{x \in X : \neg P(x)\}) = 0 .
-\]
-\end{definition}
-
-In the context of Lebesgue measure on $\R^n$, ``almost everywhere'' means
-``except on a set of Lebesgue measure zero''.
-
-\subsection{Functional-analytic preliminaries}
-\label{subsec:app:functional-analysis}
-
-\begin{definition}[Vector space]
-\label{def:app:vector-space}
-A \emph{vector space} over $\R$ is a set $V$ equipped with two operations,
-addition $+ \colon V \times V \to V$ and scalar multiplication
-$\cdot \colon \R \times V \to V$, satisfying the following axioms for all
-$u, v, w \in V$ and $\alpha, \beta \in \R$:
-\begin{enumerate}
-    \item \textbf{Associativity of addition:} $(u + v) + w = u + (v + w)$;
-    \item \textbf{Commutativity of addition:} $u + v = v + u$;
-    \item \textbf{Identity element:} there exists $0 \in V$ with $v + 0 = v$;
-    \item \textbf{Inverse element:} for each $v$ there is $-v \in V$ with
-          $v + (-v) = 0$;
-    \item \textbf{Compatibility of scalar multiplication:}
-          $\alpha(\beta v) = (\alpha\beta)v$;
-    \item \textbf{Unit element:} $1 \cdot v = v$;
-    \item \textbf{Distributivity over vector addition:}
-          $\alpha(u + v) = \alpha u + \alpha v$;
-    \item \textbf{Distributivity over scalar addition:}
-          $(\alpha + \beta)v = \alpha v + \beta v$.
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Normed vector space]
-\label{def:app:normed-space}
-A \emph{normed vector space} is a pair $(X, \norm{\cdot})$ where $X$ is a real
-vector space and $\norm{\cdot} \colon X \to [0, +\infty)$ is a \emph{norm}, that
-is, a function satisfying:
-\begin{enumerate}
-    \item $\norm{x} = 0$ if and only if $x = 0$;
-    \item $\norm{\alpha x} = \abs{\alpha} \norm{x}$ for all $\alpha \in \R$;
-    \item $\norm{x + y} \leq \norm{x} + \norm{y}$ (triangle inequality).
-\end{enumerate}
-\end{definition}
-
-Fundamental examples include $\R^n$ with the Euclidean norm and the function
-spaces $L^p(\Omega)$.
-
-\begin{definition}[Cover]
-\label{def:app:cover}
-Let $X$ be a topological space and $K \subseteq X$. A \emph{cover} of $K$ is a
-family of sets $\{U_\alpha\}_{\alpha \in A}$ with
-$K \subseteq \bigcup_{\alpha \in A} U_\alpha$. If each $U_\alpha$ is open, it is
-an \emph{open cover}. A \emph{subcover} is a subfamily that is still a cover of
-$K$.
-\end{definition}
-
-\begin{definition}[Compact space]
-\label{def:app:compact-space}
-A subset $K$ of a topological space is \emph{compact} if every open cover of $K$
-admits a finite subcover.
-\end{definition}
-
-Intuitively, compactness generalizes the properties of closed and bounded sets in
-$\R^n$ to general topological spaces.
-
-\begin{theorem}[Heine--Borel]
-\label{thm:app:heine-borel}
-A subset $K \subset \R^n$ is compact if and only if it is closed and bounded
-\citep[Theorem~2.41]{Rudin1976}.
+where $W_f(a, b) = \langle f, \psi_{a,b} \rangle$ is the continuous wavelet transform and $\psi_{a,b}(t) = \frac{1}{\sqrt{a}} \psi\left(\frac{t-b}{a}\right)$.
 \end{theorem}
-
-In particular, the unit hypercube $I_m = [0,1]^m$ is compact, which is essential
-for the universal approximation theorem.
-
-\begin{definition}[Linear functional]
-\label{def:app:linear-functional}
-Let $X$ be a real vector space. A \emph{linear functional} is a map
-$f \colon X \to \R$ satisfying
-\[
-f(\alpha x + \beta y) = \alpha f(x) + \beta f(y)
-\quad \forall x, y \in X, \, \forall \alpha, \beta \in \R .
-\]
-That is, a linear functional is an element of the algebraic dual space $X^*$.
-\end{definition}
-
-\begin{definition}[Continuous linear functional]
-\label{def:app:continuous-functional}
-Let $(X, \norm{\cdot})$ be a normed vector space. A linear functional
-$f \colon X \to \R$ is \emph{continuous} (or \emph{bounded}) if there is a
-constant $M > 0$ with
-\[
-\abs{f(x)} \leq M\norm{x} \quad \forall x \in X .
-\]
-\end{definition}
-
-The set of all continuous linear functionals on $X$ forms the \emph{dual space}
-$X'$, a Banach space under the operator norm
-$\norm{f} = \sup_{\norm{x} \leq 1} \abs{f(x)}$.
-
-\begin{definition}[The space $C(K)$]
-\label{def:app:space-CK}
-Let $K$ be a compact space. The space $C(K)$ is the set of all continuous
-functions $f \colon K \to \R$ equipped with the \emph{supremum norm} (or uniform
-norm)
-\[
-\norm{f}_\infty = \sup_{x \in K} \abs{f(x)} .
-\]
-\end{definition}
-
-With this norm, $C(K)$ is a Banach space (a complete normed vector space). In the
-context of the universal approximation theorem, we work with $C(I_m)$, the space
-of continuous functions on the unit hypercube.
-
-\begin{theorem}[Lebesgue dominated convergence]
-\label{thm:app:dominated-convergence}
-Let $(X, \mathcal{F}, \mu)$ be a measure space and $\{f_n\}_{n=1}^\infty$ a
-sequence of measurable functions $f_n \colon X \to \R$ such that:
-\begin{enumerate}
-    \item $f_n(x) \to f(x)$ for almost every $x \in X$;
-    \item there is an integrable function $g \colon X \to \R$ with
-          $\abs{f_n(x)} \leq g(x)$ for almost every $x \in X$ and every
-          $n \in \mathbb{N}$.
-\end{enumerate}
-Then $f$ is integrable and
-\[
-\lim_{n \to \infty} \int_X f_n \, d\mu = \int_X f \, d\mu
-= \int_X \lim_{n \to \infty} f_n \, d\mu
-\]
-\citep[Theorem~2.24]{Folland1999}.
-\end{theorem}
-
-This theorem is fundamental for interchanging limits and integrals, which is
-needed to show that sigmoidal functions are discriminatory.
-
-\begin{definition}[Convex set]
-\label{def:app:convex-set}
-A subset $C$ of a vector space $V$ is \emph{convex} if for all $x, y \in C$ and
-$\lambda \in [0,1]$ one has $\lambda x + (1-\lambda)y \in C$. Equivalently, $C$
-contains the segment joining any two of its points.
-\end{definition}
-
-\begin{theorem}[Hahn--Banach, geometric form]
-\label{thm:app:hahn-banach}
-Let $X$ be a real topological vector space, and $A$, $B$ disjoint convex subsets
-of $X$ with $A$ open. Then there exist a continuous linear functional
-$f \colon X \to \R$ and a constant $\alpha \in \R$ such that
-\[
-f(a) < \alpha \leq f(b) \quad \forall a \in A, \, b \in B
-\]
-\citep[Theorem~5.5]{Folland1999}.
-\end{theorem}
-
-\begin{corollary}[Density characterization]
-\label{cor:app:density-characterization}
-Let $X$ be a normed vector space and $Y \subset X$ a subspace. Then $Y$ is dense
-in $X$ if and only if the only continuous linear functional vanishing on $Y$ is
-the zero functional.
-\end{corollary}
 
 \begin{proof}
-\textbf{($\Rightarrow$)} Suppose $Y$ is dense in $X$. Let $f \colon X \to \R$ be
-a continuous linear functional with $f(y) = 0$ for all $y \in Y$. For any
-$x \in X$ there is a sequence $\{y_n\} \subset Y$ with $y_n \to x$. By continuity
-of $f$,
+We work in the Fourier domain. The transform of $\psi_{a,b}$ is $\hat{\psi}_{a,b}(\omega) = \sqrt{a} \, e^{-i\omega b} \hat{\psi}(a\omega)$. The wavelet coefficients satisfy:
 \[
-f(x) = f\!\left(\lim_{n \to \infty} y_n\right)
-= \lim_{n \to \infty} f(y_n) = 0 ,
+W_f(a,b) = \int_{\mathbb{R}} f(t) \overline{\psi_{a,b}(t)} \, dt = \int_{\mathbb{R}} \hat{f}(\omega) \overline{\hat{\psi}_{a,b}(\omega)} \, d\omega = \sqrt{a} \int_{\mathbb{R}} \hat{f}(\omega) \overline{\hat{\psi}(a\omega)} e^{i\omega b} \, d\omega
 \]
-so $f \equiv 0$.
-
-\textbf{($\Leftarrow$)} Suppose $Y$ is not dense in $X$. Then $\overline{Y} \neq X$,
-and there is $x_0 \in X \setminus \overline{Y}$. Since $\overline{Y}$ is a closed
-subspace, take an open ball $B_r(0) \subset X$ and set
-$A = \overline{Y} + B_r(0)$, which is open and convex with $A \cap \{x_0\} =
-\emptyset$ for $r$ small enough (as $x_0 \notin \overline{Y}$). By
-\Cref{thm:app:hahn-banach}, there exist a linear functional $f$ and
-$\alpha \in \R$ with
+Substituting into the reconstruction formula and using Fubini's theorem:
+\begin{align}
+I(t) &= \frac{1}{C_\psi} \int_0^\infty \int_{\mathbb{R}} W_f(a,b) \psi_{a,b}(t) \frac{db \, da}{a^2}
+\end{align}
+In the Fourier domain, the integral in $b$ produces a Dirac delta:
 \[
-f(a) < \alpha \leq f(x_0) \quad \forall a \in A .
+\int_{\mathbb{R}} e^{i\omega b} e^{-i\omega' b} \, db = 2\pi \delta(\omega - \omega')
 \]
-Since $\overline{Y}$ is a subspace, $0 \in \overline{Y} \subset A$, so
-$f(0) = 0 < \alpha$. Moreover, for any $y \in Y$ and $t \in \R$, $ty \in
-\overline{Y} \subset A$, so $tf(y) = f(ty) < \alpha$ for all $t$. This is
-possible only if $f(y) = 0$. Yet $f(x_0) \geq \alpha > 0$, so $f \not\equiv 0$.
+After integrating in $b$ and simplifying:
+\[
+\hat{I}(\omega) = \hat{f}(\omega) \cdot \frac{1}{C_\psi} \int_0^\infty \frac{|\hat{\psi}(a\omega)|^2}{a} \, da = \hat{f}(\omega) \cdot \frac{1}{C_\psi} \int_0^\infty \frac{|\hat{\psi}(u)|^2}{u} \, du = \hat{f}(\omega)
+\]
+where in the second-to-last equality we use the change $u = a\omega$ (for $\omega > 0$). The equality $\hat{I} = \hat{f}$ implies $I = f$ in $L^2$. See \citep[Theorem~4.3]{Mallat2009} and \citep[Chapter~2]{Daubechies1992} for details on the convergence conditions.
 \end{proof}
 
-\begin{theorem}[Riesz representation for $C(K)$]
-\label{thm:app:riesz}
-Let $K$ be a compact space and $C(K)$ the space of real continuous functions on
-$K$ with the supremum norm. For every continuous linear functional
-$L \colon C(K) \to \R$ there exists a unique regular finite signed Borel measure
-$\mu$ on $K$ such that
+\section{Multiresolution Wavelet Decomposition}\label{sec:descomposicion_wavelet}
+
+\begin{theorem}[Wavelet Decomposition]\label{thm:descomposicion_wavelet_apendice}
+Let $\{V_j\}_{j \in \mathbb{Z}}$ be a multiresolution analysis (MRA) of $L^2(\mathbb{R})$ with scaling function $\phi$ and mother wavelet $\psi$. Then:
 \[
-L(f) = \int_K f \, d\mu \quad \forall f \in C(K) .
+L^2(\mathbb{R}) = V_{j_0} \oplus \bigoplus_{j=j_0}^{\infty} W_j
 \]
-Moreover, $\norm{L} = \abs{\mu}(K)$, where $\abs{\mu}$ is the total variation of
-$\mu$ \citep[Theorem~7.17]{Folland1999}.
+where $W_j$ is the orthogonal complement of $V_j$ in $V_{j+1}$ and $\{2^{j/2}\psi(2^j \cdot - k)\}_{k \in \mathbb{Z}}$ forms an orthonormal basis of $W_j$.
 \end{theorem}
 
-\begin{theorem}[Stone--Weierstrass]
-\label{thm:app:stone-weierstrass}
-Let $K$ be a compact space and $\mathcal{A} \subset C(K)$ a subalgebra that
-separates points of $K$ and vanishes nowhere. Then $\mathcal{A}$ is dense in
-$C(K)$ with respect to the supremum norm \citep[Theorem~7.32]{Rudin1976}.
+\begin{proof}
+By the definition of MRA, the subspaces $\{V_j\}$ satisfy: (i) $V_j \subset V_{j+1}$, (ii) $\overline{\bigcup_j V_j} = L^2(\mathbb{R})$, (iii) $\bigcap_j V_j = \{0\}$, and (iv) $\{\phi(\cdot - k)\}_{k \in \mathbb{Z}}$ is an orthonormal basis of $V_0$.
+
+Let $W_j = V_{j+1} \ominus V_j$ be the orthogonal complement of $V_j$ in $V_{j+1}$. Then $V_{j+1} = V_j \oplus W_j$ (orthogonal direct sum). Iterating from $j_0$:
+\[
+V_J = V_{j_0} \oplus W_{j_0} \oplus W_{j_0+1} \oplus \cdots \oplus W_{J-1}
+\]
+
+Taking $J \to \infty$ and using the density condition (ii): $L^2(\mathbb{R}) = \overline{\bigcup_J V_J} = V_{j_0} \oplus \bigoplus_{j=j_0}^{\infty} W_j$.
+
+For the construction of the basis of $W_j$: by the refinement equation $\phi(t) = \sqrt{2} \sum_k h_k \phi(2t - k)$ (where $h_k$ are the low-pass filter coefficients), one defines $\psi(t) = \sqrt{2} \sum_k g_k \phi(2t - k)$ with $g_k = (-1)^k \overline{h_{1-k}}$ (quadrature mirror filter). The orthonormality of $\{2^{j/2}\psi(2^j \cdot - k)\}_k$ in $W_j$ is verified using the properties of the mirror filter and the condition $|H(\omega)|^2 + |H(\omega + \pi)|^2 = 1$, where $H(\omega) = \frac{1}{\sqrt{2}} \sum_k h_k e^{-ik\omega}$. See \citep[Chapter~7]{Mallat2009}.
+\end{proof}
+
+\section{Spherical Harmonic Expansion}\label{sec:expansion_armonicos_esfericos}
+
+\begin{theorem}[Completeness of Spherical Harmonics]\label{thm:expansion_armonicos_apendice}
+The spherical harmonics $\{Y_l^m\}_{l \geq 0, |m| \leq l}$ form a complete orthonormal system in $L^2(S^2)$: for every $f \in L^2(S^2)$,
+\[
+f(\theta, \phi) = \sum_{l=0}^{\infty} \sum_{m=-l}^{l} f_l^m Y_l^m(\theta, \phi)
+\]
+with convergence in $L^2(S^2)$, where $f_l^m = \int_{S^2} f(\mathbf{x}) \overline{Y_l^m(\mathbf{x})} \, d\sigma(\mathbf{x})$.
 \end{theorem}
 
-In particular, if $\mathcal{A}$ contains the constant functions and separates
-points, then it is dense in $C(K)$.
+\begin{proof}
+The proof proceeds in three steps.
 
-\begin{remark}
-There are two main approaches to proving the universal approximation theorem. The
-approach of \citet{cybenko1989} uses the Hahn--Banach corollary together with the
-Riesz representation theorem, showing that sigmoidal functions are
-``discriminatory'' (they vanish against a measure only if the measure is zero).
-The approach of \citet{hornik1989} uses the Stone--Weierstrass theorem, showing
-that neural networks form a point-separating subalgebra. Both rely on the
-preliminaries collected above, and the full statement and proof are developed in
-\Cref{ch:foundations}.
-\end{remark}
+\textbf{Step 1: Orthonormality.} The spherical harmonics satisfy $\langle Y_l^m, Y_{l'}^{m'} \rangle = \delta_{ll'} \delta_{mm'}$. This is verified by direct computation: the integral over $\phi \in [0, 2\pi)$ of $e^{i(m-m')\phi}$ is $2\pi \delta_{mm'}$, and the integral over $\theta$ of the associated Legendre polynomials gives the correct normalization by the Legendre orthogonality relations.
+
+\textbf{Step 2: The $Y_l^m$ as eigenfunctions of the Laplacian.} The Laplace-Beltrami operator on $S^2$ is:
+\[
+\Delta_{S^2} = \frac{1}{\sin\theta}\frac{\partial}{\partial\theta}\left(\sin\theta\frac{\partial}{\partial\theta}\right) + \frac{1}{\sin^2\theta}\frac{\partial^2}{\partial\phi^2}
+\]
+It is verified that $\Delta_{S^2} Y_l^m = -l(l+1) Y_l^m$. The eigenvalues $-l(l+1)$ have multiplicity $2l+1$ (corresponding to $m = -l, \ldots, l$).
+
+\textbf{Step 3: Completeness.} The operator $\Delta_{S^2}$ is self-adjoint and elliptic on the compact manifold $S^2$. By the spectral theorem for elliptic operators on compact manifolds, the eigenfunctions form a complete system in $L^2(S^2)$. Equivalently, the homogeneous harmonic polynomials restricted to $S^2$ generate a subalgebra that separates points and contains the constants; by the Stone-Weierstrass theorem, this subalgebra is dense in $C(S^2)$ and, therefore, in $L^2(S^2)$. See \citep[Chapter~IV]{Folland1999}.
+\end{proof}
+
+\section{Clebsch-Gordan Decomposition}\label{sec:clebsch_gordan}
+
+\begin{theorem}[Clebsch-Gordan Decomposition for $SO(3)$]\label{thm:clebsch_gordan_apendice}
+The tensor product of two irreducible representations $D^{(l_1)}$ and $D^{(l_2)}$ of $SO(3)$ decomposes as:
+\[
+D^{(l_1)} \otimes D^{(l_2)} = \bigoplus_{L=|l_1-l_2|}^{l_1+l_2} D^{(L)}
+\]
+The change of basis is given by the Clebsch-Gordan coefficients $C_{l_1 m_1, l_2 m_2}^{L M}$.
+\end{theorem}
+
+\begin{proof}
+The tensor product space $V_{l_1} \otimes V_{l_2}$ has dimension $(2l_1+1)(2l_2+1)$. The action of $SO(3)$ on this space is $(D^{(l_1)} \otimes D^{(l_2)})(R) = D^{(l_1)}(R) \otimes D^{(l_2)}(R)$.
+
+\textit{Character analysis}: The character of $D^{(l)}$ is $\chi_l(\theta) = \sum_{m=-l}^{l} e^{im\theta} = \frac{\sin((l+1/2)\theta)}{\sin(\theta/2)}$, where $\theta$ is the rotation angle. The character of the tensor product is:
+\[
+\chi_{l_1}(\theta) \cdot \chi_{l_2}(\theta) = \frac{\sin((l_1+1/2)\theta) \cdot \sin((l_2+1/2)\theta)}{\sin^2(\theta/2)}
+\]
+
+Using the product-of-sines identity: $\sin A \cdot \sin B = \frac{1}{2}[\cos(A-B) - \cos(A+B)]$, one obtains, after simplification:
+\[
+\chi_{l_1} \cdot \chi_{l_2} = \sum_{L=|l_1-l_2|}^{l_1+l_2} \chi_L
+\]
+
+Since the irreducible representations of $SO(3)$ are determined by their characters (by the Peter-Weyl theorem), this character identity implies the decomposition of the statement. The dimension is verified: $\sum_{L=|l_1-l_2|}^{l_1+l_2}(2L+1) = (2l_1+1)(2l_2+1)$. The Clebsch-Gordan coefficients $C_{l_1 m_1, l_2 m_2}^{LM}$ are the entries of the unitary matrix that effects the change of basis between $\{|l_1, m_1\rangle \otimes |l_2, m_2\rangle\}$ and $\{|L, M\rangle\}$. See \citep[Chapter~8]{Serre1977} and \citep[Chapter~11]{Fulton1991}.
+\end{proof}
+
+\section{Cayley's Theorem}\label{sec:cayley}
+
+\begin{theorem}[Cayley for Finite Groups]\label{thm:cayley_apendice}
+Every finite group $G$ of order $n$ is isomorphic to a subgroup of $S_n$, the symmetric group of permutations of $n$ elements.
+\end{theorem}
+
+\begin{proof}
+For each $g \in G$, we define the \textit{left multiplication} $\lambda_g: G \to G$ by $\lambda_g(h) = gh$. This map is bijective: it is injective because $gh_1 = gh_2$ implies $h_1 = h_2$ (by the cancellation law in groups), and surjective because for every $h \in G$ we have $h = g(g^{-1}h)$.
+
+Numbering the elements of $G = \{g_1, \ldots, g_n\}$, each $\lambda_g$ defines a permutation $\sigma_g \in S_n$ via $\sigma_g(i) = j$ if $g \cdot g_i = g_j$.
+
+The homomorphism $\Phi: G \to S_n$ defined by $\Phi(g) = \sigma_g$ is injective: if $\Phi(g) = \Phi(h)$, then $\sigma_g = \sigma_h$, which implies $g \cdot g_i = h \cdot g_i$ for all $i$. Taking $g_i = e$ (identity), $g = h$.
+
+Compatibility with composition is verified directly: $\Phi(gh)(g_i) = (gh) \cdot g_i = g \cdot (h \cdot g_i) = \Phi(g)(\Phi(h)(g_i)) = (\Phi(g) \circ \Phi(h))(g_i)$.
+
+Therefore, $\Phi$ is an injective homomorphism, and $G \cong \Phi(G) \leq S_n$. See \citep[Section~4.2]{dummit2004abstract}.
+\end{proof}
+
+\section{Universal Gauge Approximation}\label{sec:aproximacion_universal_gauge}
+
+\begin{theorem}[Universal Approximation for Gauge Equivariant Networks]\label{thm:aproximacion_universal_gauge_apendice}
+Let $\mathcal{M}$ be a compact Riemannian manifold and $G$ a compact Lie group acting on fibers. Gauge equivariant networks are universal approximators in the space of continuous gauge equivariant functions: for every continuous gauge equivariant function $f: \Gamma(E) \to \Gamma(E')$ between sections of associated bundles and every $\epsilon > 0$, there exists a gauge equivariant network $\Phi$ such that $\|f - \Phi\|_\infty < \epsilon$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The proof adapts the classical universal approximation argument to the gauge equivariant context, following \citep{cohen2019gaugeequivariantconvolutional}.
+
+\textbf{Step 1: Local reduction.} By the compactness of $\mathcal{M}$, it can be covered with a finite number of trivializing charts $\{U_\alpha\}$ where the bundle is locally trivial: $\pi^{-1}(U_\alpha) \cong U_\alpha \times F$. In each chart, the gauge equivariant function reduces to a function equivariant with respect to the action of $G$ on the fiber.
+
+\textbf{Step 2: Local equivariant approximation.} In each chart, by the equivariant universal approximation theorem (which follows from the classical case by projecting onto the space of equivariant functions via the Reynolds operator $\mathcal{R}_G f = \frac{1}{|G|}\int_G \rho(g)^{-1} f(\rho(g) \cdot) \, dg$), there exists a local network $\Phi_\alpha$ that approximates $f|_{U_\alpha}$ with error $< \epsilon/2$.
+
+\textbf{Step 3: Global assembly.} Using a partition of unity $\{\chi_\alpha\}$ subordinate to $\{U_\alpha\}$, one constructs $\Phi = \sum_\alpha \chi_\alpha \Phi_\alpha$. Global gauge equivariance is preserved because each $\Phi_\alpha$ is equivariant and the partition functions $\chi_\alpha$ are scalar (gauge invariant). The total error is controlled by $\|f - \Phi\|_\infty \leq \max_\alpha \|f|_{U_\alpha} - \Phi_\alpha\|_\infty < \epsilon$.
+\end{proof}
+
+\section{De Rham's Theorem}\label{sec:de_rham}
+
+\begin{theorem}[De Rham]\label{thm:de_rham_apendice}
+Let $\mathcal{M}$ be a compact differentiable manifold without boundary. There exists a natural isomorphism between De Rham cohomology and singular cohomology with real coefficients:
+\[
+H^k_{\text{dR}}(\mathcal{M}) \cong H^k(\mathcal{M}; \mathbb{R})
+\]
+for all $k \geq 0$, where $H^k_{\text{dR}}(\mathcal{M}) = \ker(d_k)/\operatorname{Im}(d_{k-1})$ with $d_k: \Omega^k(\mathcal{M}) \to \Omega^{k+1}(\mathcal{M})$ the exterior derivative.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The proof proceeds by means of sheaf theory, following \citep{Warner1983}.
+
+\textbf{Step 1: Poincaré lemma.} For every contractible open set $U \subseteq \mathbb{R}^n$ and $k \geq 1$, $H^k_{\text{dR}}(U) = 0$. The proof uses the homotopy operator $K: \Omega^k(U) \to \Omega^{k-1}(U)$ defined by $(K\omega)(x) = \int_0^1 t^{k-1} \iota_{x-x_0} \omega(tx+(1-t)x_0) \, dt$, which satisfies $dK + Kd = \operatorname{Id}$.
+
+\textbf{Step 2: Smooth resolution of the constant sheaf.} The Poincaré lemma implies that the sequence $0 \to \underline{\mathbb{R}} \to \Omega^0 \xrightarrow{d} \Omega^1 \xrightarrow{d} \Omega^2 \to \cdots$ is a resolution of the constant sheaf $\underline{\mathbb{R}}$ by fine sheaves (differential forms admit partitions of unity).
+
+\textbf{Step 3: Fine sheaf theorem.} Since the sheaves $\Omega^k$ are fine (by the existence of smooth partitions of unity), the previous resolution computes the cohomology of the sheaf $\underline{\mathbb{R}}$:
+\[
+H^k_{\text{dR}}(\mathcal{M}) = H^k(\Gamma(\mathcal{M}, \Omega^\bullet)) \cong H^k(\mathcal{M}; \underline{\mathbb{R}})
+\]
+
+\textbf{Step 4: Cohomology of the constant sheaf.} The cohomology of the constant sheaf $\underline{\mathbb{R}}$ is isomorphic to the singular cohomology $H^k(\mathcal{M}; \mathbb{R})$ by Eilenberg's comparison theorem. This isomorphism is constructed explicitly by means of integration: the map $[\omega] \mapsto [\sigma \mapsto \int_\sigma \omega]$ defines a homomorphism from $H^k_{\text{dR}}$ to $H^k_{\text{sing}}(\mathcal{M}; \mathbb{R})$ that is an isomorphism. See \citep[Chapter~5]{Warner1983} and \citep[Chapter~17]{Lee2013}.
+\end{proof}
+
+\section{Convergence of Random Fourier Features}\label{sec:convergencia_rff}
+
+\begin{theorem}[Uniform Convergence of Random Fourier Features]\label{thm:convergencia_rff_apendice}
+Let $k: \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$ be a positive definite, stationary and continuous kernel with Fourier transform $p(\boldsymbol{\omega})$ (spectral distribution). Define the approximation with $m$ random Fourier features:
+\[
+\hat{k}_m(\mathbf{x}, \mathbf{y}) = \frac{1}{m} \sum_{j=1}^{m} z_{\boldsymbol{\omega}_j}(\mathbf{x}) \, z_{\boldsymbol{\omega}_j}(\mathbf{y})
+\]
+where $\boldsymbol{\omega}_j \sim p(\boldsymbol{\omega})$ i.i.d. and $z_{\boldsymbol{\omega}}(\mathbf{x}) = \sqrt{2}\cos(\boldsymbol{\omega}^T \mathbf{x} + b)$ with $b \sim \text{Uniform}[0, 2\pi]$. Then, for all $\epsilon, \delta > 0$ and finite set $\mathcal{X} = \{\mathbf{x}_1, \ldots, \mathbf{x}_n\}$, if $m \geq \frac{4}{\epsilon^2}\log\frac{2n}{\delta}$:
+\[
+\Pr\!\left[\sup_{i,j} |k(\mathbf{x}_i, \mathbf{x}_j) - \hat{k}_m(\mathbf{x}_i, \mathbf{x}_j)| > \epsilon\right] < \delta
+\]
+\end{theorem}
+
+\begin{proof}
+\textbf{Step 1: Spectral representation.} By Bochner's theorem, a continuous positive definite stationary kernel $k(\mathbf{x}, \mathbf{y}) = k(\mathbf{x} - \mathbf{y})$ admits the representation:
+\[
+k(\boldsymbol{\delta}) = \int_{\mathbb{R}^d} e^{i\boldsymbol{\omega}^T \boldsymbol{\delta}} \, p(\boldsymbol{\omega}) \, d\boldsymbol{\omega} = \mathbb{E}_{\boldsymbol{\omega} \sim p}\!\left[e^{i\boldsymbol{\omega}^T \boldsymbol{\delta}}\right]
+\]
+Writing $e^{i\boldsymbol{\omega}^T \boldsymbol{\delta}} = \cos(\boldsymbol{\omega}^T \boldsymbol{\delta}) + i\sin(\boldsymbol{\omega}^T \boldsymbol{\delta})$ and using that $k$ is real and $p$ is symmetric, $k(\boldsymbol{\delta}) = \mathbb{E}[\cos(\boldsymbol{\omega}^T \boldsymbol{\delta})]$.
+
+\textbf{Step 2: Unbiased estimator.} It is verified that $\mathbb{E}[z_{\boldsymbol{\omega}}(\mathbf{x}) z_{\boldsymbol{\omega}}(\mathbf{y})] = k(\mathbf{x} - \mathbf{y})$:
+\begin{align}
+\mathbb{E}_{b}[\cos(\boldsymbol{\omega}^T\mathbf{x}+b)\cos(\boldsymbol{\omega}^T\mathbf{y}+b)] &= \frac{1}{2}\cos(\boldsymbol{\omega}^T(\mathbf{x}-\mathbf{y}))
+\end{align}
+by the product-of-cosines identity. Multiplying by 2 (from the $\sqrt{2}$ factor) and taking the expectation over $\boldsymbol{\omega} \sim p$, $k(\mathbf{x}-\mathbf{y})$ is recovered.
+
+\textbf{Step 3: Concentration.} Each variable $z_{\boldsymbol{\omega}}(\mathbf{x}) z_{\boldsymbol{\omega}}(\mathbf{y})$ is bounded in $[-2, 2]$ (since $|z_{\boldsymbol{\omega}}| \leq \sqrt{2}$). By Hoeffding's inequality, for a fixed pair $(\mathbf{x}_i, \mathbf{x}_j)$:
+\[
+\Pr\!\left[|\hat{k}_m(\mathbf{x}_i, \mathbf{x}_j) - k(\mathbf{x}_i, \mathbf{x}_j)| > \epsilon\right] \leq 2\exp\!\left(-\frac{m\epsilon^2}{4}\right)
+\]
+
+\textbf{Step 4: Union over pairs.} By the union bound over the $\binom{n}{2} \leq n^2/2$ pairs:
+\[
+\Pr\!\left[\sup_{i,j} |\hat{k}_m - k| > \epsilon\right] \leq n^2 \exp\!\left(-\frac{m\epsilon^2}{4}\right) \leq \delta
+\]
+when $m \geq \frac{4}{\epsilon^2}\log\frac{n^2}{\delta} \geq \frac{4}{\epsilon^2}\log\frac{2n}{\delta}$. See \citep{rahimi2007random}.
+\end{proof}
