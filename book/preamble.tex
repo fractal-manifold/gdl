@@ -33,7 +33,10 @@
 \usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,decorations.pathreplacing}
 \usepackage{tikz-cd}
 \usepackage{float}
+\usepackage{array}      % \arraybackslash + >{...} column modifiers (notation tables)
 \usepackage{longtable}
+\usepackage{makecell}   % \makecell[l]{line \\ line} for multi-line table cells
+\usepackage{ytableau}   % \ytableaushort Young tableaux (representation theory)
 
 % ----- Code listings (pure-LaTeX; no minted/shell-escape needed) -----
 \usepackage{listings}
@@ -136,10 +139,12 @@
 % TikZ arrow syntax such as ->, >=stealth and <-. Disable just those two
 % shorthands for the Spanish edition; accents are written explicitly (\'o).
 % babel activates its shorthands at \begin{document}, so disabling them must
-% happen there too (a preamble \shorthandoff would be undone).
+% happen there too (a preamble \shorthandoff would be undone). We hook into
+% begindocument/end so this runs *after* babel has activated the main-language
+% shorthands, regardless of package load order.
 \def\esbooklang{es}
 \ifx\booklang\esbooklang
-  \AtBeginDocument{\shorthandoff{<>}}
+  \AddToHook{begindocument/end}{\shorthandoff{<>}}
 \fi
 
 % ----- Theorem environments -----------------------------------------
