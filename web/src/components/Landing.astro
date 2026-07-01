@@ -59,17 +59,17 @@ const copy = {
     gsEyebrow: '02 — The Five Gs',
     gsTitle: 'Five domains, one set of principles',
     gs: [
-      { name: 'Grids', desc: 'Convolutional networks and translation symmetry — convolution as the equivariant linear map on a regular grid, with pooling and scale separation.' },
-      { name: 'Groups', desc: 'Group-equivariant networks. Equivariance to rotations, reflections and general symmetry groups through group convolutions and steerable filters.' },
-      { name: 'Graphs', desc: 'Graph neural networks. Permutation-equivariant message passing, spectral and spatial methods, and the Weisfeiler–Leman hierarchy.' },
-      { name: 'Geodesics', desc: 'Learning on manifolds. Intrinsic geometry, geodesic convolution and spectral methods on curved domains.' },
-      { name: 'Gauges', desc: 'Gauge-equivariant networks. Local reference frames, parallel transport and gauge-equivariant convolution — the most general setting.' },
+      { name: 'Geometry', desc: 'The domains of data. Riemannian manifolds, tangent spaces and curvature give a precise language for the space a signal lives on.' },
+      { name: 'Groups', desc: 'The symmetries of data. Lie groups and representation theory — Peter–Weyl and Schur — yield the equivariant operators that respect them.' },
+      { name: 'Graphs', desc: 'The discretisation of geometries. The graph Laplacian and spectral analysis turn continuous domains into computable, neighbourhood-preserving structures.' },
+      { name: 'Geodesics', desc: 'Optimal paths and information propagation. Metrics, the exponential map and parallel transport — the geometric root of message passing.' },
+      { name: 'Gauges', desc: 'Local invariances and coordinate freedoms. Principal bundles and connections handle the freedom to choose local reference frames.' },
     ],
     blueprintLabel: 'The blueprint',
     blueprintDesc: 'Each domain is a special case of one recipe: a symmetry group, a signal on a domain, and equivariant maps that commute with the group. Message passing is its common implementation.',
     contentsEyebrow: '03 — Contents',
     contentsTitle: 'Table of contents',
-    contentsNote: 'Ten chapters across three parts — Foundations, the Five Gs, and Practice. ',
+    contentsNote: 'Six chapters — from neural-network foundations through the geometric framework of the Five Gs to its convolutional and attention models. ',
     audienceEyebrow: "04 — Who it's for",
     audienceTitle: 'Written for builders and theorists alike',
     audience: [
@@ -103,17 +103,17 @@ const copy = {
     gsEyebrow: '02 — Las Cinco Ges',
     gsTitle: 'Cinco dominios, un mismo conjunto de principios',
     gs: [
-      { name: 'Grids', desc: 'Redes convolucionales y simetría de traslación — la convolución como aplicación lineal equivariante en una rejilla regular, con agrupamiento y separación de escalas.' },
-      { name: 'Groups', desc: 'Redes equivariantes a grupos. Equivariancia a rotaciones, reflexiones y grupos de simetría generales mediante convoluciones de grupo y filtros orientables.' },
-      { name: 'Graphs', desc: 'Redes neuronales de grafos. Paso de mensajes equivariante a permutaciones, métodos espectrales y espaciales, y la jerarquía de Weisfeiler–Leman.' },
-      { name: 'Geodesics', desc: 'Aprendizaje en variedades. Geometría intrínseca, convolución geodésica y métodos espectrales en dominios curvos.' },
-      { name: 'Gauges', desc: 'Redes equivariantes gauge. Marcos de referencia locales, transporte paralelo y convolución equivariante gauge — el marco más general.' },
+      { name: 'Geometry', desc: 'Los dominios de los datos. Variedades de Riemann, espacios tangentes y curvatura dan un lenguaje preciso para el espacio en que vive una señal.' },
+      { name: 'Groups', desc: 'Las simetrías de los datos. Grupos de Lie y teoría de representaciones —Peter–Weyl y Schur— producen los operadores equivariantes que las respetan.' },
+      { name: 'Graphs', desc: 'La discretización de geometrías. El laplaciano del grafo y el análisis espectral convierten dominios continuos en estructuras computables que preservan la vecindad.' },
+      { name: 'Geodesics', desc: 'Caminos óptimos y propagación de la información. Métricas, mapa exponencial y transporte paralelo — la raíz geométrica del paso de mensajes.' },
+      { name: 'Gauges', desc: 'Invarianzas locales y libertad de coordenadas. Fibrados principales y conexiones manejan la libertad de elegir marcos de referencia locales.' },
     ],
     blueprintLabel: 'El esquema',
     blueprintDesc: 'Cada dominio es un caso particular de una misma receta: un grupo de simetría, una señal sobre un dominio y aplicaciones equivariantes que conmutan con el grupo. El paso de mensajes es su implementación común.',
     contentsEyebrow: '03 — Contenidos',
     contentsTitle: 'Tabla de contenidos',
-    contentsNote: 'Diez capítulos en tres partes — Fundamentos, las Cinco Ges y Práctica. ',
+    contentsNote: 'Seis capítulos — de los fundamentos de redes neuronales al marco geométrico de las Cinco Ges y sus modelos convolucionales y de atención. ',
     audienceEyebrow: '04 — Para quién es',
     audienceTitle: 'Escrito tanto para quienes construyen como para quienes teorizan',
     audience: [
@@ -178,7 +178,7 @@ const formats = formatMeta.map((m, i) => ({ ...m, ...copy.formats[i] }));
               <h2 class="cover-title gradient-text">Geometric Deep Learning</h2>
               <p class="cover-sub">{copy.heroTagline}</p>
               <div class="cover-rule"></div>
-              <p class="cover-gs">Grids · Groups · Graphs<br />Geodesics · Gauges</p>
+              <p class="cover-gs">Geometry · Groups · Graphs<br />Geodesics · Gauges</p>
             </div>
           </div>
         </div>
