@@ -31,20 +31,11 @@ const heroMath = [
 ];
 
 // Icons + accents are constant across languages; the copy comes from `tr`.
-const gsMeta = [
-  { accent: 'gold', icon: '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>' },
-  { accent: 'purple', icon: '<polygon points="12 2 21 7 21 17 12 22 3 17 3 7"></polygon><line x1="12" y1="2" x2="12" y2="22"></line><line x1="3" y1="7" x2="21" y2="17"></line><line x1="21" y1="7" x2="3" y2="17"></line>' },
-  { accent: 'gold', icon: '<circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>' },
-  { accent: 'purple', icon: '<circle cx="6" cy="19" r="2"></circle><circle cx="18" cy="5" r="2"></circle><path d="M7.5 17.5C11 13 13 11 16.5 6.5"></path>' },
-  { accent: 'gold', icon: '<circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>' },
-];
-
 // Icons + accents are constant across languages; the copy (title/desc/cta) and
 // the download href come from `copy.formats`, which differs per language.
 const formatMeta = [
   { accent: 'gold', icon: '<rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path>' },
   { accent: 'gold', icon: '<polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect>' },
-  { accent: 'purple', icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>' },
   { accent: 'purple', icon: '<circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>' },
 ];
 
@@ -59,38 +50,19 @@ const copy = {
     ctaBrowse: 'Browse contents',
     heroBy: 'By the Fractal Manifold research team · Free to download',
     thesisEyebrow: '01 — The Thesis',
-    thesisTitle: 'An Erlangen Programme for deep learning',
-    thesisP1: 'Most successful neural networks share a hidden blueprint: they are built to respect the symmetries of the data they consume. A convolutional network is invariant to translation; a graph network to permutation; a spherical network to rotation.',
-    thesisP2: 'Geometric Deep Learning makes that blueprint explicit. Starting from a small set of geometric priors — symmetry, scale separation and locality — it derives the architectures that dominate practice today, and points toward the ones that don’t yet exist.',
-    thesisQuote: 'Symmetry is not a constraint on learning — it is the structure that makes learning possible.',
-    gsEyebrow: '02 — The Five Gs',
-    gsTitle: 'Five domains, one set of principles',
-    gs: [
-      { name: 'Geometry', desc: 'The domains of data. Riemannian manifolds, tangent spaces and curvature give a precise language for the space a signal lives on.' },
-      { name: 'Groups', desc: 'The symmetries of data. Lie groups and representation theory — Peter–Weyl and Schur — yield the equivariant operators that respect them.' },
-      { name: 'Graphs', desc: 'The discretisation of geometries. The graph Laplacian and spectral analysis turn continuous domains into computable, neighbourhood-preserving structures.' },
-      { name: 'Geodesics', desc: 'Optimal paths and information propagation. Metrics, the exponential map and parallel transport — the geometric root of message passing.' },
-      { name: 'Gauges', desc: 'Local invariances and coordinate freedoms. Principal bundles and connections handle the freedom to choose local reference frames.' },
-    ],
-    blueprintLabel: 'The blueprint',
-    blueprintDesc: 'Each domain is a special case of one recipe: a symmetry group, a signal on a domain, and equivariant maps that commute with the group. Message passing is its common implementation.',
-    contentsEyebrow: '03 — Contents',
+    thesisTitle: 'The geometry beneath deep learning',
+    thesisP1: 'Data is never shapeless. Images live on grids, molecules on graphs, signals on spheres, poses on groups — every dataset carries a geometry, and that geometry comes with properties: symmetries first of all, but also locality, curvature and scale. A convolutional network already honours one such symmetry, translation; a graph network, permutation; a spherical network, rotation.',
+    thesisP2: 'Geometric Deep Learning takes that geometry as the starting point rather than an afterthought. Read the properties of a domain — beginning with its symmetries — and they tell you how a network on it must be built: which operations are allowed, which are ruled out, and why. From this small set of geometric principles the architectures that dominate practice today follow as special cases, and the ones still missing come into view.',
+    thesisQuote: 'The shape of the data decides the shape of the network — and that reasoning begins with symmetry.',
+    contentsEyebrow: '02 — Contents',
     contentsTitle: 'Table of contents',
     contentsNote: 'Six chapters — from neural-network foundations through the geometric framework of the Five Gs to its convolutional and attention models. ',
-    audienceEyebrow: "04 — Who it's for",
-    audienceTitle: 'Written for builders and theorists alike',
-    audience: [
-      { title: 'Researchers', desc: 'A unifying language for architectures you already know, and a map of the open territory beyond them.' },
-      { title: 'Engineers', desc: 'Principled reasons to choose one model over another, grounded in the structure of your own data.' },
-      { title: 'Students', desc: 'A rigorous on-ramp: linear algebra and calculus in, modern deep learning out — with the maths kept honest.' },
-    ],
-    accessEyebrow: '05 — Get the book',
+    accessEyebrow: '03 — Get the book',
     accessTitle: 'Get the book',
-    accessLead: 'The book is still being written, but the current draft is free to download now — screen and print PDFs in English and Spanish. An ePub for e-readers and a bound edition on Amazon will follow.',
+    accessLead: 'The book is still being written, but the current draft is free to download now — screen and print PDFs in English and Spanish. A bound edition on Amazon will follow.',
     formats: [
       { title: 'Screen PDF', desc: 'Optimised for reading on any screen', cta: 'Download', href: `${RELEASE}/geometric-deep-learning.pdf` },
       { title: 'Print PDF', desc: 'Print-ready, sized for 7×10″ paper', cta: 'Download', href: `${RELEASE}/geometric-deep-learning-print.pdf` },
-      { title: 'ePub', desc: 'For Kindle, Kobo & e-readers', cta: 'Coming soon', href: null },
       { title: 'Printed copy', desc: 'Order a bound edition on Amazon', cta: 'Coming soon', href: null },
     ],
     accessFine: 'PDFs are published on GitHub Releases and always link to the latest edition. The printed edition will link to Amazon.',
@@ -103,45 +75,25 @@ const copy = {
     ctaBrowse: 'Ver contenidos',
     heroBy: 'Por el equipo de investigación de Fractal Manifold · Descarga gratuita',
     thesisEyebrow: '01 — La tesis',
-    thesisTitle: 'Un Programa de Erlangen para el aprendizaje profundo',
-    thesisP1: 'La mayoría de las redes neuronales exitosas comparten un esquema oculto: están construidas para respetar las simetrías de los datos que consumen. Una red convolucional es invariante a la traslación; una red de grafos a la permutación; una red esférica a la rotación.',
-    thesisP2: 'El aprendizaje profundo geométrico hace ese esquema explícito. Partiendo de un pequeño conjunto de priores geométricos — simetría, separación de escalas y localidad — deriva las arquitecturas que dominan la práctica actual, y apunta hacia las que aún no existen.',
-    thesisQuote: 'La simetría no es una restricción para el aprendizaje — es la estructura que lo hace posible.',
-    gsEyebrow: '02 — Las Cinco Ges',
-    gsTitle: 'Cinco dominios, un mismo conjunto de principios',
-    gs: [
-      { name: 'Geometry', desc: 'Los dominios de los datos. Variedades de Riemann, espacios tangentes y curvatura dan un lenguaje preciso para el espacio en que vive una señal.' },
-      { name: 'Groups', desc: 'Las simetrías de los datos. Grupos de Lie y teoría de representaciones —Peter–Weyl y Schur— producen los operadores equivariantes que las respetan.' },
-      { name: 'Graphs', desc: 'La discretización de geometrías. El laplaciano del grafo y el análisis espectral convierten dominios continuos en estructuras computables que preservan la vecindad.' },
-      { name: 'Geodesics', desc: 'Caminos óptimos y propagación de la información. Métricas, mapa exponencial y transporte paralelo — la raíz geométrica del paso de mensajes.' },
-      { name: 'Gauges', desc: 'Invarianzas locales y libertad de coordenadas. Fibrados principales y conexiones manejan la libertad de elegir marcos de referencia locales.' },
-    ],
-    blueprintLabel: 'El esquema',
-    blueprintDesc: 'Cada dominio es un caso particular de una misma receta: un grupo de simetría, una señal sobre un dominio y aplicaciones equivariantes que conmutan con el grupo. El paso de mensajes es su implementación común.',
-    contentsEyebrow: '03 — Contenidos',
+    thesisTitle: 'La geometría bajo el aprendizaje profundo',
+    thesisP1: 'Los datos nunca carecen de forma. Las imágenes viven sobre rejillas, las moléculas sobre grafos, las señales sobre esferas, las poses sobre grupos — cada conjunto de datos trae consigo una geometría, y esa geometría tiene propiedades: ante todo simetrías, pero también localidad, curvatura y escala. Una red convolucional ya respeta una de esas simetrías, la traslación; una red de grafos, la permutación; una red esférica, la rotación.',
+    thesisP2: 'El aprendizaje profundo geométrico toma esa geometría como punto de partida, no como detalle posterior. Basta leer las propiedades de un dominio —empezando por sus simetrías— para saber cómo debe construirse una red sobre él: qué operaciones se permiten, cuáles quedan descartadas y por qué. De ese pequeño conjunto de principios geométricos se derivan como casos particulares las arquitecturas que hoy dominan la práctica, y aparecen a la vista las que aún faltan.',
+    thesisQuote: 'La forma de los datos decide la forma de la red — y ese razonamiento empieza en la simetría.',
+    contentsEyebrow: '02 — Contenidos',
     contentsTitle: 'Tabla de contenidos',
     contentsNote: 'Seis capítulos — de los fundamentos de redes neuronales al marco geométrico de las Cinco Ges y sus modelos convolucionales y de atención. ',
-    audienceEyebrow: '04 — Para quién es',
-    audienceTitle: 'Escrito tanto para quienes construyen como para quienes teorizan',
-    audience: [
-      { title: 'Investigadores', desc: 'Un lenguaje unificador para arquitecturas que ya conoces, y un mapa del territorio abierto más allá de ellas.' },
-      { title: 'Ingenieros', desc: 'Razones fundamentadas para elegir un modelo sobre otro, ancladas en la estructura de tus propios datos.' },
-      { title: 'Estudiantes', desc: 'Una entrada rigurosa: entra álgebra lineal y cálculo, sale aprendizaje profundo moderno — con las matemáticas bien cuidadas.' },
-    ],
-    accessEyebrow: '05 — Consigue el libro',
+    accessEyebrow: '03 — Consigue el libro',
     accessTitle: 'Consigue el libro',
-    accessLead: 'El libro aún se está escribiendo, pero el borrador actual ya se puede descargar gratis — PDF para pantalla e impresión, en inglés y español. Más adelante llegarán un ePub para lectores electrónicos y una edición encuadernada en Amazon.',
+    accessLead: 'El libro aún se está escribiendo, pero el borrador actual ya se puede descargar gratis — PDF para pantalla e impresión, en inglés y español. Más adelante llegará una edición encuadernada en Amazon.',
     formats: [
       { title: 'PDF de pantalla', desc: 'Optimizado para leer en cualquier pantalla', cta: 'Descargar', href: `${RELEASE}/geometric-deep-learning-es.pdf` },
       { title: 'PDF de impresión', desc: 'Listo para imprimir, en papel de 7×10″', cta: 'Descargar', href: `${RELEASE}/geometric-deep-learning-print-es.pdf` },
-      { title: 'ePub', desc: 'Para Kindle, Kobo y lectores electrónicos', cta: 'Próximamente', href: null },
       { title: 'Copia impresa', desc: 'Pide una edición encuadernada en Amazon', cta: 'Próximamente', href: null },
     ],
     accessFine: 'Los PDF se publican en GitHub Releases y siempre enlazan a la última edición. La edición impresa enlazará a Amazon.',
   },
 }[lang];
 
-const fiveGs = gsMeta.map((m, i) => ({ ...m, ...copy.gs[i] }));
 const formats = formatMeta.map((m, i) => ({ ...m, ...copy.formats[i] }));
 ---
 
@@ -210,30 +162,6 @@ const formats = formatMeta.map((m, i) => ({ ...m, ...copy.formats[i] }));
   </div>
 </section>
 
-<!-- ===================== THE 5 Gs ===================== -->
-<section id="gs" class="band">
-  <div class="shell">
-    <div class="head">
-      <div class="eyebrow">{copy.gsEyebrow}</div>
-      <h2 class="band-title">{copy.gsTitle}</h2>
-      <div class="rule"></div>
-    </div>
-    <div class="grid grid-gs">
-      {fiveGs.map((g) => (
-        <article class={`card ${g.accent}`}>
-          <div class="badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={g.icon}></svg></div>
-          <h3 class="card-title">{g.name}</h3>
-          <p class="card-desc">{g.desc}</p>
-        </article>
-      ))}
-      <article class="card dashed center">
-        <p class="eyebrow blueprint">{copy.blueprintLabel}</p>
-        <p class="card-desc light">{copy.blueprintDesc}</p>
-      </article>
-    </div>
-  </div>
-</section>
-
 <!-- ===================== CONTENTS (list) ===================== -->
 <section id="contents" class="band">
   <div class="shell">
@@ -263,25 +191,6 @@ const formats = formatMeta.map((m, i) => ({ ...m, ...copy.formats[i] }));
       })}
     </ol>
     <p class="note">{copy.contentsNote}<a href={localizePath('/chapters/', lang)}>{t('chapters.read')}</a></p>
-  </div>
-</section>
-
-<!-- ===================== AUDIENCE ===================== -->
-<section id="audience" class="band">
-  <div class="shell">
-    <div class="head">
-      <div class="eyebrow">{copy.audienceEyebrow}</div>
-      <h2 class="band-title">{copy.audienceTitle}</h2>
-      <div class="rule"></div>
-    </div>
-    <div class="grid grid-aud">
-      {copy.audience.map((a) => (
-        <article class="card gold pad">
-          <h3 class="card-title md">{a.title}</h3>
-          <p class="card-desc">{a.desc}</p>
-        </article>
-      ))}
-    </div>
   </div>
 </section>
 
