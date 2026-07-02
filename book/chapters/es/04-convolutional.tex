@@ -135,32 +135,10 @@ La convolución discreta satisface las siguientes propiedades para funciones
 \end{proposition}
 
 \begin{proof}
-\textbf{(1) Conmutatividad.} Mediante el cambio de variable \(b = x - a\):
+Probamos la conmutatividad; la asociatividad, distributividad y el elemento neutro se demuestran de forma análoga (véase \citep[Cap.~1]{Folland1999}). Mediante el cambio de variable \(b = x - a\):
 \begin{align}
-(f * g)(x) &= \sum_{a \in \mathbb{Z}^d} f(a)\,g(x - a) = \sum_{b \in \mathbb{Z}^d} f(x - b)\,g(b) = (g * f)(x)
+(f * g)(x) &= \sum_{a \in \mathbb{Z}^d} f(a)\,g(x - a) = \sum_{b \in \mathbb{Z}^d} f(x - b)\,g(b) = (g * f)(x). \qedhere
 \end{align}
-
-\textbf{(2) Asociatividad.} Por aplicación directa de la definición y cambio de orden de sumación (Fubini discreto):
-\begin{align}
-((f * g) * h)(x) &= \sum_{b \in \mathbb{Z}^d} (f * g)(b)\,h(x - b) = \sum_{b \in \mathbb{Z}^d} \left[\sum_{a \in \mathbb{Z}^d} f(a)\,g(b - a)\right] h(x - b) \nonumber \\
-                  &= \sum_{a \in \mathbb{Z}^d} f(a) \sum_{b \in \mathbb{Z}^d} g(b - a)\,h(x - b)
-\end{align}
-Con el cambio \(c = b - a\):
-\begin{align}
-&= \sum_{a \in \mathbb{Z}^d} f(a) \sum_{c \in \mathbb{Z}^d} g(c)\,h(x - a - c) = \sum_{a \in \mathbb{Z}^d} f(a)\,(g * h)(x - a) = (f * (g * h))(x)
-\end{align}
-
-\textbf{(3) Distributividad.} Por linealidad de la suma:
-\begin{align}
-(f * (g + h))(x) &= \sum_{a \in \mathbb{Z}^d} f(a)\,(g + h)(x - a) \nonumber \\
-                  &= \sum_{a \in \mathbb{Z}^d} f(a)\,g(x - a) + \sum_{a \in \mathbb{Z}^d} f(a)\,h(x - a) = (f * g)(x) + (f * h)(x)
-\end{align}
-
-\textbf{(4) Elemento neutro.} La delta de Kronecker satisface \(\delta(a) = 1\) si \(a = 0\) y \(\delta(a) = 0\) en otro caso:
-\begin{align}
-(f * \delta)(x) &= \sum_{a \in \mathbb{Z}^d} f(a)\,\delta(x - a) = f(x)
-\end{align}
-ya que \(\delta(x - a) \neq 0\) únicamente cuando \(a = x\).
 \end{proof}
 
 \begin{theorem}[Equivarianza de la Convolución a Traslaciones]\label{theorem:convolution_translation_equivariance}
@@ -220,13 +198,13 @@ Estas limitaciones sistemáticas han motivado el desarrollo de extensiones geom�
 
 Esta progresión sistemática desde la equivarianza restringida hacia la generalidad completa constituye la narrativa central del capítulo y ejemplifica los principios del \gls{GDL} en acción.
 
-\section{Análisis Armónico y Convoluciones Espectrales}\label{sec:analisis_armonico}
+\section{Análisis Armónico y Convoluciones Espectrales: de Fourier a Grafos}\label{sec:analisis_armonico}
 
-Mientras que las extensiones geométricas de \glspl{CNN} abordan las limitaciones de simetría, topología y localidad mediante la generalización directa de las operaciones convolucionales, el análisis armónico proporciona una perspectiva dual y complementaria que revela la estructura matemática profunda subyacente a todas estas arquitecturas. Esta sección desarrolla el marco teórico que conecta las convoluciones clásicas con sus generalizaciones espectrales, desde los fundamentos del análisis de Fourier hasta las aplicaciones modernas en dominios irregulares.
+Mientras que las extensiones geométricas de \glspl{CNN} abordan las limitaciones de simetría, topología y localidad mediante la generalización directa de las operaciones convolucionales, el análisis armónico proporciona una perspectiva dual y complementaria que revela la estructura matemática profunda subyacente a todas estas arquitecturas. Esta sección desarrolla el marco teórico que conecta las convoluciones clásicas con sus generalizaciones espectrales, desde los fundamentos del análisis de Fourier hasta las aplicaciones modernas en dominios irregulares y, finalmente, la equivalencia formal entre convoluciones en grillas y operaciones de paso de mensajes en grafos.
 
 La dualidad espacial-espectral constituye uno de los principios más fundamentales en matemáticas aplicadas: mientras que las operaciones de convolución se realizan naturalmente en el dominio espacial, su estructura algebraica se comprende mejor en el dominio frecuencial. El teorema de convolución, $\mathcal{F}[f * g] = \mathcal{F}[f] \cdot \mathcal{F}[g]$, revela que la operación convolucional compleja en el espacio se reduce a una simple multiplicación puntual en frecuencia. Esta perspectiva no solo proporciona ventajas computacionales mediante algoritmos como la \gls{FFT}, sino que también ofrece perspectivas profundas sobre qué características aprenden las redes neuronales y cómo pueden diseñarse arquitecturas más eficientes.
 
-En el contexto del \gls{GDL}, el análisis armónico adquiere una importancia fundamental al proporcionar las herramientas matemáticas necesarias para generalizar las convoluciones a dominios no euclidianos. La teoría de representaciones de grupos, desarrollada en el marco del análisis armónico, permite diseñar capas convolucionales que preservan automáticamente las simetrías específicas del dominio de datos. Del mismo modo, el análisis espectral en grafos mediante el Laplaciano proporciona la base teórica para las \glspl{GCN} espectrales, mientras que las wavelets ofrecen representaciones jerárquicas naturales que se alinean con las arquitecturas profundas modernas.
+En el contexto del \gls{GDL}, el análisis armónico adquiere una importancia fundamental al proporcionar las herramientas matemáticas necesarias para generalizar las convoluciones a dominios no euclidianos. La teoría de representaciones de grupos permite diseñar capas convolucionales que preservan automáticamente las simetrías específicas del dominio de datos, mientras que el análisis espectral en grafos mediante el Laplaciano proporciona la base teórica para las \glspl{GCN} espectrales.
 
 \subsection{Fundamentos del Análisis de Fourier}\label{subsec:fundamentos_fourier}
 
@@ -265,8 +243,6 @@ Para funciones $f, g: \mathbb{R}^d \to \mathbb{C}$, la \textit{convolución} se 
 cuando la integral converge.
 \end{definition}
 
-\subsubsection{Ejemplos Concretos de Transformadas de Fourier}
-
 Los siguientes ejemplos ilustran las propiedades fundamentales de la transformada de Fourier en contextos relevantes para el análisis de CNNs.
 
 \begin{example}[Transformada de la Función Gaussiana]\label{ex:fourier_gaussian}
@@ -284,34 +260,6 @@ Para la función gaussiana $f(x) = e^{-\alpha x^2}$ con $\alpha > 0$:
 \end{itemize}
 \end{example}
 
-\begin{example}[Transformada de la Función Escalón]\label{ex:fourier_step}
-Para la función escalón unitaria $\mathbf{1}_{[0,1]}(x)$:
-\begin{equation}
-\mathcal{F}[\mathbf{1}_{[0,1]}](\omega) = \frac{e^{-2\pi i \omega} - 1}{-2\pi i \omega} = \frac{\sin(\pi\omega)}{\pi\omega} e^{-\pi i \omega}
-\end{equation}
-
-\textbf{Interpretación para CNNs}:
-\begin{itemize}
-    \item Representa filtros de promediado (kernels constantes)
-    \item La función sinc en frecuencia indica comportamiento pasa-bajos
-    \item Oscilaciones en frecuencia debidas a discontinuidades en el dominio espacial
-\end{itemize}
-\end{example}
-
-\begin{example}[Transformada de la Función Sinc]\label{ex:fourier_sinc}
-Para la función sinc $f(x) = \frac{\sin(\pi x)}{\pi x}$:
-\begin{equation}
-\mathcal{F}[\operatorname{sinc}(x)](\omega) = \mathbf{1}_{[-1/2,1/2]}(\omega)
-\end{equation}
-
-Esta dualidad escalón $\leftrightarrow$ sinc es fundamental:
-\begin{itemize}
-    \item Filtro ideal pasa-bajos en frecuencia $\rightarrow$ respuesta sinc en espacio
-    \item Imposible de implementar exactamente (soporte infinito)
-    \item Inspira diseño de filtros aproximados en CNNs espectrales
-\end{itemize}
-\end{example}
-
 \begin{example}[Transformada del Delta de Dirac]\label{ex:fourier_delta}
 Para la distribución delta $\delta(x)$:
 \begin{equation}
@@ -326,30 +274,7 @@ Para la distribución delta $\delta(x)$:
 \end{itemize}
 \end{example}
 
-\textbf{Implementación Computacional.} En la práctica, estas transformadas se calculan mediante \gls{FFT} discreta. El análisis espectral de kernels comunes revela patrones importantes:
-
-\textbf{Proceso de análisis}:
-\begin{enumerate}
-    \item \textbf{Padding}: Se extiende el kernel con ceros para mejorar la resolución frecuencial
-    \item \textbf{\gls{FFT} 2D}: Se calcula la transformada rápida de Fourier bidimensional
-    \item \textbf{Centrado del espectro}: Se aplica fftshift para centrar las frecuencias bajas
-    \item \textbf{Análisis de magnitud y fase}: Se separan los componentes para interpretación
-\end{enumerate}
-
-\textbf{Ejemplos de kernels típicos}:
-\begin{itemize}
-    \item \textbf{Sobel X}: Detector de bordes con respuesta pasa-altos en dirección horizontal
-    \item \textbf{Gaussiano}: Filtro pasa-bajos con respuesta suave y simétrica
-    \item \textbf{Laplaciano}: Detector de bordes isotrópico con respuesta pasa-altos
-\end{itemize}
-
-\textbf{Conexión con Wavelets.} Las transformadas anteriores motivan el uso de wavelets en CNNs:
-\begin{itemize}
-    \item \textbf{Gaussianas}: Base para wavelets Gabor (análisis tiempo-frecuencia)
-    \item \textbf{Escalones}: Relacionados con wavelets de Haar (características de borde)
-    \item \textbf{Sinc}: Fundamento de wavelets Daubechies (reconstrucción perfecta)
-\end{itemize}
-La capacidad de analizar múltiples escalas simultáneamente hace que las wavelets sean especialmente atractivas para arquitecturas CNN jerárquicas.
+En la práctica, estas transformadas se calculan mediante \gls{FFT} discreta, lo que permite analizar la respuesta espectral de kernels convolucionales típicos (detectores de bordes con respuesta pasa-altos, filtros gaussianos pasa-bajos, etc.), como se detalla en la \autoref{subsec:convoluciones_espectrales_cnns}.
 
 \begin{figure}[htbp]
 	\centering
@@ -443,99 +368,110 @@ donde $w$ es una función ventana (típicamente Gaussiana o Hann).
 
 \textbf{Principio de Incertidumbre Tiempo-Frecuencia.} La STFT está sujeta al principio de incertidumbre: $\Delta t \cdot \Delta \omega \geq \frac{1}{4\pi}$, lo que implica un trade-off fundamental entre resolución temporal y frecuencial.
 
-\subsubsection{Ejemplos Numéricos del Teorema de Convolución}
+\paragraph{Localización tiempo-frecuencia y wavelets.} La STFT emplea una ventana de anchura fija, lo que impone una resolución uniforme en todo el plano tiempo-frecuencia. Las \textit{wavelets} superan esta limitación mediante un análisis multiescala: a partir de una \textit{wavelet madre} $\psi \in L^2(\mathbb{R})$ de media cero (condición de admisibilidad $\int \psi = 0$), se genera una familia $\psi_{a,b}(t) = |a|^{-1/2}\psi((t-b)/a)$ por dilatación ($a$) y traslación ($b$). Las escalas pequeñas resuelven detalles de alta frecuencia con buena localización temporal, mientras que las escalas grandes capturan tendencias de baja frecuencia. Las familias más habituales son las \textit{wavelets de Haar} (escalones ortogonales, detección de bordes) y las \textit{wavelets de Daubechies} (soporte compacto con $N$ momentos nulos y reconstrucción perfecta).
 
-El teorema de convolución es fundamental para entender la eficiencia computacional de las CNNs espectrales. Los siguientes ejemplos ilustran su aplicación práctica.
+El \textit{análisis multirresolución} formaliza esta idea como una sucesión encajada de subespacios $\cdots \subset V_{-1} \subset V_0 \subset V_1 \subset \cdots$ con $\overline{\bigcup_j V_j} = L^2(\mathbb{R})$ y $\bigcap_j V_j = \{0\}$, ligados por la relación de escalado $f(x) \in V_j \Leftrightarrow f(2x) \in V_{j+1}$. Cada nivel se descompone en una aproximación (subespacio $V_j$, filtro paso-bajo) y un detalle (subespacio wavelet, filtro paso-alto), reproduciendo exactamente la estructura jerárquica de las arquitecturas convolucionales profundas.
 
-\begin{example}[Convolución Rápida vía FFT: Análisis de Complejidad]\label{ex:convolution_fft_complexity}
-Considere la convolución de una imagen $f \in \mathbb{R}^{N \times N}$ con un kernel $g \in \mathbb{R}^{K \times K}$.
+\begin{remark}[Scattering Transform y wavelets en grafos]
+La conexión más profunda entre wavelets y CNNs se establece a través del \textit{scattering transform} de Mallat~\citep{Mallat2012scattering}, que aplica de forma iterativa convoluciones con wavelets predefinidas seguidas de una no linealidad de módulo y un promediado paso-bajo, $S_m f = \{|\,\cdots|f \star \psi_{j_1}| \star \cdots \star \psi_{j_m}| \star \phi_J\}$. Esta arquitectura es isomorfa a una CNN con filtros fijos (wavelets en lugar de kernels aprendidos), módulo en lugar de ReLU y convolución con $\phi_J$ en lugar de pooling, pero con garantías teóricas de invarianza a traslaciones y estabilidad Lipschitz frente a deformaciones. La misma construcción se extiende a dominios irregulares mediante \textit{wavelets espectrales en grafos}~\citep{hammond2011wavelets}, $\psi_{s,i} = \sum_k g(s\lambda_k)\phi_k(i)\phi_k$, que proporcionan localización simultánea en el dominio espectral y espacial del grafo, anticipando el análisis espectral de la \autoref{subsec:analisis_espectral_grafos}.
+\end{remark}
 
-\textbf{Método directo}:
+\subsection{Convoluciones Espectrales en CNNs}\label{subsec:convoluciones_espectrales_cnns}
+
+Las convoluciones espectrales en CNNs aprovechan las propiedades del dominio frecuencial para implementar operaciones convolucionales de manera eficiente, especialmente para kernels grandes o en aplicaciones con estructura geométrica específica.
+
+\begin{definition}[Filtro Espectral Parametrizado]\label{def:filtro_espectral_parametrizado}
+Un \textbf{filtro espectral parametrizado} es una función $h_\theta: \mathbb{R}_+ \to \mathbb{R}$ donde $\theta \in \mathbb{R}^p$ son parámetros entrenables. El filtro actúa sobre el espectro de frecuencias mediante:
 \begin{equation}
-(f * g)[i,j] = \sum_{u=0}^{K-1} \sum_{v=0}^{K-1} f[i-u, j-v] \cdot g[u,v]
+h_\theta(\lambda) = \sum_{k=0}^{K-1} \theta_k \phi_k(\lambda)
 \end{equation}
-Complejidad: $O(N^2 K^2)$
+donde $\{\phi_k\}$ es una base de funciones (polinomios, wavelets, etc.).
+\end{definition}
 
-\textbf{Método espectral}:
-\begin{align}
-\hat{f} &= \text{FFT2D}(f) \quad \text{[Complejidad: } O(N^2 \log N)\text{]} \\
-\hat{g} &= \text{FFT2D}(\text{pad}(g, N)) \quad \text{[Complejidad: } O(N^2 \log N)\text{]} \\
-\hat{h} &= \hat{f} \odot \hat{g} \quad \text{[Complejidad: } O(N^2)\text{]} \\
-h &= \text{IFFT2D}(\hat{h}) \quad \text{[Complejidad: } O(N^2 \log N)\text{]}
-\end{align}
-Complejidad total: $O(N^2 \log N)$
+\begin{definition}[Capa Convolucional Espectral]\label{def:capa_convolucional_espectral}
+Una capa convolucional espectral transforma una señal de entrada $x \in \mathbb{R}^n$ mediante:
+\begin{equation}
+y = \sigma(h_\theta \star x + b)
+\end{equation}
+donde:
+\begin{itemize}
+    \item $h_\theta \star x$ es la convolución espectral: $\mathcal{F}^{-1}[h_\theta(\cdot) \cdot \mathcal{F}[x]]$
+    \item $\sigma$ es la función de activación
+    \item $b$ es el término de sesgo
+\end{itemize}
+\end{definition}
 
-\textbf{Punto de equilibrio}: El método espectral es más eficiente cuando $K > O(\log N)$.
-\end{example}
+\begin{theorem}[Equivalencia Espacial-Espectral]\label{thm:equivalencia_espacial_espectral}
+Para dominios con estructura regular (grillas, toros), las convoluciones espaciales y espectrales son matemáticamente equivalentes:
+\begin{equation}
+(f * g)(x) = \mathcal{F}^{-1}[\mathcal{F}[f] \cdot \mathcal{F}[g]](x)
+\end{equation}
+Sin embargo, difieren en:
+\begin{itemize}
+    \item \textbf{Complejidad computacional}: Espacial $O(n \cdot k^2)$ vs Espectral $O(n \log n)$
+    \item \textbf{Localización}: Espacial (local) vs Espectral (global)
+    \item \textbf{Interpretabilidad}: Espacial (geométrica) vs Espectral (frecuencial)
+\end{itemize}
+\end{theorem}
 
-\begin{example}[Implementación Práctica: Convolución Rápida]\label{ex:fast_convolution_implementation}
-La convolución rápida mediante \gls{FFT} sigue estos pasos algorítmicos:
+\begin{proof}
+Es una consecuencia inmediata del teorema de convolución (\autoref{thm:convolucion_fourier}): aplicando $\mathcal{F}^{-1}$ a $\mathcal{F}[f * g] = \mathcal{F}[f] \cdot \mathcal{F}[g]$ se obtiene la identidad del enunciado. Las diferencias de complejidad reflejan que la convolución directa realiza $O(n \cdot k^2)$ operaciones frente a las $O(n \log n)$ de la vía \gls{FFT}, y la localización difiere porque un kernel espacial de soporte finito corresponde a un filtro espectral de soporte completo, y viceversa.
+\end{proof}
 
-\textbf{Algoritmo de convolución espectral}:
+\textbf{Algoritmo: Forward Pass Espectral.}\label{alg:forward_espectral} Para una entrada $x \in \mathbb{R}^{H \times W}$ y filtro parametrizado $h_\theta$:
 \begin{enumerate}
-    \item \textbf{Dimensionamiento}: Calcular tamaño óptimo como potencia de 2 para eficiencia de \gls{FFT}
-    \item \textbf{Transformación}: Aplicar FFT2D tanto a la imagen como al kernel con padding apropiado
-    \item \textbf{Multiplicación}: Producto elemento a elemento en el dominio frecuencial
-    \item \textbf{Inversión}: IFFT2D para recuperar el resultado en dominio espacial
-    \item \textbf{Recorte}: Extraer la región válida del resultado
+    \item \textbf{Transformada directa}: $\hat{x} = \text{FFT2D}(x)$
+    \item \textbf{Aplicación del filtro}: $\hat{y} = h_\theta(\omega) \odot \hat{x}$ (producto elemento a elemento)
+    \item \textbf{Transformada inversa}: $y = \text{IFFT2D}(\hat{y})$
+    \item \textbf{Activación}: $z = \sigma(y + b)$
 \end{enumerate}
 
-\textbf{Análisis comparativo de rendimiento}:
-Para diferentes tamaños de imagen y kernel, los resultados típicos muestran:
+\begin{theorem}[Complejidad Computacional]\label{thm:complejidad_convoluciones_espectrales}
+Para una convolución 2D de tamaño $n \times n$ con kernel $k \times k$:
 \begin{itemize}
-    \item \textbf{Imágenes pequeñas (64$\times$64)}: Método directo más eficiente para kernels $< 7 \times 7$
-    \item \textbf{Imágenes medianas (256$\times$256)}: \gls{FFT} ventajosa para kernels $> 5 \times 5$
-    \item \textbf{Imágenes grandes (512$\times$512)}: \gls{FFT} consistentemente más rápida con speedups de 2-10x
-    \item \textbf{Error numérico}: Típicamente $< 10^{-12}$ con precisión doble
+    \item \textbf{Convolución directa}: $O(n^2 k^2)$
+    \item \textbf{Convolución espectral}: $O(n^2 \log n)$
+    \item \textbf{Punto de equilibrio}: Espectral es más eficiente cuando $k > O(\log n)$
+\end{itemize}
+\end{theorem}
+
+\begin{proof}
+La convolución directa en 2D calcula, para cada una de las $n^2$ posiciones de la imagen, una suma de $k^2$ productos, dando $O(n^2 k^2)$ operaciones. La convolución espectral requiere: (i) FFT 2D de la imagen: $O(n^2 \log n)$; (ii) FFT 2D del kernel (con zero-padding): $O(n^2 \log n)$; (iii) multiplicación punto a punto en frecuencia: $O(n^2)$; (iv) IFFT 2D: $O(n^2 \log n)$. El total es $O(n^2 \log n)$. El punto de equilibrio se obtiene igualando $n^2 k^2 = n^2 \log n$, es decir, $k^2 = \log n$, por lo que la convolución espectral es preferible cuando $k > O(\sqrt{\log n})$.
+\end{proof}
+
+\begin{example}[Análisis de Eficiencia Práctica]\label{ex:eficiencia_practica}
+Para imagen $512 \times 512$ y kernel $k \times k$:
+\begin{itemize}
+    \item $k = 3$: Directa: $\sim 2.3 \times 10^6$ ops, Espectral: $\sim 2.6 \times 10^6$ ops
+    \item $k = 15$: Directa: $\sim 5.9 \times 10^7$ ops, Espectral: $\sim 2.6 \times 10^6$ ops
+    \item $k = 51$: Directa: $\sim 6.8 \times 10^8$ ops, Espectral: $\sim 2.6 \times 10^6$ ops
 \end{itemize}
 \end{example}
 
-\begin{example}[Análisis de Error Numérico]\label{ex:numerical_error_analysis}
-El análisis de errores en convoluciones \gls{FFT} revela patrones importantes de estabilidad numérica:
+\begin{theorem}[Aproximación Universal Espectral]\label{thm:aproximacion_universal_espectral}
+Sea $\mathcal{G} = (V, E)$ un grafo finito con Laplaciano $L$ y espectro contenido en $[0, \lambda_{\max}]$. Para cualquier filtro espectral continuo $h: [0, \lambda_{\max}] \to \mathbb{R}$ y $\epsilon > 0$, existe un filtro polinomial $p(\lambda) = \sum_{k=0}^{K} \theta_k T_k(\tilde{\lambda})$ de grado $K$ suficientemente grande tal que:
+\begin{equation}
+\|h(\lambda) - p(\lambda)\|_{\infty, [0, \lambda_{\max}]} < \epsilon
+\end{equation}
+En consecuencia, la señal filtrada satisface $\|h(L)f - p(L)f\| \leq \epsilon \|f\|$ para toda señal $f$ en el grafo.
+\end{theorem}
 
-\textbf{Metodología de análisis}:
-\begin{enumerate}
-    \item \textbf{Señales de prueba}: Utilizar matrices aleatorias con distribución normal
-    \item \textbf{Kernel de referencia}: Laplaciano discreto como caso de prueba estándar
-    \item \textbf{Comparación}: Convolución directa vs. método \gls{FFT}
-    \item \textbf{Métricas}: Error relativo en norma L2
-\end{enumerate}
+\begin{proof}[Esbozo]
+El intervalo espectral $[0, \lambda_{\max}]$ es compacto, por lo que el resultado es consecuencia directa del teorema de aproximación de Weierstrass: toda función continua en un intervalo compacto puede aproximarse uniformemente por polinomios. La cota sobre la señal filtrada se sigue de $\|h(L)f - p(L)f\| = \|(h-p)(L)f\| \leq \|h - p\|_\infty \|f\|$, ya que los eigenvalores de $(h-p)(L)$ están acotados por $\|h-p\|_\infty$.
+\end{proof}
 
-\textbf{Resultados empíricos observados}:
-\begin{itemize}
-    \item \textbf{Error relativo típico}: $10^{-12}$ a $10^{-14}$ con precisión doble
-    \item \textbf{Escalabilidad}: El error crece logarítmicamente con el tamaño de imagen
-    \item \textbf{Estabilidad de kernel}: Kernels bien condicionados minimizan propagación
-    \item \textbf{Accumulation pattern}: Errores se concentran en componentes de alta frecuencia
-\end{itemize}
+\paragraph{Interpretación frecuencial de kernels.} El análisis frecuencial de CNNs tradicionales revela qué características aprenden y cómo procesan la información visual.
 
-\textbf{Implicaciones prácticas}:
-La alta precisión numérica (error $< 10^{-12}$) hace que el método \gls{FFT} sea prácticamente equivalente al método directo para la mayoría de aplicaciones de deep learning, donde la precisión single ($\sim 10^{-7}$) es estándar.
-\end{example}
+\begin{definition}[Respuesta Frecuencial de un Kernel]\label{def:respuesta_frecuencial_kernel}
+Para un kernel convolucional $K \in \mathbb{R}^{k \times k}$, su respuesta frecuencial es:
+\begin{equation}
+H(\omega_x, \omega_y) = \sum_{i=0}^{k-1} \sum_{j=0}^{k-1} K[i,j] e^{-2\pi i(\omega_x i + \omega_y j)}
+\end{equation}
+\end{definition}
 
-\textbf{Optimizaciones Avanzadas.} En implementaciones prácticas de CNNs espectrales:
+Los kernels clásicos de procesamiento de imágenes admiten así una lectura espectral directa: el detector de bordes de Sobel (\autoref{ex:kernel_sobel}) actúa como filtro pasa-altos con máximo en frecuencias medias; un filtro gaussiano $K_{\text{Gauss}}[i,j] \propto e^{-((i-c)^2 + (j-c)^2)/(2\sigma^2)}$ es un pasa-bajos con corte suave determinado por $\sigma$; y el Laplaciano $K_{\text{Lap}} = \begin{psmallmatrix} 0 & -1 & 0 \\ -1 & 4 & -1 \\ 0 & -1 & 0 \end{psmallmatrix}$ es un pasa-altos isotrópico.
 
-\textbf{1. Uso de FFTW (Fastest Fourier Transform in the West)}:
-\begin{itemize}
-    \item Optimización específica para hardware (SIMD, multi-core)
-    \item Planning automático del algoritmo \gls{FFT} óptimo
-    \item Speedups de 2-5x sobre implementaciones básicas
-\end{itemize}
-
-\textbf{2. Overlap-Add/Overlap-Save}:
-Para convoluciones con kernels grandes en CNNs, se usan técnicas de procesamiento por bloques:
-\begin{itemize}
-    \item Dividir la imagen en bloques superpuestos
-    \item FFT de bloques pequeños (más eficiente en cache)
-    \item Reconstrucción con manejo de solapamiento
-\end{itemize}
-
-\textbf{3. GPU Acceleration}:
-\begin{itemize}
-    \item cuFFT para implementaciones en CUDA
-    \item Uso de memoria compartida para minimizar transferencias
-    \item Batching de múltiples convoluciones simultáneas
-\end{itemize}
+Estudios empíricos muestran, además, que las CNNs exhiben un \textbf{sesgo espectral} hacia las frecuencias bajas: aprenden primero las componentes de baja frecuencia y requieren más iteraciones para capturar los detalles de alta frecuencia, un fenómeno que puede mitigarse con técnicas de inicialización espectral. Estos métodos espectrales encuentran aplicaciones directas en dominios donde la estructura frecuencial de los datos es fundamental (reconstrucción de imágenes médicas, procesamiento de señales científicas, compresión mediante poda espectral), aunque el enfoque de este libro se centra en su fundamentación matemática.
 
 \subsection{Análisis Armónico en Grupos}\label{subsec:analisis_armonico_grupos}
 
@@ -577,51 +513,6 @@ Para el grupo diédrico de orden $2n$ (simetrías de un $n$-gono), las represent
 \end{itemize}
 \end{example}
 
-\subsubsection{Ejemplos Detallados de Análisis Armónico en Grupos Finitos}
-
-Los siguientes ejemplos proporcionan cálculos explícitos que ilustran la construcción práctica de representaciones y transformadas de Fourier para grupos relevantes en GDL.
-
-\begin{example}[Grupo Cíclico $\mathbb{Z}_4$: Cálculos Explícitos]\label{ex:grupo_z4_detallado}
-El grupo cíclico $\mathbb{Z}_4 = \{0, 1, 2, 3\}$ con operación suma módulo 4 representa rotaciones de $90^\circ$.
-
-\textbf{Representaciones irreducibles}:
-Las representaciones 1D son homomorfismos $\rho_k: \mathbb{Z}_4 \to \mathbb{C}^*$:
-\begin{align}
-\rho_0(j) &= 1 \quad \text{(representación trivial)} \\
-\rho_1(j) &= i^j \quad \text{donde } i = e^{2\pi i/4} \\
-\rho_2(j) &= (-1)^j \\
-\rho_3(j) &= (-i)^j
-\end{align}
-
-\textbf{Matriz de caracteres}:
-\begin{equation}
-\chi = \begin{bmatrix}
-1 & 1 & 1 & 1 \\
-1 & i & -1 & -i \\
-1 & -1 & 1 & -1 \\
-1 & -i & -1 & i
-\end{bmatrix}
-\end{equation}
-
-\textbf{Transformada de Fourier discreta}:
-Para una función $f: \mathbb{Z}_4 \to \mathbb{C}$, $f = (f_0, f_1, f_2, f_3)^T$:
-\begin{equation}
-\hat{f} = \chi f = \begin{bmatrix}
-f_0 + f_1 + f_2 + f_3 \\
-f_0 + if_1 - f_2 - if_3 \\
-f_0 - f_1 + f_2 - f_3 \\
-f_0 - if_1 - f_2 + if_3
-\end{bmatrix}
-\end{equation}
-
-\textbf{Aplicación en G-CNNs}:
-\begin{itemize}
-    \item Cada representación $\rho_k$ corresponde a un canal en convoluciones equivariantes a rotaciones de $90^\circ$
-    \item Los filtros se expresan como combinaciones lineales de las representaciones
-    \item La equivarianza se preserva automáticamente por la estructura del grupo
-\end{itemize}
-\end{example}
-
 \begin{example}[Grupo Diédrico $D_3$: Simetrías del Triángulo]\label{ex:grupo_d3_detallado}
 $D_3$ contiene las 6 simetrías del triángulo equilátero: 3 rotaciones y 3 reflexiones.
 
@@ -635,7 +526,7 @@ $D_3$ contiene las 6 simetrías del triángulo equilátero: 3 rotaciones y 3 ref
 \textbf{Representaciones irreducibles}:
 \begin{enumerate}
     \item \textbf{Trivial} $\rho^{(1)}$: $\rho^{(1)}(g) = 1$ para todo $g$
-    \item \textbf{Alternante} $\rho^{(2)}$: 
+    \item \textbf{Alternante} $\rho^{(2)}$:
     \begin{align}
     \rho^{(2)}(r^k) &= 1, \quad k = 0,1,2 \\
     \rho^{(2)}(sr^k) &= -1, \quad k = 0,1,2
@@ -659,72 +550,9 @@ $D_3$ contiene las 6 simetrías del triángulo equilátero: 3 rotaciones y 3 ref
 \rho^{(3)} & 2 & -1 & 0
 \end{array}
 \end{equation}
-
-\textbf{Implementación computacional}:
-La implementación práctica del grupo diédrico $D_3$ requiere:
-
-\textbf{Representaciones matriciales}:
-\begin{itemize}
-    \item \textbf{Identidad}: Matriz identidad $2 \times 2$
-    \item \textbf{Rotaciones}: Matrices de rotación para $120^\circ$ y $240^\circ$
-    \item \textbf{Reflexiones}: Combinación de reflexión básica con rotaciones
-\end{itemize}
-
-\textbf{Transformada de Fourier en $D_3$}:
-Para una función $f: D_3 \to \mathbb{C}$, el proceso computacional implica:
-\begin{enumerate}
-    \item \textbf{Proyección trivial}: Promedio de todos los valores de función
-    \item \textbf{Proyección alternante}: Diferencia entre rotaciones y reflexiones
-    \item \textbf{Proyección bidimensional}: Combinación lineal más compleja
-\end{enumerate}
-
-\textbf{Ejemplo de análisis}:
-Para la función característica de rotaciones $f(g) = 1$ si $g$ es rotación, $f(g) = 0$ si es reflexión:
-\begin{itemize}
-    \item Componente trivial: $\frac{3}{6} = 0.5$
-    \item Componente alternante: $\frac{3-0}{6} = 0.5$
-    \item Componente 2D: Vector con estructura específica
-\end{itemize}
 \end{example}
 
-\textbf{Conexión con G-CNNs Prácticas.} Los cálculos anteriores se traducen directamente en arquitecturas de redes neuronales:
-
-\textbf{Para $\mathbb{Z}_4$-CNNs}:
-\begin{itemize}
-    \item 4 orientaciones de filtros $(0^\circ, 90^\circ, 180^\circ, 270^\circ)$
-    \item Cada canal de salida corresponde a una representación irreducible
-    \item La convolución se implementa como suma sobre órbitas del grupo
-\end{itemize}
-
-\textbf{Para $D_3$-CNNs}:
-\begin{itemize}
-    \item 6 transformaciones de filtros (3 rotaciones $\times$ 2 reflexiones)
-    \item Manejo especial de la representación 2D (canales acoplados)
-    \item Aplicación en análisis de simetrías triangulares (cristalografía, materiales)
-\end{itemize}
-
-\textbf{Implementación eficiente}:
-La transformada de Fourier rápida en grupos finitos se implementa mediante:
-\begin{equation}
-\text{Complejidad}: O(|G|^{3/2}) \text{ vs } O(|G|^2) \text{ para DFT directa}
-\end{equation}
-
-\begin{example}[Conexión con Wavelets en Grupos]\label{ex:wavelets_grupos_finitos}
-Los grupos finitos también admiten análisis wavelet mediante funciones madre apropiadas.
-
-\textbf{Wavelet madre en $\mathbb{Z}_4$}:
-\begin{equation}
-\psi(j) = \delta_{j,1} - \delta_{j,3} \quad \text{(función diferencia)}
-\end{equation}
-
-\textbf{Familia wavelet}:
-\begin{equation}
-\psi_{k,j}(m) = \psi((m - j) \bmod 4) \cdot \omega_4^{km}
-\end{equation}
-donde $\omega_4 = e^{2\pi i/4}$.
-
-Esta construcción permite análisis multiresolución en espacios discretos con simetría rotacional.
-\end{example}
+\textbf{Conexión con G-CNNs Prácticas.} Los cálculos anteriores se traducen directamente en arquitecturas de redes neuronales: en una $\mathbb{Z}_4$-CNN cada representación irreducible corresponde a una de las 4 orientaciones de filtros $(0^\circ, 90^\circ, 180^\circ, 270^\circ)$ y la convolución se implementa como suma sobre las órbitas del grupo, mientras que en una $D_3$-CNN se manejan 6 transformaciones (3 rotaciones $\times$ 2 reflexiones) con la representación 2D implementada mediante canales acoplados. En ambos casos la equivarianza se preserva automáticamente por la estructura del grupo, y la transformada de Fourier rápida en grupos finitos reduce la complejidad a $O(|G|^{3/2})$ frente al $O(|G|^2)$ de la DFT directa.
 
 \begin{definition}[Transformada de Fourier en Grupos Compactos]\label{def:fourier_grupos_compactos}
 Para un grupo compacto $G$ y función $f \in L^2(G)$, la transformada de Fourier se define mediante el teorema de Peter-Weyl:
@@ -762,7 +590,52 @@ donde $Y_l^m$ son los armónicos esféricos de grado $l$ y orden $m$.
     \item La parametrización eficiente de convoluciones en grupos de Lie
 \end{itemize}
 
-\subsection{Análisis Espectral en Grafos}\label{subsec:analisis_espectral_grafos}
+\subsection{Preliminares: Datos como Grafos}\label{subsec:preliminares_grafos_cnn}
+
+Habiendo establecido el análisis armónico en dominios euclidianos y de grupo, abordamos ahora los dominios irregulares. Para la definición básica de grafo, véase la \autoref{def:grafo_neuronal} en el \autoref{ch:neural_networks}. En esta sección nos enfocamos en su relación específica con las convoluciones.
+
+\begin{definition}[Representación de Datos como Grafos]\label{def:representacion_datos_grafos}
+Los datos se representan en un grafo mediante:
+\begin{itemize}
+	\item \textbf{Características nodales}: \(X \in \mathbb{R}^{n \times d}\) donde \(x_i \in \mathbb{R}^d\) es el feature del nodo \(i\)
+	\item \textbf{Matriz de adyacencia}: \(A \in \{0,1\}^{n \times n}\) donde \(A_{ij} = 1\) si \((v_i, v_j) \in E\)
+	\item \textbf{Características de aristas} (opcional): \(E \in \mathbb{R}^{|E| \times d_e}\)
+\end{itemize}
+\end{definition}
+
+Muchos dominios se representan naturalmente como grafos: moléculas (átomos = nodos, enlaces = aristas), redes sociales (personas = nodos, relaciones = aristas), nubes de puntos (puntos = nodos, $k$-NN = aristas) y, como caso especial que nos interesa aquí, las imágenes (píxeles = nodos, vecindad = aristas).
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.85\textwidth]{figures/image_as_graph}
+	\caption[Imagen como grafo de grilla regular]{Una imagen puede representarse como un grafo de grilla regular con conectividad 4: cada píxel es un nodo y las aristas conectan píxeles vecinos horizontal y verticalmente. La vecindad $\mathcal{N}(v_i)$ corresponde exactamente al soporte del kernel convolucional.}
+	\label{fig:image_as_graph}
+\end{figure}
+
+\begin{example}[Construcción Explícita: Imagen 3×3 como Grafo]\label{ex:imagen_3x3_grafo}
+Una imagen RGB de tamaño $3 \times 3$ se transforma en un grafo asociando un nodo a cada píxel, de modo que $|V| = 9$. Con 4-conectividad (aristas entre píxeles adyacentes horizontal y verticalmente) se obtienen $|E| = 12$ aristas no dirigidas. Cada nodo $v_{i,j}$ recibe como características el vector RGB del píxel, dando una matriz de características $X \in \mathbb{R}^{9 \times 3}$, y la matriz de adyacencia $A \in \{0,1\}^{9 \times 9}$ tiene la forma block-tridiagonal característica de las grillas regulares.
+\end{example}
+
+\begin{definition}[Grilla como Grafo]\label{def:grilla_como_grafo}
+Para imagen de tamaño \(H \times W\):
+\begin{itemize}
+	\item \(V = \{(i,j) : 0 \leq i < H, 0 \leq j < W\}\)
+	\item \(E = \{((i,j), (i',j')) : |i-i'| + |j-j'| \leq 1\}\) (4-conectividad)
+	\item Grado constante: \(\deg(v) = 4\) (excepto bordes)
+\end{itemize}
+\end{definition}
+
+\textbf{Propiedades Especiales de Grafos Grilla.} Los grafos grilla derivados de imágenes poseen propiedades estructurales únicas:
+\begin{enumerate}
+    \item \textbf{Regularidad}: Grado casi constante ($\deg(v) = 4$ excepto en bordes)
+    \item \textbf{Estructura espacial}: Posiciones $(i,j)$ definen un embedding natural en $\mathbb{R}^2$
+    \item \textbf{Simetría}: Invarianza a traslaciones discretas
+    \item \textbf{Espectro predecible}: Los eigenvalores del Laplaciano son conocidos analíticamente
+\end{enumerate}
+
+Estas propiedades hacen que las CNNs sean especialmente efectivas en grillas, pero también limitan su aplicabilidad a grafos generales.
+
+\subsection{Análisis Espectral en Grafos y en la Grilla}\label{subsec:analisis_espectral_grafos}
 
 El análisis espectral en grafos extiende las ideas del análisis de Fourier a dominios irregulares, proporcionando las bases matemáticas para convoluciones espectrales en redes neuronales sobre grafos. Los fundamentos teóricos del Laplaciano de grafo, incluyendo definiciones y propiedades espectrales, se desarrollan en el \autoref{ch:gdl}, Sección~\ref{subsec:geometria_topologica_grafos}. Para la matriz Laplaciana $L = D - A$ y sus variantes normalizadas, véase la \autoref{def:laplaciano_grafo} y la \autoref{prop:propiedades_espectrales_laplaciano_grafos}.
 
@@ -779,7 +652,78 @@ Sea $L$ la matriz Laplaciana de un grafo conectado. Entonces:
 Para la demostración, véase \citep[Capítulos~1--2]{Chung1997} y la \autoref{prop:propiedades_espectrales_laplaciano_grafos}.
 \end{theorem}
 
-La transformada de Fourier en grafos (\autoref{def:transformada_fourier_grafos}, \autoref{ch:gdl}) proyecta señales sobre los eigenvectores del Laplaciano: $\hat{f}(\lambda_k) = \langle \mathbf{f}, \phi_k \rangle$, con forma matricial $\hat{f} = U^T f$. A partir de esta transformada se definen las convoluciones espectrales:
+La transformada de Fourier en grafos (\autoref{def:transformada_fourier_grafos}, \autoref{ch:gdl}) proyecta señales sobre los eigenvectores del Laplaciano: $\hat{f}(\lambda_k) = \langle \mathbf{f}, \phi_k \rangle$, con forma matricial $\hat{f} = U^T f$.
+
+\subsubsection{La Grilla como Caso Resoluble}
+
+La grilla regular es el caso en el que todo el análisis espectral admite forma cerrada. En una grilla 2D con 4-conectividad, el Laplaciano $\mathcal{L} = D - A$ tiene valor $4$ en la diagonal y $-1$ en las posiciones correspondientes a los cuatro vecinos de cada nodo, coincidiendo exactamente con el kernel Laplaciano del procesamiento de imágenes.
+
+\begin{example}[Kernel Laplaciano como Filtro CNN]
+El Laplaciano discreto corresponde al kernel:
+\[
+K = \begin{bmatrix}
+ 0 & -1 &  0 \\
+-1 &  4 & -1 \\
+ 0 & -1 &  0
+\end{bmatrix}
+\]
+Este es un detector de bordes clásico en procesamiento de imágenes, y su interpretación espectral como filtro paso-alto se formaliza en el \autoref{thm:cnns_filtros_espectrales_grillas}.
+\end{example}
+
+\begin{proposition}[Eigenvalores del Laplaciano en Grilla Rectangular]\label{prop:eigenvalores_laplaciano_grilla}
+Para una grilla 2D de tamaño $n_1 \times n_2$ con condiciones de frontera periódicas, los eigenvalores del Laplaciano son:
+\begin{equation}
+\lambda_{k_1,k_2} = 4 - 2\cos\!\left(\frac{2\pi k_1}{n_1}\right) - 2\cos\!\left(\frac{2\pi k_2}{n_2}\right), \quad 0 \leq k_i < n_i
+\end{equation}
+con eigenvectores $\phi_{k_1,k_2}(i,j) = \frac{1}{\sqrt{n_1 n_2}} e^{2\pi \imath(k_1 i/n_1 + k_2 j/n_2)}$, que son exactamente las bases de Fourier discretas.
+\end{proposition}
+
+\begin{proof}
+Para condiciones de frontera periódicas, las funciones $\phi_{k_1,k_2}$ satisfacen $\phi_{k_1,k_2}(i + n_1, j) = \phi_{k_1,k_2}(i,j)$. Aplicando el Laplaciano:
+\begin{align}
+(\mathcal{L}\phi_{k_1,k_2})(i,j) &= 4\phi_{k_1,k_2}(i,j) - \phi_{k_1,k_2}(i+1,j) - \phi_{k_1,k_2}(i-1,j) - \phi_{k_1,k_2}(i,j+1) - \phi_{k_1,k_2}(i,j-1) \\
+&= \left(4 - e^{2\pi \imath k_1/n_1} - e^{-2\pi \imath k_1/n_1} - e^{2\pi \imath k_2/n_2} - e^{-2\pi \imath k_2/n_2}\right)\phi_{k_1,k_2}(i,j) \\
+&= \left(4 - 2\cos\!\left(\frac{2\pi k_1}{n_1}\right) - 2\cos\!\left(\frac{2\pi k_2}{n_2}\right)\right)\phi_{k_1,k_2}(i,j)
+\end{align}
+confirmando que $\phi_{k_1,k_2}$ es eigenvector con eigenvalor $\lambda_{k_1,k_2}$. Estos eigenvalores admiten una interpretación frecuencial directa: $\lambda_{0,0} = 0$ corresponde a la componente DC (eigenvector uniforme), los eigenvalores pequeños ($k_1, k_2$ cercanos a $0$) a variaciones suaves seleccionadas por un filtro paso-bajo, y los eigenvalores grandes (hasta $\lambda_{\max} = 8$, patrón de tablero $(-1)^{i+j}$) a variaciones rápidas seleccionadas por un filtro paso-alto como el Laplaciano.
+\end{proof}
+
+\begin{example}[Filtros Paso-Bajo y Paso-Alto en la Grilla]\label{ex:filtros_paso_bajo_alto}
+Los filtros clásicos de procesamiento de imágenes tienen interpretaciones espectrales precisas:
+
+\textbf{Filtro de suavizado (media $3 \times 3$)}: El kernel $K_{\text{media}} = \frac{1}{9}\begin{bsmallmatrix} 1 & 1 & 1 \\ 1 & 1 & 1 \\ 1 & 1 & 1 \end{bsmallmatrix}$ actúa como filtro paso-bajo, atenuando las componentes de alta frecuencia (eigenvalores grandes del Laplaciano) mientras preserva las componentes de baja frecuencia.
+
+\textbf{Filtro de enfoque (sharpening)}: El kernel $K_{\text{sharp}} = \begin{bsmallmatrix} 0 & -1 & 0 \\ -1 & 5 & -1 \\ 0 & -1 & 0 \end{bsmallmatrix} = I + \mathcal{L}$ amplifica las componentes de alta frecuencia, donde $I$ preserva la señal original y $\mathcal{L}$ añade las diferencias locales.
+
+En el dominio espectral, la respuesta de estos filtros es:
+\begin{align}
+\hat{K}_{\text{media}}(\lambda) &\approx 1 - c\lambda + O(\lambda^2) \quad \text{(paso-bajo)} \\
+\hat{K}_{\text{sharp}}(\lambda) &= 1 + \lambda \quad \text{(amplificación de altas frecuencias)}
+\end{align}
+\end{example}
+
+Puede comprobarse, además, que este Laplaciano discreto es la aproximación por diferencias finitas de segundo orden del Laplaciano continuo $\Delta f = \partial_{xx} f + \partial_{yy} f$, con $(\mathcal{L}f)_{i,j} = -h^2 \Delta f + O(h^4)$ para paso de malla $h$.
+
+\begin{theorem}[CNNs como Filtros Espectrales en Grillas]\label{thm:cnns_filtros_espectrales_grillas}
+Los filtros convolucionales pueden interpretarse como filtros
+espectrales sobre el Laplaciano de la grilla:
+\[
+h_\theta * f = \sum_k h_\theta(\lambda_k)\langle f, \phi_k\rangle\phi_k
+\]
+donde \(\{\lambda_k, \phi_k\}\) son eigenvalores/eigenvectores del Laplaciano de grilla.
+\end{theorem}
+
+\begin{proof}
+Sea $\mathcal{L} = U \Lambda U^T$ la descomposición espectral del Laplaciano de la grilla, con $\Lambda = \operatorname{diag}(\lambda_0, \ldots, \lambda_{n-1})$ y $U = [\phi_0 | \cdots | \phi_{n-1}]$. Un filtro convolucional con kernel $h_\theta$ actúa sobre la señal $f$ en el dominio espacial como $(h_\theta * f)(i) = \sum_j h_\theta(i-j) f(j)$. En el dominio espectral, por el teorema de convolución, esto equivale a $\widehat{h_\theta * f}(k) = \hat{h}_\theta(k) \cdot \hat{f}(k)$, donde $\hat{f}(k) = \langle f, \phi_k \rangle$. Definiendo $h_\theta(\lambda_k) := \hat{h}_\theta(k)$, la señal filtrada se reconstruye como:
+\[
+(h_\theta * f)(i) = \sum_k h_\theta(\lambda_k) \langle f, \phi_k \rangle \phi_k(i)
+\]
+que es exactamente la convolución espectral del enunciado.
+\end{proof}
+
+\subsubsection{Generalización a Grafos Arbitrarios}
+
+Puesto que el Laplaciano $\mathcal{L} = D - A$ está definido para cualquier grafo, la identidad del \autoref{thm:cnns_filtros_espectrales_grillas} se extiende directamente a dominios irregulares, dando lugar a la convolución espectral en grafos.
 
 \begin{definition}[Convolución Espectral en Grafos]\label{def:convolucion_espectral_grafos}
 Para una función $f: V \to \mathbb{R}$ y un filtro espectral $g: \mathbb{R}_+ \to \mathbb{R}$:
@@ -837,12 +781,12 @@ g(\lambda) \approx \sum_{k=0}^K \theta_k p_k(\lambda)
 donde $\{p_k\}$ es una base polinomial y $\{\theta_k\}$ son parámetros entrenables.
 \end{definition}
 
-\begin{example}[Aproximación de Chebyshev]\label{ex:chebyshev_aproximacion}
+\begin{example}[Aproximación de Chebyshev (ChebNet)]\label{ex:chebyshev_aproximacion}
 Usando polinomios de Chebyshev $T_k$ en el intervalo $[-1, 1]$:
 \begin{equation}
 g(\tilde{\lambda}) = \sum_{k=0}^K \theta_k T_k(\tilde{\lambda})
 \end{equation}
-donde $\tilde{\lambda} = 2\lambda/\lambda_{\max} - 1$ reescala los eigenvalues.
+donde $\tilde{\lambda} = 2\lambda/\lambda_{\max} - 1$ reescala los eigenvalues. Esta parametrización es la base de \textit{ChebNet}~\citep{defferrard2017convolutionalneuralnetworksgraphs}, la primera formulación práctica de convoluciones espectrales en \glspl{GNN}.
 \end{example}
 
 \begin{theorem}[Eficiencia Computacional]\label{thm:eficiencia_chebyshev}
@@ -859,689 +803,17 @@ donde $\tilde{L} = 2L/\lambda_{\max} - I$.
 Por la recurrencia de Chebyshev, $T_k(\tilde{L})f$ se calcula inductivamente: $\bar{x}_0 = f$ requiere $O(n)$, $\bar{x}_1 = \tilde{L}f$ requiere una multiplicación matriz-vector dispersa con coste $O(|E|)$ (pues $\tilde{L}$ tiene a lo sumo $2|E| + n$ entradas no nulas), y cada paso $\bar{x}_k = 2\tilde{L}\bar{x}_{k-1} - \bar{x}_{k-2}$ requiere igualmente $O(|E|)$. Como se realizan $K$ pasos de recurrencia, el coste total es $O(K|E|)$. Nótese que no se requiere calcular los eigenvalores ni eigenvectores de $L$, pues la recurrencia opera directamente con la matriz dispersa $\tilde{L}$.
 \end{proof}
 
-\subsubsection{Ejemplo Completo: Análisis Espectral de un Grafo Pequeño}
-
-El siguiente ejemplo ilustra todos los conceptos anteriores mediante cálculos explícitos en un grafo de 4 nodos.
-
-\begin{example}[Laplaciano de Grafo Triangular con Vértice Aislado]\label{ex:laplaciano_triangulo_4_nodos}
-Considere el grafo $G$ con 4 vértices y aristas $E = \{(1,2), (1,3), (2,3), (3,4)\}$:
-
-\begin{center}
-\begin{tikzpicture}[scale=1.2]
-    \node[circle, draw, fill=gdlblue!20] (1) at (0, 1) {1};
-    \node[circle, draw, fill=gdlblue!20] (2) at (-1, -0.5) {2};
-    \node[circle, draw, fill=gdlblue!20] (3) at (1, -0.5) {3};
-    \node[circle, draw, fill=gdlgreen!20] (4) at (2.5, 0) {4};
-    
-    \draw[thick] (1) -- (2);
-    \draw[thick] (1) -- (3);
-    \draw[thick] (2) -- (3);
-    \draw[thick] (3) -- (4);
-\end{tikzpicture}
-\end{center}
-
-\textbf{1. Matriz de adyacencia}:
-\begin{equation}
-A = \begin{bmatrix}
-0 & 1 & 1 & 0 \\
-1 & 0 & 1 & 0 \\
-1 & 1 & 0 & 1 \\
-0 & 0 & 1 & 0
-\end{bmatrix}
-\end{equation}
-
-\textbf{2. Matriz de grados}:
-\begin{equation}
-D = \begin{bmatrix}
-2 & 0 & 0 & 0 \\
-0 & 2 & 0 & 0 \\
-0 & 0 & 3 & 0 \\
-0 & 0 & 0 & 1
-\end{bmatrix}
-\end{equation}
-
-\textbf{3. Laplaciano no normalizado}:
-\begin{equation}
-L = D - A = \begin{bmatrix}
-2 & -1 & -1 & 0 \\
--1 & 2 & -1 & 0 \\
--1 & -1 & 3 & -1 \\
-0 & 0 & -1 & 1
-\end{bmatrix}
-\end{equation}
-
-\textbf{4. Cálculo de eigenvalores y eigenvectores}:
-El polinomio característico es:
-\begin{equation}
-\det(L - \lambda I) = \lambda(\lambda - 1)(\lambda - 3)(\lambda - 4)
-\end{equation}
-
-Los eigenvalores son: $\lambda_0 = 0, \lambda_1 = 1, \lambda_2 = 3, \lambda_3 = 4$.
-
-\textbf{Eigenvectores (calculados y normalizados)}:
-\begin{align}
-\phi_0 &= \tfrac{1}{2}(1, 1, 1, 1)^T \quad \text{(vector constante, $\lambda_0 = 0$)} \\
-\phi_1 &= \tfrac{1}{\sqrt{6}}(-1, -1, 0, 2)^T \quad \text{(variación suave, $\lambda_1 = 1$)} \\
-\phi_2 &= \tfrac{1}{\sqrt{2}}(1, -1, 0, 0)^T \quad \text{(contraste 1-2, $\lambda_2 = 3$)} \\
-\phi_3 &= \tfrac{1}{2\sqrt{3}}(1, 1, -3, 1)^T \quad \text{(alta frecuencia, $\lambda_3 = 4$)}
-\end{align}
-
-Se verifica que $L\phi_k = \lambda_k \phi_k$, $\|\phi_k\| = 1$ y $\langle \phi_i, \phi_j \rangle = \delta_{ij}$ para todo $i, j$.
-
-\textbf{5. Interpretación frecuencial}:
-\begin{itemize}
-    \item $\phi_0$ (DC): función constante sobre todo el grafo
-    \item $\phi_1$ (baja frecuencia): variación suave, vértice 4 contrasta con vértices 1-2
-    \item $\phi_2$ (media frecuencia): contraste entre vértices 1 y 2
-    \item $\phi_3$ (alta frecuencia): oscilación rápida, vértice 3 contrasta fuertemente con sus vecinos
-\end{itemize}
-
-\textbf{6. Convolución espectral - Ejemplo práctico}:
-Sea $f = (1, 0, -1, 2)^T$ una señal en el grafo y $g(\lambda) = e^{-\lambda/2}$ un filtro pasa-bajos.
-
-\textbf{Transformada de Fourier de $f$}:
-\begin{align}
-\hat{f}_0 &= \phi_0^T f = \tfrac{1}{2}(1 + 0 - 1 + 2) = 1 \\
-\hat{f}_1 &= \phi_1^T f = \tfrac{1}{\sqrt{6}}(-1 + 0 + 0 + 4) = \tfrac{3}{\sqrt{6}} = \tfrac{\sqrt{6}}{2} \\
-\hat{f}_2 &= \phi_2^T f = \tfrac{1}{\sqrt{2}}(1 - 0 + 0 + 0) = \tfrac{1}{\sqrt{2}} = \tfrac{\sqrt{2}}{2} \\
-\hat{f}_3 &= \phi_3^T f = \tfrac{1}{2\sqrt{3}}(1 + 0 + 3 + 2) = \tfrac{6}{2\sqrt{3}} = \sqrt{3}
-\end{align}
-
-\textbf{Aplicación del filtro}:
-\begin{align}
-g(\lambda_0) \hat{f}_0 &= e^{0} \cdot 1 = 1 \\
-g(\lambda_1) \hat{f}_1 &= e^{-1/2} \cdot \tfrac{\sqrt{6}}{2} \approx 0.74 \\
-g(\lambda_2) \hat{f}_2 &= e^{-3/2} \cdot \tfrac{\sqrt{2}}{2} \approx 0.16 \\
-g(\lambda_3) \hat{f}_3 &= e^{-2} \cdot \sqrt{3} \approx 0.23
-\end{align}
-
-\textbf{Señal filtrada}:
-\begin{equation}
-f_{\text{filtered}} = \sum_{k=0}^{3} g(\lambda_k)\hat{f}_k \phi_k \approx (0.38, 0.15, 0.30, 1.17)^T
-\end{equation}
-
-\textbf{Interpretación}: El filtro pasa-bajos ha suavizado la señal, reduciendo especialmente las componentes de alta frecuencia ($\lambda_2 = 3$ y $\lambda_3 = 4$) mientras preserva la componente constante.
-\end{example}
-
-\textbf{Implementación Computacional del Ejemplo.} La verificación computacional del ejemplo sigue esta metodología:
-
-\textbf{Construcción del grafo}:
-\begin{enumerate}
-    \item Definir 4 nodos con conectividad específica: $(1,2)$, $(1,3)$, $(2,3)$, $(3,4)$
-    \item Calcular matrices de adyacencia y Laplaciano usando bibliotecas estándar
-    \item Verificar propiedades básicas: simetría, semi-definitud positiva
-\end{enumerate}
-
-\textbf{Análisis espectral}:
-\begin{itemize}
-    \item \textbf{Eigenvalores}: $\{0, 1, 3, 4\}$ con interpretación frecuencial clara
-    \item \textbf{Eigenvectores}: Base ortogonal para representar señales en el grafo
-    \item \textbf{Verificación}: Comprobar ortogonalidad y propiedades de normalization
-\end{itemize}
-
-\textbf{Convolución espectral}:
-Para la señal de prueba $f = [1, 0, -1, 2]^T$ y filtro pasa-bajos $g(\lambda) = e^{-\lambda/2}$:
-\begin{enumerate}
-    \item \textbf{Transformada directa}: $\hat{f} = U^T f$ usando eigenvectores
-    \item \textbf{Filtrado}: Multiplicación por $g(\lambda_k)$ para cada componente
-    \item \textbf{Transformada inversa}: $f_{filtrado} = U \hat{f}_{filtrado}$
-\end{enumerate}
-
-\textbf{Resultados numéricos}:
-El filtro pasa-bajos produce una señal suavizada $\approx [0.38, 0.15, 0.30, 1.17]^T$, demostrando la atenuación de componentes de alta frecuencia mientras preserva las tendencias globales.
-
-\textbf{Observaciones del Ejemplo.} Este ejemplo ilustra conceptos clave del análisis espectral en grafos:
-
-\textbf{1. Conectividad y multiplicidad}:
-El grafo es conexo, por lo que $\lambda_0 = 0$ tiene multiplicidad 1.
-
-\textbf{2. Interpretación geométrica}:
-- Los eigenvectores de baja frecuencia capturan la estructura global
-- Los de alta frecuencia revelan variaciones locales entre nodos adyacentes
-
-\textbf{3. Filtrado eficaz}:
-El filtro pasa-bajos $e^{-\lambda/2}$ preserva la componente DC y atenúa progresivamente las frecuencias más altas.
-
-\textbf{4. Complejidad computacional}:
-- Diagonalización: $O(n^3)$ para $n = 4$ (trivial)
-- En grafos grandes, se prefiere la aproximación polinomial Chebyshev
-
-\begin{example}[Otros Tipos de Filtros Espectrales]\label{ex:otros_filtros_espectrales}
-\leavevmode
-\begin{enumerate}
-    \item \textbf{Filtros Racionales}: $g(\lambda) = \frac{P(\lambda)}{Q(\lambda)}$ donde $P, Q$ son polinomios
-    \item \textbf{Filtros de Lanczos}: $g(\lambda) = \theta \cdot \operatorname{sinc}(\pi\lambda/\lambda_{\max})$
-    \item \textbf{Splines}: Funciones spline por tramos sobre el espectro
-    \item \textbf{Filtros Wavelets}: Basados en wavelets espectrales en grafos
-\end{enumerate}
-\end{example}
-
-\textbf{Trade-off Localización vs Eficiencia.} Existe un trade-off fundamental:
-\begin{itemize}
-    \item \textbf{Filtros espectrales globales}: Más expresivos pero $O(n^3)$ para diagonalización
-    \item \textbf{Aproximaciones polinomiales}: Locales y eficientes $O(K|E|)$ pero menos expresivos
-    \item \textbf{Grado del polinomio $K$}: Controla el radio de localización espacial
-\end{itemize}
-
-\subsection{Bases Wavelets y Análisis Multiresolución}\label{subsec:wavelets_multirresolucion}
-
-Las wavelets proporcionan una alternativa a la transformada de Fourier que permite análisis tiempo-frecuencia simultáneo, superando las limitaciones del principio de incertidumbre. Su aplicación en redes neuronales ofrece representaciones jerárquicas naturales.
-
-\begin{definition}[Wavelet Madre]\label{def:wavelet_madre}
-Una función $\psi \in L^2(\mathbb{R})$ es una \textbf{wavelet madre} si satisface la condición de admisibilidad:
-\begin{equation}
-C_\psi = \int_{-\infty}^{\infty} \frac{|\hat{\psi}(\omega)|^2}{|\omega|} d\omega < \infty
-\end{equation}
-donde $\hat{\psi}$ es la transformada de Fourier de $\psi$.
-\end{definition}
-
-\textbf{Implicaciones de la Condición de Admisibilidad.} La condición $C_\psi < \infty$ implica que $\hat{\psi}(0) = 0$, lo que significa $\int_{-\infty}^{\infty} \psi(t) dt = 0$. Esto garantiza que las wavelets tienen media cero y proporcionan análisis local.
-
-\begin{definition}[Transformada Wavelet Continua]\label{def:transformada_wavelet_continua}
-Para una función $f \in L^2(\mathbb{R})$ y wavelet madre $\psi$, la transformada wavelet continua se define como:
-\begin{equation}
-W_f(a, b) = \frac{1}{\sqrt{|a|}} \int_{-\infty}^{\infty} f(t) \psi^*\left(\frac{t-b}{a}\right) dt
-\end{equation}
-donde $a \in \mathbb{R}\setminus\{0\}$ es el parámetro de escala y $b \in \mathbb{R}$ es el parámetro de traslación.
-\end{definition}
-
-\begin{theorem}[Fórmula de Reconstrucción Wavelet]\label{thm:reconstruccion_wavelet}
-Si $\psi$ satisface la condición de admisibilidad, entonces:
-\begin{equation}
-f(t) = \frac{1}{C_\psi} \int_{-\infty}^{\infty} \int_{-\infty}^{\infty} W_f(a, b) \psi_{a,b}(t) \frac{da \, db}{a^2}
-\end{equation}
-donde $\psi_{a,b}(t) = \frac{1}{\sqrt{|a|}} \psi\left(\frac{t-b}{a}\right)$.
-
-Véase la Sección~\ref{sec:reconstruccion_wavelet} del \autoref{ch:teoremas_complementarios} para la demostración completa.
-\end{theorem}
-
-\begin{definition}[Análisis Multiresolución (MRA)]\label{def:mra}
-Un \textbf{análisis multiresolución} de $L^2(\mathbb{R})$ es una secuencia de subespacios cerrados $\{V_j\}_{j \in \mathbb{Z}}$ que satisface:
-\begin{enumerate}
-    \item \textbf{Inclusión}: $\cdots \subset V_{-1} \subset V_0 \subset V_1 \subset \cdots$
-    \item \textbf{Densidad}: $\overline{\bigcup_{j \in \mathbb{Z}} V_j} = L^2(\mathbb{R})$
-    \item \textbf{Separación}: $\bigcap_{j \in \mathbb{Z}} V_j = \{0\}$
-    \item \textbf{Escalado}: $f(x) \in V_j \Leftrightarrow f(2x) \in V_{j+1}$
-    \item \textbf{Traslación}: $f(x) \in V_0 \Rightarrow f(x-k) \in V_0$ para $k \in \mathbb{Z}$
-    \item \textbf{Base de Riesz}: Existe $\phi \in V_0$ tal que $\{\phi(x-k)\}_{k \in \mathbb{Z}}$ es base de Riesz de $V_0$
-\end{enumerate}
-\end{definition}
-
-\begin{definition}[Función de Escala]\label{def:funcion_escala}
-La función $\phi$ en la condición 6 del MRA se llama \textbf{función de escala} o \textbf{wavelet padre}. Satisface la ecuación de escalado:
-\begin{equation}
-\phi(x) = \sqrt{2} \sum_{k \in \mathbb{Z}} h_k \phi(2x - k)
-\end{equation}
-donde $\{h_k\}$ son los coeficientes de escalado.
-\end{definition}
-
-\begin{definition}[Wavelet Ortogonal]\label{def:wavelet_ortogonal}
-Dado un MRA con función de escala $\phi$, la \textbf{wavelet ortogonal} asociada se define como:
-\begin{equation}
-\psi(x) = \sqrt{2} \sum_{k \in \mathbb{Z}} g_k \phi(2x - k)
-\end{equation}
-donde $g_k = (-1)^k h_{1-k}$ están relacionados con los coeficientes de escalado.
-\end{definition}
-
-\begin{theorem}[Descomposición Wavelet]\label{thm:descomposicion_wavelet}
-Toda función $f \in L^2(\mathbb{R})$ puede descomponerse como:
-\begin{equation}
-f(x) = \sum_{k \in \mathbb{Z}} c_{J,k} \phi_{J,k}(x) + \sum_{j=J}^{\infty} \sum_{k \in \mathbb{Z}} d_{j,k} \psi_{j,k}(x)
-\end{equation}
-donde $\phi_{j,k}(x) = 2^{j/2} \phi(2^j x - k)$ y $\psi_{j,k}(x) = 2^{j/2} \psi(2^j x - k)$.
-
-Véase la Sección~\ref{sec:descomposicion_wavelet} del \autoref{ch:teoremas_complementarios} para la demostración.
-\end{theorem}
-
-\begin{example}[Wavelets de Haar]\label{ex:wavelets_haar}
-Las wavelets de Haar son las más simples:
-\begin{align}
-\phi(x) &= \begin{cases} 1 & \text{si } 0 \leq x < 1 \\ 0 & \text{en otro caso} \end{cases} \\
-\psi(x) &= \begin{cases} 1 & \text{si } 0 \leq x < 1/2 \\ -1 & \text{si } 1/2 \leq x < 1 \\ 0 & \text{en otro caso} \end{cases}
-\end{align}
-\end{example}
-
-\begin{example}[Wavelets de Daubechies]\label{ex:wavelets_daubechies}
-Las wavelets de Daubechies $D_N$ tienen soporte compacto $[0, 2N-1]$ y $N$ momentos nulos:
-\begin{equation}
-\int_{-\infty}^{\infty} x^k \psi(x) dx = 0, \quad k = 0, 1, \ldots, N-1
-\end{equation}
-\end{example}
-
-\subsubsection{Wavelets en Grafos}
-
-\begin{definition}[Wavelets Espectrales en Grafos]\label{def:wavelets_grafos}
-Para un grafo con Laplaciano $L$ y eigenvectores $\{\phi_k\}$, las wavelets espectrales se definen como:
-\begin{equation}
-\psi_{s,i} = \sum_{k=0}^{n-1} g(s\lambda_k) \phi_k(i) \phi_k
-\end{equation}
-donde $g$ es una función wavelet madre y $s$ es el parámetro de escala.
-\end{definition}
-
-\begin{example}[GraphWavelets]\label{ex:graph_wavelets}
-Una elección común para la función madre es:
-\begin{equation}
-g(x) = x e^{-x}
-\end{equation}
-que proporciona localización tanto espectral como espacial en el grafo.
-\end{example}
-
-\textbf{Ventajas de Wavelets en CNNs.} Las wavelets ofrecen ventajas específicas para redes neuronales:
-\begin{itemize}
-    \item \textbf{Análisis multiresolución}: Natural para arquitecturas jerárquicas
-    \item \textbf{Localización}: Mejor que Fourier para características locales
-    \item \textbf{Parsimonia}: Representaciones sparse para señales naturales
-    \item \textbf{Invarianza por traslación}: Aproximada según el tipo de wavelet
-\end{itemize}
-
-\subsubsection{Wavelet de Morlet y Análisis Tiempo-Frecuencia}
-
-\begin{definition}[Wavelet de Morlet]\label{def:wavelet_morlet}
-La \textit{wavelet de Morlet} es una onda modulada por una gaussiana:
-\begin{equation}
-\psi_{\omega_0}(t) = c_\sigma \pi^{-1/4} e^{i\omega_0 t} e^{-t^2/2}
-\end{equation}
-donde $\omega_0 \geq 5$ es la frecuencia central y $c_\sigma$ es una constante de normalización. Su transformada de Fourier es $\hat{\psi}_{\omega_0}(\omega) = c_\sigma \pi^{-1/4} e^{-(\omega - \omega_0)^2/2}$, una gaussiana centrada en $\omega_0$.
-\end{definition}
-
-\begin{remark}[Resolución Tiempo-Frecuencia Óptima]
-La wavelet de Morlet alcanza la igualdad en el principio de incertidumbre de Heisenberg-Gabor:
-\[
-\Delta t \cdot \Delta \omega = \frac{1}{2}
-\]
-lo que la convierte en la wavelet con mejor resolución simultánea en tiempo y frecuencia. A escala $a$, la wavelet $\psi_{a,b}(t) = a^{-1/2}\psi((t-b)/a)$ tiene resolución temporal $\Delta t \propto a$ y frecuencial $\Delta \omega \propto 1/a$, implementando exactamente la propiedad de multiresolución adaptativa.
-\end{remark}
-
-\subsubsection{Scattering Transform: CNNs con Wavelets Predefinidas}
-
-La conexión más profunda entre wavelets y CNNs se establece a través del \textit{Scattering Transform} de Mallat~\citep{Mallat2012scattering}, que muestra que las primeras capas de una CNN pueden entenderse como un banco de filtros wavelet con no linealidad de módulo.
-
-\begin{definition}[Scattering Transform]\label{def:scattering_transform}
-Sea $\psi$ una wavelet madre y $\phi$ una función de escala (paso-bajo). El \textit{operador de scattering} de orden $m$ se define recursivamente:
-\begin{align}
-S_0 f &= f \star \phi_J \\
-S_1 f &= \{|f \star \psi_{j_1}| \star \phi_J\}_{j_1} \\
-S_m f &= \{|\cdots|f \star \psi_{j_1}| \star \psi_{j_2}| \cdots \star \psi_{j_m}| \star \phi_J\}_{j_1 < j_2 < \cdots < j_m}
-\end{align}
-donde $\psi_j(t) = 2^{-j}\psi(2^{-j}t)$ son las wavelets dilatadas y $\phi_J$ es la función de escala a la resolución más gruesa.
-\end{definition}
-
-\begin{proposition}[Propiedades del Scattering Transform]\label{prop:propiedades_scattering}
-El operador de scattering $Sf = (S_0 f, S_1 f, S_2 f, \ldots)$ satisface:
-\begin{enumerate}
-    \item \textbf{Invarianza por traslación}: $S[\tau_c f] = S[f]$ para toda traslación $\tau_c f(t) = f(t - c)$.
-    \item \textbf{Estabilidad Lipschitz a deformaciones}: Para todo difeomorfismo $\tau$ cercano a la identidad:
-    \begin{equation}
-    \|Sf - S(f \circ \tau)\| \leq C\|\nabla \tau\|_\infty \|f\|
-    \end{equation}
-    \item \textbf{Conservación de energía}: $\sum_{m=0}^{\infty} \|S_m f\|^2 = \|f\|^2$.
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-(1) La traslación conmuta con la convolución: $\tau_c f \star \psi_j = \tau_c(f \star \psi_j)$. El módulo preserva esta traslación: $|\tau_c(f \star \psi_j)| = \tau_c|f \star \psi_j|$. Finalmente, la convolución con $\phi_J$ (paso-bajo a escala $2^J$) promedia sobre traslaciones menores que $2^J$, eliminando la dependencia en $c$.
-
-(2) Dado que $\psi_j$ tiene soporte frecuencial concentrado en $|\omega| \sim 2^j$, la convolución $f \star \psi_j$ es sensible a variaciones de $f$ a escala $2^{-j}$. Una deformación $\tau$ con $\|\nabla \tau\|_\infty \leq \epsilon$ desplaza las frecuencias como máximo en $\epsilon \cdot 2^j$, que es pequeño comparado con el ancho de banda $2^j$ del filtro, produciendo un error proporcional a $\epsilon$.
-
-(3) Se sigue de la identidad de Parseval para wavelets: $\|f\|^2 = \|f \star \phi_J\|^2 + \sum_j \|f \star \psi_j\|^2$. Aplicando iterativamente a los coeficientes $|f \star \psi_j|$ y usando que el módulo preserva la norma $L^2$, se obtiene la conservación de energía total.
-\end{proof}
-
-\begin{remark}[Scattering como CNN con Pesos Fijos]
-La arquitectura del scattering transform es isomorfa a una CNN con las siguientes correspondencias:
-\begin{itemize}
-    \item \textbf{Filtros}: Wavelets $\psi_j$ predefinidas (no aprendidas) $\leftrightarrow$ kernels convolucionales
-    \item \textbf{No linealidad}: Módulo $|{\cdot}|$ $\leftrightarrow$ ReLU
-    \item \textbf{Pooling}: Convolución con $\phi_J$ $\leftrightarrow$ average pooling
-    \item \textbf{Profundidad}: Orden $m$ del scattering $\leftrightarrow$ número de capas
-\end{itemize}
-La diferencia clave es que el scattering transform tiene garantías teóricas de estabilidad e invarianza, mientras que las CNNs entrenadas las aprenden implícitamente.
-\end{remark}
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.85\textwidth]{figures/wavelet_multiresolution}
-	\caption[Descomposición wavelet multiresolución]{Descomposición wavelet multiresolución: una señal se descompone iterativamente mediante filtros paso-bajo ($h$) y paso-alto ($g$) seguidos de submuestreo ($\downarrow 2$), separando las componentes de aproximación ($c_{j,k}$) y detalle ($d_{j,k}$) a múltiples escalas.}
-	\label{fig:wavelet_multiresolution}
-\end{figure}
-
-\subsection{Convoluciones Espectrales en CNNs}\label{subsec:convoluciones_espectrales_cnns}
-
-Las convoluciones espectrales en CNNs aprovechan las propiedades del dominio frecuencial para implementar operaciones convolucionales de manera eficiente, especialmente para kernels grandes o en aplicaciones con estructura geométrica específica.
-
-\begin{definition}[Filtro Espectral Parametrizado]\label{def:filtro_espectral_parametrizado}
-Un \textbf{filtro espectral parametrizado} es una función $h_\theta: \mathbb{R}_+ \to \mathbb{R}$ donde $\theta \in \mathbb{R}^p$ son parámetros entrenables. El filtro actúa sobre el espectro de frecuencias mediante:
-\begin{equation}
-h_\theta(\lambda) = \sum_{k=0}^{K-1} \theta_k \phi_k(\lambda)
-\end{equation}
-donde $\{\phi_k\}$ es una base de funciones (polinomios, wavelets, etc.).
-\end{definition}
-
-\begin{definition}[Capa Convolucional Espectral]\label{def:capa_convolucional_espectral}
-Una capa convolucional espectral transforma una señal de entrada $x \in \mathbb{R}^n$ mediante:
-\begin{equation}
-y = \sigma(h_\theta \star x + b)
-\end{equation}
-donde:
-\begin{itemize}
-    \item $h_\theta \star x$ es la convolución espectral: $\mathcal{F}^{-1}[h_\theta(\cdot) \cdot \mathcal{F}[x]]$
-    \item $\sigma$ es la función de activación
-    \item $b$ es el término de sesgo
-\end{itemize}
-\end{definition}
-
-\begin{theorem}[Equivalencia Espacial-Espectral]\label{thm:equivalencia_espacial_espectral}
-Para dominios con estructura regular (grillas, toros), las convoluciones espaciales y espectrales son matemáticamente equivalentes:
-\begin{equation}
-(f * g)(x) = \mathcal{F}^{-1}[\mathcal{F}[f] \cdot \mathcal{F}[g]](x)
-\end{equation}
-Sin embargo, difieren en:
-\begin{itemize}
-    \item \textbf{Complejidad computacional}: Espacial $O(n \cdot k^2)$ vs Espectral $O(n \log n)$
-    \item \textbf{Localización}: Espacial (local) vs Espectral (global)
-    \item \textbf{Interpretabilidad}: Espacial (geométrica) vs Espectral (frecuencial)
-\end{itemize}
+\begin{theorem}[Localización de Filtros de Chebyshev]\label{thm:localizacion_chebyshev}
+Un filtro de Chebyshev de orden $K$ es estrictamente $K$-localizado: la respuesta en el nodo $i$ depende únicamente de nodos a distancia máxima $K$ de $i$ en el grafo.
 \end{theorem}
 
 \begin{proof}
-La equivalencia se deduce del teorema de convolución para la transformada de Fourier. Para funciones $f, g \in L^1(\mathbb{R}^d)$ (o sus análogos discretos en $\mathbb{Z}^d$), la transformada de Fourier satisface $\mathcal{F}[f * g] = \mathcal{F}[f] \cdot \mathcal{F}[g]$. Aplicando $\mathcal{F}^{-1}$ a ambos lados se obtiene la identidad del enunciado. Las diferencias en complejidad son: la convolución espacial directa realiza $O(n \cdot k^2)$ operaciones (recorrer $n$ posiciones aplicando un kernel de tamaño $k \times k$), mientras que la convolución espectral vía FFT requiere $O(n \log n)$ para la transformada directa, $O(n)$ para la multiplicación punto a punto, y $O(n \log n)$ para la transformada inversa, totalizando $O(n \log n)$. La localización difiere porque un kernel espacial finito de tamaño $k$ corresponde a un filtro espectral de soporte completo, y viceversa.
+Un polinomio de Chebyshev $T_k$ de grado $k$ satisface $T_k(\tilde{\mathcal{L}}) = 2\tilde{\mathcal{L}} T_{k-1}(\tilde{\mathcal{L}}) - T_{k-2}(\tilde{\mathcal{L}})$. Puesto que $\tilde{\mathcal{L}}_{ij} \neq 0$ solo si los nodos $i$ y $j$ son adyacentes (distancia 1), la multiplicación por $\tilde{\mathcal{L}}$ extiende el soporte de una señal en exactamente un salto. Así, $T_1(\tilde{\mathcal{L}})f$ depende de vecinos a distancia $\leq 1$, y por inducción, $T_k(\tilde{\mathcal{L}})f$ en el nodo $i$ depende únicamente de nodos a distancia $\leq k$. Como el filtro es $g_\theta(\tilde{\mathcal{L}}) = \sum_{k=0}^K \theta_k T_k(\tilde{\mathcal{L}})$, la respuesta en cada nodo depende de nodos a distancia $\leq K$.
 \end{proof}
 
-\subsubsection{Implementación Práctica de CNNs Espectrales}
+\subsection{Equivalencia CNN--Message Passing}\label{subsec:equivalencia_conv_mp}\label{sec:cnn_as_gnn}
 
-\textbf{Algoritmo: Forward Pass Espectral.}\label{alg:forward_espectral} Para una entrada $x \in \mathbb{R}^{H \times W}$ y filtro parametrizado $h_\theta$:
-\begin{enumerate}
-    \item \textbf{Transformada directa}: $\hat{x} = \text{FFT2D}(x)$
-    \item \textbf{Aplicación del filtro}: $\hat{y} = h_\theta(\omega) \odot \hat{x}$ (producto elemento a elemento)
-    \item \textbf{Transformada inversa}: $y = \text{IFFT2D}(\hat{y})$
-    \item \textbf{Activación}: $z = \sigma(y + b)$
-\end{enumerate}
-
-\textbf{Consideraciones de Implementación.}
-\begin{itemize}
-    \item \textbf{Padding}: Para evitar efectos de borde, se usa padding circular o zero-padding
-    \item \textbf{Precisión numérica}: \gls{FFT}/IFFT pueden acumular errores de punto flotante
-    \item \textbf{Memoria}: Almacenar tanto representación espacial como espectral
-\end{itemize}
-
-\begin{definition}[Función de Transferencia de una CNN Lineal]\label{def:funcion_transferencia_cnn}
-Para una CNN lineal (sin funciones de activación no lineales) con $L$ capas, la función de transferencia global en el dominio frecuencial es:
-\begin{equation}
-H(\omega) = \prod_{l=1}^L H_l(\omega)
-\end{equation}
-donde $H_l(\omega)$ es la respuesta frecuencial de la capa $l$. Esta factorización solo es válida en ausencia de no linealidades entre capas.
-\end{definition}
-
-\begin{example}[CNN Espectral Simple]\label{ex:cnn_espectral_simple}
-Consider una CNN de dos capas:
-\begin{align}
-\text{Capa 1}: \quad y_1 &= \sigma(\mathcal{F}^{-1}[h_1(\omega) \cdot \mathcal{F}[x]] + b_1) \\
-\text{Capa 2}: \quad y_2 &= \mathcal{F}^{-1}[h_2(\omega) \cdot \mathcal{F}[y_1]] + b_2
-\end{align}
-La respuesta frecuencial total es $H(\omega) = h_1(\omega) \cdot h_2(\omega)$ (sin considerar no-linealidades).
-\end{example}
-
-\subsubsection{Análisis de Complejidad}
-
-\begin{theorem}[Complejidad Computacional]\label{thm:complejidad_convoluciones_espectrales}
-Para una convolución 2D de tamaño $n \times n$ con kernel $k \times k$:
-\begin{itemize}
-    \item \textbf{Convolución directa}: $O(n^2 k^2)$
-    \item \textbf{Convolución espectral}: $O(n^2 \log n)$
-    \item \textbf{Punto de equilibrio}: Espectral es más eficiente cuando $k > O(\log n)$
-\end{itemize}
-\end{theorem}
-
-\begin{proof}
-La convolución directa en 2D calcula, para cada una de las $n^2$ posiciones de la imagen, una suma de $k^2$ productos, dando $O(n^2 k^2)$ operaciones. La convolución espectral requiere: (i) FFT 2D de la imagen: $O(n^2 \log n)$; (ii) FFT 2D del kernel (con zero-padding): $O(n^2 \log n)$; (iii) multiplicación punto a punto en frecuencia: $O(n^2)$; (iv) IFFT 2D: $O(n^2 \log n)$. El total es $O(n^2 \log n)$. El punto de equilibrio se obtiene igualando $n^2 k^2 = n^2 \log n$, es decir, $k^2 = \log n$, por lo que la convolución espectral es preferible cuando $k > O(\sqrt{\log n})$.
-\end{proof}
-
-\begin{example}[Análisis de Eficiencia Práctica]\label{ex:eficiencia_practica}
-Para imagen $512 \times 512$ y kernel $k \times k$:
-\begin{itemize}
-    \item $k = 3$: Directa: $\sim 2.3 \times 10^6$ ops, Espectral: $\sim 2.6 \times 10^6$ ops
-    \item $k = 15$: Directa: $\sim 5.9 \times 10^7$ ops, Espectral: $\sim 2.6 \times 10^6$ ops
-    \item $k = 51$: Directa: $\sim 6.8 \times 10^8$ ops, Espectral: $\sim 2.6 \times 10^6$ ops
-\end{itemize}
-\end{example}
-
-\begin{theorem}[Aproximación Universal Espectral]\label{thm:aproximacion_universal_espectral}
-Sea $\mathcal{G} = (V, E)$ un grafo finito con Laplaciano $L$ y espectro contenido en $[0, \lambda_{\max}]$. Para cualquier filtro espectral continuo $h: [0, \lambda_{\max}] \to \mathbb{R}$ y $\epsilon > 0$, existe un filtro polinomial $p(\lambda) = \sum_{k=0}^{K} \theta_k T_k(\tilde{\lambda})$ de grado $K$ suficientemente grande tal que:
-\begin{equation}
-\|h(\lambda) - p(\lambda)\|_{\infty, [0, \lambda_{\max}]} < \epsilon
-\end{equation}
-En consecuencia, la señal filtrada satisface $\|h(L)f - p(L)f\| \leq \epsilon \|f\|$ para toda señal $f$ en el grafo.
-\end{theorem}
-
-\begin{proof}[Esbozo]
-El intervalo espectral $[0, \lambda_{\max}]$ es compacto, por lo que el resultado es consecuencia directa del teorema de aproximación de Weierstrass: toda función continua en un intervalo compacto puede aproximarse uniformemente por polinomios. La cota sobre la señal filtrada se sigue de $\|h(L)f - p(L)f\| = \|(h-p)(L)f\| \leq \|h - p\|_\infty \|f\|$, ya que los eigenvalores de $(h-p)(L)$ están acotados por $\|h-p\|_\infty$.
-\end{proof}
-
-\textbf{Limitaciones de Convoluciones Espectrales.}
-\begin{itemize}
-    \item \textbf{No-localidad}: Los filtros espectrales afectan globalmente la señal
-    \item \textbf{Regularidad}: Requieren dominios con estructura \gls{FFT} (grillas regulares)
-    \item \textbf{Bordes}: Dificultades con condiciones de frontera no-periódicas
-    \item \textbf{Interpretabilidad}: Menos intuitiva que la convolución espacial
-\end{itemize}
-
-\subsection{Interpretación Frecuencial de CNNs Clásicas}\label{subsec:interpretacion_frecuencial_cnns}
-
-El análisis frecuencial de CNNs tradicionales revela insights profundos sobre qué características aprenden y cómo procesan la información visual.
-
-\begin{definition}[Respuesta Frecuencial de un Kernel]\label{def:respuesta_frecuencial_kernel}
-Para un kernel convolucional $K \in \mathbb{R}^{k \times k}$, su respuesta frecuencial es:
-\begin{equation}
-H(\omega_x, \omega_y) = \sum_{i=0}^{k-1} \sum_{j=0}^{k-1} K[i,j] e^{-2\pi i(\omega_x i + \omega_y j)}
-\end{equation}
-\end{definition}
-
-\begin{example}[Análisis de Kernels Comunes]\label{ex:analisis_kernels_comunes}
-\textbf{1. Detector de Bordes Sobel}:
-\begin{equation}
-K_{\text{Sobel}} = \begin{bmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{bmatrix}
-\end{equation}
-Respuesta frecuencial: pasa-altos con máximo en frecuencias horizontales medias.
-
-\textbf{2. Filtro Gaussiano}:
-\begin{equation}
-K_{\text{Gauss}}[i,j] = \frac{1}{2\pi\sigma^2} e^{-\frac{(i-c)^2 + (j-c)^2}{2\sigma^2}}
-\end{equation}
-Respuesta frecuencial: pasa-bajos con corte suave determinado por $\sigma$.
-
-\textbf{3. Laplaciano}:
-\begin{equation}
-K_{\text{Lap}} = \begin{bmatrix} 0 & -1 & 0 \\ -1 & 4 & -1 \\ 0 & -1 & 0 \end{bmatrix}
-\end{equation}
-Respuesta frecuencial: pasa-altos isotrópico.
-\end{example}
-
-\begin{remark}[Evolución Espectral durante Entrenamiento]\label{rem:evolucion_espectral}
-Observaciones empíricas muestran que, durante el entrenamiento de una CNN, la distribución espectral de los filtros evoluciona siguiendo un patrón característico:
-\begin{enumerate}
-    \item \textbf{Capas tempranas}: Filtros pasa-bajos y detectores de bordes (altas frecuencias)
-    \item \textbf{Capas intermedias}: Filtros pasa-banda para texturas específicas
-    \item \textbf{Capas profundas}: Filtros complejos, menos interpretables espectralmente
-\end{enumerate}
-Este comportamiento ha sido documentado experimentalmente en múltiples arquitecturas, aunque carece de una demostración formal general.
-\end{remark}
-
-\textbf{Experimento: Sesgo Espectral de CNNs.}\label{exp:sesgo_espectral} Estudios empíricos muestran que las CNNs exhiben un sesgo hacia frecuencias bajas:
-\begin{itemize}
-    \item Aprenden primero componentes de baja frecuencia
-    \item Requieren más iteraciones para capturar detalles de alta frecuencia
-    \item Este sesgo puede mejorarse con técnicas de inicialización espectral
-\end{itemize}
-
-Los métodos espectrales desarrollados en esta sección encuentran aplicaciones directas en dominios donde la estructura frecuencial de los datos es fundamental: reconstrucción de imágenes médicas (MRI, tomografía computarizada), procesamiento de señales científicas (astronomía, sismología) y compresión de redes neuronales mediante poda espectral. El enfoque de esta tesis, sin embargo, se centra en la fundamentación matemática de estos métodos.
-
-\subsection{Limitaciones y Desafíos}\label{subsec:aplicaciones_limitaciones}
-
-\textbf{Limitación: Dependencia de la Geometría del Dominio.}\label{lim:geometria_dominio} Las convoluciones espectrales clásicas requieren:
-\begin{itemize}
-    \item \textbf{Estructura regular}: Grillas uniformes para \gls{FFT} eficiente
-    \item \textbf{Condiciones de frontera}: Periódicas o con padding adecuado
-    \item \textbf{Tamaño fijo}: Dificultades con datos de tamaño variable
-\end{itemize}
-
-\textbf{Consecuencia}: Limitación a dominios euclidianos regulares.
-
-\textbf{Limitación: Trade-off Localización-Eficiencia.}\label{lim:tradeoff_localizacion}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Método} & \textbf{Localización} & \textbf{Eficiencia} & \textbf{Interpretabilidad} \\
-\hline
-Convolución espacial & Excelente & Media & Alta \\
-Convolución espectral & Pobre & Excelente & Media \\
-Aproximación polinomial & Buena & Buena & Media \\
-Wavelets & Excelente & Media & Alta \\
-\hline
-\end{tabular}
-\caption{Comparación de métodos convolucionales}
-\label{tab:comparacion_metodos}
-\end{table}
-
-\textbf{Limitación: Estabilidad Numérica.}\label{lim:estabilidad_numerica} Los métodos espectrales pueden sufrir:
-\begin{itemize}
-    \item \textbf{Acumulación de errores}: En múltiples \gls{FFT}/IFFT
-    \item \textbf{Aliasing}: En sub-muestreo sin filtros anti-aliasing
-    \item \textbf{Precisión de punto flotante}: Especialmente en GPU
-\end{itemize}
-
-\textbf{Limitación: Interpretabilidad Reducida.}\label{lim:interpretabilidad} Comparado con convoluciones espaciales:
-\begin{itemize}
-    \item Los filtros espectrales son menos intuitivos visualmente
-    \item La relación con características geométricas es indirecta
-    \item Debugging y análisis de errores más complejo
-\end{itemize}
-
-\textbf{Limitación: No Transferibilidad Espectral entre Dominios.}\label{lim:transferibilidad} Los filtros espectrales definidos sobre un dominio $\Omega_1$ no pueden transferirse directamente a otro dominio $\Omega_2$ con espectro distinto. Formalmente, si $\{\lambda_k^{(1)}, \phi_k^{(1)}\}$ y $\{\lambda_k^{(2)}, \phi_k^{(2)}\}$ son las descomposiciones espectrales de los operadores Laplacianos en $\Omega_1$ y $\Omega_2$ respectivamente, un filtro $h(\lambda)$ aprendido sobre $\{\lambda_k^{(1)}\}$ no tiene interpretación canónica sobre $\{\lambda_k^{(2)}\}$ a menos que exista una correspondencia natural entre los eigenvalores. Esta limitación motiva el uso de aproximaciones polinomiales como los filtros de Chebyshev (\autoref{thm:localizacion_espectral}), que definen el filtro como función del operador $h(L)$ en lugar de actuar sobre eigenvalores individuales.
-
-\begin{proposition}[Trade-off Fundamental Localización-Globalidad]\label{prop:tradeoff_localizacion}
-Sea $h(\lambda)$ un filtro espectral con soporte en $[\lambda_{\min}, \lambda_{\max}]$ y sea $K(x,y) = \sum_k h(\lambda_k) \phi_k(x)\phi_k(y)$ su kernel espacial asociado. Entonces:
-\begin{equation}
-\text{supp}_{\text{freq}}(h) \cdot \text{supp}_{\text{spatial}}(K) \geq C > 0
-\end{equation}
-donde $C$ depende solo de la dimensión del dominio. En particular, un filtro perfectamente localizado en frecuencia ($h = \delta_{\lambda_k}$) es completamente deslocalizado en espacio ($K(x,y) = \phi_k(x)\phi_k(y)$, soporte global).
-\end{proposition}
-
-\begin{proof}
-Es una consecuencia directa del principio de incertidumbre para la transformada espectral: la concentración de una función y su representación espectral no pueden ser simultáneamente arbitrariamente pequeñas. Para el caso $h = \delta_{\lambda_k}$, el kernel se reduce a $K(x,y) = \phi_k(x)\phi_k(y)$, que es no nulo en casi todo el dominio (ya que los eigenvectores del Laplaciano solo se anulan en un conjunto de medida cero). El caso general sigue por un argumento de dualidad análogo al principio de Heisenberg clásico.
-\end{proof}
-
-\textbf{Síntesis: Perspectiva Espectral como Puente.} El análisis armónico proporciona un marco unificador que conecta:
-\begin{enumerate}
-    \item \textbf{CNNs clásicas} (análisis de Fourier en grillas regulares)
-    \item \textbf{GCNs espectrales} (análisis espectral en grafos)
-    \item \textbf{CNNs geométricas} (análisis armónico en grupos y variedades)
-    \item \textbf{Transformers} (atención como convolución adaptativa en dominio frecuencial)
-\end{enumerate}
-
-Esta perspectiva revela que muchas arquitecturas aparentemente diferentes comparten fundamentos matemáticos profundos, facilitando el desarrollo de nuevas arquitecturas que combinen las mejores características de cada enfoque.
-
-El \gls{analisis_armonico} desarrollado en la sección precedente no solo enriquece nuestra comprensión de las CNNs clásicas, sino que proporciona las herramientas matemáticas necesarias para establecer la equivalencia fundamental entre convoluciones en grillas regulares y operaciones espectrales en grafos. Esta conexión, que exploraremos a continuación, constituye uno de los pilares del marco unificador del Geometric Deep Learning.
-
-\section[De Convoluciones a Grafos: Conexión CNNs-GNNs]{De Convoluciones a Grafos: Conexión \glspl{CNN}-\glspl{GNN}}\label{sec:cnn_as_gnn}
-
-\subsection{Preliminares: Teoría de Grafos}\label{subsec:preliminares_grafos_cnn}
-
-Para la definición básica de grafo, véase la \autoref{def:grafo_neuronal} en el \autoref{ch:neural_networks}. En esta sección nos enfocamos en su relación específica con las convoluciones.
-
-\begin{definition}[Representación de Datos como Grafos]\label{def:representacion_datos_grafos}
-Los datos se representan en un grafo mediante:
-\begin{itemize}
-	\item \textbf{Características nodales}: \(X \in \mathbb{R}^{n \times d}\) donde \(x_i \in \mathbb{R}^d\) es el feature del nodo \(i\)
-	\item \textbf{Matriz de adyacencia}: \(A \in \{0,1\}^{n \times n}\) donde \(A_{ij} = 1\) si \((v_i, v_j) \in E\)
-	\item \textbf{Características de aristas} (opcional): \(E \in \mathbb{R}^{|E| \times d_e}\)
-\end{itemize}
-\end{definition}
-
-\begin{example}[Diferentes Tipos de Datos como Grafos]
-\leavevmode
-\begin{enumerate}
-	\item \textbf{Moléculas}: átomos = nodos, enlaces = aristas
-	\item \textbf{Redes sociales}: personas = nodos, relaciones = aristas
-	\item \textbf{Imágenes}: píxeles = nodos, vecindad = aristas (¡caso especial!)
-	\item \textbf{Nubes de puntos}: puntos = nodos, k-NN = aristas
-\end{enumerate}
-\end{example}
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.85\textwidth]{figures/image_as_graph}
-	\caption[Imagen como grafo de grilla regular]{Una imagen puede representarse como un grafo de grilla regular con conectividad 4: cada píxel es un nodo y las aristas conectan píxeles vecinos horizontal y verticalmente. La vecindad $\mathcal{N}(v_i)$ corresponde exactamente al soporte del kernel convolucional.}
-	\label{fig:image_as_graph}
-\end{figure}
-
-\begin{example}[Construcción Explícita: Imagen 3×3 como Grafo]\label{ex:imagen_3x3_grafo}
-Consideremos una imagen RGB de tamaño $3 \times 3$ con 3 canales de color. La transformación a grafo procede en tres pasos:
-
-\textbf{Paso 1: Identificación de nodos}. Cada píxel $(i,j)$ se mapea a un nodo $v_{i,j}$ del grafo:
-\[
-V = \{v_{0,0}, v_{0,1}, v_{0,2}, v_{1,0}, v_{1,1}, v_{1,2}, v_{2,0}, v_{2,1}, v_{2,2}\}
-\]
-con $|V| = 9$ nodos.
-
-\textbf{Paso 2: Construcción de aristas}. Para 4-conectividad, conectamos píxeles adyacentes horizontal y verticalmente:
-\begin{align}
-E = \{&(v_{0,0}, v_{0,1}), (v_{0,1}, v_{0,2}), \quad \text{(fila 0)} \\
-    &(v_{1,0}, v_{1,1}), (v_{1,1}, v_{1,2}), \quad \text{(fila 1)} \\
-    &(v_{2,0}, v_{2,1}), (v_{2,1}, v_{2,2}), \quad \text{(fila 2)} \\
-    &(v_{0,0}, v_{1,0}), (v_{1,0}, v_{2,0}), \quad \text{(columna 0)} \\
-    &(v_{0,1}, v_{1,1}), (v_{1,1}, v_{2,1}), \quad \text{(columna 1)} \\
-    &(v_{0,2}, v_{1,2}), (v_{1,2}, v_{2,2}) \} \quad \text{(columna 2)}
-\end{align}
-Obtenemos $|E| = 12$ aristas no dirigidas.
-
-\textbf{Paso 3: Asignación de características}. Cada nodo $v_{i,j}$ recibe un vector de características $\mathbf{x}_{i,j} \in \mathbb{R}^3$ correspondiente a los valores RGB del píxel $(i,j)$:
-\[
-X = \begin{bmatrix} \mathbf{x}_{0,0}^T \\ \mathbf{x}_{0,1}^T \\ \vdots \\ \mathbf{x}_{2,2}^T \end{bmatrix} \in \mathbb{R}^{9 \times 3}
-\]
-
-La matriz de adyacencia $A \in \{0,1\}^{9 \times 9}$ tiene la forma block-tridiagonal característica de grillas regulares.
-\end{example}
-
-\textbf{Propiedades Especiales de Grafos Grilla.} Los grafos grilla derivados de imágenes poseen propiedades estructurales únicas:
-\begin{enumerate}
-    \item \textbf{Regularidad}: Grado casi constante ($\deg(v) = 4$ excepto en bordes)
-    \item \textbf{Estructura espacial}: Posiciones $(i,j)$ definen un embedding natural en $\mathbb{R}^2$
-    \item \textbf{Simetría}: Invarianza a traslaciones discretas
-    \item \textbf{Espectro predecible}: Los eigenvalores del Laplaciano son conocidos analíticamente
-\end{enumerate}
-
-Estas propiedades hacen que las CNNs sean especialmente efectivas en grillas, pero también limitan su aplicabilidad a grafos generales.
-
-\subsection[CNNs como GNNs en Grillas Regulares]{\glspl{CNN} como \glspl{GNN} en Grillas Regulares}\label{subsec:cnns_como_gnns_grillas}
-
-\begin{theorem}[\gls{CNN} es un Caso Especial de \gls{GNN}]\label{thm:cnn_caso_especial_gnn}
-Una \gls{CNN} 2D es exactamente equivalente a una \gls{GNN} donde:
-\begin{itemize}
-	\item \textbf{Grafo}: Grilla regular \(G = (\mathbb{Z}^2 \cap \Omega, E)\)
-	\item \textbf{Vértices}: Píxeles en posiciones \((i,j)\)
-	\item \textbf{Aristas}: Conectividad 4 u 8 vecinos
-	\item \textbf{Pesos}: Compartidos según posición relativa (kernel)
-\end{itemize}
-\end{theorem}
-
-\begin{proof}
-La equivalencia se establece mediante la correspondencia natural:
-\begin{enumerate}
-	\item Cada píxel \((i,j)\) corresponde a un nodo \(v_{i,j}\) en el grafo
-	\item Las conexiones espaciales definen las aristas: \((v_{i,j}, v_{i',j'}) \in E\) si y solo si \(|i-i'| + |j-j'| \leq 1\)
-	\item El kernel convolucional \(K\) determina los pesos de las aristas según la distancia relativa
-	\item La operación de agregación en \glspl{GNN} se reduce exactamente a la convolución 2D
-\end{enumerate}
-\end{proof}
-
-\begin{definition}[Grilla como Grafo]\label{def:grilla_como_grafo}
-Para imagen de tamaño \(H \times W\):
-\begin{itemize}
-	\item \(V = \{(i,j) : 0 \leq i < H, 0 \leq j < W\}\)
-	\item \(E = \{((i,j), (i',j')) : |i-i'| + |j-j'| \leq 1\}\) (4-conectividad)
-	\item Grado constante: \(\deg(v) = 4\) (excepto bordes)
-\end{itemize}
-\end{definition}
+El análisis espectral precedente admite una contrapartida puramente espacial: una \gls{CNN} 2D es exactamente equivalente a una \gls{GNN} definida sobre la grilla regular, donde los píxeles son los vértices, la conectividad de 4 u 8 vecinos define las aristas, y los pesos se comparten según la posición relativa (el kernel). Esta correspondencia, que formalizamos a continuación, revela que las convoluciones no son sino un caso particular del paradigma de paso de mensajes.
 
 \begin{theorem}[Equivalencia Constructiva CNN-GNN]\label{thm:equivalencia_constructiva_cnn_gnn}
 Dada una CNN con arquitectura de capas convolucionales $\{L_\ell\}_{\ell=1}^L$ operando sobre grillas $H \times W$, existe una construcción explícita de una GNN equivalente que produce salidas idénticas para toda entrada.
@@ -1602,60 +874,6 @@ h_v^{(\ell+1)} &= \sigma\left(\sum_{u \in \mathcal{N}(v)} W_{v-u}^{(\ell)} h_u^{
 donde usamos la hipótesis inductiva (H.I.) en la tercera igualdad. $\square$
 \end{proof}
 
-\begin{example}[Verificación Numérica: Kernel 3×3 Sobel]\label{ex:verificacion_numerica_sobel}
-Consideremos el kernel Sobel horizontal:
-\[
-K = \begin{bmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{bmatrix}
-\]
-
-Aplicado a la imagen $3 \times 3$:
-\[
-I = \begin{bmatrix} 0 & 1 & 2 \\ 0 & 1 & 2 \\ 0 & 1 & 2 \end{bmatrix}
-\]
-
-\textbf{Método CNN}: La convolución en el píxel central $(1,1)$ produce:
-\begin{align}
-y_{1,1} &= -1 \cdot 0 + 0 \cdot 1 + 1 \cdot 2 \\
-        &\quad + (-2) \cdot 0 + 0 \cdot 1 + 2 \cdot 2 \\
-        &\quad + (-1) \cdot 0 + 0 \cdot 1 + 1 \cdot 2 \\
-        &= 0 + 2 + 0 + 4 + 0 + 2 = 8
-\end{align}
-
-\textbf{Método GNN}: Construimos el grafo con $v_{1,1}$ conectado a sus 8 vecinos. Los mensajes son:
-\begin{align}
-m_{1,1} &= K_{-1,-1} \cdot h_{0,0} + K_{-1,0} \cdot h_{0,1} + K_{-1,1} \cdot h_{0,2} \\
-        &\quad + K_{0,-1} \cdot h_{1,0} + K_{0,1} \cdot h_{1,2} \\
-        &\quad + K_{1,-1} \cdot h_{2,0} + K_{1,0} \cdot h_{2,1} + K_{1,1} \cdot h_{2,2} \\
-        &= (-1)(0) + (0)(1) + (1)(2) + (-2)(0) + (2)(2) \\
-        &\quad + (-1)(0) + (0)(1) + (1)(2) = 8
-\end{align}
-
-Ambos métodos producen el resultado idéntico $y_{1,1} = 8$, verificando la equivalencia.
-\end{example}
-
-\subsection{Equivalencia Convolución-Message Passing}\label{subsec:equivalencia_conv_mp}
-
-\begin{theorem}[Equivalencia Fundamental]\label{thm:equivalencia_fundamental_conv_mp}
-La operación de convolución 2D:
-\[
-y_{i,j} = \sum_{(u,v) \in \mathcal{N}} K_{u,v} \cdot x_{i+u,j+v}
-\]
-
-es exactamente equivalente a message passing en la grilla:
-\[
-m_{(i,j)} = \sum_{(i',j') \in N(i,j)} K_{i'-i,j'-j} \cdot x_{i',j'}
-\]
-
-donde \(N(i,j)\) son los vecinos del píxel \((i,j)\).
-\end{theorem}
-
-\begin{proof}
-La convolución suma sobre un vecindario fijo relativo al píxel central.
-En la grilla regular, este vecindario corresponde exactamente a los
-vecinos en el grafo con pesos determinados por la posición relativa.
-Los pesos \(K_{u,v}\) del kernel corresponden a los mensajes ponderados. \(\square\)
-\end{proof}
-
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=0.90\textwidth]{figures/conv_message_passing}
@@ -1690,17 +908,7 @@ m_{v_1}^{(1)} = \sum_{u \in \mathcal{N}(v_1)} m_{v_1 \leftarrow u} = 0.5 + 3 + 1
 Nuevamente, ambos enfoques producen el mismo resultado: $4.5$.
 \end{example}
 
-\textbf{Conexión con el Marco MPNN Unificado.} La equivalencia convolución-message passing establecida en esta sección es un caso especial del marco de \textit{Message Passing Neural Networks} (\glspl{MPNN}) introducido en la \autoref{def:mpnn_unificador} del \autoref{ch:gdl}.
-
-Específicamente, las CNNs corresponden a MPNNs con:
-\begin{itemize}
-    \item \textbf{Grafo fijo}: Grilla regular con conectividad local
-    \item \textbf{Función de mensaje}: $M_\ell(h_v, h_u, e_{vu}) = W_{v-u}^{(\ell)} h_u$ (dependencia solo del desplazamiento relativo)
-    \item \textbf{Agregación}: Suma no ponderada $m_v = \sum_{u \in \mathcal{N}(v)} M_\ell(\cdot)$
-    \item \textbf{Actualización}: $U_\ell(h_v, m_v) = \sigma(m_v + b^{(\ell)})$
-\end{itemize}
-
-Esta formulación revela que la restricción fundamental de las CNNs es la \textbf{compartición de pesos basada en posición relativa} ($W_{v-u}$), que solo tiene sentido en dominios con estructura de traslación. Para grafos generales sin tal estructura, necesitamos funciones de mensaje más flexibles, como se explora en la \autoref{subsec:message_passing_unificador} del \autoref{ch:gdl}.
+\textbf{Conexión con el Marco MPNN Unificado.} La equivalencia convolución-message passing establecida en esta sección es un caso especial del marco de \textit{Message Passing Neural Networks} (\glspl{MPNN}) introducido en la \autoref{def:mpnn_unificador} del \autoref{ch:gdl}. Específicamente, las CNNs corresponden a MPNNs con grafo fijo (grilla regular), función de mensaje dependiente solo del desplazamiento relativo $M_\ell(h_v, h_u, e_{vu}) = W_{v-u}^{(\ell)} h_u$, agregación por suma y actualización $U_\ell(h_v, m_v) = \sigma(m_v + b^{(\ell)})$. Esta formulación revela que la restricción fundamental de las CNNs es la \textbf{compartición de pesos basada en posición relativa} ($W_{v-u}$), que solo tiene sentido en dominios con estructura de traslación; para grafos generales se requieren funciones de mensaje más flexibles, como se explora en la \autoref{subsec:message_passing_unificador} del \autoref{ch:gdl}.
 
 \begin{proposition}[Complejidad Computacional CNN vs GNN en Grillas]\label{prop:complejidad_cnn_vs_gnn_grilla}
 Para una imagen de tamaño $H \times W$ con $C$ canales y kernel $k \times k$:
@@ -1708,253 +916,59 @@ Para una imagen de tamaño $H \times W$ con $C$ canales y kernel $k \times k$:
     \item \textbf{CNN estándar}: $O(H \cdot W \cdot k^2 \cdot C)$ operaciones
     \item \textbf{GNN en grilla}: $O(|E| \cdot C) = O(4HW \cdot C)$ operaciones (para 4-conectividad)
 \end{itemize}
-
 Cuando $k$ es pequeño (típicamente $k \in \{3, 5, 7\}$), ambas complejidades son equivalentes: $O(HWC)$. Sin embargo, la formulación de GNN revela que la complejidad depende fundamentalmente del número de aristas $|E|$, no del tamaño del kernel, proporcionando una perspectiva unificada para analizar eficiencia en diferentes topologías de grafos.
 \end{proposition}
 
 \begin{proof}
-\textbf{CNN estándar}: La imagen tiene $H \cdot W$ posiciones espaciales. En cada posición, el kernel $k \times k$ realiza $k^2$ multiplicaciones sobre cada uno de los $C$ canales, dando un total de $O(H \cdot W \cdot k^2 \cdot C)$ operaciones.
-
-\textbf{GNN en grilla}: Cada nodo (píxel) tiene a lo sumo 4 vecinos en conectividad 4 (arriba, abajo, izquierda, derecha), luego $|E| = O(4HW)$. El paso de mensajes procesa $C$ canales por arista, resultando en $O(4HW \cdot C) = O(|E| \cdot C)$ operaciones.
+La CNN procesa $H \cdot W$ posiciones y en cada una realiza $k^2$ multiplicaciones por canal, dando $O(H W k^2 C)$. En la GNN sobre grilla, cada nodo tiene a lo sumo 4 vecinos, luego $|E| = O(4HW)$, y el paso de mensajes procesa $C$ canales por arista, resultando en $O(|E| C) = O(4HW C)$.
 \end{proof}
 
-\textbf{Perspectiva Dual: Espacial vs. Espectral.} La equivalencia establecida en esta sección admite dos interpretaciones complementarias:
+\textbf{Perspectiva Dual: Espacial vs. Espectral.} La equivalencia establecida admite dos interpretaciones complementarias. En la \textbf{perspectiva espacial}, la convolución agrega información de vecinos locales con pesos compartidos determinados por la posición relativa (la formulación natural de las CNNs). En la \textbf{perspectiva espectral}, la convolución corresponde a multiplicación en el dominio de Fourier: para grillas regulares los eigenvectores del Laplaciano son exactamente las bases de Fourier discretas (\autoref{prop:eigenvalores_laplaciano_grilla}), estableciendo la conexión con la \autoref{def:convolucion_espectral_grafos}. Las CNNs clásicas operan en el dominio espacial por eficiencia computacional, mientras que las formulaciones espectrales proporcionan las herramientas teóricas para generalizar a grafos arbitrarios mediante la aproximación de Chebyshev (\autoref{ex:chebyshev_aproximacion}).
 
-\textbf{Perspectiva espacial}: La convolución agrega información de vecinos locales con pesos compartidos determinados por la posición relativa. Esta es la formulación natural de las CNNs.
+La generalización natural de las CNNs a grafos arbitrarios se obtiene, por tanto, reemplazando la grilla regular por un grafo general, el kernel espacial por funciones del Laplaciano $h_\theta(\mathcal{L})$, y preservando la agregación local mediante filtros polinomiales. La convolución espectral en grafos (\autoref{def:convolucion_espectral_grafos}) traslada así la operación convolucional al dominio espectral, $\text{conv}_\theta \star x = U g_\theta(\Lambda) U^T x$, donde $\mathcal{L} = U\Lambda U^T$ es la descomposición espectral del Laplaciano y $g_\theta$ es el filtro entrenable.
 
-\textbf{Perspectiva espectral}: Como se desarrolló en la \autoref{sec:analisis_armonico}, la convolución corresponde a multiplicación en el dominio de Fourier. Para grillas regulares, los eigenvectores del Laplaciano son exactamente las bases de Fourier discretas, estableciendo la conexión con la \autoref{def:convolucion_espectral_grafos}.
+\subsection{Limitaciones y Transición a las Convoluciones Geométricas}\label{subsec:aplicaciones_limitaciones}
 
-Esta dualidad espacial-espectral es fundamental: las CNNs clásicas operan en el dominio espacial por eficiencia computacional, mientras que las formulaciones espectrales proporcionan las herramientas teóricas para generalizar a grafos arbitrarios mediante la aproximación de Chebyshev (\autoref{ex:chebyshev_aproximacion}).
+La perspectiva espectral revela también los límites de las convoluciones espectrales clásicas, que motivan las extensiones geométricas del resto del capítulo.
 
-\subsection{Laplaciano de Grilla y Filtros}\label{subsec:laplaciano_grilla_filtros}
+\textbf{Limitación: Dependencia de la Geometría del Dominio.}\label{lim:geometria_dominio} Las convoluciones espectrales clásicas requieren estructura regular (grillas uniformes para \gls{FFT} eficiente), condiciones de frontera periódicas o con padding adecuado, y tamaño fijo, lo que las limita a dominios euclidianos regulares.
 
-\begin{definition}[Laplaciano Discreto en Grilla 2D]\label{def:laplaciano_discreto_grilla}
-El operador Laplaciano en una grilla:
-\[
-\mathcal{L} = D - A
-\]
-donde \(D\) es la matriz de grados y \(A\) la matriz de adyacencia.
+\textbf{Limitación: Trade-off Localización-Eficiencia.}\label{lim:tradeoff_localizacion}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Método} & \textbf{Localización} & \textbf{Eficiencia} & \textbf{Interpretabilidad} \\
+\hline
+Convolución espacial & Excelente & Media & Alta \\
+Convolución espectral & Pobre & Excelente & Media \\
+Aproximación polinomial & Buena & Buena & Media \\
+Wavelets & Excelente & Media & Alta \\
+\hline
+\end{tabular}
+\caption{Comparación de métodos convolucionales}
+\label{tab:comparacion_metodos}
+\end{table}
 
-Para grilla 2D con 4-conectividad:
-\begin{align}
-\mathcal{L}_{(i,j),(i,j)} &= 4 \\
-\mathcal{L}_{(i,j),(i \pm 1,j)} = \mathcal{L}_{(i,j),(i,j \pm 1)} &= -1
-\end{align}
-\end{definition}
+\textbf{Limitación: Estabilidad Numérica.}\label{lim:estabilidad_numerica} Los métodos espectrales pueden sufrir acumulación de errores en múltiples \gls{FFT}/IFFT, aliasing en sub-muestreo sin filtros anti-aliasing, y pérdida de precisión de punto flotante (especialmente en GPU).
 
-\begin{example}[Kernel Laplaciano como Filtro CNN]
-El Laplaciano discreto corresponde al kernel:
-\[
-K = \begin{bmatrix}
- 0 & -1 &  0 \\
--1 &  4 & -1 \\
- 0 & -1 &  0
-\end{bmatrix}
-\]
-Este es un detector de bordes clásico en procesamiento de imágenes, y su interpretación espectral como filtro paso-alto se formaliza en el \autoref{thm:cnns_filtros_espectrales_grillas}.
-\end{example}
+\textbf{Limitación: Interpretabilidad Reducida.}\label{lim:interpretabilidad} Comparados con las convoluciones espaciales, los filtros espectrales son menos intuitivos visualmente, su relación con características geométricas es indirecta, y el análisis de errores resulta más complejo.
 
-\begin{proposition}[Eigenvalores del Laplaciano en Grilla Rectangular]\label{prop:eigenvalores_laplaciano_grilla}
-Para una grilla 2D de tamaño $n_1 \times n_2$ con condiciones de frontera periódicas, los eigenvalores del Laplaciano son:
+\textbf{Limitación: No Transferibilidad Espectral entre Dominios.}\label{lim:transferibilidad} Los filtros espectrales definidos sobre un dominio $\Omega_1$ no pueden transferirse directamente a otro dominio $\Omega_2$ con espectro distinto. Formalmente, si $\{\lambda_k^{(1)}, \phi_k^{(1)}\}$ y $\{\lambda_k^{(2)}, \phi_k^{(2)}\}$ son las descomposiciones espectrales de los operadores Laplacianos en $\Omega_1$ y $\Omega_2$ respectivamente, un filtro $h(\lambda)$ aprendido sobre $\{\lambda_k^{(1)}\}$ no tiene interpretación canónica sobre $\{\lambda_k^{(2)}\}$ a menos que exista una correspondencia natural entre los eigenvalores. Esta limitación motiva el uso de aproximaciones polinomiales como los filtros de Chebyshev (\autoref{thm:localizacion_espectral}), que definen el filtro como función del operador $h(L)$ en lugar de actuar sobre eigenvalores individuales.
+
+\begin{proposition}[Trade-off Fundamental Localización-Globalidad]\label{prop:tradeoff_localizacion}
+Sea $h(\lambda)$ un filtro espectral con soporte en $[\lambda_{\min}, \lambda_{\max}]$ y sea $K(x,y) = \sum_k h(\lambda_k) \phi_k(x)\phi_k(y)$ su kernel espacial asociado. Entonces:
 \begin{equation}
-\lambda_{k_1,k_2} = 4 - 2\cos\!\left(\frac{2\pi k_1}{n_1}\right) - 2\cos\!\left(\frac{2\pi k_2}{n_2}\right), \quad 0 \leq k_i < n_i
+\text{supp}_{\text{freq}}(h) \cdot \text{supp}_{\text{spatial}}(K) \geq C > 0
 \end{equation}
-con eigenvectores $\phi_{k_1,k_2}(i,j) = \frac{1}{\sqrt{n_1 n_2}} e^{2\pi \imath(k_1 i/n_1 + k_2 j/n_2)}$, que son exactamente las bases de Fourier discretas.
+donde $C$ depende solo de la dimensión del dominio. En particular, un filtro perfectamente localizado en frecuencia ($h = \delta_{\lambda_k}$) es completamente deslocalizado en espacio ($K(x,y) = \phi_k(x)\phi_k(y)$, soporte global).
 \end{proposition}
 
 \begin{proof}
-Para condiciones de frontera periódicas, las funciones $\phi_{k_1,k_2}$ satisfacen $\phi_{k_1,k_2}(i + n_1, j) = \phi_{k_1,k_2}(i,j)$. Aplicando el Laplaciano:
-\begin{align}
-(\mathcal{L}\phi_{k_1,k_2})(i,j) &= 4\phi_{k_1,k_2}(i,j) - \phi_{k_1,k_2}(i+1,j) - \phi_{k_1,k_2}(i-1,j) - \phi_{k_1,k_2}(i,j+1) - \phi_{k_1,k_2}(i,j-1) \\
-&= \left(4 - e^{2\pi \imath k_1/n_1} - e^{-2\pi \imath k_1/n_1} - e^{2\pi \imath k_2/n_2} - e^{-2\pi \imath k_2/n_2}\right)\phi_{k_1,k_2}(i,j) \\
-&= \left(4 - 2\cos\!\left(\frac{2\pi k_1}{n_1}\right) - 2\cos\!\left(\frac{2\pi k_2}{n_2}\right)\right)\phi_{k_1,k_2}(i,j)
-\end{align}
-confirmando que $\phi_{k_1,k_2}$ es eigenvector con eigenvalor $\lambda_{k_1,k_2}$.
+Es una consecuencia directa del principio de incertidumbre para la transformada espectral: la concentración de una función y su representación espectral no pueden ser simultáneamente arbitrariamente pequeñas. Para el caso $h = \delta_{\lambda_k}$, el kernel se reduce a $K(x,y) = \phi_k(x)\phi_k(y)$, no nulo en casi todo el dominio, pues los eigenvectores del Laplaciano solo se anulan en un conjunto de medida cero.
 \end{proof}
 
-\begin{remark}[Interpretación Frecuencial de los Eigenvalores]\label{rem:interpretacion_frecuencial_eigenvalores}
-Los eigenvalores del Laplaciano en la grilla admiten una interpretación frecuencial directa:
-\begin{itemize}
-    \item \textbf{Frecuencia cero}: $\lambda_{0,0} = 0$ corresponde a la componente DC (señal constante), el eigenvector $\phi_{0,0} = 1/\sqrt{n_1 n_2}$ es uniforme.
-    \item \textbf{Frecuencias bajas}: eigenvalores pequeños ($k_1, k_2$ cercanos a 0) corresponden a variaciones suaves en la grilla. Un filtro paso-bajo selecciona estos modos.
-    \item \textbf{Frecuencias altas}: eigenvalores grandes (cercanos a $\lambda_{\max} = 8$ para la grilla cuadrada) corresponden a variaciones rápidas. Un filtro paso-alto (como el Laplaciano) selecciona estos modos.
-    \item \textbf{Máxima frecuencia}: $\lambda_{n/2,n/2} = 8$ corresponde a la máxima oscilación posible (patrón de tablero de ajedrez $(-1)^{i+j}$).
-\end{itemize}
-\end{remark}
-
-\begin{example}[Filtros Paso-Bajo y Paso-Alto en la Grilla]\label{ex:filtros_paso_bajo_alto}
-Los filtros clásicos de procesamiento de imágenes tienen interpretaciones espectrales precisas:
-
-\textbf{Filtro de suavizado (media $3 \times 3$)}: El kernel $K_{\text{media}} = \frac{1}{9}\begin{bsmallmatrix} 1 & 1 & 1 \\ 1 & 1 & 1 \\ 1 & 1 & 1 \end{bsmallmatrix}$ actúa como filtro paso-bajo, atenuando las componentes de alta frecuencia (eigenvalores grandes del Laplaciano) mientras preserva las componentes de baja frecuencia.
-
-\textbf{Filtro de enfoque (sharpening)}: El kernel $K_{\text{sharp}} = \begin{bsmallmatrix} 0 & -1 & 0 \\ -1 & 5 & -1 \\ 0 & -1 & 0 \end{bsmallmatrix} = I + \mathcal{L}$ amplifica las componentes de alta frecuencia, donde $I$ preserva la señal original y $\mathcal{L}$ añade las diferencias locales.
-
-En el dominio espectral, la respuesta de estos filtros es:
-\begin{align}
-\hat{K}_{\text{media}}(\lambda) &\approx 1 - c\lambda + O(\lambda^2) \quad \text{(paso-bajo)} \\
-\hat{K}_{\text{sharp}}(\lambda) &= 1 + \lambda \quad \text{(amplificación de altas frecuencias)}
-\end{align}
-\end{example}
-
-\begin{proposition}[Conexión entre Laplaciano Discreto y Continuo]\label{prop:laplaciano_discreto_continuo}
-El Laplaciano discreto en grilla es una aproximación por diferencias finitas del Laplaciano continuo $\Delta f = \frac{\partial^2 f}{\partial x^2} + \frac{\partial^2 f}{\partial y^2}$. Para una función $f$ suficientemente suave definida en la grilla con paso $h$:
-\[
-(\mathcal{L}f)_{i,j} = h^2 \Delta f(ih, jh) + O(h^4)
-\]
-\end{proposition}
-
-\begin{proof}
-Por el desarrollo de Taylor de segundo orden:
-\begin{align}
-f(i+1,j) &= f(i,j) + h f_x + \frac{h^2}{2}f_{xx} + \frac{h^3}{6}f_{xxx} + O(h^4) \\
-f(i-1,j) &= f(i,j) - h f_x + \frac{h^2}{2}f_{xx} - \frac{h^3}{6}f_{xxx} + O(h^4)
-\end{align}
-Sumando: $f(i+1,j) + f(i-1,j) = 2f(i,j) + h^2 f_{xx} + O(h^4)$. Análogamente para la dirección $j$. Por tanto:
-\[
-4f(i,j) - f(i+1,j) - f(i-1,j) - f(i,j+1) - f(i,j-1) = -h^2(f_{xx} + f_{yy}) + O(h^4) = -h^2 \Delta f + O(h^4)
-\]
-lo que demuestra que $(\mathcal{L}f)_{i,j} = -h^2 \Delta f + O(h^4)$, con signo negativo consistente con la convención $\mathcal{L} = D - A$ (Laplaciano semidefinido positivo).
-\end{proof}
-
-\subsection{Generalización Espectral}\label{subsec:generalizacion_espectral}
-
-\begin{theorem}[CNNs como Filtros Espectrales en Grillas]\label{thm:cnns_filtros_espectrales_grillas}
-Los filtros convolucionales pueden interpretarse como filtros 
-espectrales sobre el Laplaciano de la grilla:
-\[
-h_\theta * f = \sum_k h_\theta(\lambda_k)\langle f, \phi_k\rangle\phi_k
-\]
-donde \(\{\lambda_k, \phi_k\}\) son eigenvalores/eigenvectores del Laplaciano de grilla.
-\end{theorem}
-
-\begin{proof}
-Sea $\mathcal{L} = U \Lambda U^T$ la descomposición espectral del Laplaciano de la grilla, con $\Lambda = \operatorname{diag}(\lambda_0, \ldots, \lambda_{n-1})$ y $U = [\phi_0 | \cdots | \phi_{n-1}]$. Un filtro convolucional con kernel $h_\theta$ actúa sobre la señal $f$ en el dominio espacial como $(h_\theta * f)(i) = \sum_j h_\theta(i-j) f(j)$. En el dominio espectral, por el teorema de convolución, esto equivale a $\widehat{h_\theta * f}(k) = \hat{h}_\theta(k) \cdot \hat{f}(k)$, donde $\hat{f}(k) = \langle f, \phi_k \rangle$. Definiendo $h_\theta(\lambda_k) := \hat{h}_\theta(k)$, la señal filtrada se reconstruye como:
-\[
-(h_\theta * f)(i) = \sum_k h_\theta(\lambda_k) \langle f, \phi_k \rangle \phi_k(i)
-\]
-que es exactamente la convolución espectral del enunciado.
-\end{proof}
-
-\begin{proposition}[De Grillas Regulares a Grafos Arbitrarios]\label{prop:grillas_a_grafos}
-La generalización natural de CNNs a grafos arbitrarios es:
-\begin{enumerate}
-	\item Reemplazar la grilla regular por un grafo general
-	\item Reemplazar el kernel espacial por funciones del Laplaciano
-	\item Mantener la idea de agregación local de información
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-La generalización se justifica por la equivalencia espectral establecida en el \autoref{thm:cnns_filtros_espectrales_grillas}: dado que los filtros convolucionales en grillas son funciones del Laplaciano $h_\theta(\mathcal{L})$, y el Laplaciano $\mathcal{L} = D - A$ está definido para cualquier grafo (no solo grillas), la formulación $h_\theta(\mathcal{L})f = \sum_k h_\theta(\lambda_k)\langle f, \phi_k \rangle \phi_k$ se extiende directamente a grafos arbitrarios. Los tres pasos del enunciado corresponden a: (1) reemplazar la grilla por un grafo con su propia matriz de adyacencia, (2) usar la descomposición espectral del nuevo Laplaciano como base funcional, y (3) preservar la localidad espacial mediante filtros polinomiales de grado $K$ que operan en vecindarios de radio $K$.
-\end{proof}
-
-La convolución espectral en grafos (\autoref{def:convolucion_espectral_grafos}) permite trasladar la operación convolucional al dominio espectral: $\text{conv}_\theta \star x = U g_\theta(\Lambda) U^T x$, donde $\mathcal{L} = U\Lambda U^T$ es la descomposición espectral del Laplaciano y $g_\theta$ es el filtro entrenable.
-
-\subsubsection{Análisis Espectral Detallado}
-
-El análisis espectral proporciona las herramientas matemáticas fundamentales para entender y diseñar convoluciones sobre grafos como generalización de las \glspl{CNN} clásicas.
-
-La descomposición espectral del Laplaciano normalizado $\mathcal{L} = U \Lambda U^T$ y la transformada de Fourier en grafos $\hat{f} = U^T f$ (\autoref{def:transformada_fourier_grafos}, \autoref{ch:gdl}) permiten definir filtros espectrales como funciones $g: [0,2] \to \mathbb{R}$ que actúan sobre señales mediante $(g \star f) = U g(\Lambda) U^T f$. Un filtro $K$-localizado concentra su soporte en los primeros $K$ eigenvalores, induciendo operaciones locales con complejidad $O(K|V|)$ que generalizan los kernels locales de las \glspl{CNN}.
-
-La aproximación por polinomios de Chebyshev (\autoref{ex:chebyshev_aproximacion}) permite hacer computacionalmente tratables estas convoluciones espectrales. La recurrencia del \autoref{thm:eficiencia_chebyshev} reduce la complejidad a $O(K|E|)$ sin requerir la diagonalización del Laplaciano. Véase \citep{defferrard2017convolutionalneuralnetworksgraphs} para la formulación original en el contexto de \glspl{GNN}.
-
-\textbf{Puente Conceptual: Análisis Armónico Unificador.} El análisis armónico desarrollado en la \autoref{sec:analisis_armonico} proporciona el lenguaje matemático para unificar CNNs y GNNs:
-\begin{enumerate}
-    \item \textbf{Dominio euclidiano}: Transformada de Fourier clásica (\autoref{def:transformada_fourier_continua})
-    \item \textbf{Grillas discretas}: DFT y FFT (Definiciones~\ref{def:dft}, \ref{def:fft})
-    \item \textbf{Grupos finitos/compactos}: Transformada de Fourier en grupos (Ecuación~\ref{eq:fourier_grupo_finito})
-    \item \textbf{Grafos generales}: Transformada de Fourier en grafos (\autoref{def:transformada_fourier_grafos}, \autoref{ch:gdl})
-\end{enumerate}
-
-Cada nivel generaliza el anterior mientras preserva la intuición fundamental: las frecuencias bajas capturan estructura suave/global, las frecuencias altas capturan detalles/variaciones locales.
-
-\subsubsection{De CNNs Espectrales a Graph Neural Networks}
-
-La teoría espectral anterior establece el puente formal entre las \glspl{CNN} tradicionales y las redes de grafos, demostrando que ambas son casos especiales del mismo principio matemático fundamental.
-
-\begin{theorem}[Conexión Fundamental CNN-GNN]\label{thm:conexion_fundamental_cnn_gnn}
-Toda \gls{CNN} puede representarse exactamente como una \gls{GNN} espectral sobre una grilla regular, donde:
-\begin{enumerate}
-    \item El grafo $G = (V, E)$ representa la estructura de píxeles con $V = \{(i,j) : 1 \leq i,j \leq n\}$
-    \item La conectividad $E$ está determinada por la vecindad espacial
-    \item Los filtros espectrales corresponden a kernels convolucionales via transformada de Fourier discreta
-\end{enumerate}
-\end{theorem}
-
-\begin{proof}[Esbozo de demostración]
-Para una grilla 2D de tamaño $n \times n$, consideremos el grafo $G$ donde cada píxel $(i,j)$ es un nodo y las aristas conectan píxeles adyacentes. El Laplaciano de este grafo tiene la forma:
-\[
-\mathcal{L}_{(i,j),(i',j')} = \begin{cases}
-4 & \text{si } (i,j) = (i',j') \\
--1 & \text{si } |i-i'| + |j-j'| = 1 \\
-0 & \text{en caso contrario}
-\end{cases}
-\]
-
-Sus eigenvectores son exactamente las funciones de Fourier discretas bidimensionales:
-\[
-\phi_{k,\ell}(i,j) = \frac{1}{n} e^{2\pi \imath (ki + \ell j)/n}
-\]
-
-Por tanto, la convolución espacial $f * g$ corresponde exactamente a la multiplicación espectral $\hat{f} \odot \hat{g}$ en el dominio de frecuencias del grafo. $\square$
-\end{proof}
-
-\subsubsection{Implementaciones Computacionalmente Eficientes}
-
-El trabajo pionero de \citet{defferrard2017convolutionalneuralnetworksgraphs} resolvió el problema computacional de las convoluciones espectrales mediante aproximaciones polinomiales de Chebyshev.
-
-\begin{definition}[ChebNet: Convolución de Chebyshev]\label{def:chebnet}
-Un filtro espectral aproximado por polinomios de Chebyshev de orden $K$ se define como:
-\[
-g_\theta(\Lambda) = \sum_{k=0}^{K} \theta_k T_k(\tilde{\Lambda})
-\]
-donde $T_k$ son los polinomios de Chebyshev de primera especie, $\tilde{\Lambda} = 2\Lambda/\lambda_{\max} - I$ es el Laplaciano escalado, y $\theta_k$ son parámetros entrenables.
-\end{definition}
-
-\begin{theorem}[Localización de Filtros de Chebyshev]\label{thm:localizacion_chebyshev}
-Un filtro de Chebyshev de orden $K$ es estrictamente $K$-localizado: la respuesta en el nodo $i$ depende únicamente de nodos a distancia máxima $K$ de $i$ en el grafo.
-\end{theorem}
-
-\begin{proof}
-Un polinomio de Chebyshev $T_k$ de grado $k$ satisface $T_k(\tilde{\mathcal{L}}) = 2\tilde{\mathcal{L}} T_{k-1}(\tilde{\mathcal{L}}) - T_{k-2}(\tilde{\mathcal{L}})$. Puesto que $\tilde{\mathcal{L}}_{ij} \neq 0$ solo si los nodos $i$ y $j$ son adyacentes (distancia 1), la multiplicación por $\tilde{\mathcal{L}}$ extiende el soporte de una señal en exactamente un salto. Así, $T_1(\tilde{\mathcal{L}})f$ depende de vecinos a distancia $\leq 1$, y por inducción, $T_k(\tilde{\mathcal{L}})f$ en el nodo $i$ depende únicamente de nodos a distancia $\leq k$. Como el filtro es $g_\theta(\tilde{\mathcal{L}}) = \sum_{k=0}^K \theta_k T_k(\tilde{\mathcal{L}})$, la respuesta en cada nodo depende de nodos a distancia $\leq K$.
-\end{proof}
-
-La evaluación eficiente de estos filtros se obtiene mediante la recurrencia de Chebyshev establecida en el \autoref{thm:eficiencia_chebyshev}, que permite calcular $g_\theta(\tilde{\mathcal{L}}) \mathbf{x}$ en tiempo $O(K|\mathcal{E}|)$ sin diagonalizar el Laplaciano, con solo $O(K)$ parámetros entrenables independientes del tamaño del grafo.
-
-Esta mejora computacional elimina la necesidad de calcular la descomposición espectral completa, haciendo que las \glspl{GNN} espectrales sean prácticas para grafos de gran escala.
-
-\subsubsection{Ejemplos Concretos de Traducción CNN $\rightarrow$ GNN}
-
-\begin{example}[Kernel Sobel como Filtro Espectral]
-El kernel de detección de bordes Sobel:
-\[
-K_{\text{Sobel}} = \begin{bmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{bmatrix}
-\]
-
-En el dominio espectral del grafo grilla, este filtro corresponde a:
-\[
-\hat{g}(\lambda_{k,\ell}) = |\sin(2\pi k/n)| \cdot \text{función de frecuencia vertical}
-\]
-
-Este ejemplo demuestra cómo los filtros de detección de características en \glspl{CNN} tienen interpretaciones espectrales naturales en grafos.
-\end{example}
-
-\begin{example}[Pooling como Coarsening de Grafo]
-El max-pooling $2 \times 2$ de \glspl{CNN} corresponde a:
-\begin{enumerate}
-    \item \textbf{Agrupamiento}: Particionar cada bloque $2 \times 2$ de píxeles
-    \item \textbf{Agregación}: Aplicar función max sobre cada partición
-    \item \textbf{Nuevo grafo}: Construir grafo coarser con $n/4$ nodos
-\end{enumerate}
-
-Esto generaliza a grafos arbitrarios mediante algoritmos de coarsening algebraico que preservan la estructura espectral local.
-\end{example}
-
-\subsection{Implicaciones y Transición}\label{subsec:implicaciones_transicion_cnn_gnn}
-
-Esta equivalencia \gls{CNN}-\gls{GNN} tiene implicaciones profundas que trascienden la mera analogía matemática y proporcionan un marco conceptual para entender las limitaciones y extensiones de las arquitecturas convolucionales.
-
-\subsubsection{Unificación Conceptual}
+\textbf{Superación mediante GNNs.} Estas limitaciones son consecuencia directa de la equivarianza exclusiva a traslaciones de las CNNs (\autoref{theorem:convolution_translation_equivariance}), que exige una grilla euclidiana regular y falla en dominios intrínsecamente irregulares (moléculas, redes sociales, mallas 3D). La reformulación como GNNs sobre grafos generales supera estas restricciones, y el max-pooling de las CNNs se generaliza mediante algoritmos de \textit{coarsening} de grafos que preservan la estructura espectral local.
 
 \begin{proposition}[Principios Compartidos CNN-GNN]\label{prop:principios_compartidos}
 Las \glspl{CNN} y \glspl{GNN} comparten tres principios arquitectónicos fundamentales:
@@ -1966,50 +980,10 @@ Las \glspl{CNN} y \glspl{GNN} comparten tres principios arquitectónicos fundame
 \end{proposition}
 
 \begin{proof}
-(1) \textit{Localidad}: En una CNN, cada capa convolucional agrega información de un vecindario de tamaño $k$ (el kernel). En una GNN, el paso de message passing agrega información de los vecinos 1-hop $\mathcal{N}(i)$. En ambos casos, la operación es local y está determinada por la estructura de adyacencia del dominio.
-
-(2) \textit{Compartición de pesos}: En una CNN, el mismo kernel se aplica en todas las posiciones espaciales. En una GNN, la misma función de mensaje $\phi$ y de actualización $\gamma$ se aplica en todos los nodos. En ambos casos, los parámetros son independientes de la posición.
-
-(3) \textit{Composición jerárquica}: En una CNN, las operaciones de pooling reducen la resolución espacial creando representaciones multi-escala. En una GNN, los algoritmos de coarsening (como Graclus o DiffPool) colapsan nodos, produciendo grafos progresivamente más pequeños con representaciones de nivel superior.
+En ambos casos: (1) la operación es local, agregando un vecindario de tamaño $k$ (kernel) o los vecinos 1-hop $\mathcal{N}(i)$; (2) los parámetros son independientes de la posición (el mismo kernel en toda posición espacial, las mismas funciones de mensaje y actualización en todo nodo); y (3) la resolución se reduce jerárquicamente mediante pooling (CNN) o coarsening de grafos (GNN), produciendo representaciones multi-escala.
 \end{proof}
 
-\subsubsection{Limitaciones de CNNs y Superación mediante GNNs}
-
-\begin{remark}[Limitaciones Estructurales de CNNs]\label{rem:limitaciones_estructurales_cnns}
-Las \glspl{CNN} tradicionales presentan las siguientes restricciones fundamentales, consecuencia directa de su equivarianza exclusiva a traslaciones (\autoref{theorem:convolution_translation_equivariance}):
-\begin{enumerate}
-    \item \textbf{Dependencia de grilla regular}: Requieren estructura euclidiana fija
-    \item \textbf{Rigidez topológica}: No pueden procesar directamente dominios irregulares
-    \item \textbf{Pérdida de información geométrica}: La representación euclidiana puede destruir relaciones intrínsecas
-    \item \textbf{Escalabilidad limitada}: Complejidad cuadrática con resolución para estructuras no locales
-\end{enumerate}
-\end{remark}
-
-\begin{example}[Casos donde CNNs Fallan y GNNs Triunfan]
-\leavevmode
-\begin{enumerate}
-    \item \textbf{Análisis molecular}: Las moléculas son grafos naturalmente, no grillas
-    \item \textbf{Redes sociales}: La conectividad social no respeta geometría euclidiana
-    \item \textbf{Mallas 3D}: Superficies complejas con topología variable
-    \item \textbf{Sistemas de transporte}: Redes con conectividad no-uniforme
-\end{enumerate}
-\end{example}
-
-\subsubsection{Transferencia Bidireccional de Técnicas}
-
-\begin{proposition}[Transferibilidad de Innovaciones]
-Técnicas desarrolladas para \glspl{CNN} se adaptan naturalmente a \glspl{GNN} y viceversa:
-\begin{itemize}
-    \item \textbf{CNN $\rightarrow$ GNN}: Pooling, dropout, batch normalization, skip connections
-    \item \textbf{GNN $\rightarrow$ CNN}: Attention mechanisms, adaptive pooling, graph-inspired regularization
-\end{itemize}
-\end{proposition}
-
-\begin{proof}
-La transferibilidad se fundamenta en la equivalencia estructural establecida en el \autoref{thm:conexion_fundamental_cnn_gnn}. Las técnicas de CNN que dependen solo de operaciones locales y compartición de pesos se transfieren a GNNs porque ambas arquitecturas comparten estos principios (véase \autoref{prop:principios_compartidos}): pooling corresponde a coarsening de grafos, dropout se aplica a nodos/aristas, batch normalization se adapta por nodo, y skip connections preservan la estructura. En dirección inversa, los mecanismos de atención de GNNs (que ponderan vecinos adaptativamente) se transfieren a CNNs como atención espacial, y las técnicas de pooling adaptativo en grafos inspiran métodos de pooling no uniforme en imágenes.
-\end{proof}
-
-\subsubsection{Marco de Generalización Progresiva}
+\textbf{Puente Conceptual: Análisis Armónico Unificador.} El análisis armónico desarrollado en esta sección proporciona el lenguaje matemático para unificar CNNs y GNNs a través de una jerarquía de transformadas: la transformada de Fourier clásica en dominios euclidianos (\autoref{def:transformada_fourier_continua}), la DFT/FFT en grillas discretas (Definiciones~\ref{def:dft}, \ref{def:fft}), la transformada de Fourier en grupos finitos y compactos (Ecuación~\ref{eq:fourier_grupo_finito}) y la transformada de Fourier en grafos (\autoref{def:transformada_fourier_grafos}, \autoref{ch:gdl}). Cada nivel generaliza el anterior preservando la intuición fundamental: las frecuencias bajas capturan estructura suave o global y las altas, detalles o variaciones locales.
 
 \begin{theorem}[Jerarquía de Generalización]\label{thm:jerarquia_generalizacion_cnn}
 Las arquitecturas neuronales admiten la siguiente jerarquía de generalización:
@@ -2025,87 +999,10 @@ Cada nivel de la jerarquía anterior puede expresar estrictamente más funciones
 \end{corollary}
 
 \begin{proof}
-Cada inclusión en la jerarquía relaja una restricción arquitectónica específica: CNN $\subset$ CNN espectral relaja la localidad espacial del kernel, CNN espectral $\subset$ GNN espectral relaja la estructura de grilla regular, etc. La inclusión en cada caso es estricta porque la relajación permite expresar funciones que violan la restricción anterior. Por ejemplo, existen funciones equivariantes respecto al grupo de simetría del grafo que no pueden implementarse como convoluciones sobre grilla, pues la grilla impone simetrías de traslación que el grafo general no posee. El aumento en poder expresivo conlleva mayor complejidad computacional (más parámetros y operaciones por capa) y mayor riesgo de sobreajuste (espacio de hipótesis más grande con la misma cantidad de datos).
+Cada inclusión relaja una restricción: CNN $\subset$ CNN espectral relaja la localidad espacial del kernel, CNN espectral $\subset$ GNN espectral relaja la estructura de grilla regular, y así sucesivamente. La inclusión es estricta porque la relajación permite expresar funciones que violan la restricción previa (por ejemplo, funciones equivariantes respecto a la simetría de un grafo general que no admiten representación como convoluciones sobre grilla). El aumento de poder expresivo conlleva más parámetros y operaciones por capa y un espacio de hipótesis mayor con el mismo volumen de datos.
 \end{proof}
 
-\subsubsection{Interpretabilidad desde Perspectiva de Grafos}
-
-\textbf{Nueva Interpretación de CNNs.} La perspectiva de grafos proporciona nuevas herramientas para interpretar \glspl{CNN}:
-\begin{itemize}
-    \item \textbf{Análisis espectral}: Entender filtros como funciones espectrales
-    \item \textbf{Localización}: Cuantificar el campo receptivo usando distancias de grafo
-    \item \textbf{Robustez}: Analizar estabilidad usando perturbaciones de grafo
-    \item \textbf{Transferibilidad}: Evaluar generalización mediante propiedades espectrales
-\end{itemize}
-
-\subsubsection{Puente hacia Extensiones Geométricas}
-
-Esta equivalencia fundamental \gls{CNN}-\gls{GNN} establece el fundamento conceptual para las extensiones geométricas que exploraremos:
-
-\begin{definition}[Taxonomía de Extensiones Geométricas]\label{def:taxonomia_extensiones}
-A partir de la base CNN-GNN, identificamos tres direcciones principales de generalización:
-\begin{enumerate}
-    \item \textbf{Convoluciones de Grupo}: Generalizar traslaciones a grupos de transformación más ricos
-    \item \textbf{Convoluciones en Variedades}: Extender a dominios con curvatura no-trivial
-    \item \textbf{Convoluciones Gauge}: Incorporar invarianzas gauge para estructuras fibradas
-\end{enumerate}
-\end{definition}
-
-Cada una de estas direcciones mantiene los principios fundamentales establecidos en esta sección mientras extiende el poder expresivo de las arquitecturas convolucionales a dominios geométricos cada vez más sofisticados.
-
-\subsubsection{Contexto Histórico y Desarrollo}
-
-\textbf{Evolución Histórica CNN-GNN.} La conexión entre \glspl{CNN} y \glspl{GNN} se desarrolló a través de varios trabajos fundamentales:
-
-\begin{enumerate}
-    \item \textbf{2013}: \citet{bruna2014spectralnetworkslocallyconnected} establecen las primeras convoluciones espectrales en grafos, demostrando la equivalencia teórica con \glspl{CNN} tradicionales
-
-    \item \textbf{2016}: \citet{defferrard2017convolutionalneuralnetworksgraphs} resuelven los problemas computacionales mediante aproximaciones de Chebyshev, haciendo prácticas las \glspl{GNN} espectrales
-
-    \item \textbf{2017}: Los trabajos sobre GraphSAGE y GAT introducen enfoques espaciales, complementando las técnicas espectrales
-
-    \item \textbf{2017-presente}: Síntesis en el marco de \gls{GDL}, unificando ambos enfoques bajo principios geométricos comunes
-\end{enumerate}
-
-\begin{remark}[Impacto del Marco Unificado]\label{rem:impacto_marco_unificado}
-La unificación CNN-GNN ha tenido tres impactos fundamentales:
-\begin{enumerate}
-    \item \textbf{Teórico}: Proporcionó fundamentos matemáticos rigurosos para el diseño de arquitecturas
-    \item \textbf{Práctico}: Permitió la transferencia sistemática de técnicas entre dominios
-    \item \textbf{Aplicado}: Habilitó el procesamiento eficiente de datos no-euclidianos en aplicaciones reales
-\end{enumerate}
-\end{remark}
-
-\subsubsection{Construcción Matemática de la Correspondencia CNN-GNN}
-
-La traducción matemática entre CNNs y GNNs se fundamenta en dos transformaciones estructurales principales:
-
-\begin{definition}[Inmersión de Imagen en Grafo]\label{def:inmersion_imagen_grafo}
-Una imagen $I \in \mathbb{R}^{H \times W}$ se inmerse canónicamente en un grafo $G = (V, E, W)$ mediante:
-\begin{align}
-V &= \{(i,j) : 1 \leq i \leq H, 1 \leq j \leq W\} \\
-E &= \{((i,j), (i',j')) : |i-i'| + |j-j'| \leq \delta\}
-\end{align}
-donde $\delta \in \{1, 2\}$ determina la conectividad (4 u 8 vecinos) y $W$ puede incorporar pesos basados en similitud de intensidad para capturar relaciones locales no uniformes.
-\end{definition}
-
-\begin{theorem}[Correspondencia Espectral CNN-GNN]\label{thm:correspondencia_espectral_cnn_gnn}
-Dada una CNN con arquitectura de capas $\{L_\ell\}$ y kernels $\{K_\ell\}$, existe una transformación canónica a una GNN equivalente mediante:
-\begin{enumerate}
-    \item \textbf{Transformada espectral}: Cada kernel $K_\ell$ induce un filtro espectral $g_\ell(\lambda) = \mathcal{F}\{K_\ell\}(\lambda)$ donde $\mathcal{F}$ denota la transformada de Fourier discreta
-    \item \textbf{Aproximación polinomial}: El filtro $g_\ell$ se aproxima mediante $\hat{g}_\ell(\lambda) = \sum_{k=0}^{K_\ell} \theta_{\ell,k} T_k(\lambda)$ con coeficientes $\theta_{\ell,k}$ determinados por mínimos cuadrados
-    \item \textbf{Preservación arquitectónica}: La composición de capas se mantiene idéntica, garantizando equivalencia funcional exacta
-\end{enumerate}
-\end{theorem}
-
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[width=0.95\textwidth]{figures/cnn_to_spectral_graph}
-	\caption[Transformación de un kernel CNN a su representación espectral en un grafo grilla]{Transformación de un kernel CNN a su representación espectral en un grafo grilla. Izquierda: kernel $3 \times 3$ aplicado sobre una grilla de imagen con valores proporcionales a la intensidad. Centro: representación del mismo dominio como un grafo con conectividad 4. Derecha: filtro espectral $g(\lambda)$ y su aproximación mediante polinomios de Chebyshev $\hat{g}(\lambda) = \sum_k \theta_k T_k(\lambda)$.}
-	\label{fig:cnn_to_spectral_graph}
-\end{figure}
-
-La próxima sección comenzará con las convoluciones de grupo, donde la estructura regular de la grilla se generaliza a espacios homogéneos más complejos, extendiendo el marco unificador CNN-GNN hacia transformaciones geométricas más ricas.
+Esta equivalencia fundamental CNN-GNN establece el fundamento conceptual para las extensiones geométricas que exploraremos a continuación, que identifican tres direcciones principales de generalización a partir de la base CNN-GNN: las \textbf{convoluciones de grupo}, que generalizan las traslaciones a grupos de transformación más ricos; las \textbf{convoluciones en variedades}, que extienden la operación a dominios con curvatura no trivial; y las \textbf{convoluciones gauge}, que incorporan invarianzas gauge para estructuras fibradas. Cada dirección mantiene los principios de localidad, compartición de pesos y composición jerárquica, extendiendo el poder expresivo de las arquitecturas convolucionales a dominios geométricos cada vez más sofisticados. Comenzamos con las convoluciones de grupo, donde la estructura regular de la grilla se generaliza a espacios homogéneos más complejos.
 
 \section{Convoluciones de Grupo}\label{sec:group_convolutions}
 
@@ -2742,24 +1639,9 @@ donde $g \cdot \theta$ denota la transformación de parámetros bajo la acción 
 
 \subsubsection{Fundamentos Teóricos de las Ventajas Empíricas}
 
-\paragraph{Experimentos en Reconocimiento de Texturas}
+\paragraph{Reconocimiento bajo Rotaciones}
 
-Los experimentos de Cohen y Welling~\citep{cohen2016groupequivariantconvolutional} en el dataset \textit{rotated CIFAR-10} demuestran mejoras significativas:
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Modelo} & \textbf{CIFAR-10} & \textbf{Rotated CIFAR-10} \\
-\hline
-CNN estándar & 92.3\% & 47.2\% \\
-\gls{GCNN} ($C_4$) & 92.8\% & 71.8\% \\
-\gls{GCNN} ($D_4$) & 93.1\% & 73.4\% \\
-\hline
-\end{tabular}
-\caption{Precisión en reconocimiento con rotaciones arbitrarias}
-\label{tab:resultados_rotaciones}
-\end{table}
+El trabajo fundacional de Cohen y Welling~\citep{cohen2016groupequivariantconvolutional} muestra el argumento central a favor de las \glspl{GCNN}: al incorporar la equivarianza al grupo por construcción, las \glspl{GCNN} mantienen su rendimiento cuando las entradas se presentan en orientaciones arbitrarias, régimen en el que la precisión de una CNN estándar se degrada drásticamente por carecer de esa simetría estructural. La ganancia es cualitativamente mayor cuanto mayor es el grupo de simetría incorporado (por ejemplo, de $C_4$ a $D_4$), sin necesidad de aumentación de datos rotacional.
 
 \paragraph{Análisis de Patrones Cristalográficos}
 
@@ -3270,27 +2152,9 @@ def rotate_tensor_continuous(x: torch.Tensor, angle: float) -> torch.Tensor:
 \label{code:continuous_equivariance_test}
 \end{listing}
 
-\paragraph{Análisis Empírico y Comparaciones}
+\paragraph{Eficiencia Paramétrica}
 
-Los experimentos empíricos demuestran las ventajas de las Steerable CNNs sobre discretizaciones finitas:
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Método} & \textbf{Rotated MNIST} & \textbf{Texture Dataset} & \textbf{Parámetros} \\
-\hline
-CNN Estándar & 67.3\% & 52.1\% & 125K \\
-G-CNN (C4) & 91.2\% & 76.8\% & 95K \\
-G-CNN (D4) & 93.5\% & 79.2\% & 87K \\
-Steerable CNN & \textbf{96.1\%} & \textbf{84.7\%} & \textbf{73K} \\
-\hline
-\end{tabular}
-\caption{Comparación de precisión y eficiencia paramétrica}
-\label{tab:steerable_comparison}
-\end{table}
-
-Los resultados muestran que las Steerable CNNs no solo superan a las discretizaciones finitas en precisión, sino que también requieren menos parámetros debido a su representación más eficiente de las simetrías continuas.
+Al representar las simetrías continuas mediante bases armónicas en lugar de discretizar el grupo en un número finito de elementos, las Steerable CNNs logran una notable eficiencia paramétrica: capturan la equivarianza a rotaciones arbitrarias sin replicar filtros para cada elemento del grupo, lo que reduce el número de parámetros respecto a las G-CNNs definidas sobre grupos finitos manteniendo la misma expresividad~\citep{weiler2019general}.
 
 \paragraph{Visualización de Filtros Steerable}
 
@@ -3623,25 +2487,6 @@ La estructura esférica natural de datos astronómicos hace a las Spherical CNNs
 \begin{example}[Radiación Cósmica de Fondo]
 El análisis de las anisotropías en la radiación cósmica de fondo (CMB) requiere procesamiento de señales definidas sobre la esfera celestial completa. Las Spherical CNNs pueden detectar patrones cosmológicos preservando todas las simetrías rotacionales.
 \end{example}
-
-\subsubsection{Comparación de Rendimiento}
-
-Los experimentos comparativos demuestran las ventajas de las Spherical CNNs sobre métodos convencionales:
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Método} & \textbf{Omnidirectional MNIST} & \textbf{Climate Pattern} & \textbf{Spherical CIFAR} \\
-\hline
-CNN + Equirectangular & 89.2\% & 76.4\% & 72.8\% \\
-CNN + Cubemap & 91.7\% & 79.1\% & 76.2\% \\
-Spherical CNN & \textbf{96.4\%} & \textbf{87.3\%} & \textbf{83.1\%} \\
-\hline
-\end{tabular}
-\caption{Precisión en datasets esféricos sintéticos y reales}
-\label{tab:spherical_performance}
-\end{table}
 
 \paragraph{Eficiencia Computacional}
 
@@ -4818,13 +3663,13 @@ Las arquitecturas permutación-invariantes y equivariantes han transformado múl
 
 \paragraph{Procesamiento de Nubes de Puntos 3D}
 
-Las nubes de puntos 3D obtenidas mediante LiDAR, escaneo láser o reconstrucción fotogramétrica son conjuntos no ordenados de posiciones espaciales. PointNet y sus variantes han revolucionado:
+Las nubes de puntos 3D obtenidas mediante LiDAR, escaneo láser o reconstrucción fotogramétrica son conjuntos no ordenados de posiciones espaciales. PointNet~\citep{qi2017pointnet} y sus variantes jerárquicas como PointNet++~\citep{qi2017pointnetplus} han revolucionado:
 
 \begin{itemize}
-    \item \textbf{Clasificación de objetos 3D}: ModelNet40 (98.4\% precisión con PointNet++)
-    \item \textbf{Segmentación semántica}: Segmentación de nubes de puntos urbanas (ScanNet, S3DIS)
-    \item \textbf{Detección de objetos}: Detección 3D para vehículos autónomos (KITTI)
-    \item \textbf{Reconstrucción de escenas}: Comprensión de geometría 3D completa
+    \item \textbf{Clasificación de objetos 3D}: reconocimiento de categorías a partir de nubes de puntos completas
+    \item \textbf{Segmentación semántica}: etiquetado punto a punto de nubes de puntos de interiores y escenas urbanas
+    \item \textbf{Detección de objetos}: localización 3D para vehículos autónomos
+    \item \textbf{Reconstrucción de escenas}: comprensión de geometría 3D completa
 \end{itemize}
 
 La invarianza a permutaciones permite que estas arquitecturas procesen nubes de puntos de densidad variable y muestreo irregular sin preprocesamiento.
@@ -4902,99 +3747,32 @@ La elección del grupo de simetría determina tanto las capacidades representaci
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{|l|c|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-\textbf{Grupo} & \textbf{Orden} & \textbf{Tipo} & \textbf{Complejidad} & \textbf{Memoria} & \textbf{Precisión} \\
+\textbf{Grupo} & \textbf{Orden} & \textbf{Tipo} & \textbf{Complejidad} & \textbf{Memoria} \\
 \hline
-CNN Estándar & - & Traslacional & $O(N^2)$ & 1x & Baseline \\
-$C_4$ & 4 & Finito & $O(4N^2)$ & 4x & +15-25\% \\
-$D_4$ & 8 & Finito & $O(8N^2)$ & 8x & +20-30\% \\
-$SO(2)$ Discreto & $L$ & Discretizado & $O(LN^2)$ & $L$x & +25-35\% \\
-$SO(2)$ Steerable & $\infty$ & Continuo & $O(F^2N^2)$ & $F^2$x & +30-40\% \\
-$SO(3)$ Spherical & $\infty$ & Continuo & $O(L^3N^2)$ & $L^3$x & +35-50\% \\
-$SE(3)$ & $\infty$ & No-compacto & $O(L^4N^2)$ & $L^4$x & +40-60\% \\
+CNN Estándar & - & Traslacional & $O(N^2)$ & 1x \\
+$C_4$ & 4 & Finito & $O(4N^2)$ & 4x \\
+$D_4$ & 8 & Finito & $O(8N^2)$ & 8x \\
+$SO(2)$ Discreto & $L$ & Discretizado & $O(LN^2)$ & $L$x \\
+$SO(2)$ Steerable & $\infty$ & Continuo & $O(F^2N^2)$ & $F^2$x \\
+$SO(3)$ Spherical & $\infty$ & Continuo & $O(L^3N^2)$ & $L^3$x \\
+$SE(3)$ & $\infty$ & No-compacto & $O(L^4N^2)$ & $L^4$x \\
 \hline
 \end{tabular}
-\caption{Comparación de complejidad y rendimiento para diferentes grupos. $N$: resolución espacial, $L$: grado máximo de representaciones esféricas, $F$: frecuencia máxima en representaciones armónicas.}
+\caption{Comparación de complejidad computacional y memoria para diferentes grupos. $N$: resolución espacial, $L$: grado máximo de representaciones esféricas, $F$: frecuencia máxima en representaciones armónicas.}
 \label{tab:group_complexity_comparison}
-\end{table}
-
-\subsubsection{Evaluación Empírica}\label{subsubsec:framework_evaluacion_empirica}
-
-La evaluación de arquitecturas equivariantes requiere medir tres dimensiones complementarias: el error de equivarianza (cuán fielmente se preserva la simetría), la precisión en la tarea objetivo, y la eficiencia computacional. El siguiente código ilustra un framework de benchmarking que integra estas métricas:
-
-\begin{listing}[h]
-\begin{lstlisting}[language=Python]
-class EquivarianceBenchmark:
-    """Framework unificado para evaluación de equivarianza."""
-
-    def __init__(self, model, group, n_transforms=20):
-        self.model = model
-        self.group = group
-        self.transforms = group.sample_elements(n_transforms)
-
-    def measure_equivariance_error(self, x: torch.Tensor) -> float:
-        """Mide error cuadrático medio de equivarianza."""
-        self.model.eval()
-        with torch.no_grad():
-            y = self.model(x)
-            errors = []
-            for g in self.transforms:
-                gx = self.group.apply(g, x)
-                gy_expected = self.group.apply_output(g, y)
-                errors.append(torch.mean((self.model(gx) - gy_expected)**2).item())
-        return np.mean(errors)
-
-    def benchmark(self, test_loader, input_shape):
-        """Benchmark completo: equivarianza + eficiencia + precisión."""
-        sample = next(iter(test_loader))[0][:1]
-        eq_error = self.measure_equivariance_error(sample)
-
-        # Eficiencia
-        x = torch.randn(*input_shape)
-        t0 = time.time()
-        for _ in range(100):
-            self.model(x)
-        fwd_ms = (time.time() - t0) / 100 * 1000
-        n_params = sum(p.numel() for p in self.model.parameters())
-
-        return {'eq_error': eq_error, 'fwd_ms': fwd_ms, 'params': n_params}
-\end{lstlisting}
-\caption{Framework de benchmarking para equivarianza}
-\label{code:equivariance_benchmark}
-\end{listing}
-
-Aplicando este framework a implementaciones estándar:
-
-\begin{table}[h]
-\centering
-\footnotesize
-\begin{tabular}{|l|c|c|c|c|c|c|}
-\hline
-\textbf{Arquitectura} & \textbf{CIFAR-10} & \textbf{Rot-MNIST} & \textbf{Params} & \textbf{Tiempo} & \textbf{Memoria} & \textbf{Equiv. Error} \\
- & \textbf{(\%)} & \textbf{(\%)} & \textbf{(M)} & \textbf{(ms)} & \textbf{(MB)} & \textbf{($10^{-6}$)} \\
-\hline
-CNN Estándar & 92.3 & 67.1 & 1.2 & 2.1 & 45 & - \\
-G-CNN (C4) & 93.8 & 91.5 & 1.1 & 3.2 & 52 & 3.2 \\
-G-CNN (D4) & 94.2 & 93.1 & 1.0 & 4.1 & 58 & 4.7 \\
-SO(2) Steerable & 95.1 & 96.8 & 0.9 & 5.8 & 67 & 2.1 \\
-Spherical CNN & 94.8 & 97.2 & 1.4 & 12.3 & 128 & 1.8 \\
-SE(3) Transformer & 95.6 & 98.1 & 2.1 & 18.7 & 256 & 1.2 \\
-\hline
-\end{tabular}
-\caption{Resultados comparativos en benchmarks estándar}
-\label{tab:comprehensive_benchmark_results}
 \end{table}
 
 \subsubsection{Recomendaciones Prácticas}\label{subsubsec:tradeoffs_recomendaciones}
 
-Los resultados empíricos revelan un trade-off fundamental entre exactitud de equivarianza y eficiencia computacional. Las arquitecturas en la frontera de Pareto (aquellas no dominadas simultáneamente en precisión, eficiencia y error de equivarianza) sugieren las siguientes guías:
+A nivel cualitativo, la elección de arquitectura obedece a un trade-off fundamental entre la fidelidad de la equivarianza y la complejidad computacional (véase la Tabla~\ref{tab:group_complexity_comparison}): grupos más ricos amplían las simetrías capturadas a costa de mayor coste en cómputo y memoria. Este balance sugiere las siguientes guías:
 
 \begin{enumerate}
     \item \textbf{Producción con tiempo real}: G-CNNs discretas ($C_4$, $D_4$) ofrecen el mejor balance entre mejoras de equivarianza y overhead computacional.
     \item \textbf{Alta precisión}: Las Steerable CNNs y arquitecturas SE(3) justifican su mayor costo computacional con precisión superior.
     \item \textbf{Simetrías desconocidas}: Comenzar con G-CNNs simples para validar la presencia de simetrías antes de adoptar arquitecturas más complejas.
-    \item \textbf{Desarrollo iterativo}: CNN estándar como baseline $\to$ G-CNN discreta $\to$ extensiones continuas según resultados de benchmarking.
+    \item \textbf{Desarrollo iterativo}: CNN estándar como baseline $\to$ G-CNN discreta $\to$ extensiones continuas según los requisitos de simetría del problema.
 \end{enumerate}
 
 \subsubsection{Perspectivas Futuras}\label{subsubsec:perspectivas_desarrollo_futuro}
@@ -5201,6 +3979,16 @@ En la práctica, las variedades se representan como mallas triangulares. La impl
     \State Propagar gradientes respetando geometría discreta
 \end{algorithmic}
 \end{algorithm}
+
+El operador Laplace-Beltrami discreto que subyace a estas construcciones se obtiene habitualmente mediante la \emph{discretización de cotangente}, la aproximación estándar sobre mallas triangulares~\citep{bronstein2017geometricdeeplearning}. Para una malla con vértices $V$ y caras $F$, sus entradas son
+\begin{equation}
+L_{ij} = \begin{cases}
+\tfrac{1}{2A_i}(\cot \alpha_{ij} + \cot \beta_{ij}) & \text{si } (i,j) \text{ son adyacentes},\\
+-\sum_{k \neq i} L_{ik} & \text{si } i = j,\\
+0 & \text{en caso contrario},
+\end{cases}
+\end{equation}
+donde $A_i$ es el área de Voronoi del vértice $i$ y $\alpha_{ij}, \beta_{ij}$ son los ángulos opuestos a la arista $(i,j)$. Esta discretización preserva propiedades esenciales del operador continuo: es simétrica, semidefinida negativa (con $\lambda_0 = 0$) y local, con solo $O(n)$ entradas no nulas, lo que la hace idónea para el ensamblaje sparse y para las convoluciones intrínsecas sobre variedades~\citep{masci2018geodesicconvolutionalneural}.
 
 \paragraph{Estabilidad Numérica}
 
@@ -5736,499 +4524,9 @@ Las CNNs en variedades ofrecen:
 
 La progresión de CNNs geodésicas específicas hacia marcos generales como MoNet, técnicas de transporte paralelo, y arquitecturas residuales Riemannianas ilustra la maduración del campo, proporcionando herramientas cada vez más sofisticadas para el procesamiento de datos no-euclidianos.
 
-\subsection{Casos de Estudio en Aplicaciones Específicas}\label{subsec:casos_estudio_variedades}
+\subsubsection{Jerarquía de Expresividad y Complejidad Computacional}
 
-Esta subsección examina aplicaciones concretas de las CNNs en variedades, proporcionando ejemplos detallados de implementaciones prácticas y comparaciones experimentales con métodos euclidianos tradicionales.
-
-\subsubsection{Análisis de Formas 3D: Dataset FAUST}\label{subsubsec:formas_3d_faust}
-
-El dataset FAUST (FAUST: Dataset and Evaluation for 3D Mesh Registration) proporciona un benchmark estándar para evaluar métodos geométricos en superficies 3D humanas. Este caso de estudio ilustra cómo las CNNs geodésicas superan las limitaciones de las proyecciones euclidianas.
-
-\paragraph{Configuración Experimental}
-
-El dataset FAUST contiene 100 mallas triangulares de 10 sujetos humanos en 10 poses diferentes cada uno. Cada malla tiene aproximadamente 6890 vértices, representando superficies de genus-0 con curvatura variable significativa.
-
-\begin{example}[Implementación de Geodesic CNN para FAUST]
-La implementación práctica sigue estos pasos:
-
-\begin{algorithm}[H]
-\caption{Geodesic CNN para Clasificación de Poses FAUST}
-\begin{algorithmic}[1]
-    \State \textbf{Entrada:} Malla triangular $M$ con vértices $V$ y caras $F$
-    \State \textbf{Preprocesamiento:}
-    \State \quad Normalizar área superficial total a 1
-    \State \quad Calcular operador Laplace-Beltrami discreto $L$
-    \State \quad Computar descriptores HKS como características iniciales
-    \State \textbf{Para cada vértice} $v_i \in V$:
-    \State \quad \quad Construir sistema de coordenadas geodésicas local
-    \State \quad \quad Extraer patch geodésico de radio $r = 0.1 \times \sqrt{\text{área}}$
-    \State \quad \quad Muestrear en grilla polar: 8 direcciones $\times$ 5 radios
-    \State \quad \quad Aplicar kernel convolucional $3 \times 3$ en coordenadas geodésicas
-    \State \quad \quad Corregir por factor Jacobiano local
-    \State \textbf{Agregación:} Pooling global sobre todos los vértices
-    \State \textbf{Salida:} Clasificación de pose (10 clases)
-\end{algorithmic}
-\end{algorithm}
-
-\textbf{Características Técnicas Críticas}:
-\begin{itemize}
-    \item \textbf{Construcción de coordenadas geodésicas}: Para cada vértice $v$, se selecciona una base ortonormal en el espacio tangente usando eigenvectores del operador de curvatura local
-    \item \textbf{Corrección del Jacobiano}: El factor $J(r, \theta) = \sqrt{\det g_r}$ donde $g_r$ es la métrica inducida en coordenadas polares
-    \item \textbf{Manejo de boundaries}: Vertices cercanos a bordes usan patches adaptativos con radios reducidos
-\end{itemize}
-\end{example}
-
-\paragraph{Resultados Comparativos}
-
-\begin{table}[h]
-\centering
-\caption{Comparación de Métodos en Dataset FAUST}
-\label{tab:faust_comparison}
-\begin{tabular}{lcccc}
-\hline
-\textbf{Método} & \textbf{Precisión} & \textbf{Tiempo/Malla} & \textbf{Parámetros} & \textbf{Robusto a Deform.} \\
-\hline
-CNN Euclidiana (proyección) & 73.2\% & 15ms & 2.1M & No \\
-SpectralCNN & 81.7\% & 45ms & 1.8M & Sí (parcial) \\
-Geodesic CNN & \textbf{89.4\%} & 120ms & 1.5M & Sí \\
-MoNet & 87.1\% & 95ms & 1.7M & Sí \\
-PTC (Transporte Paralelo) & 88.6\% & 180ms & 1.4M & Sí \\
-\hline
-\end{tabular}
-\end{table}
-
-\paragraph{Análisis de Resultados}
-
-Los resultados revelan ventajas significativas de los métodos geométricos:
-
-\begin{enumerate}
-    \item \textbf{Precisión superior}: Geodesic CNN supera métodos euclidianos en 16.2 puntos porcentuales
-    \item \textbf{Invarianza a deformaciones}: Los métodos geométricos mantienen precisión bajo deformaciones isométricas
-    \item \textbf{Eficiencia en parámetros}: Menor número de parámetros debido a la estructura geométrica intrínseca
-    \item \textbf{Trade-off computacional}: Mayor costo computacional por la construcción de coordenadas geodésicas
-\end{enumerate}
-
-\textbf{Insights del Caso FAUST.} El análisis detallado del dataset FAUST revela que:
-\begin{itemize}
-    \item Las regiones de alta curvatura (articulaciones) se benefician más de coordenadas geodésicas
-    \item La corrección del Jacobiano es crítica cerca de singularidades geométricas
-    \item El radio geodésico óptimo depende de la densidad local de la malla
-    \item La elección de características iniciales (HKS vs. coordenadas Cartesianas) afecta significativamente el rendimiento
-\end{itemize}
-
-\subsubsection{Procesamiento de Imágenes Omnidireccionales}\label{subsubsec:imagenes_omnidireccionales}
-
-Las imágenes omnidireccionales $(360^\circ)$ presentan desafíos únicos debido a las distorsiones inherentes en cualquier proyección plana. Este caso de estudio compara aproximaciones en la esfera $S^2$ versus proyecciones euclidianas.
-
-\paragraph{Datasets y Configuración}
-
-\begin{itemize}
-    \item \textbf{SUN360}: 67,448 imágenes panorámicas para clasificación de escenas
-    \item \textbf{Stanford 2D-3D-S}: Dataset multimodal con anotaciones de segmentación semántica
-    \item \textbf{Resolución}: $2048 \times 1024$ pixels en proyección equirectangular
-\end{itemize}
-
-\begin{example}[Comparación de Representaciones para Imágenes $360^\circ$]
-
-\textbf{1. Proyección Equirectangular + CNN Estándar}:
-\begin{itemize}
-    \item \textbf{Ventajas}: Implementación directa, compatibilidad con arquitecturas existentes
-    \item \textbf{Desventajas}: Severas distorsiones polares, pérdida de información métrica
-    \item \textbf{Precisión en SUN360}: 76.3\%
-\end{itemize}
-
-\textbf{2. Proyección Icosaédrica + Geodesic CNN}:
-\begin{itemize}
-    \item \textbf{Método}: Proyectar la esfera en un icosaedro, aplicar CNNs geodésicas en cada cara
-    \item \textbf{Ventajas}: Distorsión uniforme, preservación de propiedades métricas
-    \item \textbf{Desventajas}: Complejidad en manejo de aristas entre caras
-    \item \textbf{Precisión en SUN360}: 82.1\%
-\end{itemize}
-
-\textbf{3. Spherical CNNs Directas}:
-\begin{itemize}
-    \item \textbf{Método}: Convoluciones definidas directamente en armónicos esféricos
-    \item \textbf{Ventajas}: Matemáticamente elegant, equivarianza rotacional exacta
-    \item \textbf{Desventajas}: Alta complejidad computacional, limitaciones en resolución
-    \item \textbf{Precisión en SUN360}: 84.7\%
-\end{itemize}
-\end{example}
-
-\paragraph{Análisis Detallado: Efectos de Distorsión}
-
-\begin{figure}[h]
-\centering
-% Esta sería una figura ilustrativa de las distorsiones
-\begin{minipage}{0.45\textwidth}
-\textbf{Proyección Equirectangular}:
-\begin{itemize}
-    \item Distorsión máxima en polos: $\times 10$ área real
-    \item Objetos circulares → elípticos hacia polos
-    \item Pérdida de invarianza rotacional
-\end{itemize}
-\end{minipage}
-\hfill
-\begin{minipage}{0.45\textwidth}
-\textbf{Método Geodésico}:
-\begin{itemize}
-    \item Distorsión máxima: $\times 1.15$ área real
-    \item Preservación de formas locales
-    \item Invarianza rotacional aproximada
-\end{itemize}
-\end{minipage}
-\caption[Comparación de distorsiones en imágenes omnidireccionales]{Comparación de distorsiones en imágenes omnidireccionales}
-\label{fig:omnidirectional_distortion}
-\end{figure}
-
-\subsubsection{Análisis de Superficies Médicas: Corteza Cerebral}\label{subsubsec:corteza_cerebral}
-
-El análisis de la corteza cerebral representa uno de los casos de uso más desafiantes para CNNs en variedades, debido a la compleja topología de genus-0 con plegamientos intrincados y curvatura variable extrema.
-
-\paragraph{Dataset y Desafíos}
-
-\begin{itemize}
-    \item \textbf{Human Connectome Project (HCP)}: 1200 sujetos con imágenes de resonancia magnética de alta resolución
-    \item \textbf{Preprocessamiento}: Extracción de superficies corticales usando FreeSurfer
-    \item \textbf{Desafíos técnicos}:
-        \begin{itemize}
-            \item Topología compleja con surcos profundos y giros
-            \item Curvatura variable: desde regiones planas hasta plegamientos de $180^\circ$
-            \item Variabilidad anatómica inter-sujeto significativa
-            \item Necesidad de correspondencia anatómica precisa
-        \end{itemize}
-\end{itemize}
-
-\begin{example}[Pipeline para Análisis Cortical]
-
-\textbf{Tarea}: Segmentación automática de áreas corticales (parcellation) en 180 regiones anatómicas.
-
-\begin{algorithm}[H]
-\caption{CNN Geodésica para Parcellation Cortical}
-\begin{algorithmic}[1]
-    \State \textbf{Entrada:} Superficie cortical $S$ con $\sim$150k vértices
-    \State \textbf{Características locales:}
-    \State \quad Curvatura media y gaussiana en cada vértice
-    \State \quad Espesor cortical (distancia a materia blanca)
-    \State \quad Descriptores espectrales (primeros 10 eigenvalores del Laplaciano)
-    \State \textbf{Construcción de patches geodésicos}:
-    \State \quad Radio adaptativo: $r = \max(2mm, k \times \sqrt{\text{área local}})$
-    \State \quad Orientación basada en dirección de gradiente principal
-    \State \quad Muestreo: grilla polar 12 direcciones $\times$ 6 radios
-    \State \textbf{Arquitectura CNN}:
-    \State \quad 3 capas geodésicas convolucionales (32, 64, 128 canales)
-    \State \quad Normalización por lotes adaptada a variedades
-    \State \quad Skip connections preservando estructura geométrica
-    \State \textbf{Salida:} Probabilidades para 180 clases anatómicas
-\end{algorithmic}
-\end{algorithm}
-\end{example}
-
-\paragraph{Resultados Clínicos}
-
-\begin{proposition}[Optimalidad de Segmentación Geométrica en Corteza Cerebral]\label{prop:optimalidad_segmentacion}
-La segmentación basada en coordenadas geodésicas alcanza optimalidad teórica bajo las siguientes condiciones:
-
-\begin{enumerate}
-    \item \textbf{Hipótesis de regularidad}: Las fronteras anatómicas siguen curvas de curvatura mínima en la métrica cortical inducida
-    \item \textbf{Principio variacional}: La segmentación óptima minimiza el funcional
-    \begin{equation}
-    E[\Omega] = \int_{\partial \Omega} \kappa_g ds + \lambda \int_{\Omega} \|\nabla f\|_g^2 dA
-    \end{equation}
-    donde $\kappa_g$ es curvatura geodésica del borde y $f$ son características anatómicas
-    \item \textbf{Consistencia topológica}: Las regiones satisfacen restricciones de genus y conectividad determinadas por la anatomía
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}[Esbozo de demostración]
-Bajo la hipótesis de regularidad, las fronteras anatómicas son geodésicas o curvas de curvatura geodésica mínima en la métrica cortical. El funcional $E[\Omega]$ combina un término de regularización geométrica $\int_{\partial \Omega} \kappa_g \, ds$ (que penaliza fronteras con alta curvatura geodésica) y un término de fidelidad $\lambda \int_{\Omega} \|\nabla f\|_g^2 \, dA$ (que penaliza regiones con alta variación de características). Por el cálculo de variaciones en variedades, los minimizadores de $E$ satisfacen la ecuación de Euler-Lagrange:
-\[
-\kappa_g = \lambda \left[\|\nabla f\|_g^2\right]_{\partial \Omega}
-\]
-donde el lado derecho representa el salto de $\|\nabla f\|_g^2$ a través de la frontera. Las coordenadas geodésicas proporcionan el sistema de coordenadas natural para resolver este problema variacional, pues en ellas la métrica toma forma $ds^2 = d\rho^2 + J(\rho, \theta)^2 d\theta^2$ con $J(0, \theta) = 0$ y $\partial_\rho J(0,\theta) = 1$, simplificando el cálculo de $\kappa_g$ y $\|\nabla f\|_g$.
-\end{proof}
-
-\begin{remark}[Convergencia de Métodos Geométricos]
-Bajo condiciones de regularidad, las CNNs geodésicas convergen a la segmentación óptima con tasa $O(h^{p})$ donde $h$ es la resolución de la malla y $p$ depende de la regularidad de las fronteras anatómicas. Esta observación es análoga a las tasas de convergencia clásicas de métodos de elementos finitos en variedades.
-\end{remark}
-
-\paragraph{Fundamentos Teóricos del Impacto Clínico}
-
-Las ventajas clínicas de los métodos geométricos se fundamentan en principios matemáticos sólidos:
-\begin{itemize}
-    \item \textbf{Principio de optimalidad bayesiana}: La incorporación de prior geométrico reduce la varianza del estimador por el factor $\frac{\sigma^2}{\sigma^2 + \sigma_{\text{prior}}^2}$
-    \item \textbf{Teorema de regularización}: La norma $H^s$ en variedades proporciona control natural sobre oscilaciones espúrias
-    \item \textbf{Invarianza a transformaciones}: La formulación intríseca elimina dependencia de orientaciones arbitrarias del scanner
-    \item \textbf{Adaptación automática}: La métrica Riemanniana se adapta naturalmente a la variabilidad anatómica individual
-\end{itemize}
-
-\subsection{Implementación Práctica y Optimizaciones}\label{subsec:implementacion_practica_variedades}
-
-Esta subsección proporciona detalles técnicos esenciales para implementaciones robustas de CNNs en variedades, incluyendo algoritmos optimizados, consideraciones de eficiencia computacional y técnicas de estabilización numérica.
-
-\subsubsection{Discretización Eficiente de Operadores Diferenciales}\label{subsubsec:discretizacion_operadores}
-
-La implementación práctica de CNNs en variedades requiere discretizaciones cuidadosas de conceptos de geometría diferencial.
-
-\paragraph{Cálculo del Laplaciano de Mesh}
-
-El operador Laplace-Beltrami discreto es fundamental para muchas operaciones. La discretización de cotangente proporciona la aproximación más precisa:
-
-\begin{definition}[Laplaciano Discreto de Cotangente]
-Para una malla triangular con vértices $V$ y caras $F$, el Laplaciano discreto se define como:
-\begin{equation}
-L_{ij} = \begin{cases}
-\frac{1}{2A_i}(\cot \alpha_{ij} + \cot \beta_{ij}) & \text{si } (i,j) \text{ son adyacentes} \\
--\sum_{k \neq i} L_{ik} & \text{si } i = j \\
-0 & \text{en caso contrario}
-\end{cases}
-\end{equation}
-donde $A_i$ es el área de Voronoi del vértice $i$, y $\alpha_{ij}, \beta_{ij}$ son los ángulos opuestos a la arista $(i,j)$.
-\end{definition}
-
-\begin{algorithm}[H]
-\caption{Construcción Eficiente del Laplaciano de Mesh}
-\begin{algorithmic}[1]
-    \State \textbf{Entrada:} Vértices $V \in \mathbb{R}^{n \times 3}$, caras $F \in \mathbb{Z}^{m \times 3}$
-    \State Inicializar matriz sparse $L \in \mathbb{R}^{n \times n}$
-    \State Calcular vectores de aristas para cada cara
-    \State \textbf{Para cada cara} $f = (i, j, k) \in F$:
-    \State \quad Calcular longitudes de aristas: $a = \|v_j - v_k\|$, $b = \|v_k - v_i\|$, $c = \|v_i - v_j\|$
-    \State \quad Calcular cotangentes usando ley de cosenos:
-    \State \quad \quad $\cot \alpha = \frac{b^2 + c^2 - a^2}{4 \times \text{área}(f)}$
-    \State \quad Actualizar entradas de matriz: $L[i,j] += \cot \alpha$
-    \State Normalizar por áreas de Voronoi
-    \State Imponer condición de suma cero: $L_{ii} = -\sum_{j \neq i} L_{ij}$
-    \State \textbf{Salida:} Matriz Laplaciana sparse
-\end{algorithmic}
-\end{algorithm}
-
-\paragraph{Implementación Optimizada en GPU}
-
-\textbf{Optimización del Laplaciano de Mesh para Cálculo Paralelo.} La discretización eficiente del operador Laplace-Beltrami requiere consideraciones teóricas especiales para implementación en arquitecturas paralelas:
-
-\textbf{Propiedades Computacionales del Laplaciano Discreto}:
-\begin{enumerate}
-    \item \textbf{Esparsidad}: La matriz Laplaciana tiene $O(n)$ entradas no nulas para $n$ vértices
-    \item \textbf{Simetría}: $L_{ij} = L_{ji}$ garantizada por construcción geométrica
-    \item \textbf{Definición negativa}: Todos los eigenvalores son $\leq 0$, con $\lambda_0 = 0$
-    \item \textbf{Localidad}: Cada entrada depende solo de la geometría local de triángulos adyacentes
-\end{enumerate}
-
-\textbf{Consideraciones para Paralelización}:
-\begin{itemize}
-    \item \textbf{Vectorización de cotangentes}: El cálculo de $\cot \alpha_{ij} = \frac{\langle e_{ik}, e_{jk} \rangle}{\|e_{ik} \times e_{jk}\|}$ puede paralelizarse sobre todas las caras simultáneamente
-    \item \textbf{Ensamblaje sparse}: La construcción de la matriz requiere patrones de acceso coherentes para evitar condiciones de carrera
-    \item \textbf{Precondicionamiento}: Métodos multigrid adaptativos para sistemas lineales grandes
-    \item \textbf{Estabilidad numérica}: Regularización adaptativa en regiones de alta curvatura o triángulos degenerados
-\end{itemize}
-
-\textbf{Complejidad Algoritímica}:
-\begin{itemize}
-    \item Construcción: $O(|F|)$ donde $|F|$ es el número de caras
-    \item Producto matriz-vector: $O(n \cdot \text{grado promedio})$
-    \item Memoria: $O(n + |E|)$ para almacenamiento sparse
-\end{itemize}
-
-\subsubsection{Algoritmos para Cálculo de Geodésicas}\label{subsubsec:calculo_geodesicas}
-
-El cálculo eficiente de distancias geodésicas es crítico para el rendimiento de las CNNs geodésicas.
-
-\paragraph{Aproximación mediante Dijkstra en Mallas}
-
-Para mallas densas, el algoritmo de Dijkstra modificado proporciona aproximaciones geodésicas eficientes:
-
-\begin{algorithm}[H]
-\caption{Dijkstra Geodésico en Malla Triangular}
-\begin{algorithmic}[1]
-    \State \textbf{Entrada:} Malla $(V, E)$, vértice fuente $s$, radio máximo $r_{max}$
-    \State Inicializar distancias: $d[s] = 0$, $d[v] = \infty$ para $v \neq s$
-    \State Inicializar cola de prioridad $Q$ con todos los vértices
-    \State \textbf{Mientras} $Q$ no esté vacía \textbf{y} $\min(Q) < r_{max}$:
-    \State \quad Extraer vértice $u$ con distancia mínima
-    \State \quad \textbf{Para cada} vecino $v$ de $u$:
-    \State \quad \quad Calcular peso geodésico: $w = \|p_u - p_v\|$ (distancia Euclidiana)
-    \State \quad \quad \textbf{Si} $d[u] + w < d[v]$:
-    \State \quad \quad \quad $d[v] = d[u] + w$
-    \State \quad \quad \quad Actualizar predecesor: $\pi[v] = u$
-    \State \textbf{Salida:} Distancias geodésicas $d$ y predecesores $\pi$
-\end{algorithmic}
-\end{algorithm}
-
-\paragraph{Fast Marching Method para Mayor Precisión}
-
-Para aplicaciones que requieren mayor precisión geodésica, el Fast Marching Method proporciona soluciones de la ecuación Eikonal:
-
-\begin{equation}
-\|\nabla T(x)\| = f(x)
-\end{equation}
-
-donde $T(x)$ es el tiempo de llegada y $f(x) = 1/v(x)$ es la función de velocidad local.
-
-\textbf{Formulación Teórica del Fast Marching Method.} El Fast Marching Method proporciona una solución eficiente de la ecuación Eikonal $\|\nabla T(x)\| = f(x)$ en mallas triangulares, donde $T(x)$ representa el tiempo de llegada desde una fuente.
-
-\textbf{Fundamentos Teóricos}:
-\begin{enumerate}
-    \item \textbf{Ecuación Eikonal}: $\|\nabla T\|^2 = f^2(x)$ con condición de frontera $T(\partial \Omega) = g$
-    \item \textbf{Principio de causalidad}: La información se propaga desde regiones de menor tiempo hacia mayores
-    \item \textbf{Monotonicidad}: $T$ es monótona no decreciente a lo largo de rayos desde la fuente
-    \item \textbf{Viscosidad}: Solución de viscosidad única que maneja singularidades automáticamente
-\end{enumerate}
-
-\textbf{Discretización en Mallas Triangulares}:
-
-Para un vértice $v_i$ en un triángulo $T = \{v_i, v_j, v_k\}$, la actualización discreta resuelve:
-\begin{equation}
-\max\left\{\frac{T_i - T_j}{\|v_i - v_j\|}, \frac{T_i - T_k}{\|v_i - v_k\|}\right\} = f_i
-\end{equation}
-
-sujeto a la restricción de causalidad que los valores $T_j, T_k$ ya estén determinados.
-
-\textbf{Algoritmo de Heap Ordenado}:
-\begin{enumerate}
-    \item \textbf{Estados}: ALIVE (valor final), NARROW\_BAND (candidato), FAR (no procesado)
-    \item \textbf{Inicialización}: Marcar fuentes como ALIVE, vecinos como NARROW\_BAND
-    \item \textbf{Propagación}: Extraer mínimo de heap, actualizar vecinos FAR
-    \item \textbf{Terminación}: Cuando heap se vacía o se alcanza distancia máxima
-\end{enumerate}
-
-\textbf{Garantías Teóricas}:
-\begin{itemize}
-    \item \textbf{Convergencia}: $O(h)$ para mallas de tamaño $h$ en dominios suaves
-    \item \textbf{Complejidad}: $O(n \log n)$ donde $n$ es el número de vértices
-    \item \textbf{Estabilidad}: Condicionamiento controlado por la geometría de la malla
-    \item \textbf{Adaptabilidad}: Manejo automático de velocidades variables $f(x)$
-\end{itemize}
-
-\textbf{Aplicaciones a Patches Geodésicos}:
-Para extraer vecindarios geodésicos de radio $r$, se utiliza $f(x) \equiv 1$ (velocidad constante) y se termina cuando $T(x) > r$. Los vértices con $T(x) \leq r$ forman el patch geodésico deseado.
-
-\subsubsection{Paralelización y Optimización GPU}\label{subsubsec:optimizacion_gpu}
-
-Las CNNs en variedades presentan desafíos únicos para paralelización debido a la geometría irregular de las mallas.
-
-\paragraph{Estrategias de Batching para Mallas}
-
-A diferencia de las imágenes regulares, las mallas tienen topologías variables que complican el batching directo.
-
-\begin{algorithm}[H]
-\caption{Batching Adaptativo para Mallas de Tamaños Variables}
-\begin{algorithmic}[1]
-    \State \textbf{Entrada:} Lista de mallas $\{M_1, M_2, ..., M_B\}$ con $|V_i|$ vértices cada una
-    \State Determinar tamaño máximo: $N_{max} = \max_i |V_i|$
-    \State \textbf{Para cada malla} $M_i$:
-    \State \quad \textbf{Si} $|V_i| < N_{max}$:
-    \State \quad \quad Agregar vértices dummy con características cero
-    \State \quad \quad Crear máscara de validez $mask_i \in \{0,1\}^{N_{max}}$
-    \State \quad \textbf{Si no}:
-    \State \quad \quad Aplicar submuestreo consistente a $N_{max}$ vértices
-    \State Concatenar en tensor batch: $X \in \mathbb{R}^{B \times N_{max} \times F}$
-    \State Aplicar CNNs en batch con atención a máscaras de validez
-    \State \textbf{Salida:} Predicciones enmascaradas por malla individual
-\end{algorithmic}
-\end{algorithm}
-
-\paragraph{Optimización de Memoria}
-
-\textbf{Estrategias Teóricas para Optimización de Memoria.} Las CNNs geodésicas presentan desafíos computacionales únicos debido a la geometría irregular. Las siguientes estrategias teóricas optimizan el uso de recursos:
-
-\textbf{1. Checkpointing de Gradientes}:
-\begin{itemize}
-    \item \textbf{Principio}: Intercambiar cómputo por memoria, recalculando coordenadas geodésicas durante backpropagation
-    \item \textbf{Complejidad temporal}: Factor $\times 2$ en cómputo, reducción $\times 1/N$ en memoria
-    \item \textbf{Aplicabilidad}: Particularmente efectivo para operadores diferenciales costosos
-\end{itemize}
-
-\textbf{2. Procesamiento Secuencial por Patches}:
-\begin{itemize}
-    \item \textbf{Particionamiento espacial}: Dividir la malla en regiones geométricas coherentes
-    \item \textbf{Localidad temporal}: Explotar coherencia cache mediante ordenamiento geodésico
-    \item \textbf{Balance carga-memoria}: Tamaño de chunk adaptativo según curvatura local
-\end{itemize}
-
-\textbf{3. Precisión Mixta Adaptativa}:
-\begin{itemize}
-    \item \textbf{Forward pass}: FP16 para cálculos geométricos regulares
-    \item \textbf{Regiones críticas}: FP32 para áreas de alta curvatura o singularidades
-    \item \textbf{Gradientes}: Precisión completa para derivadas de operadores diferenciales
-\end{itemize}
-
-\textbf{4. Cache Geodésico Jerárquico}:
-\begin{itemize}
-    \item \textbf{Precomputación estratégica}: Distancias geodésicas entre puntos de referencia
-    \item \textbf{Interpolación local}: Aproximaciones de bajo orden para queries frecuentes
-    \item \textbf{Eviccción adaptativa}: Prioridad basada en frecuencia de acceso y costo de recómputo
-\end{itemize}
-
-\textbf{Modelos de Complejidad}:
-\begin{align}
-\text{Memoria base} &= O(nF + E) \\
-\text{Memoria con chunking} &= O(\text{chunk\_size} \cdot F + E) \\
-\text{Speedup te\'orico} &= \frac{\text{bandwidth}_{\text{memoria}}}{\text{bandwidth}_{\text{c\'omputo}}} \times \text{ratio\_reutilizaci\'on}
-\end{align}
-
-donde $n$ es el número de vértices, $F$ el número de características, y $E$ las aristas de la malla.
-
-\subsection{Evaluación Experimental y Benchmarks}\label{subsec:evaluacion_experimental_variedades}
-
-Esta subsección presenta una evaluación sistemática de CNNs en variedades en múltiples datasets estándar, incluyendo análisis de ablación y comparaciones con métodos de proyección euclidiana.
-
-\subsubsection{Datasets de Benchmark Estándar}\label{subsubsec:datasets_benchmark}
-
-\paragraph{Benchmarks para Análisis de Formas}
-
-\begin{definition}[Categorías de Problemas en Variedades]
-Los métodos de CNNs en variedades abordan las siguientes clases de problemas matemáticos:
-
-\begin{enumerate}
-    \item \textbf{Clasificación de formas}: Determinar la clase de equivalencia de $(M, g)$ bajo un grupo de transformaciones $G$
-    \item \textbf{Correspondencia geométrica}: Encontrar mapeo $\phi: M_1 \to M_2$ que preserva estructura geométrica
-    \item \textbf{Segmentación semántica}: Particionar $M = \bigcup_{i=1}^k \Omega_i$ según criterios geométricos/semánticos
-    \item \textbf{Detección de características}: Identificar regiones $U \subset M$ con propiedades geométricas distinguibles
-\end{enumerate}
-
-Cada clase requiere formulaciones matemáticas y métricas de evaluación específicas adaptadas a la geometría del problema.
-\end{definition}
-
-\paragraph{Marco Teórico para Evaluación Rigurosa}
-
-La evaluación matemáticamente rigurosa de métodos en variedades requiere consideraciones teóricas especiales:
-
-\begin{definition}[Protocolo de Evaluación Geométrico-Invariante]
-\leavevmode
-\begin{enumerate}
-    \item \textbf{Normalización canónica}: 
-    \begin{itemize}
-        \item Orientación: Alineación con componentes principales de $\int_M x \otimes x \, d\text{Vol}(x)$
-        \item Escala: Normalización $\text{Vol}_g(M) = 1$ mediante $g \mapsto g/\text{Vol}_g(M)$
-        \item Centro de masa: Traslación para $\int_M x \, d\text{Vol}(x) = 0$
-    \end{itemize}
-    
-    \item \textbf{Augmentación geométrica controlada}:
-    \begin{itemize}
-        \item Isometrías: $\phi \in \text{Isom}(M)$ preservando la métrica
-        \item Perturbaciones métricas: $g \mapsto g + \epsilon h$ con $\|h\|_{C^k} \leq \delta$
-        \item Remuestreo topológicamente consistente preservando genus y características
-    \end{itemize}
-    
-    \item \textbf{Métricas invariantes}:
-    \begin{itemize}
-        \item Error geodésico: $d_g(\phi(p), q)$ para correspondencias
-        \item IoU geométrico: $\frac{\text{Vol}(\Omega_1 \cap \Omega_2)}{\text{Vol}(\Omega_1 \cup \Omega_2)}$ para segmentación
-        \item Medidas espectrales: Basadas en eigenvalores del Laplaciano
-    \end{itemize}
-    
-    \item \textbf{Validez estadística}:
-    \begin{itemize}
-        \item Bootstrap geométrico sobre variedades
-        \item Tests no paramétricos para distribuciones en espacios curvos
-        \item Corrección por comparaciones múltiples en espacios de Riemannian
-    \end{itemize}
-\end{enumerate}
-\end{definition}
-
-\subsubsection{Resultados Comparativos Exhaustivos}\label{subsubsec:resultados_comparativos}
-
-\paragraph{Benchmark Principal: Clasificación de Formas}
+Más allá de sus aplicaciones, las arquitecturas geométricas admiten una caracterización teórica en términos de expresividad y coste computacional que es independiente de cualquier conjunto de datos concreto.
 
 \begin{theorem}[Jerarquía de Capacidades Representacionales]
 Los diferentes enfoques para CNNs en variedades forman una jerarquía teórica natural:
@@ -6258,9 +4556,7 @@ En el límite de datos infinitos y complejidad suficiente, los métodos gauge-eq
 Por el teorema de jerarquía expresiva (cuya demostración precede este corolario), los métodos gauge-equivariantes constituyen la clase más expresiva en la jerarquía, conteniendo como casos particulares a todos los estimadores equivariantes de menor generalidad. Por el teorema de Hunt-Stein de teoría de decisión estadística, para problemas invariantes bajo un grupo compacto, el estimador minimax equivariante es admisible. La universalidad de los métodos gauge-equivariantes garantiza que, con complejidad suficiente (profundidad y anchura de red), pueden aproximar cualquier estimador equivariante. En el límite de datos infinitos, la consistencia del estimador de máxima verosimilitud implica convergencia al clasificador de Bayes, que minimiza el riesgo esperado.
 \end{proof}
 
-\paragraph{Fundamentos Teóricos de la Significancia}
-
-La superioridad estadística de métodos geométricos se fundamenta en principios teóricos profundos:
+La superioridad estadística de los métodos geométricos se fundamenta en principios teóricos profundos:
 
 \begin{theorem}[Principio de Eficiencia Estadística Geométrica]
 Para problemas con simetrías intrínsecas caracterizadas por grupo $G$, los estimadores equivariantes alcanzan menor varianza asintótica:
@@ -6281,82 +4577,7 @@ Consecuencia directa del teorema anterior. La tasa de convergencia de un estimad
 Para alcanzar error $\epsilon$, el estimador euclidiano necesita $n_{\text{eucl}} = O(\text{Var}_{\text{eucl}}/\epsilon^2)$ muestras, mientras que el equivariante necesita $n_{\text{equiv}} = O(\text{Var}_{\text{equiv}}/\epsilon^2) \leq O(\text{Var}_{\text{eucl}}/(|G|\epsilon^2)) = n_{\text{eucl}}/|G|$. Es decir, la reducción de varianza por factor $|G|$ equivale a multiplicar el tamaño muestral efectivo por $|G|$.
 \end{proof}
 
-\subsubsection{Estudios de Ablación Detallados}\label{subsubsec:estudios_ablacion}
-
-\paragraph{Impacto de Componentes Arquitectónicos}
-
-\begin{remark}[Análisis de Contribuciones Teóricas]\label{rem:analisis_contribuciones_teoricas}
-La efectividad de las CNNs geodésicas se fundamenta en la interacción sinérgica de varios componentes matemáticos:
-
-\begin{enumerate}
-    \item \textbf{Sistemas de Coordenadas}:
-    \begin{itemize}
-        \item \textbf{Corrección Jacobiana}: Esencial para compensar distorsiones $J(\rho, \theta) = \sqrt{\det g}$
-        \item \textbf{Coordenadas geodésicas}: Proporcionan parametrización natural que preserva estructura métrica local
-        \item \textbf{Elecciones alternativas}: Coordenadas esféricas introducen sesgo por curvatura no constante
-    \end{itemize}
-    
-    \item \textbf{Características Geométricas Intrínsecas}:
-    \begin{itemize}
-        \item \textbf{Coordenadas externas}: Información posicional básica con limitaciones invariantes
-        \item \textbf{Curvatura local}: Invariantes fundamentales $K$ (Gaussiana) y $H$ (media)
-        \item \textbf{Descriptores espectrales}: HKS = $\sum_k e^{-t\lambda_k} \phi_k^2(x)$ captura geometría multi-escala
-        \item \textbf{Descriptores wavelets}: WKS proporciona localización espacio-frecuencia óptima
-    \end{itemize}
-    
-    \item \textbf{Configuración de Vecindarios}:
-    \begin{itemize}
-        \item \textbf{Radio óptimo}: Compromiso entre localidad ($r \to 0$) e información contextual ($r \to \infty$)
-        \item \textbf{Adaptación dinámica}: $r_{\text{eff}}(x) = r_0 / \sqrt{1 + |K(x)| r_0^2}$ según curvatura local
-    \end{itemize}
-    
-    \item \textbf{Arquitectura de Red}:
-    \begin{itemize}
-        \item \textbf{Profundidad}: Capas múltiples permiten composición de transformaciones geométricas
-        \item \textbf{Conexiones residuales}: Estabilizan gradientes en variedades curvas
-        \item \textbf{Atención geométrica}: Pondera información según relevancia geométrica local
-    \end{itemize}
-\end{enumerate}
-\end{remark}
-
-\begin{remark}[Sinergia de Componentes]
-La efectividad de CNNs geodésicas emerge de la interacción no lineal entre componentes, no de la suma de contribuciones individuales. Formalmente:
-\begin{equation}
-\text{Eficacia total} \neq \sum_{i} \text{Contribución}_i
-\end{equation}
-\end{remark}
-
-\paragraph{Análisis de Sensibilidad Geométrica}
-
-\begin{figure}[h]
-\centering
-% Aquí iría una gráfica mostrando robustez a deformaciones
-\begin{minipage}{0.48\textwidth}
-\textbf{Análisis Teórico de Robustez}:
-\begin{itemize}
-    \item \textbf{Perturbaciones métricas}: Para $\|g - g_0\|_{C^k} \leq \epsilon$, error acotado por $O(\epsilon)$
-    \item \textbf{Ruido estocástico}: Teorema de estabilidad garantiza degradación gradual
-    \item \textbf{Invarianza topológica}: Métodos preservan robustez bajo homeomorfismos
-    \item \textbf{Regularización implícita}: Smoothing Laplaciano mejora estabilidad numérica
-\end{itemize}
-\end{minipage}
-\hfill
-\begin{minipage}{0.48\textwidth}
-\textbf{Garantías Teóricas de Invarianza}:
-\begin{itemize}
-    \item \textbf{Isometrías}: Invarianza exacta por construcción para $\phi \in \text{Isom}(M)$
-    \item \textbf{Homotetias}: Invarianza bajo escalado $g \mapsto \lambda^2 g$ con $\lambda > 0$
-    \item \textbf{Cuasi-isometrías}: Estabilidad controlada para deformaciones pequeñas
-    \item \textbf{Cambios topológicos}: Fuera del marco teórico de variedades diferenciables
-\end{itemize}
-\end{minipage}
-\caption[Análisis de robustez geométrica]{Análisis de robustez geométrica}
-\label{fig:geometric_robustness}
-\end{figure}
-
-\subsubsection{Análisis de Eficiencia Computacional}\label{subsubsec:eficiencia_computacional}
-
-\paragraph{Profiling de Rendimiento Detallado}
+En cuanto al coste computacional, las distintas familias de métodos sobre variedades admiten una caracterización asintótica precisa.
 
 \begin{proposition}[Complejidad Computacional de Aproximaciones Geométricas]\label{prop:complejidad_aproximaciones_geometricas}
 La complejidad temporal de diferentes aproximaciones geométricas se caracteriza por:
@@ -6383,18 +4604,6 @@ Cada cota se obtiene por análisis directo de las operaciones:
 \end{itemize}
 \end{proof}
 
-\textbf{Trade-offs Fundamentales.} Existe una jerarquía teórica en el trade-off precisión-eficiencia:
-\begin{enumerate}
-    \item \textbf{Métodos espectrales}: Alta precisión teórica pero complejidad $O(n^3)$ por diagonalización
-    \item \textbf{Métodos geodésicos}: Balance óptimo con complejidad $O(n \log n)$ y garantías de invarianza
-    \item \textbf{Aproximaciones locales}: Eficiencia $O(n)$ a costa de pérdida de información global
-    \item \textbf{Métodos euclidianos}: Máxima eficiencia pero sin garantías geométricas
-\end{enumerate}
-
-\paragraph{Teoría de Escalabilidad en Variedades}
-
-La escalabilidad de diferentes aproximaciones geométricas revela principios fundamentales:
-
 \begin{proposition}[Jerarquía de Complejidades]\label{prop:jerarquia_complejidades}
 Para variedades discretizadas con $n$ vértices, los métodos se clasifican según:
 \begin{enumerate}
@@ -6412,20 +4621,6 @@ La clasificación se deduce de la \autoref{prop:complejidad_aproximaciones_geome
 \begin{remark}[Límites Teóricos de Eficiencia]
 Existe una cota inferior $\Omega(n \log n)$ para algoritmos que requieren construcción de vecindarios geodésicos exactos en variedades de curvatura variable. Esta cota se obtiene por reducción al problema de ordenación: determinar los $k$ vecinos más cercanos en métrica geodésica requiere comparaciones que, en el caso general de curvatura variable, no pueden resolverse en tiempo sublineal sin preprocesamiento.
 \end{remark}
-
-\paragraph{Trade-offs Precisión vs Eficiencia}
-
-\textbf{Principios de Selección Teóricos.} La elección del método óptimo se basa en principios matemáticos fundamentales:
-
-\begin{enumerate}
-    \item \textbf{Principio de parsimonia}: Elegir el método con menor complejidad que satisfaga las garantías teóricas requeridas
-    \item \textbf{Teorema de aproximación}: Métodos con mayor expresividad requieren menos datos para alcanzar precisión dada
-    \item \textbf{Compromiso sesgo-varianza}: Métodos geométricos reducen varianza a costa de sesgo inductivo
-    \item \textbf{Invarianza vs flexibilidad}: Existe trade-off fundamental entre invarianzas exactas y adaptabilidad
-    \item \textbf{Regularidad geométrica}: Métodos espectrales requieren suavidad; métodos locales toleran irregularidades
-\end{enumerate}
-
-\textbf{Criterio teórico}: La mejora en cota de generalización $O(\sqrt{\log N/n})$ justifica incremento en complejidad computacional cuando $N$ (capacidad del modelo) decrece significativamente.
 
 Esta base teórica y práctica establecida en variedades Riemannianas proporciona los fundamentos conceptuales para extensiones aún más generales, como las convoluciones gauge que exploraremos en la siguiente sección.
 
@@ -7650,7 +5845,7 @@ Las extensiones algebraicas avanzadas (Clifford, topológicas, categóricas) enf
 
 \section{Métodos Especiales y Conexiones}\label{sec:special_methods}
 
-Esta sección final del capítulo explora métodos especializados que complementan las técnicas convolucionales geométricas presentadas anteriormente, estableciendo conexiones con otros paradigmas de aprendizaje y analizando perspectivas futuras del campo. Los temas tratados incluyen codificación posicional avanzada, ruptura controlada de simetrías, aplicaciones en computación cuántica, y consideraciones de escalabilidad que determinan la viabilidad práctica de estos métodos.
+Esta sección final del capítulo explora métodos especializados que complementan las técnicas convolucionales geométricas presentadas anteriormente, estableciendo conexiones con otros paradigmas de aprendizaje y analizando perspectivas futuras del campo. Los temas tratados incluyen codificación posicional avanzada, ruptura controlada de simetrías, y consideraciones de escalabilidad que determinan la viabilidad práctica de estos métodos.
 
 \subsection{Codificación Posicional y Features de Fourier}
 
@@ -7964,48 +6159,6 @@ En química computacional, las moléculas pueden tener simetrías nominales que 
 \end{equation}
 donde $\mathbf{c}_{\text{env}}$ codifica condiciones ambientales que rompen la simetría.
 
-\subsection{Conexiones con Computación Cuántica}
-
-\subsubsection{CNNs Cuánticas Equivariantes}
-
-La intersección entre geometric deep learning y computación cuántica representa una frontera emergente con potencial transformador. El trabajo de \citet{west2024quantum} explora cómo los principios de equivarianza se extienden naturalmente al régimen cuántico, donde los estados cuánticos y las operaciones unitarias respetan simetrías fundamentales de la física.
-
-Una CNN cuántica equivariante opera en el espacio de Hilbert $\mathcal{H} = (\mathbb{C}^2)^{\otimes n}$, donde los estados cuánticos $|\psi\rangle$ codifican información geométrica. La equivarianza se manifiesta a través de la conmutación con operadores de simetría cuántica:
-
-\begin{equation}
-[U_g, \mathcal{C}_\text{quantum}] = 0
-\end{equation}
-
-donde $U_g$ es la representación unitaria del elemento de grupo $g$ y $\mathcal{C}_\text{quantum}$ es la operación convolucional cuántica.
-
-\subsubsection{Embedding de Datos Geométricos}
-
-El embedding de datos clásicos en estados cuánticos requiere técnicas especializadas que preserven la estructura geométrica. Para datos en variedades, el embedding se realiza mediante:
-
-\begin{equation}
-|\psi(\mathbf{x})\rangle = \sum_{i=1}^{2^n} \alpha_i(\mathbf{x}) |i\rangle
-\end{equation}
-
-donde las amplitudes $\alpha_i(\mathbf{x})$ codifican las coordenadas locales en la variedad de manera que las simetrías geométricas se traduzcan en simetrías del estado cuántico.
-
-\textbf{Ventajas Fundamentales del Enfoque Cuántico:}
-
-\begin{itemize}
-\item \textbf{Superposición Coherente:} El principio de superposición permite la evaluación simultánea de configuraciones geométricas en el espacio de Hilbert $\mathcal{H} = \bigotimes_{i=1}^n \mathbb{C}^{d_i}$.
-\item \textbf{Entrelazamiento Geométrico:} Los estados entrelazados $|\psi\rangle \in \mathcal{H}_A \otimes \mathcal{H}_B$ codifican naturalmente correlaciones no-separables entre regiones geométricamente distantes.
-\item \textbf{Codificación Exponencial:} La dimensión del espacio de Hilbert crece exponencialmente, permitiendo representaciones densas de estructuras geométricas complejas mediante $\log_2(\dim \mathcal{H})$ qubits.
-\end{itemize}
-
-\subsubsection{Medición y Decoherencia}
-
-El proceso de medición en CNNs cuánticas debe diseñarse cuidadosamente para extraer información geométrica relevante mientras se minimiza la pérdida de coherencia cuántica. Se utilizan mediciones proyectivas en bases que respetan las simetrías del problema:
-
-\begin{equation}
-P_{\text{sym}} = \frac{1}{|G|} \sum_{g \in G} U_g P_0 U_g^\dagger
-\end{equation}
-
-donde $P_0$ es un proyector base y la suma sobre el grupo $G$ asegura que la medición sea invariante bajo las simetrías relevantes.
-
 \subsection{Análisis de Escalabilidad y Eficiencia}
 
 \subsubsection{El Dilema Equivarianza vs. Escalabilidad}
@@ -8150,28 +6303,7 @@ Esta métrica normaliza la mejora en generalización por el tamaño del grupo y 
 \end{equation}
 donde $\mathcal{C}(\mathcal{A})$ es la complejidad algorítmica del método $\mathcal{A}$ y $\mathcal{T}(\epsilon)$ representa el factor de aceleración en convergencia a precisión $\epsilon$.
 
-\paragraph{Ejemplo Cuantitativo: Clasificación de Nubes de Puntos}
-
-Para el dataset ModelNet40 con $n = 10{,}000$ puntos por nube:
-
-\begin{itemize}
-\item \textbf{PointNet (baseline)}:
-  \begin{itemize}
-  \item Complejidad: $O(n \cdot d^2)$
-  \item ICP: $1$ (sin equivarianza)
-  \item Precisión: $89.2\%$
-  \end{itemize}
-
-\item \textbf{PointNet++ con SO(3) equivarianza}:
-  \begin{itemize}
-  \item Complejidad: $O(n \cdot d^2 \cdot (2\ell_{\max} + 1)^2)$ con $\ell_{\max} = 2$
-  \item ICP: $5$
-  \item Precisión: $93.7\%$ ($+4.5\%$)
-  \item GGG: $\frac{4.5}{\sqrt{\log(5) / 10000}} \approx 352.6$
-  \end{itemize}
-\end{itemize}
-
-Esto demuestra que la ganancia de generalización (GGG) es sustancial, justificando el costo adicional de la equivarianza.
+Estas métricas permiten comparar arquitecturas de forma principiada: al incorporar equivarianza a $\text{SO}(3)$, un modelo como PointNet++ multiplica su índice de compresión paramétrica por un factor $2\ell_{\max}+1$ respecto a una línea base sin equivarianza, a cambio de un incremento de complejidad por producto tensorial de orden $(2\ell_{\max}+1)^2$. La ganancia de generalización geométrica formaliza cuándo este compromiso resulta favorable, mostrando que el beneficio de la equivarianza crece cuando el grupo de simetría es grande y el número de muestras es limitado.
 
 \subsubsection{Estrategias de Escalado Eficiente}
 
@@ -8284,7 +6416,7 @@ Una CNN geométrica unificada es un triple $(\mathcal{M}, G, \Phi)$ donde:
 
 \textbf{3. Aprendizaje de Simetrías:} Métodos que pueden descubrir automáticamente las simetrías relevantes en los datos sin conocimiento a priori.
 
-\textbf{4. Escalabilidad Cuántica:} Desarrollo de CNNs cuánticas que pueden procesar datos clásicos de gran escala manteniendo ventaja cuántica.
+\textbf{4. Escalabilidad de Arquitecturas Equivariantes:} Desarrollo de algoritmos aproximados que preserven las garantías de equivarianza reduciendo el coste computacional para datos de gran escala.
 
 \textbf{5. Aplicaciones Científicas:} Extensión de métodos geométricos a problemas en física, química, y biología molecular donde las simetrías son fundamentales.
 

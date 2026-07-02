@@ -47,11 +47,11 @@ The activation function \(\sigma\) plays a fundamental role by introducing the e
 
 \subsubsection{Spiking Neural Networks}
 
-It is important to mention that this classical formulation, although extremely successful, represents a simplified abstraction of neuronal behavior. There exist alternative models that are closer to biology, such as \textbf{Spiking Neural Networks} or \gls{SNN}, considered the ``third generation'' of neural networks \citep{Maass1997spiking}. Unlike the classical model where the output is a continuous value, \glspl{SNN} process information through discrete pulses (spikes) that propagate over time, thus capturing the temporal dynamics inherent to biological neurons. These networks use models such as \textit{Integrate-and-Fire} or \textit{Hodgkin-Huxley}, where the neuron accumulates membrane potential until reaching a threshold and emitting a spike. \glspl{SNN} offer significant computational advantages in terms of energy efficiency and are especially promising for neuromorphic hardware \citep{Tavanaei2018deep}. However, for the purposes of this work, we will focus on the classical artificial neuron model described above.
+It is important to mention that this classical formulation, although extremely successful, represents a simplified abstraction of neuronal behavior. There exist alternative models that are closer to biology, such as \textbf{Spiking Neural Networks} or \gls{SNN}, considered the ``third generation'' of neural networks \citep{Maass1997spiking}. Unlike the classical model where the output is a continuous value, \glspl{SNN} process information through discrete pulses (spikes) that propagate over time, thus capturing the temporal dynamics inherent to biological neurons. These networks use models such as \textit{Integrate-and-Fire} or \textit{Hodgkin-Huxley}, where the neuron accumulates membrane potential until reaching a threshold and emitting a spike. \glspl{SNN} offer significant computational advantages in terms of energy efficiency and are especially promising for neuromorphic hardware \citep{Tavanaei2018deep}. However, for the purposes of this book, we will focus on the classical artificial neuron model described above.
 
 \subsubsection{Formal definition}
 
-To establish a rigorous mathematical framework for this work, we first formalize the concept of activation function and, subsequently, that of artificial neuron.
+To establish a rigorous mathematical framework for this book, we first formalize the concept of activation function and, subsequently, that of artificial neuron.
 
 \begin{definition}[Activation function]\label{def:funcion_activacion}
 	An \textit{activation function} is a function $\sigma: \mathbb{R} \to \mathbb{R}$ that satisfies the following properties:
@@ -1630,7 +1630,7 @@ The error of the \gls{ANN} is a measure of the difference between the expected o
 Some loss functions satisfy the stronger condition \(\mathcal{L}(y, \hat{y}) = 0 \iff y = \hat{y}\) (for example, MSE and MAE), while others attain the minimum of zero over a wider region: the hinge loss (\autoref{def:hinge_loss}) satisfies \(\mathcal{L}(y, \hat{y}) = 0\) when \(y \hat{y} \geq 1\), not only when \(y = \hat{y}\).
 \end{remark}
 
-The loss function can be used in more than one layer of the \gls{ANN}, several can be combined, and it can even be used with the parameters \(\theta\) of the \gls{ANN} to prevent them from growing excessively\footnote{Applying a loss function over the weights of a network is a process called regularization and serves to avoid or reduce cumulative errors due to the representation capacity of computers, and also to force greater generalization of the learning.}. In the context of this work we will consider only a single loss function applied over the last layer of the \gls{ANN}, which will consist of more than one output.
+The loss function can be used in more than one layer of the \gls{ANN}, several can be combined, and it can even be used with the parameters \(\theta\) of the \gls{ANN} to prevent them from growing excessively\footnote{Applying a loss function over the weights of a network is a process called regularization and serves to avoid or reduce cumulative errors due to the representation capacity of computers, and also to force greater generalization of the learning.}. In the context of this book we will consider only a single loss function applied over the last layer of the \gls{ANN}, which will consist of more than one output.
 
 
 \subsubsection{Common loss functions}
@@ -1801,7 +1801,7 @@ Both metrics and loss functions measure ``distance'' between values, but they ha
 
 \subsection{Gradient descent}\label{subsec:descenso_gradiente}
 
-Once the loss function has been defined as a quantitative measure of the network's error, the next step is to determine how to adjust the parameters to minimize it. The most widespread method for training neural networks is supervised learning via error backpropagation\footnote{There also exist unsupervised and self-supervised training methods that fall outside the scope of this work. Nevertheless, the underlying idea is common: to have some loss function that provides a signal about the network's error. For example, \acrlong{GAN} (\gls{GAN})~\citep{goodfellow2014generative} employ an adversarial loss function in which two networks compete against each other.}. This procedure can be summarized in the following steps:
+Once the loss function has been defined as a quantitative measure of the network's error, the next step is to determine how to adjust the parameters to minimize it. The most widespread method for training neural networks is supervised learning via error backpropagation\footnote{There also exist unsupervised and self-supervised training methods that fall outside the scope of this book. Nevertheless, the underlying idea is common: to have some loss function that provides a signal about the network's error. For example, \acrlong{GAN} (\gls{GAN})~\citep{goodfellow2014generative} employ an adversarial loss function in which two networks compete against each other.}. This procedure can be summarized in the following steps:
 
 \begin{enumerate}
 	\item \textbf{Parameter initialization}: The weights and biases of the network are typically initialized with small random values.

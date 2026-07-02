@@ -640,27 +640,7 @@ where $C = \|K\|_\infty^2 \|f\|_{L^2}^2 \mu(\mathcal{M})$. The extension to oper
 
 \section{Group Theory and Equivariance}
 
-The incorporation of geometric symmetries into attention mechanisms constitutes one of the most significant developments in geometric deep learning, allowing models to preserve fundamental structures of the data.
-
-\subsection{Foundations of Group Theory}
-
-The foundations of group theory (groups, group actions, equivariance) needed for equivariant attention mechanisms are developed in full in \autoref{ch:gdl}, Sections~\ref{subsec:teoria_grupos_representaciones} and~\ref{subsec:equivarianza_invarianza}.
-
-Attention mechanisms extend these principles through adaptive operations that preserve the symmetries of arbitrary groups, overcoming the fixed-equivariance limitations of \glspl{CNN}.
-
-\subsubsection{Relevant Groups for Geometric Attention}
-
-In the context of attention mechanisms, the most important groups include:
-
-\begin{enumerate}
-    \item \textbf{$SO(3)$}: 3D rotations, essential for Point \glspl{Transformer} and molecular data
-    \item \textbf{$SE(3)$}: Special Euclidean group, fundamental in SE(3)-\glspl{Transformer}
-    \item \textbf{$E(3)$}: Full Euclidean group, including reflections
-    \item \textbf{General Lie groups}: Unified framework for Lie\glspl{Transformer}
-    \item \textbf{Permutation groups}: For invariance to reorderings in sets
-\end{enumerate}
-
-\autoref{theorem:equivariant_composition} of \autoref{ch:gdl} ensures that equivariant attention layers can be composed while preserving the desired symmetry properties.
+The incorporation of geometric symmetries into attention mechanisms constitutes one of the most significant developments in geometric deep learning, allowing models to preserve fundamental structures of the data. The foundations of group theory (groups, group actions, representations, and equivariance) needed for this section are developed in full in \autoref{ch:gdl}, Sections~\ref{subsec:teoria_grupos_representaciones} and~\ref{subsec:equivarianza_invarianza}; attention mechanisms extend these principles through adaptive operations that preserve the symmetries of arbitrary groups, overcoming the fixed-equivariance limitations of \glspl{CNN}. In this context, the most relevant groups are $SO(3)$ (3D rotations, essential for Point \glspl{Transformer} and molecular data), $SE(3)$ (special Euclidean group, fundamental in SE(3)-\glspl{Transformer}), $E(3)$ (full Euclidean group, including reflections), the general Lie groups (unified framework for Lie\glspl{Transformer}), and the permutation groups (for invariance to reorderings in sets). \autoref{theorem:equivariant_composition} of \autoref{ch:gdl} ensures that equivariant attention layers can be composed while preserving the desired symmetry properties.
 
 \subsection{Equivariant Attention}\label{subsec:equivariant_attention}\label{sec:equivariant_attention}
 
@@ -964,22 +944,11 @@ The function $\delta$ captures the local geometry:
 The Point \gls{Transformer} formulation can be understood as an instance of the equivariant attention framework developed in \autoref{subsec:equivariant_attention}. The positional encoding $\delta_{ij}$ depends exclusively on the relative position $\mathbf{p}_i - \mathbf{p}_j$, which is invariant under translations. Likewise, if the \gls{MLP} that computes $\delta$ receives as input only the relative difference and its norm, the architecture is invariant under rotations in the computation of the attention weights, connecting directly with the invariance condition of the compatibility functions of \autoref{subsec:equivariant_attention}. Vector attention (in contrast to standard scalar attention) allows different dimensions of the attention vector to independently modulate the features, providing greater expressive capacity than a single scalar weight $\alpha_{ij}$ per pair of points.
 
 A computational advantage of the Point \gls{Transformer} over architectures such as SE(3)-\glspl{Transformer} lies in avoiding the tensor product of irreducible representations (Equation~\eqref{eq:tensor_product_decomposition_attention}), which has cost $O(\ell_{\max}^3)$ for maximum degree $\ell_{\max}$. By operating directly on differences of positions and features, the Point \gls{Transformer} achieves complexity $O(|\mathcal{N}(i)| \cdot d)$ per point, at the cost of giving up exact equivariance under $SO(3)$ for the output features (only the relative positions are invariant, not the transformed features).
-\section{Graph Theory and Spectral Analysis}
+\section{Attention on Graphs}
 
-The attention mechanisms developed so far operate on data with regular structure (sequences, images, point clouds). However, many problems of interest (social networks, molecules, knowledge graphs) involve data with irregular connectivity. The natural extension of attention to these domains requires combining graph theory with spectral analysis, providing solid mathematical foundations for adaptive weights on irregularly structured data.
+The attention mechanisms developed so far operate on data with regular structure (sequences, images, point clouds). However, many problems of interest (social networks, molecules, knowledge graphs) involve data with irregular connectivity. The natural extension of attention to these domains requires combining graph theory with spectral analysis, providing solid mathematical foundations for adaptive weights on irregularly structured data. For the graph theory foundations (definition of a graph, adjacency matrix, Laplacian) used in this section, see \autoref{ch:gdl}, \autoref{sec:grafos_discretizacion}; the spectral analysis concepts are developed in \autoref{ch:cnn}.
 
-\subsection{Graph Foundations}
-
-For the graph theory foundations (definition of a graph, adjacency matrix, Laplacian) needed in attention mechanisms, see \autoref{ch:gdl}, \autoref{sec:grafos_discretizacion}. The spectral analysis concepts are developed in \autoref{ch:cnn}.
-
-\subsubsection{Connection with Message Passing}
-
-Attention mechanisms on graphs generalize the message passing paradigm:
-
-\begin{equation}
-    \text{Attention} \equiv \text{MessagePassing with adaptive weights}
-    \label{eq:attention_message_passing_equivalence}
-\end{equation}
+From this perspective, attention on graphs generalizes the \textit{message passing} paradigm: each node aggregates information from its neighborhood through learned adaptive weights, rather than fixed coefficients, so that attention is equivalent to message passing with content-dependent weights. This observation connects the rest of the section with the unifying framework of \autoref{ch:gdl}.
 
 \subsection{Graph Attention Networks}\label{subsec:graph_attention_networks}\label{sec:graph_attention}
 
@@ -1149,7 +1118,7 @@ Step~3 of the previous proof assumes that the learned attention matrix $\mathbf{
 
 \subsubsection{Spectral Positional Encoding}\label{subsubsec:codificacion_posicional_espectral}
 
-A fundamental limitation of \glspl{GAT} is their inability to distinguish structurally equivalent nodes. Spectral positional encoding solves this problem.
+For the spectral analysis foundations of the Laplacian (eigenvalues, eigenvectors, and spectral decomposition) that underpin this section, see \autoref{ch:cnn}. A fundamental limitation of \glspl{GAT} is their inability to distinguish structurally equivalent nodes. Spectral positional encoding solves this problem.
 
 \begin{definition}[Spectral Positional Encoding]\label{def:spectral_positional_encoding}
 Let $\mathbf{L} = \mathbf{U}\mathbf{\Lambda}\mathbf{U}^T$ be the spectral decomposition of the \gls{laplaciano_grafo}. The spectral positional encoding of node $i$ is defined as:
@@ -1182,78 +1151,7 @@ To improve attention between distant nodes, spectral metrics are defined:
 \end{equation}
 \end{definition}
 
-\subsubsection{Spectral Attention Networks (SAN)}\label{subsubsec:spectral_attention_networks}
-
-\citet{kreuzer2021spectral} introduce the first fully connected Transformer for graphs that competes with specialized GNNs.
-
-\begin{definition}[SAN Architecture]\label{def:san_architecture}
-A Spectral Attention Network processes graphs through:
-
-\textbf{Step 1: Learnable positional encoding}
-\begin{equation}
-    \text{LPE}_i = \text{MLP}_{\text{PE}}([\lambda_1, \ldots, \lambda_k, \mathbf{u}_{i,1}, \ldots, \mathbf{u}_{i,k}])
-    \label{eq:learned_positional_encoding}
-\end{equation}
-
-\textbf{Step 2}: Dual attention (real + virtual)
-\begin{align}
-    \mathbf{h}_i^{\text{real}} &= \text{Attention}_{\text{sparse}}(\mathbf{h}_i, \{\mathbf{h}_j : j \in \mathcal{N}(i)\}) \\
-    \mathbf{h}_i^{\text{virtual}} &= \text{Attention}_{\text{full}}(\mathbf{h}_i, \{\mathbf{h}_j : j \in V\})
-    \label{eq:dual_attention_san}
-\end{align}
-
-\textbf{Step 3: Adaptive balancing}
-\begin{equation}
-    \mathbf{h}_i' = \gamma \cdot \mathbf{h}_i^{\text{real}} + (1-\gamma) \cdot \mathbf{h}_i^{\text{virtual}}
-    \label{eq:adaptive_balancing_san}
-\end{equation}
-where $\gamma \in [0,1]$ is a learnable parameter.
-\end{definition}
-
-\begin{theorem}[Overcoming Over-Squashing]\label{thm:over_squashing_resolution}
-Spectral Attention Networks solve the over-squashing problem by providing direct connections between arbitrarily distant nodes:
-\begin{equation}
-    \text{Information distance} = \mathcal{O}(1) \quad \forall i,j \in V
-    \label{eq:information_distance_constant}
-\end{equation}
-independently of the geodesic distance in the original graph.
-\end{theorem}
-
-\begin{proof}
-In a \gls{GNN} with local message passing, the information of node $j$ takes at least $d_G(i,j)$ layers to reach node $i$, where $d_G$ is the geodesic distance. After $L$ layers, the information is compressed into fixed-dimension representations $d$, causing over-squashing when $|\{j: d_G(i,j) \leq L\}|$ grows exponentially \citep{topping2022understanding}. In SAN, global attention allows node $i$ to attend directly to node $j$ in a single layer, with score $\alpha_{ij} = \text{softmax}(\mathbf{q}_i^T \mathbf{k}_j / \sqrt{d})$. The information distance $D_{\text{info}}(i,j) = -\log \alpha_{ij}$ is $O(1)$ (it depends on the similarity of representations, not on the topology of the graph), eliminating the bottleneck.
-\end{proof}
-
-\subsubsection{Scalable Extensions: GraphGPS}\label{subsubsec:graphgps}
-
-\begin{definition}[GraphGPS Architecture]\label{def:graphgps_architecture}
-GraphGPS \citep{rampasek2022graphgps} combines local message passing with global attention through:
-
-\begin{equation}
-    \mathbf{H}^{(\ell+1)} = \text{MLP}^{(\ell)}\left(\mathbf{H}_{\text{MPNN}}^{(\ell+1)} + \mathbf{H}_{\text{Global}}^{(\ell+1)}\right)
-    \label{eq:graphgps_architecture}
-\end{equation}
-
-where:
-\begin{align}
-    \mathbf{H}_{\text{MPNN}}^{(\ell+1)} &= \text{MPNN}^{(\ell)}(\mathbf{H}^{(\ell)}) \\
-    \mathbf{H}_{\text{Global}}^{(\ell+1)} &= \text{GlobalTransformer}^{(\ell)}(\mathbf{H}^{(\ell)} + \text{PE})
-    \label{eq:graphgps_components}
-\end{align}
-\end{definition}
-
-\begin{proposition}[Linear Scalability of GraphGPS]\label{prop:graphgps_scalability}
-When a linear-complexity attention mechanism (Performer \citep{choromanski2021performer} or BigBird) is used for the global component, and excluding the cost of precomputing spectral positional encodings, GraphGPS achieves per-layer complexity $\mathcal{O}(N + E)$ through:
-\begin{enumerate}
-    \item \textbf{Sub-quadratic attention}: Performer or BigBird with complexity $\mathcal{O}(N)$
-    \item \textbf{Local message passing}: Complexity $\mathcal{O}(E)$ for the MPNN component
-    \item \textbf{Modular separation}: Decoupling of local and global information
-\end{enumerate}
-With standard full attention, the global component would have complexity $\mathcal{O}(N^2)$. For the precise breakdown as a function of the model parameters, see \autoref{prop:graphgps_efficient_complexity}.
-\end{proposition}
-
-\begin{proof}
-The complexity is obtained by summing the contributions of each component. The MPNN component processes each edge once, resulting in $\mathcal{O}(E)$. For the global component, mechanisms like Performer approximate softmax attention through $\text{softmax}(\mathbf{Q}\mathbf{K}^\top) \approx \hat{\phi}(\mathbf{Q})\hat{\phi}(\mathbf{K})^\top$, where $\hat{\phi}: \mathbb{R}^d \to \mathbb{R}^k$ with $k \ll N$. This reduces the computation from $\mathcal{O}(N^2)$ to $\mathcal{O}(Nk) = \mathcal{O}(N)$ for fixed $k$. The modular separation allows summing both contributions independently, obtaining $\mathcal{O}(N + E)$.
-\end{proof}
+These spectral positional encodings are the essential ingredient of global attention architectures on graphs---in particular Spectral Attention Networks (SAN) and GraphGPS---which combine local and global attention to overcome the over-squashing and structural myopia of classical \glspl{GAT}. These architectures are developed in detail in \autoref{subsec:arquitecturas_avanzadas_grafos}. Before addressing them, it is worth delimiting the fundamental limitations that motivate their design.
 
 \subsubsection{Limitations and Future Directions}\label{subsubsec:limitaciones_gat}
 
@@ -1318,10 +1216,6 @@ Let $G = (V, E)$ be a graph and $\mathbf{h}_i^{(k)}$ the representation of node 
 \end{proof}
 
 This formulation shows that GATs represent the natural evolution of message passing from rigid aggregation toward flexible aggregation, maintaining equivariance guarantees while gaining adaptive expressiveness.
-
-\subsection{Spectral Analysis on Graphs}
-
-For the spectral analysis foundations of the Laplacian, including eigenvalues, eigenvectors, and spectral decomposition, see \autoref{ch:cnn}, Detailed Spectral Analysis Section. The spectral positional encoding (\autoref{def:spectral_positional_encoding}) and the spectral distances (\autoref{def:spectral_distances_attention}) introduced earlier constitute the fundamental tools for incorporating structural information of the graph into attention mechanisms.
 
 \subsection{Advanced Graph Architectures}\label{subsec:arquitecturas_avanzadas_grafos}
 
@@ -1652,77 +1546,26 @@ For the foundations of differentiable manifolds and Riemannian metrics, see \aut
 
 \subsubsection{Hyperbolic Geometry}
 
-Hyperbolic geometry emerges naturally in the context of hierarchical data and tree structures, where volume grows exponentially with the distance from the root.
-
-\begin{definition}[Hyperbolic Space - Hyperboloid Model]\label{def:espacio_hiperbolico_hiperboloide}
-The $n$-dimensional hyperbolic space is represented through the hyperboloid model:
-
-\begin{equation}
-    \mathbb{H}^n = \{\mathbf{x} \in \mathbb{R}^{n+1} : \langle \mathbf{x}, \mathbf{x} \rangle_{\mathcal{L}} = -1, x_0 > 0\}
-    \label{eq:hyperboloid_model}
-\end{equation}
-
-where $\langle \cdot, \cdot \rangle_{\mathcal{L}}$ is the Lorentz inner product:
-
-\begin{equation}
-    \langle \mathbf{x}, \mathbf{y} \rangle_{\mathcal{L}} = -x_0y_0 + \sum_{i=1}^{n} x_iy_i
-    \label{eq:lorentz_inner_product}
-\end{equation}
-\end{definition}
+Hyperbolic geometry emerges naturally in the context of hierarchical data and tree structures, where volume grows exponentially with the distance from the root. The foundations of hyperbolic space $\mathbb{H}^n$ (its definition, constant negative curvature, and the isometric hyperboloid, Poincaré, and Klein models) are developed in \autoref{ch:gdl}, \autoref{subsec:espacios_no_euclidianos} (see \autoref{def:espacio_hiperbolico} and \autoref{rem:modelos_hiperbolico}); the proofs of the isometries between models are found in Appendix~\ref{ch:teoremas_complementarios} (\autoref{thm:isometria_hiperboloide_poincare}). Here we recall only the elements that intervene directly in hyperbolic attention.
 
 \begin{definition}[Poincaré Model]\label{def:modelo_poincare}
-The Poincaré model represents hyperbolic space as the unit disk:
-\begin{equation}
-\mathbb{D}^n = \{\mathbf{x} \in \mathbb{R}^n : \|\mathbf{x}\| < 1\}
-\end{equation}
-with Riemannian metric:
-\begin{equation}
-g_{ij} = \frac{4}{(1-\|\mathbf{x}\|^2)^2} \delta_{ij}
-\end{equation}
-
-\textbf{Mapping between models}: The transformation from the hyperboloid to Poincaré is:
-\begin{equation}
-\mathbf{x} = \frac{(x_1, \ldots, x_n)}{1 + x_0}
-\end{equation}
-The proof that this transformation is a Riemannian isometry can be found in \autoref{thm:isometria_hiperboloide_poincare} (Appendix~\ref{ch:teoremas_complementarios}).
+The Poincaré model represents $\mathbb{H}^n$ as the unit disk $\mathbb{D}^n = \{\mathbf{x} \in \mathbb{R}^n : \|\mathbf{x}\| < 1\}$ endowed with the Riemannian metric $g_{ij} = \frac{4}{(1-\|\mathbf{x}\|^2)^2}\, \delta_{ij}$. The transformation from the hyperboloid model, $\mathbf{x} = (x_1, \ldots, x_n)/(1 + x_0)$, is a Riemannian isometry (\autoref{thm:isometria_hiperboloide_poincare}).
 \end{definition}
 
 \begin{theorem}[Fundamental Properties of Hyperbolic Space]\label{thm:propiedades_espacio_hiperbolico}
-The hyperbolic space $\mathbb{H}^n$ satisfies:
-\begin{enumerate}
-    \item \textbf{Constant negative curvature}: $K = -1$
-    \item \textbf{Exponential growth of volume}: $\text{Vol}(B_r(p)) \sim e^{(n-1)r}$ for large radius $r$
-    \item \textbf{Hyperbolic Gauss-Bonnet theorem}: For geodesic triangles with interior angles $\alpha, \beta, \gamma$, the area is $\text{Area}(T) = \pi - (\alpha + \beta + \gamma) > 0$ and $\int_T K\, dA = (\alpha + \beta + \gamma) - \pi < 0$
-    \item \textbf{Isometry}: The group of isometries that preserve orientation and the component $x_0 > 0$ is $SO^+(1,n)$ (the connected component of the identity of $SO(1,n)$)
-\end{enumerate}
-Properties (1)-(3) are direct consequences of the hyperboloid metric; for proofs, see \citep{do1976differential}.
+Hyperbolic space $\mathbb{H}^n$ has constant negative sectional curvature $K = -1$ and exponential growth of volume, $\text{Vol}(B_r(p)) \sim e^{(n-1)r}$ for large radius $r$. This exponential expansion is what allows trees and hierarchies to be embedded with minimal distortion, motivating its use in machine learning; for the proofs, see \citep{do1976differential} and \autoref{ch:gdl}.
 \end{theorem}
 
-\textbf{Implications for machine learning}:
-\begin{itemize}
-    \item \textbf{Efficient representation of hierarchies}: Trees are embedded naturally with minimal distortion
-    \item \textbf{Expressive capacity}: Exponential growth allows representing complex structures
-    \item \textbf{Geometric regularization}: Negative curvature induces implicit regularization
-\end{itemize}
-
 \begin{definition}[Fundamental Hyperbolic Operations]\label{def:operaciones_hiperbolicas}
-In the Poincaré model, the basic operations are:
-
-\textbf{Möbius addition}:
+In the Poincaré model, the operations used by hyperbolic attention are \textbf{Möbius addition}
 \begin{equation}
 \mathbf{x} \oplus \mathbf{y} = \frac{(1+2\langle\mathbf{x},\mathbf{y}\rangle+\|\mathbf{y}\|^2)\mathbf{x} + (1-\|\mathbf{x}\|^2)\mathbf{y}}{1+2\langle\mathbf{x},\mathbf{y}\rangle+\|\mathbf{x}\|^2\|\mathbf{y}\|^2}
 \end{equation}
-
-\textbf{Möbius scalar multiplication}:
+and the \textbf{hyperbolic exponential map}
 \begin{equation}
-r \otimes \mathbf{x} = \tanh(r \tanh^{-1}(\|\mathbf{x}\|)) \frac{\mathbf{x}}{\|\mathbf{x}\|}
+\exp_{\mathbf{x}}^{\mathbb{H}}(\mathbf{v}) = \mathbf{x} \oplus \left(\tanh\left(\frac{\lambda_{\mathbf{x}} \|\mathbf{v}\|}{2}\right) \frac{\mathbf{v}}{\|\mathbf{v}\|}\right),
 \end{equation}
-
-\textbf{Hyperbolic exponential map}:
-\begin{equation}
-\exp_{\mathbf{x}}^{\mathbb{H}}(\mathbf{v}) = \mathbf{x} \oplus \left(\tanh\left(\frac{\lambda_{\mathbf{x}} \|\mathbf{v}\|}{2}\right) \frac{\mathbf{v}}{\|\mathbf{v}\|}\right)
-\end{equation}
-where $\lambda_{\mathbf{x}} = \frac{2}{1-\|\mathbf{x}\|^2}$ is the conformal factor.
+where $\lambda_{\mathbf{x}} = \frac{2}{1-\|\mathbf{x}\|^2}$ is the conformal factor. Möbius scalar multiplication is defined analogously by $r \otimes \mathbf{x} = \tanh(r \tanh^{-1}(\|\mathbf{x}\|))\, \mathbf{x}/\|\mathbf{x}\|$.
 \end{definition}
 
 \subsection{Attention in Hyperbolic Spaces}
@@ -1976,13 +1819,7 @@ where $\sigma^2$ is the variance of the stochastic gradient and $\mathbf{x}^*$ i
 
 \textbf{Experimental results and ablation}:
 
-The experiments of \citet{hvt2024hyperbolic} demonstrate significant advantages of HVT over standard \gls{ViT}:
-
-\begin{itemize}
-    \item \textbf{ImageNet-1K}: HVT-Base achieves 84.2\% top-1 accuracy with 30\% fewer parameters than ViT-Base
-    \item \textbf{CIFAR-100}: Improvement of 2.8\% in accuracy with hyperbolic embeddings of dimension $d=256$ vs. Euclidean of $d=512$
-    \item \textbf{Hierarchical data}: In biological species classification (taxonomic structure), HVT surpasses \gls{ViT} by 5.3\%
-\end{itemize}
+The experiments of \citet{hvt2024hyperbolic} show consistent improvements of HVT over the standard \gls{ViT} in image classification and, more markedly, on data with hierarchical or taxonomic structure, while also yielding more compact representations than their higher-dimensional Euclidean counterparts.
 
 \subsubsection{HyPE-GT: Hyperbolic Positional Encodings}
 
@@ -2098,66 +1935,12 @@ Parallel transport provides a fundamental mechanism for comparing tangent vector
 
 \subsubsection{Mathematical Foundations of Parallel Transport}
 
-We recall that the \textit{Levi-Civita connection} $\nabla$ of a Riemannian manifold $(M, g)$ is the unique affine connection compatible with the metric and torsion-free (\autoref{def:conexion_levi_civita_gdl} of \autoref{ch:gdl}), determined in local coordinates by the Christoffel symbols $\Gamma^k_{ij}$.\label{def:levi_civita_attention}\label{eq:christoffel_symbols_attention}
-
-The \textit{parallel transport} along a curve $\gamma: [0,1] \to M$ is given by the equation $\nabla_{\dot{\gamma}(t)} V(t) = 0$, which in local coordinates translates into $\frac{dV^k}{dt} + \Gamma^k_{ij} \frac{dx^i}{dt} V^j = 0$ (see \autoref{def:transporte_paralelo_formal} of \autoref{ch:gdl} for the general case in principal bundles).\label{def:parallel_transport_attention}\label{eq:parallel_transport}\label{eq:parallel_transport_coordinates}
-
-\begin{theorem}[Existence and Uniqueness of Parallel Transport]\label{thm:existence_parallel_transport}
-Given a smooth curve $\gamma: [0,1] \to M$ and an initial vector $v_0 \in T_{\gamma(0)}M$, there exists a unique parallel vector field $V(t)$ along $\gamma$ with $V(0) = v_0$.
-
-Parallel transport defines a linear isometry:
+The foundations of parallel transport are developed in \autoref{ch:gdl}: the \textit{Levi-Civita connection} $\nabla$---the unique affine connection compatible with the metric and torsion-free, determined in local coordinates by the Christoffel symbols $\Gamma^k_{ij}$---is defined in \autoref{def:conexion_levi_civita_gdl}, and parallel transport in principal bundles in \autoref{def:transporte_paralelo_formal}. The parallel transport of a tangent vector along a curve $\gamma: [0,1] \to M$, given by $\nabla_{\dot{\gamma}(t)} V(t) = 0$, is the solution in local coordinates of
 \begin{equation}
-\Gamma_\gamma: T_{\gamma(0)}M \to T_{\gamma(1)}M
+\frac{dV^k}{dt} + \Gamma^k_{ij} \frac{dx^i}{dt} V^j = 0,
+\label{eq:parallel_transport_coordinates}
 \end{equation}
-that satisfies $\Gamma_\gamma(v_0) = V(1)$.
-\end{theorem}
-
-\begin{proof}
-Equation~\eqref{eq:parallel_transport_coordinates} is a linear system of first-order ODEs. By the Picard-Lindelöf theorem, given an initial value $V(0) = v_0$, there exists a unique solution $V(t)$ defined for $t \in [0,1]$.
-
-The metric preservation follows from the compatibility of $\nabla$ with $g$:
-\begin{align}
-\frac{d}{dt}\langle V(t), W(t) \rangle &= \langle \nabla_{\dot{\gamma}} V, W \rangle + \langle V, \nabla_{\dot{\gamma}} W \rangle \\
-&= 0 \quad \text{(if $V$ and $W$ are parallel)}
-\end{align}
-
-Therefore, $\langle \Gamma_\gamma(v), \Gamma_\gamma(w) \rangle_{\gamma(1)} = \langle v, w \rangle_{\gamma(0)}$ for all $v, w \in T_{\gamma(0)}M$.
-\end{proof}
-
-\begin{proposition}[Properties of Parallel Transport]\label{prop:parallel_transport_properties}
-Parallel transport $\Gamma_\gamma: T_{\gamma(0)}M \to T_{\gamma(1)}M$ satisfies:
-
-\begin{enumerate}
-    \item \textbf{Linearity}: $\Gamma_\gamma(\alpha u + \beta v) = \alpha \Gamma_\gamma(u) + \beta \Gamma_\gamma(v)$
-    \item \textbf{Metric preservation}: $g_{\gamma(1)}(\Gamma_\gamma(u), \Gamma_\gamma(v)) = g_{\gamma(0)}(u, v)$
-    \item \textbf{Concatenation property}: For paths $\gamma_1, \gamma_2$ with $\gamma_1(1) = \gamma_2(0)$:
-    \begin{equation}
-    \Gamma_{\gamma_2 * \gamma_1} = \Gamma_{\gamma_2} \circ \Gamma_{\gamma_1}
-    \end{equation}
-    \item \textbf{Inversion}: $\Gamma_{\gamma^{-1}} = (\Gamma_\gamma)^{-1}$ where $\gamma^{-1}(t) = \gamma(1-t)$
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-\textbf{(1) Linearity}: Since parallel transport is defined as the solution of the equation $\nabla_{\dot{\gamma}} V = 0$, which is linear in $V$, the uniqueness of solutions of linear ODEs guarantees the linearity of the operator $\Gamma_\gamma$.
-
-\textbf{(2) Metric preservation}: If $\nabla$ is the Levi-Civita connection, compatible with the metric, then for parallel fields $V, W$ along $\gamma$:
-\[
-\frac{d}{dt} g(V, W) = g(\nabla_{\dot{\gamma}} V, W) + g(V, \nabla_{\dot{\gamma}} W) = 0
-\]
-so $g(V,W)$ is constant along $\gamma$.
-
-\textbf{(3) Concatenation}: Let $V$ be a parallel field along $\gamma_1$ with $V(0) = v$. Then $V(1) = \Gamma_{\gamma_1}(v)$. Let $W$ be parallel along $\gamma_2$ with $W(0) = V(1)$. Then $W(1) = \Gamma_{\gamma_2}(\Gamma_{\gamma_1}(v))$. But the concatenation $\gamma_2 * \gamma_1$ with field $V$ followed by $W$ is parallel along the complete path.
-
-\textbf{(4) Inversion}: If $V$ is parallel along $\gamma$, then $V(\gamma^{-1}(t)) = V(\gamma(1-t))$ is parallel along $\gamma^{-1}$, so $\Gamma_{\gamma^{-1}} \circ \Gamma_\gamma = \text{Id}$.
-\end{proof}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.8\textwidth]{figures/parallel_transport_surface.pdf}
-    \caption{Parallel transport of a tangent vector along a curve $\gamma$ on a surface. The vector $V(t)$ satisfies $\nabla_{\dot{\gamma}} V = 0$, keeping its norm and relative angle to the curve constant. The dependence of the result on the chosen path (holonomy) reflects the curvature of the surface and motivates attention with parallel transport (\autoref{def:attention_parallel_transport}).}
-    \label{fig:parallel_transport_attention}
-\end{figure}
+which exists and is unique by the Picard-Lindelöf theorem and defines a linear isometry $\Gamma_\gamma: T_{\gamma(0)}M \to T_{\gamma(1)}M$. Its properties (linearity, metric preservation, concatenation, and inversion) and the geometric interpretation of holonomy as a manifestation of curvature are collected in \autoref{thm:propiedades_transporte} and \autoref{fig:parallel_transport} of \autoref{ch:gdl}; this dependence on the chosen path is precisely what motivates attention with parallel transport (\autoref{def:attention_parallel_transport}).
 
 \subsubsection{Algorithm to Compute Geodesics and Parallel Transport}
 
@@ -2685,81 +2468,19 @@ The previous sections have shown how attention mechanisms benefit from incorpora
 
 \subsection{Foundations of Algebraic Topology}
 
-\subsubsection{Simplicial Complexes: General Theory}
-
-We recall the definitions of $k$-simplex (\autoref{def:simplicio_gdl}), face of a simplex (\autoref{def:cara_simplicio_gdl}), and simplicial complex (\autoref{def:complejo_simplicial}), introduced in \autoref{ch:gdl}. The fundamental cases are:
-\begin{align}
-    k=0: &\quad \text{0-simplex (vertex)} \\
-    k=1: &\quad \text{1-simplex (edge)} \\
-    k=2: &\quad \text{2-simplex (triangle)} \\
-    k=3: &\quad \text{3-simplex (tetrahedron)} \\
-    k=n: &\quad \text{$n$-simplex (polytope of dimension } n\text{)}
-\end{align}
-
-\begin{theorem}[Simplicial Realization Theorem]\label{thm:realizacion_simplicial}
-Every finite abstract simplicial complex admits a geometric realization in $\mathbb{R}^n$ for $n$ sufficiently large. For the proof, see \citep{munkres2000topology}.
-\end{theorem}
-
-\subsubsection{Orientations and Simplicial Chains}
+The basic notions of algebraic topology used in this section are developed in \autoref{ch:gdl}: the $k$-simplex (\autoref{def:simplicio_gdl}), the face of a simplex (\autoref{def:cara_simplicio_gdl}), and the simplicial complex (\autoref{def:complejo_simplicial}), as well as the boundary operator $\partial_k$ (\autoref{def:operador_frontera_gdl}) and the Hodge Laplacian, presented in \autoref{subsec:tdl_grafos}. Here we recall only the signed ingredients---orientations and chain spaces---that the simplicial attention architectures use explicitly.
 
 \begin{definition}[Orientation of a Simplex]\label{def:orientacion_simplicio}
-An orientation of a $k$-simplex $\sigma = [v_0, v_1, \ldots, v_k]$ is an equivalence class of orderings of its vertices under even permutations. We denote the positive orientation as $[v_0, v_1, \ldots, v_k]$ and the negative one as $-[v_0, v_1, \ldots, v_k]$.
+An orientation of a $k$-simplex $\sigma = [v_0, v_1, \ldots, v_k]$ with $k \geq 1$ is one of the two equivalence classes of orderings of its vertices under even permutations; we denote the positive orientation as $[v_0, \ldots, v_k]$ and the negative one as $-[v_0, \ldots, v_k]$. The 0-simplices have trivial orientation.
 \end{definition}
-
-\textbf{Number of Orientations.}\label{rem:numero_orientaciones} A $k$-simplex with $k \geq 1$ has exactly two orientations. The 0-simplices have trivial orientation.
 
 \begin{definition}[Space of Simplicial Chains]\label{def:espacio_cadenas}
-For a simplicial complex $\mathcal{K}$, the space of $k$-chains is the free $\mathbb{Z}$-module:
-\begin{equation}
-    C_k(\mathcal{K}) = \bigoplus_{\sigma \in \mathcal{K}_k} \mathbb{Z} \cdot \sigma
-\end{equation}
-where $\mathcal{K}_k$ denotes the set of oriented $k$-simplices in $\mathcal{K}$.
-\end{definition}
-
-A typical element of $C_k(\mathcal{K})$ is written as:
-\begin{equation}
-    c = \sum_{\sigma \in \mathcal{K}_k} n_{\sigma} \sigma
-\end{equation}
-where $n_{\sigma} \in \mathbb{Z}$ are the coefficients.
-
-\subsubsection{Boundary Operators}
-
-The boundary operator $\partial_k: C_k(\mathcal{K}) \to C_{k-1}(\mathcal{K})$ (see \autoref{def:cadenas_frontera} of \autoref{ch:cnn}) satisfies $\partial_k[v_0, \ldots, v_k] = \sum_{i=0}^k (-1)^i [v_0, \ldots, \hat{v_i}, \ldots, v_k]$.\label{def:operador_frontera}
-
-\begin{example}[Explicit Boundary Operators]\label{ex:operadores_frontera_explicitos}
-\begin{align}
-    \partial_0[v] &= 0 \\
-    \partial_1[v_0, v_1] &= [v_1] - [v_0] \\
-    \partial_2[v_0, v_1, v_2] &= [v_1, v_2] - [v_0, v_2] + [v_0, v_1] \\
-    \partial_3[v_0, v_1, v_2, v_3] &= [v_1, v_2, v_3] - [v_0, v_2, v_3] + [v_0, v_1, v_3] - [v_0, v_1, v_2]
-\end{align}
-\end{example}
-
-\begin{theorem}[Fundamental Property of the Boundary]\label{thm:frontera_frontera_cero}
-For all $k \geq 1$:
-\begin{equation}
-    \partial_{k-1} \circ \partial_k = 0
-\end{equation}
-That is, the boundary operator applied twice yields zero.
-\end{theorem}
-
-\begin{proof}
-For a $k$-simplex $[v_0, \ldots, v_k]$:
-\begin{align}
-    \partial_{k-1} \partial_k[v_0, \ldots, v_k] &= \partial_{k-1} \sum_{i=0}^k (-1)^i [v_0, \ldots, \hat{v_i}, \ldots, v_k] \\
-    &= \sum_{i=0}^k (-1)^i \sum_{\substack{j=0 \\ j \neq i}}^k (-1)^{j'} [v_0, \ldots, \hat{v_j}, \ldots, \hat{v_i}, \ldots, v_k]
-\end{align}
-where $j' = j$ if $j < i$ and $j' = j-1$ if $j > i$. Each $(k-2)$-face appears exactly twice with opposite signs, so the sum is zero.
-\end{proof}
-
-\begin{definition}[Chain Complex]\label{def:complejo_cadenas}
-The chain complex associated with $\mathcal{K}$ is the sequence:
-\begin{equation}
-    \cdots \to C_{k+1}(\mathcal{K}) \xrightarrow{\partial_{k+1}} C_k(\mathcal{K}) \xrightarrow{\partial_k} C_{k-1}(\mathcal{K}) \to \cdots \to C_0(\mathcal{K}) \xrightarrow{\partial_0} 0
-\end{equation}
+For a simplicial complex $\mathcal{K}$, the space of $k$-chains is the free $\mathbb{Z}$-module $C_k(\mathcal{K}) = \bigoplus_{\sigma \in \mathcal{K}_k} \mathbb{Z} \cdot \sigma$ generated by the oriented $k$-simplices; a typical element is $c = \sum_{\sigma \in \mathcal{K}_k} n_{\sigma}\, \sigma$ with coefficients $n_{\sigma} \in \mathbb{Z}$. The boundary operator $\partial_k: C_k(\mathcal{K}) \to C_{k-1}(\mathcal{K})$ (\autoref{def:operador_frontera_gdl}) acts by $\partial_k[v_0, \ldots, v_k] = \sum_{i=0}^k (-1)^i [v_0, \ldots, \hat{v_i}, \ldots, v_k]$ and satisfies $\partial_{k-1} \circ \partial_k = 0$, the property that gives rise to the chain complex $\cdots \to C_{k+1} \xrightarrow{\partial_{k+1}} C_k \xrightarrow{\partial_k} C_{k-1} \to \cdots$.
 \end{definition}
 
 \subsection{Simplicial Homology}
+
+Simplicial homology (cycles, boundaries, homology groups, and Betti numbers) is introduced in \autoref{ch:gdl}, \autoref{subsec:tdl_grafos}; we recall it briefly before extending it to persistent homology, the central tool for topological attention.
 
 \subsubsection{Cycles, Boundaries, and Homology Groups}
 
@@ -2841,6 +2562,8 @@ where $\mathbb{k}[b,d)$ represents an interval module. This classical result of 
 \end{algorithm}
 
 \subsection{Cohomology and Discrete de Rham Theory}
+
+Simplicial cohomology is the dual theory of the homology recalled above (and developed in \autoref{ch:gdl}, \autoref{subsec:tdl_grafos}); here we present the coboundary operators and the discrete Hodge theory that directly underpin cohomological attention mechanisms.
 
 \subsubsection{Cochain Complexes}
 
@@ -3473,7 +3196,7 @@ The generalization capacity is limited by:
 
 where $\text{Dim}(\text{Rep}(G))$ is the effective dimension of the representation space.
 
-\section{Connections with CNNs and Future Directions}\label{sec:cnn_attention_connections}
+\section{Connections with Convolutional Models}\label{sec:cnn_attention_connections}
 
 This chapter has developed geometric attention mechanisms from multiple mathematical perspectives: group theory, spectral analysis, differential geometry, geometric algebra, and algebraic topology. To complete the unifying theoretical framework of Geometric Deep Learning, this final section establishes the fundamental connections with the Geometric Convolutional Neural Networks developed in \autoref{ch:cnn}, demonstrating the conceptual convergence of both paradigms under shared mathematical principles.
 
@@ -3620,81 +3343,4 @@ where $d$ is a metric on the space of functionals over $\mathcal{F}(\mathcal{D})
 
 \textbf{3. Adaptive regularization}: Modern regularization techniques (geometric dropout, adaptive normalization) cause both families to converge toward the same optimal bias-variance regime.
 
-\subsubsection{Convergence Architectures}
-
-The architectures that exemplify this convergence include:
-
-\begin{definition}[ConvNext-Attention Hybrid]\label{def:convnext_attention}
-A hybrid architecture that combines:
-\begin{itemize}
-    \item \textbf{Convolutional kernel}: To process local features with geometric guarantees
-    \item \textbf{Attention heads}: To capture adaptive global dependencies
-    \item \textbf{Dynamic switching}: A learnable mechanism that decides when to use each component
-\end{itemize}
-\end{definition}
-
-\begin{definition}[Geometric Retentive Networks]\label{def:retentive_networks_geometricas}
-Extension of the retentive mechanism to geometric domains:
-\begin{equation}
-    \text{Retention}(Q, K, V) = Q \odot \sum_{j} \text{decay}(d_\mathcal{M}(i,j)) \cdot K_j \odot V_j
-\end{equation}
-where $d_\mathcal{M}$ is the geodesic distance in the geometric domain $\mathcal{M}$.
-\end{definition}
-
-\subsection{Future Theoretical Developments}\label{subsec:desarrollos_teoricos_futuros}
-
-\subsubsection{Unified Expressivity Limits}
-
-\begin{conjecture}[Universal Limits of Geometric Approximation]\label{conj:limites_universales}
-For every continuous function $f: \mathcal{M} \to \mathbb{R}$ over a compact manifold $\mathcal{M}$, and every $\epsilon > 0$, there exist CNN and Attention architectures of complexities $C_{CNN}(\epsilon)$ and $C_{Att}(\epsilon)$ such that:
-\begin{equation}
-    \frac{C_{Att}(\epsilon)}{C_{CNN}(\epsilon)} \to 1 \quad \text{as } \epsilon \to 0
-\end{equation}
-This conjecture suggests that the difference in architectural complexity vanishes in the limit of perfect approximation.
-\end{conjecture}
-
-\subsubsection{Geometric Information Theory}
-
-\begin{definition}[Geometric Fisher Entropy]\label{def:entropia_geometrica_fisher}
-For a distribution $p$ over a Riemannian manifold $(\mathcal{M}, g)$, the geometric entropy is defined as:
-\begin{equation}
-    H_g(p) = -\int_\mathcal{M} p(x) \log p(x) \sqrt{\det g(x)} \, dx
-\end{equation}
-This quantity captures both the statistical uncertainty and the underlying geometric complexity.
-\end{definition}
-
-\begin{conjecture}[Principle of Minimal Geometric Information]\label{conj:principio_informacion_minima}
-The optimal GDL architectures minimize the geometric information necessary to represent the target function:
-\begin{equation}
-    \mathcal{A}^* = \arg\min_\mathcal{A} \left[ \mathcal{L}(\mathcal{A}) + \lambda H_g(\text{representations}_\mathcal{A}) \right]
-\end{equation}
-where $\mathcal{L}$ is the empirical loss and $\lambda$ controls the information-precision trade-off.
-\end{conjecture}
-
-\subsubsection{Geometric Meta-Learning}
-
-\begin{definition}[Geometric Meta-Learner]\label{def:meta_learner_geometrico}
-A system that automatically learns the relevant symmetries of a domain:
-\begin{equation}
-    \text{Meta-GDL}: \mathcal{D} \mapsto G_{\text{optimal}} \mapsto \mathcal{A}_{G_{\text{optimal}}}
-\end{equation}
-where $\mathcal{D}$ is the data, $G_{\text{optimal}}$ is the discovered group of symmetries, and $\mathcal{A}_{G_{\text{optimal}}}$ is the resulting architecture.
-\end{definition}
-
-\subsection{Final Reflection: Toward a Unified Theory}\label{subsec:reflexion_final}
-
-The analyses presented in this chapter and in \autoref{ch:cnn} converge toward a fundamental conclusion: the distinction between "convolutional" and "attention" is increasingly less relevant from a deep theoretical perspective. Both paradigms represent different points on a continuum of geometric operators that process structured information.
-
-The future of Geometric Deep Learning does not lie in the competition between paradigms, but in their intelligent synthesis. The most powerful architectures will combine the stability and efficiency of geometric convolutions with the flexibility and expressivity of adaptive attention, guided by deep mathematical principles rather than ad hoc heuristics.
-
-\begin{remark}[Principle of Architectural Synthesis]\label{rem:principio_sintesis}
-For every geometric problem with known structure $\mathcal{S}$ and required adaptability $\mathcal{A}$, there exists an optimal hybrid architecture:
-\begin{equation}
-    \mathcal{H}^* = \arg\min_{\mathcal{H}} \left[ \mathcal{L}(\mathcal{H}) + \lambda_1 d(\mathcal{H}, \mathcal{S}) + \lambda_2 (1 - \text{Adaptability}(\mathcal{H})) \right]
-\end{equation}
-where $d(\mathcal{H}, \mathcal{S})$ measures the distance to the known structure and the parameters $\lambda_i$ balance the constraints.
-\end{remark}
-
-This synthesis represents more than a technical convergence: it symbolizes the maturation of the field toward unifying principles that transcend historical divisions. As we will demonstrate in the next experimental chapter, this theoretical unification translates into measurable practical advantages and opens new possibilities for addressing the great scientific and technological challenges of the 21st century.
-
-Geometry, as has been the case throughout the history of mathematics and physics, once again provides the unifying language needed to understand and exploit the apparent complexity of modern machine learning systems. In this geometric synthesis lies not only the understanding of the present, but also the conceptual tools to build the future of deep learning.
+These correspondences and the convergence conjecture close the theoretical development of this chapter, positioning convolutions and attention as two regimes of a single continuum of geometric operators. \autoref{ch:conclusions} takes up this synthesis to discuss its implications, the hybrid architectures it gives rise to, and the research directions it opens.

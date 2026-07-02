@@ -2,7 +2,7 @@
 
 \TODO{These are only some ideas that need a lot of work}
 
-This work has developed a rigorous mathematical formalization of \gls{GDL}, establishing the theoretical foundations that unify modern deep learning architectures under a common geometric paradigm. Across four chapters, an arc has been constructed that starts from traditional neural networks, establishes the geometric framework of the ``5~Gs'', and shows how convolution and attention operations extend to non-Euclidean domains while preserving fundamental symmetries. The following sections synthesize the results obtained in relation to the four objectives set out in \autoref{sec:objetivos_trabajo}, identify the limitations that emerge from the theoretical development itself, and propose future directions grounded in the content of the thesis.
+This book has developed a rigorous mathematical formalization of \gls{GDL}, establishing the theoretical foundations that unify modern deep learning architectures under a common geometric paradigm. Across four chapters, an arc has been constructed that starts from traditional neural networks, establishes the geometric framework of the ``5~Gs'', and shows how convolution and attention operations extend to non-Euclidean domains while preserving fundamental symmetries. The following sections synthesize the results obtained in relation to the four objectives set out in \autoref{sec:objetivos_trabajo}, identify the limitations that emerge from the theoretical development itself, and propose future directions grounded in the content of the book.
 
 
 \section{Synthesis of Results and Contributions}
@@ -56,16 +56,37 @@ The gauge theory developed in \autoref{ch:cnn} through principal bundles (\autor
 
 \subsection{Higher-Order Structures}
 
-The topological tools developed in this work (Hodge Laplacians (\autoref{def:hodge_laplacians_cnn}), persistent homology, simplicial complexes) provide a mathematically rigorous framework for capturing higher-order relations. Nevertheless, the architectures that operate over these structures are at an early stage of maturity compared to architectures over graphs. The design of efficient convolution and attention operations over general cellular complexes, which preserve the algebraic properties of the underlying topology without incurring prohibitive computational costs, remains a relevant open problem.
+The topological tools developed in this book (Hodge Laplacians (\autoref{def:hodge_laplacians_cnn}), persistent homology, simplicial complexes) provide a mathematically rigorous framework for capturing higher-order relations. Nevertheless, the architectures that operate over these structures are at an early stage of maturity compared to architectures over graphs. The design of efficient convolution and attention operations over general cellular complexes, which preserve the algebraic properties of the underlying topology without incurring prohibitive computational costs, remains a relevant open problem.
 
 
 \section{Future Directions}
 
-The following lines of research are grounded directly in the results and limitations identified in this work.
+The following lines of research are grounded directly in the results and limitations identified in this book.
 
 \subsection{Hybrid CNN-Attention Architectures}
 
 The correspondence theorem (\autoref{thm:correspondencia_cnn_attention}) and the convergence conjecture (\autoref{conj:convergencia_cnn_attention}) between convolutions and attention, together with the analysis of the rigidity-adaptability spectrum (\autoref{rem:tradeoff_rigidez_adaptabilidad}), suggest that a natural direction is the design of architectures that combine both paradigms in a controlled manner. The theoretical framework established in \autoref{ch:attention} provides the formal tools to interpolate between the rigidity of equivariant convolutions and the adaptability of attention, potentially combining the data efficiency of the former with the expressiveness of the latter.
+
+Two concrete architectural patterns illustrate this interpolation. The first combines a convolutional kernel, which processes local features with geometric guarantees, with attention heads that capture adaptive global dependencies, mediating between the two through a learnable switching mechanism.
+
+\begin{definition}[ConvNext-Attention Hybrid]\label{def:convnext_attention}
+A hybrid architecture that combines:
+\begin{itemize}
+    \item \textbf{Convolutional kernel}: To process local features with geometric guarantees
+    \item \textbf{Attention heads}: To capture adaptive global dependencies
+    \item \textbf{Dynamic switching}: A learnable mechanism that decides when to use each component
+\end{itemize}
+\end{definition}
+
+The second carries the retentive mechanism over to geometric domains, replacing the positional decay of sequences with a decay over the geodesic distance of the domain:
+
+\begin{definition}[Geometric Retentive Networks]\label{def:retentive_networks_geometricas}
+Extension of the retentive mechanism to geometric domains:
+\begin{equation}
+    \text{Retention}(Q, K, V) = Q \odot \sum_{j} \text{decay}(d_\mathcal{M}(i,j)) \cdot K_j \odot V_j
+\end{equation}
+where $d_\mathcal{M}$ is the geodesic distance in the geometric domain $\mathcal{M}$.
+\end{definition}
 
 \subsection{Complex Geometric Domains}
 
@@ -73,11 +94,62 @@ The framework of the 5~Gs (\autoref{subsec:cinco_gs}) admits natural extensions 
 
 \subsection{Generalized Harmonic Analysis}
 
-The central role of harmonic analysis in this work (from spectral convolutions to spherical harmonics and the Chebyshev decomposition of \autoref{ch:cnn}) suggests the exploration of extensions to broader classes of groups. The Peter-Weyl theorem (\autoref{thm:peter_weyl}), the cornerstone of group convolutions, requires compactness of the group; extending the framework to non-compact groups (such as the Lorentz group or the affine groups) demands tools of non-commutative harmonic analysis that go beyond those developed in this work. An advance in this direction would broaden the scope of applicability of equivariant \glspl{CNN} to symmetries relevant in relativistic physics and general signal processing.
+The central role of harmonic analysis in this book (from spectral convolutions to spherical harmonics and the Chebyshev decomposition of \autoref{ch:cnn}) suggests the exploration of extensions to broader classes of groups. The Peter-Weyl theorem (\autoref{thm:peter_weyl}), the cornerstone of group convolutions, requires compactness of the group; extending the framework to non-compact groups (such as the Lorentz group or the affine groups) demands tools of non-commutative harmonic analysis that go beyond those developed in this book. An advance in this direction would broaden the scope of applicability of equivariant \glspl{CNN} to symmetries relevant in relativistic physics and general signal processing.
+
+
+\subsection{Toward a Unified Theory}\label{subsec:hacia_teoria_unificada}
+
+Beyond the design of concrete architectures, the \gls{CNN}-attention convergence conjecture (\autoref{conj:convergencia_cnn_attention}) points toward a unified theory whose contours are beginning to emerge. A first line concerns the limits of expressivity: if both paradigms converge to the same limit set of operators, one may expect their approximation cost to converge as well.
+
+\begin{conjecture}[Universal Limits of Geometric Approximation]\label{conj:limites_universales}
+For every continuous function $f: \mathcal{M} \to \mathbb{R}$ over a compact manifold $\mathcal{M}$, and every $\epsilon > 0$, there exist CNN and Attention architectures of complexities $C_{CNN}(\epsilon)$ and $C_{Att}(\epsilon)$ such that:
+\begin{equation}
+    \frac{C_{Att}(\epsilon)}{C_{CNN}(\epsilon)} \to 1 \quad \text{as } \epsilon \to 0
+\end{equation}
+This conjecture suggests that the difference in architectural complexity vanishes in the limit of perfect approximation.
+\end{conjecture}
+
+A second line seeks a properly geometric information theory, one that weights statistical uncertainty by the geometry of the underlying domain.
+
+\begin{definition}[Geometric Fisher Entropy]\label{def:entropia_geometrica_fisher}
+For a distribution $p$ over a Riemannian manifold $(\mathcal{M}, g)$, the geometric entropy is defined as:
+\begin{equation}
+    H_g(p) = -\int_\mathcal{M} p(x) \log p(x) \sqrt{\det g(x)} \, dx
+\end{equation}
+This quantity captures both the statistical uncertainty and the underlying geometric complexity.
+\end{definition}
+
+\begin{conjecture}[Principle of Minimal Geometric Information]\label{conj:principio_informacion_minima}
+The optimal GDL architectures minimize the geometric information necessary to represent the target function:
+\begin{equation}
+    \mathcal{A}^* = \arg\min_\mathcal{A} \left[ \mathcal{L}(\mathcal{A}) + \lambda H_g(\text{representations}_\mathcal{A}) \right]
+\end{equation}
+where $\mathcal{L}$ is the empirical loss and $\lambda$ controls the information-precision trade-off.
+\end{conjecture}
+
+A third line, complementary to the previous ones, is geometric meta-learning: rather than fixing the symmetry group a priori, the system itself discovers it from the data and builds the corresponding equivariant architecture.
+
+\begin{definition}[Geometric Meta-Learner]\label{def:meta_learner_geometrico}
+A system that automatically learns the relevant symmetries of a domain:
+\begin{equation}
+    \text{Meta-GDL}: \mathcal{D} \mapsto G_{\text{optimal}} \mapsto \mathcal{A}_{G_{\text{optimal}}}
+\end{equation}
+where $\mathcal{D}$ is the data, $G_{\text{optimal}}$ is the discovered group of symmetries, and $\mathcal{A}_{G_{\text{optimal}}}$ is the resulting architecture.
+\end{definition}
+
+These lines converge on a principle of synthesis: for each geometric problem, with a known structure and a required degree of adaptability, there would exist an optimal hybrid architecture that balances both ends of the rigidity-adaptability spectrum.
+
+\begin{remark}[Principle of Architectural Synthesis]\label{rem:principio_sintesis}
+For every geometric problem with known structure $\mathcal{S}$ and required adaptability $\mathcal{A}$, there exists an optimal hybrid architecture:
+\begin{equation}
+    \mathcal{H}^* = \arg\min_{\mathcal{H}} \left[ \mathcal{L}(\mathcal{H}) + \lambda_1 d(\mathcal{H}, \mathcal{S}) + \lambda_2 (1 - \text{Adaptability}(\mathcal{H})) \right]
+\end{equation}
+where $d(\mathcal{H}, \mathcal{S})$ measures the distance to the known structure and the parameters $\lambda_i$ balance the constraints.
+\end{remark}
 
 
 \section{Final Reflection}
 
-The development presented in this work shows that geometry is not merely a tool for improving the performance of deep learning models, but an organizing principle that allows explaining why certain architectures work for certain types of data. The synthesis of \autoref{ch:gdl} (\autoref{sec:sintesis_marco_unificador}) has shown that the differences between \glspl{ANN}, \glspl{CNN}, \glspl{GNN}, and \glspl{Transformer} reflect choices about three fundamental aspects: the geometric domain, the symmetry group, and the connectivity structure.
+The development presented in this book shows that geometry is not merely a tool for improving the performance of deep learning models, but an organizing principle that allows explaining why certain architectures work for certain types of data. From this deep theoretical perspective, the distinction between the ``convolutional'' and the ``attentional'' becomes increasingly less relevant: both paradigms are distinct points on a single continuum of geometric operators, and the future of the field lies less in their competition than in their principled synthesis. The synthesis of \autoref{ch:gdl} (\autoref{sec:sintesis_marco_unificador}) has shown that the differences between \glspl{ANN}, \glspl{CNN}, \glspl{GNN}, and \glspl{Transformer} reflect choices about three fundamental aspects: the geometric domain, the symmetry group, and the connectivity structure.
 
 The mathematical framework that underpins this unification (Lie theory, Riemannian geometry, gauge theory, algebraic topology) possesses a power that transcends the mere retrospective description of existing architectures. The equivariant universality results and the convergence theorems between paradigms provide tools with predictive capacity: they allow anticipating which geometric constraints are necessary for a given domain and which expressive guarantees the resulting architecture will offer. In this sense, \gls{GDL} constitutes not only a taxonomy of current architectures, but a theoretical framework for the principled design of future ones.

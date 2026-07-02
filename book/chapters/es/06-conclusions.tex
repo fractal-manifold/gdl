@@ -2,7 +2,7 @@
 
 \TODO{Esto solo son algunas ideas que necesita mucho trabajo}
 
-Este trabajo ha desarrollado una formalización matemática rigurosa del \gls{GDL}, estableciendo los fundamentos teóricos que unifican las arquitecturas modernas de aprendizaje profundo bajo un paradigma geométrico común. A lo largo de cuatro capítulos, se ha construido un arco que parte de las redes neuronales tradicionales, establece el marco geométrico de las ``5~Gs'', y muestra cómo las operaciones de convolución y atención se extienden a dominios no euclidianos preservando simetrías fundamentales. Las siguientes secciones sintetizan los resultados obtenidos en relación con los cuatro objetivos planteados en la \autoref{sec:objetivos_trabajo}, identifican las limitaciones que emergen del propio desarrollo teórico, y proponen direcciones futuras fundamentadas en el contenido de la tesis.
+Este libro ha desarrollado una formalización matemática rigurosa del \gls{GDL}, estableciendo los fundamentos teóricos que unifican las arquitecturas modernas de aprendizaje profundo bajo un paradigma geométrico común. A lo largo de cuatro capítulos, se ha construido un arco que parte de las redes neuronales tradicionales, establece el marco geométrico de las ``5~Gs'', y muestra cómo las operaciones de convolución y atención se extienden a dominios no euclidianos preservando simetrías fundamentales. Las siguientes secciones sintetizan los resultados obtenidos en relación con los cuatro objetivos planteados en la \autoref{sec:objetivos_trabajo}, identifican las limitaciones que emergen del propio desarrollo teórico, y proponen direcciones futuras fundamentadas en el contenido del libro.
 
 
 \section{Síntesis de Resultados y Contribuciones}
@@ -56,16 +56,37 @@ La teoría gauge desarrollada en el \autoref{ch:cnn} mediante fibrados principal
 
 \subsection{Estructuras de Orden Superior}
 
-Las herramientas topológicas desarrolladas en este trabajo (laplacianos de Hodge (\autoref{def:hodge_laplacians_cnn}), homología persistente, complejos simpliciales) proporcionan un marco matemáticamente riguroso para capturar relaciones de orden superior. No obstante, las arquitecturas que operan sobre estas estructuras se encuentran en un estado de madurez temprano en comparación con las arquitecturas sobre grafos. El diseño de operaciones de convolución y atención eficientes sobre complejos celulares generales, que preserven las propiedades algebraicas de la topología subyacente sin incurrir en costes computacionales prohibitivos, permanece como un problema abierto relevante.
+Las herramientas topológicas desarrolladas en este libro (laplacianos de Hodge (\autoref{def:hodge_laplacians_cnn}), homología persistente, complejos simpliciales) proporcionan un marco matemáticamente riguroso para capturar relaciones de orden superior. No obstante, las arquitecturas que operan sobre estas estructuras se encuentran en un estado de madurez temprano en comparación con las arquitecturas sobre grafos. El diseño de operaciones de convolución y atención eficientes sobre complejos celulares generales, que preserven las propiedades algebraicas de la topología subyacente sin incurrir en costes computacionales prohibitivos, permanece como un problema abierto relevante.
 
 
 \section{Direcciones Futuras}
 
-Las siguientes líneas de investigación se fundamentan directamente en los resultados y limitaciones identificados en este trabajo.
+Las siguientes líneas de investigación se fundamentan directamente en los resultados y limitaciones identificados en este libro.
 
 \subsection{Arquitecturas Híbridas CNN-Atención}
 
 El teorema de correspondencia (\autoref{thm:correspondencia_cnn_attention}) y la conjetura de convergencia (\autoref{conj:convergencia_cnn_attention}) entre convoluciones y atención, junto con el análisis del espectro rigidez-adaptabilidad (\autoref{rem:tradeoff_rigidez_adaptabilidad}), sugieren que una dirección natural es el diseño de arquitecturas que combinen ambos paradigmas de forma controlada. El marco teórico establecido en el \autoref{ch:attention} proporciona las herramientas formales para interpolar entre la rigidez de las convoluciones equivariantes y la adaptabilidad de la atención, potencialmente combinando la eficiencia en el uso de datos de las primeras con la expresividad de la segunda.
+
+Dos patrones arquitectónicos concretos ilustran esta interpolación. El primero combina un núcleo convolucional, que procesa características locales con garantías geométricas, con cabezas de atención que capturan dependencias globales adaptativas, mediando entre ambos mediante un mecanismo de intercambio aprendible.
+
+\begin{definition}[ConvNext-Attention Híbrido]\label{def:convnext_attention}
+Una arquitectura híbrida que combina:
+\begin{itemize}
+    \item \textbf{Núcleo convolucional}: Para procesar características locales con garantías geométricas
+    \item \textbf{Cabezas de atención}: Para capturar dependencias globales adaptativas
+    \item \textbf{Intercambio dinámico}: Mecanismo aprendible que decide cuándo usar cada componente
+\end{itemize}
+\end{definition}
+
+El segundo traslada el mecanismo retentivo a dominios geométricos, sustituyendo el decaimiento posicional propio de las secuencias por un decaimiento sobre la distancia geodésica del dominio:
+
+\begin{definition}[Retentive Networks Geométricas]\label{def:retentive_networks_geometricas}
+Extensión del mecanismo retentivo a dominios geométricos:
+\begin{equation}
+    \text{Retention}(Q, K, V) = Q \odot \sum_{j} \text{decay}(d_\mathcal{M}(i,j)) \cdot K_j \odot V_j
+\end{equation}
+donde $d_\mathcal{M}$ es la distancia geodésica en el dominio geométrico $\mathcal{M}$.
+\end{definition}
 
 \subsection{Dominios Geométricos Complejos}
 
@@ -73,11 +94,62 @@ El marco de las 5~Gs (\autoref{subsec:cinco_gs}) admite extensiones naturales a 
 
 \subsection{Análisis Armónico Generalizado}
 
-El papel central del análisis armónico en este trabajo (desde las convoluciones espectrales hasta los armónicos esféricos y la descomposición de Chebyshev del \autoref{ch:cnn}) sugiere la exploración de extensiones a clases más amplias de grupos. El teorema de Peter-Weyl (\autoref{thm:peter_weyl}), piedra angular de las convoluciones de grupo, requiere compacidad del grupo; la extensión del marco a grupos no compactos (como el grupo de Lorentz o los grupos afines) demanda herramientas de análisis armónico no conmutativo que van más allá de las desarrolladas en este trabajo. Un avance en esta dirección ampliaría el ámbito de aplicabilidad de las \glspl{CNN} equivariantes a simetrías relevantes en física relativista y procesamiento de señales generales.
+El papel central del análisis armónico en este libro (desde las convoluciones espectrales hasta los armónicos esféricos y la descomposición de Chebyshev del \autoref{ch:cnn}) sugiere la exploración de extensiones a clases más amplias de grupos. El teorema de Peter-Weyl (\autoref{thm:peter_weyl}), piedra angular de las convoluciones de grupo, requiere compacidad del grupo; la extensión del marco a grupos no compactos (como el grupo de Lorentz o los grupos afines) demanda herramientas de análisis armónico no conmutativo que van más allá de las desarrolladas en este libro. Un avance en esta dirección ampliaría el ámbito de aplicabilidad de las \glspl{CNN} equivariantes a simetrías relevantes en física relativista y procesamiento de señales generales.
+
+
+\subsection{Hacia una Teoría Unificada}\label{subsec:hacia_teoria_unificada}
+
+Más allá del diseño de arquitecturas concretas, la conjetura de convergencia \gls{CNN}-atención (\autoref{conj:convergencia_cnn_attention}) apunta hacia una teoría unificada cuyos contornos comienzan a vislumbrarse. Una primera línea concierne a los límites de expresividad: si ambos paradigmas convergen al mismo conjunto límite de operadores, cabe esperar que también converja su coste de aproximación.
+
+\begin{conjecture}[Límites Universales de Aproximación Geométrica]\label{conj:limites_universales}
+Para toda función $f: \mathcal{M} \to \mathbb{R}$ continua sobre variedad compacta $\mathcal{M}$, y todo $\epsilon > 0$, existen arquitecturas CNN y Attention de complejidades $C_{CNN}(\epsilon)$ y $C_{Att}(\epsilon)$ tales que:
+\begin{equation}
+    \frac{C_{Att}(\epsilon)}{C_{CNN}(\epsilon)} \to 1 \quad \text{cuando } \epsilon \to 0
+\end{equation}
+Esta conjetura sugiere que la diferencia en complejidad arquitectónica desaparece en el límite de aproximación perfecta.
+\end{conjecture}
+
+Una segunda línea busca una teoría de la información propiamente geométrica, que pondere la incertidumbre estadística por la geometría del dominio subyacente.
+
+\begin{definition}[Entropía Geométrica de Fisher]\label{def:entropia_geometrica_fisher}
+Para una distribución $p$ sobre variedad riemanniana $(\mathcal{M}, g)$, la entropía geométrica se define:
+\begin{equation}
+    H_g(p) = -\int_\mathcal{M} p(x) \log p(x) \sqrt{\det g(x)} \, dx
+\end{equation}
+Esta cantidad captura tanto la incertidumbre estadística como la complejidad geométrica subyacente.
+\end{definition}
+
+\begin{conjecture}[Principio de Información Mínima Geométrica]\label{conj:principio_informacion_minima}
+Las arquitecturas óptimas de GDL minimizan la información geométrica necesaria para representar la función objetivo:
+\begin{equation}
+    \mathcal{A}^* = \arg\min_\mathcal{A} \left[ \mathcal{L}(\mathcal{A}) + \lambda H_g(\text{representaciones}_\mathcal{A}) \right]
+\end{equation}
+donde $\mathcal{L}$ es la pérdida empírica y $\lambda$ controla el trade-off información-precisión.
+\end{conjecture}
+
+Una tercera línea, complementaria de las anteriores, es el meta-aprendizaje geométrico: en lugar de fijar a priori el grupo de simetrías, el propio sistema lo descubre a partir de los datos y construye la arquitectura equivariante correspondiente.
+
+\begin{definition}[Meta-Learner Geométrico]\label{def:meta_learner_geometrico}
+Un sistema que aprende automáticamente las simetrías relevantes de un dominio:
+\begin{equation}
+    \text{Meta-GDL}: \mathcal{D} \mapsto G_{\text{óptimo}} \mapsto \mathcal{A}_{G_{\text{óptimo}}}
+\end{equation}
+donde $\mathcal{D}$ son los datos, $G_{\text{óptimo}}$ es el grupo de simetrías descubierto, y $\mathcal{A}_{G_{\text{óptimo}}}$ es la arquitectura resultante.
+\end{definition}
+
+Estas líneas convergen en un principio de síntesis: para cada problema geométrico, con una estructura conocida y un grado de adaptabilidad requerido, existiría una arquitectura híbrida óptima que equilibra ambos extremos del espectro rigidez-adaptabilidad.
+
+\begin{remark}[Principio de Síntesis Arquitectónica]\label{rem:principio_sintesis}
+Para todo problema geométrico con estructura conocida $\mathcal{S}$ y adaptabilidad requerida $\mathcal{A}$, existe una arquitectura híbrida óptima:
+\begin{equation}
+    \mathcal{H}^* = \arg\min_{\mathcal{H}} \left[ \mathcal{L}(\mathcal{H}) + \lambda_1 d(\mathcal{H}, \mathcal{S}) + \lambda_2 (1 - \text{Adaptabilidad}(\mathcal{H})) \right]
+\end{equation}
+donde $d(\mathcal{H}, \mathcal{S})$ mide la distancia a la estructura conocida y los parámetros $\lambda_i$ balancean las restricciones.
+\end{remark}
 
 
 \section{Reflexión Final}
 
-El desarrollo presentado en este trabajo muestra que la geometría no es simplemente una herramienta para mejorar el rendimiento de los modelos de aprendizaje profundo, sino un principio organizador que permite explicar por qué determinadas arquitecturas funcionan para determinados tipos de datos. La síntesis del \autoref{ch:gdl} (\autoref{sec:sintesis_marco_unificador}) ha mostrado que las diferencias entre \glspl{ANN}, \glspl{CNN}, \glspl{GNN} y \glspl{Transformer} reflejan elecciones sobre tres aspectos fundamentales: el dominio geométrico, el grupo de simetría y la estructura de conectividad.
+El desarrollo presentado en este libro muestra que la geometría no es simplemente una herramienta para mejorar el rendimiento de los modelos de aprendizaje profundo, sino un principio organizador que permite explicar por qué determinadas arquitecturas funcionan para determinados tipos de datos. Desde esta perspectiva teórica profunda, la distinción entre lo ``convolucional'' y lo ``atencional'' se vuelve cada vez menos relevante: ambos paradigmas son puntos distintos de un mismo continuo de operadores geométricos, y el futuro del campo reside menos en su competencia que en su síntesis principiada. La síntesis del \autoref{ch:gdl} (\autoref{sec:sintesis_marco_unificador}) ha mostrado que las diferencias entre \glspl{ANN}, \glspl{CNN}, \glspl{GNN} y \glspl{Transformer} reflejan elecciones sobre tres aspectos fundamentales: el dominio geométrico, el grupo de simetría y la estructura de conectividad.
 
 El marco matemático que sostiene esta unificación (teoría de Lie, geometría riemanniana, teoría gauge, topología algebraica) posee un poder que trasciende la mera descripción retrospectiva de las arquitecturas existentes. Los resultados de universalidad equivariante y los teoremas de convergencia entre paradigmas proporcionan herramientas con capacidad predictiva: permiten anticipar qué restricciones geométricas son necesarias para un dominio dado y qué garantías expresivas ofrecerá la arquitectura resultante. En este sentido, el \gls{GDL} constituye no solo una taxonomía de las arquitecturas actuales, sino un marco teórico para el diseño principiado de las futuras.
