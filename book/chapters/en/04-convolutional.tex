@@ -5837,6 +5837,8 @@ Category theory provides a unifying language that connects Clifford algebras, to
     \item \textbf{Homology functor}: $H_*: \textbf{Chain} \to \textbf{GrVect}$ (chains to graded spaces)
     \item \textbf{Clifford functor}: Associates to each Riemannian manifold its Clifford bundle
 \end{itemize}
+\textbf{Naturality as Equivariance.} The clearest architectural use of this language is Natural Graph Networks \citep{dehaan2020natural}. Let $\mathcal{C}$ be the category whose objects are node neighborhoods and whose morphisms are the local isomorphisms between them, and $\mathcal{D}$ the analogous category of edge neighborhoods, with functors $F_0, F_1: \mathcal{D} \to \mathcal{C}$ selecting the two endpoints of each edge. Feature spaces are functors $\rho, \rho': \mathcal{C} \to \mathbf{Vect}$, and a layer is a natural transformation $k: \rho \circ F_0 \Rightarrow \rho' \circ F_1$. Naturality is exactly the requirement that the kernel commute with every local isomorphism, so equivariance is not imposed on top of the architecture but is the definition of a morphism in it. Since all morphisms of $\mathcal{C}$ are invertible, $\mathcal{C}$ is a groupoid (\autoref{def:grupoide}), and the construction generalizes: category-equivariant networks \citep{maruyama2025categorical} recover group convolutions, groupoid convolutions and sheaf neural networks as instances of the same naturality condition, each with its own universal approximation theorem.
+
 
 The advanced algebraic extensions (Clifford, topological, categorical) face computational challenges of scalability and numerical stability in high-dimensional algebras, and require further theoretical development in expressive capabilities and convergence guarantees.
 
