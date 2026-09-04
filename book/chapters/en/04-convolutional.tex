@@ -2479,6 +2479,12 @@ In Earth sciences, Spherical CNNs provide natural tools for:
     \item \textbf{Satellite monitoring}: Analysis of Earth observation data
 \end{itemize}
 
+\paragraph{Spherical Fourier Neural Operators}
+
+The most consequential of these applications is medium-range weather forecasting, where the object to learn is an operator rather than a function: the map from the atmospheric state at time $t$ to the state at $t + \Delta t$. Neural operators \citep{kovachki2023neural} learn maps between function spaces with parameters independent of the discretization, so the same model can be evaluated on any grid; the Fourier Neural Operator realizes each layer as $v \mapsto \sigma\big(\mathbf{W} v + \mathcal{F}^{-1}(\mathbf{R}_\theta \cdot \mathcal{F} v)\big)$, a global convolution implemented, by the convolution theorem, as a learnable multiplier $\mathbf{R}_\theta$ on the retained Fourier modes. On the sphere the \gls{FFT} treats latitude and longitude as a flat torus, and autoregressive rollouts of such models develop artifacts at the poles and degrade. Spherical Fourier Neural Operators \citep{bonev2023sfno} replace the \gls{FFT} by the spherical harmonic transform of \autoref{subsec:spherical_cnns_so3},
+\[v \mapsto \sigma\Big(\mathbf{W} v + \text{SHT}^{-1}\big(\hat{\kappa}_l \cdot \text{SHT}(v)\big)\Big),\]
+with learnable coefficients $\hat{\kappa}_l$ that depend on the degree $l$ (and mix channels) but not on the order $m$. By the zonal case of the spherical convolution theorem of that subsection this is exactly a convolution on $S^2$ with a zonal kernel, hence a rotation-equivariant layer, and the parametrization remains discretization-invariant. Trained on ERA5 reanalysis data, the model produces stable autoregressive rollouts over a full simulated year (1{,}460 six-hourly steps) at a computational cost far below that of numerical weather prediction, where the planar variant loses stability.
+
 \paragraph{Computational Astrophysics}
 
 The natural spherical structure of astronomical data makes Spherical CNNs particularly appropriate:
@@ -3127,6 +3133,18 @@ where $n_{\text{avg}}$ is the average multiplicity per irreducible type.
     \item \textbf{Practical compromise}: Use EGNNs for pre-processing and TFNs for refinement in critical regions.
 \end{itemize}
 
+\paragraph{Reducing SO(3) Convolutions to SO(2): the eSCN Reduction}
+
+The dependence on $L_{\max}$ above comes from the Clebsch--Gordan tensor product between the node features and the spherical harmonic expansion of the edge direction. If the features are stored as dense coefficients $x^{(l,m)}$ with $l \le L$, the Clebsch--Gordan tensor $C^{l_3 m_3}_{l_1 m_1, l_2 m_2}$ has $O(L^6)$ entries, and this is the cost per edge of the direct contraction (the $O(L^3)$ quoted above refers to a single triple $(l_1, l_2, l_3)$; summing over all $O(L^3)$ triples gives $O(L^6)$). \citet{passaro2023escn} observed that almost all of these entries become irrelevant once the coordinate system is chosen edge by edge.
+
+\begin{proposition}[eSCN Reduction]\label{prop:escn_reduccion}
+Let $\mathbf{x}_j = (x_j^{(l,m)})_{l \le L,\, |m| \le l}$ be steerable features of maximum degree $L$, and for each edge $(i,j)$ let $\mathbf{R}_{ij} \in SO(3)$ be a rotation with $\mathbf{R}_{ij}\hat{\mathbf{r}}_{ij} = \hat{\mathbf{z}}$, applied to the features through the Wigner matrices, $\tilde{\mathbf{x}}_j = \mathbf{D}(\mathbf{R}_{ij})\,\mathbf{x}_j$. In the rotated frame $Y_l^m(\hat{\mathbf{z}}) = 0$ for all $m \neq 0$, so the tensor product with the edge direction reduces to
+\[\Big(\tilde{\mathbf{x}}_j \otimes_{\text{CG}} Y(\hat{\mathbf{z}})\Big)^{(l_3, m)} = \sum_{l_1, l_2} w_{l_1 l_2 l_3}(r_{ij})\, C^{l_3 m}_{l_1 m,\, l_2 0}\, Y_{l_2}^{0}(\hat{\mathbf{z}})\, \tilde{x}_j^{(l_1, m)},\]
+which only couples components with the same order $m$. Absorbing the sum over $l_2$ into a learnable coefficient $w_{l_1 l_3 m}(r_{ij})$, the message is a linear map acting separately on each $m$ mode, that is, an $SO(2)$-equivariant convolution about the edge axis (with real harmonics, the pair $(m, -m)$ is mixed by a $2 \times 2$ block). Its cost is $\sum_{m} O\big((L - |m|)^2\big) = O(L^3)$ per edge, and the rotations $\mathbf{D}(\mathbf{R}_{ij})$ and $\mathbf{D}(\mathbf{R}_{ij})^{-1}$ cost $\sum_{l \le L} (2l+1)^2 = O(L^3)$ as well, so the layer runs in $O(L^3)$ instead of $O(L^6)$ per edge.
+\end{proposition}
+
+The reduction is exact, not an approximation: $\mathbf{R}_{ij}$ is determined only up to rotations about $\hat{\mathbf{z}}$, and the reduced operation is precisely $SO(2)$-equivariant with respect to that residual freedom, so global $SO(3)$-equivariance is preserved once the messages are rotated back with $\mathbf{D}(\mathbf{R}_{ij})^{-1}$ and aggregated. In practice this moves the ceiling of $L_{\max} \le 4$ mentioned above to $L_{\max} = 6$--$8$ at a fraction of the cost. Gaunt tensor products \citep{luo2024gaunt} take a different route to the same $O(L^3)$ scaling: they restrict the Clebsch--Gordan product to the couplings whose coefficients are Gaunt coefficients, the integrals of three spherical harmonics, for which the tensor product of two features of degree $\le L$ is the pointwise product of the corresponding band-limited functions on $S^2$, computable on a spherical grid with fast spherical transforms. EquiformerV2 \citep{liao2024equiformerv2}, the equivariant \gls{Transformer} that uses eSCN convolutions inside its attention blocks and scales to $L_{\max} = 6$ on the OC20 catalysis benchmark, is discussed in \autoref{ch:attention}.
+
 \subsubsection{Enhancements with Geometric and Physical Quantities}
 
 The work of Tholke and De Fabritiis~\citep{tholke2022geometric} demonstrates that incorporating domain-specific geometric and physical quantities significantly improves the performance of $E(3)$-equivariant networks without breaking the symmetry.
@@ -3196,6 +3214,32 @@ For a water molecule (H$_2$O), the additional geometric invariants include:
 
 These features complement the basic distances, improving the prediction of properties such as bond energies and vibrational frequencies.
 \end{example}
+
+\paragraph{Many-Body Messages: MACE and the Atomic Cluster Expansion}
+
+The geometric features above inject three- and four-body information (angles, dihedrals) by hand, whereas the messages of EGNNs, TFNs and NequIP are sums over neighbours of two-body terms: each summand depends on the central atom and on one neighbour. MACE \citep{batatia2022mace} builds messages of arbitrary body order systematically, importing the Atomic Cluster Expansion (ACE) of \citet{drautz2019atomic} from the theory of interatomic potentials.
+
+\begin{definition}[Body Order]\label{def:orden_cuerpo}
+A function $f$ of an atomic environment $\{\mathbf{r}_{ij}\}_{j \in \mathcal{N}(i)}$ has \textbf{body order} $\nu + 1$ (equivalently, \textbf{correlation order} $\nu$) if it can be written as a sum of terms each of which depends on the central atom $i$ and on at most $\nu$ neighbours simultaneously:
+\[f\big(\{\mathbf{r}_{ij}\}_j\big) = f_0 + \sum_{j_1} f_1(\mathbf{r}_{ij_1}) + \sum_{j_1, j_2} f_2(\mathbf{r}_{ij_1}, \mathbf{r}_{ij_2}) + \dots + \sum_{j_1, \dots, j_\nu} f_\nu(\mathbf{r}_{ij_1}, \dots, \mathbf{r}_{ij_\nu}).\]
+Pair potentials and distance-based messages are two-body ($\nu = 1$); angular terms are three-body ($\nu = 2$).
+\end{definition}
+
+The ACE construction produces all such terms at a cost linear in the number of neighbours. The one-particle basis is the product of a radial and an angular function,
+\[\phi_v(\mathbf{r}_{ij}) = R_{nl}(r_{ij})\, Y_l^m(\hat{\mathbf{r}}_{ij}), \qquad v = (n, l, m)\]
+(in MACE it also multiplies a linear transform of the neighbour features $\mathbf{h}_j$). Summing over neighbours gives the \emph{atomic basis}
+\[A_{i,v} = \sum_{j \in \mathcal{N}(i)} \phi_v(\mathbf{r}_{ij}),\]
+and products of $\nu$ atomic basis functions give the \emph{product basis}
+\[\mathbf{A}_{i,\mathbf{v}} = \prod_{t=1}^{\nu} A_{i,v_t}, \qquad \mathbf{v} = (v_1, \dots, v_\nu).\]
+Expanding the product shows that $\mathbf{A}_{i,\mathbf{v}}$ is a sum over $\nu$-tuples of neighbours, i.e., a function of body order $\nu + 1$, yet it is computed as a product of $\nu$ numbers rather than by enumerating the $O(k^\nu)$ tuples (the ``density trick''). The product basis transforms as the tensor product of irreducible representations $l_1 \otimes \dots \otimes l_\nu$; contracting it with \emph{generalized Clebsch--Gordan coefficients} $\mathcal{C}^{LM}_{\eta, \mathbf{l}\mathbf{m}}$ (products of ordinary Clebsch--Gordan coefficients along a coupling tree, indexed by the coupling path $\eta$) yields the symmetrized basis
+\[B_{i,\, \eta \mathbf{n} \mathbf{l} L M} = \sum_{\mathbf{m}} \mathcal{C}^{LM}_{\eta, \mathbf{l}\mathbf{m}} \prod_{t=1}^{\nu} A_{i,\, n_t l_t m_t},\]
+whose elements transform as the irreducible representation of degree $L$ under $O(3)$. A MACE message is a learnable linear combination of these, $\mathbf{m}_i = \sum_{\nu} \sum_{\eta \mathbf{n} \mathbf{l}} W^{L}_{\nu \eta \mathbf{n} \mathbf{l}}\, B_{i,\, \eta \mathbf{n} \mathbf{l} L}$, followed by the usual update; with $\nu = 3$ the messages are four-body. Since the body order of the features compounds when layers are stacked, two MACE layers already capture the many-body correlations for which purely two-body architectures such as NequIP need five or six rounds of message passing, and the learning curves are correspondingly steeper on the rMD17, 3BPA and acetylacetone benchmarks.
+
+\begin{remark}[Body Order and Expressivity]\label{rem:orden_cuerpo_expresividad}
+Body order is one of the two axes, together with the maximum degree $L$ of the steerable features, along which the geometric Weisfeiler--Leman hierarchy of \autoref{subsubsec:wl_geometrico} orders the expressive power of geometric \glspl{GNN}. Raising the body order enlarges the set of distinguishable environments: distances alone ($\nu = 1$) cannot separate configurations with the same multiset of pair distances but different angles, and known counterexamples show that fixed low body orders (three- and four-body invariants) still leave some pairs of distinct environments unseparated. Stacking two-body layers recovers higher-order information only indirectly, through the intermediate node features, which is why the direct construction of MACE achieves with two layers what deeper two-body networks only approximate.
+\end{remark}
+
+GotenNet \citep{aykent2025gotennet} takes the opposite route to high-degree information: it keeps steerable features of high degree but avoids irreducible representations and Clebsch--Gordan tensor products altogether, mixing scalar and tensor features through a geometry-aware tensor attention mechanism at a lower cost.
 
 $E(n)$- and $\text{SE}(3)$-equivariant networks have demonstrated consistent improvements in data efficiency (a typical reduction of one order of magnitude in training requirements), out-of-distribution generalization and transferability to unseen configurations, in domains where Euclidean or rigid symmetries are relevant: molecular systems, three-dimensional point clouds and particle analysis. The main computational challenge lies in computing Clebsch-Gordan products, whose cost grows with $L_{\max}$, and in the numerical stability of high-order spherical harmonic sums.
 
@@ -5286,6 +5330,36 @@ The kernel $\psi: SO(2) \to \text{Cl}(2,0)$ is parametrized as:
 where the $w_i$ are learnable parameters.
 \end{example}
 
+\paragraph{Clifford Group Equivariant Neural Networks}
+
+\autoref{def:conv_clifford} presupposes an action $\rho_g$ of the symmetry group on the algebra. \citet{ruhe2023cliffordgroup} show that the algebra itself supplies the canonical choice: a group of invertible multivectors, acting by conjugation, that extends the orthogonal group $O(V,Q)$ from $V$ to the whole of $\text{Cl}(V,Q)$.
+
+\begin{definition}[Clifford Group]\label{def:grupo_clifford}
+Let $\text{Cl}(V,Q)$ be the Clifford algebra of \autoref{def:clifford_cnn} and let $\alpha$ be its \textbf{grade involution} (parity), the algebra automorphism determined by $\alpha(v) = -v$ for $v \in V$, so that $\alpha(x) = x$ on even multivectors and $\alpha(x) = -x$ on odd ones. For an invertible multivector $w$, the \textbf{twisted conjugation} is
+\[\rho(w)(x) = w \, \alpha(x) \, w^{-1}, \qquad x \in \text{Cl}(V,Q).\]
+The \textbf{Clifford group} $\Gamma(V,Q)$ is the set of invertible multivectors of homogeneous parity (even or odd) whose twisted conjugation preserves the vector subspace:
+\[\Gamma(V,Q) = \big\{ w \in \text{Cl}^\times(V,Q) \cap (\text{Cl}^{[0]} \cup \text{Cl}^{[1]}) : \rho(w)(v) \in V \ \text{for all } v \in V \big\}.\]
+\end{definition}
+
+Let $\mathcal{B}$ be the symmetric bilinear form associated with $Q$, so that $vx + xv = 2\mathcal{B}(v,x)$ for $v, x \in V$. For a vector $v$ with $Q(v) \neq 0$ one obtains $\rho(v)(x) = -vxv^{-1} = x - 2\frac{\mathcal{B}(v,x)}{Q(v)}\,v$: the twist by $\alpha$ turns conjugation into the reflection across the hyperplane orthogonal to $v$. By the Cartan--Dieudonn\'e theorem every element of $O(V,Q)$ is a product of such reflections, so for non-degenerate $Q$ the Clifford group is generated by invertible vectors and surjects onto $O(V,Q)$, with the nonzero scalars as kernel.
+
+\begin{proposition}[Equivariance under the Clifford Group]\label{prop:equivarianza_grupo_clifford}
+Let $Q$ be non-degenerate and $w \in \Gamma(V,Q)$. Then:
+\begin{enumerate}
+    \item $\rho(w)$ is an algebra automorphism: it is linear and $\rho(w)(xy) = \rho(w)(x)\,\rho(w)(y)$ for all multivectors $x, y$.
+    \item $\rho(w)$ respects the grading: $\rho(w)\big(\text{Cl}^{(k)}\big) = \text{Cl}^{(k)}$ for every grade $k$, hence it commutes with the grade projections, $\rho(w)(x)^{(k)} = \rho(w)\big(x^{(k)}\big)$.
+    \item $\rho(w)$ is orthogonal for the bilinear form extended to the algebra, $\bar{\mathcal{B}}(\rho(w)x, \rho(w)y) = \bar{\mathcal{B}}(x,y)$; in particular its restriction to $V$ lies in $O(V,Q)$.
+\end{enumerate}
+Consequently, every polynomial $F$ in multivectors $x_1, \dots, x_m$ built from sums, scalar multiples, geometric products and grade projections is equivariant: $F(\rho(w)x_1, \dots, \rho(w)x_m) = \rho(w)\,F(x_1,\dots,x_m)$.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Multiplicativity follows from $\alpha$ being an automorphism: 
+\[\rho(w)(xy) = w\alpha(x)\alpha(y)w^{-1} = w\alpha(x)w^{-1}\,w\alpha(y)w^{-1}.\] Scalars are fixed, $\rho(w)(1) = 1$, so for $v \in V$ we get $\rho(w)(v)^2 = \rho(w)(v^2) = Q(v)$: the restriction of $\rho(w)$ to $V$ preserves $Q$ and lies in $O(V,Q)$. Since $\text{Cl}^{(k)}$ is spanned by products of $k$ mutually orthogonal vectors and $\rho(w)|_V$ preserves orthogonality, $\rho(w)$ maps $\text{Cl}^{(k)}$ into itself. The extended form $\bar{\mathcal{B}}(x,y) = \langle \tilde{x}\,y \rangle^{(0)}$ (reversion followed by scalar projection) is computed grade by grade from $Q$, so it is preserved as well. Finally, each operation in the construction of $F$ commutes with $\rho(w)$ by items 1 and 2, and the equivariance of $F$ follows by induction on that construction.
+\end{proof}
+
+The proposition is the entire design principle of Clifford Group Equivariant Neural Networks (CGENNs). Because every polynomial in multivectors is equivariant, a layer may be any composition of (i) grade-wise linear maps $x \mapsto \sum_{k=0}^{n} \phi_k\, x^{(k)}$ with learnable scalars $\phi_k$, which by Schur's lemma (\autoref{lem:schur}) exhaust the equivariant linear maps when $Q$ is definite, since the grade components $\mathrm{Cl}^{(k)} \cong \Lambda^k V$ are pairwise non-isomorphic irreducible $O(n)$-modules; (ii) bilinear \emph{geometric product layers} $(x, y) \mapsto \sum_{k}\sum_{i,j} \phi_{kij}\, \big(x^{(i)} y^{(j)}\big)^{(k)}$, which mix grades through the geometric product; and (iii) nonlinearities that gate each grade by a function of its invariant $\bar{\mathcal{B}}(x^{(k)}, x^{(k)})$. Translations are handled as in EGNNs, by embedding relative positions $\mathbf{x}_i - \mathbf{x}_j$ as vectors, which gives $E(n)$-equivariance. Two features distinguish this construction from the steerable networks of \autoref{subsec:grupos_no_compactos}: reflections are included automatically ($O(n)$ rather than $SO(n)$), and no decomposition into irreducible representations is needed, since the grading of the algebra replaces the harmonic decomposition and the geometric product replaces the Clebsch--Gordan tensor product. The same code therefore runs in any dimension and signature: the authors demonstrate $O(3)$- and $E(3)$-equivariant $n$-body and point-cloud models, an $O(1,3)$-equivariant model for Lorentz-invariant jet tagging in $\text{Cl}(1,3)$, and a five-dimensional regression example. The price is the $2^n$-dimensional feature space, manageable for $n \le 5$ but not far beyond. The metric-learning extension discussed below builds directly on this architecture: \citet{ali2024metriclearning} learn the quadratic form $Q$ itself while retaining the equivariance of \autoref{prop:equivarianza_grupo_clifford}.
+
 \subsubsection{Connection with Steerable CNNs}
 
 Steerable CNNs (see \autoref{subsubsec:implementacion_steerable_cnns}) can be understood as special cases of Clifford-valued CNNs.
@@ -5362,9 +5436,11 @@ The choice of the appropriate algebra must consider:
     \item \textbf{Data characteristics:} Types of symmetries present in the domain
 \end{enumerate}
 
+\textbf{Geometric Clifford Algebra Networks.} A different use of these algebras, prior to the equivariant construction of \autoref{def:grupo_clifford}, is made by Geometric Clifford Algebra Networks (GCANs) \citep{ruhe2023geometriccliffordnets}. Rather than constraining layers to be equivariant maps, GCANs parametrize layers as \emph{learnable group actions}. In the projective geometric algebra $\text{Cl}(3,0,1)$, whose additional null generator $\mathbf{e}_0$ ($\mathbf{e}_0^2 = 0$) represents planes and points in homogeneous coordinates, every rigid motion is a \emph{versor}, a product of invertible vectors $u = v_1 v_2 \cdots v_k$, acting on a multivector by the sandwich product $\mathbf{x} \mapsto u\,\mathbf{x}\,\tilde{u}$. A GCAN layer is a learnable linear combination of such actions, $T_{\mathbf{w}}(\mathbf{x}) = \sum_i w_i\, u_i\,\mathbf{x}\,\tilde{u}_i$, where the vectors composing the versors $u_i$ are parameters (optionally conditioned on the input), so that the network transforms geometric objects only through geometrically meaningful operations: rotations, translations and reflections. The authors apply this bias to rigid-body dynamics and to fluid problems governed by the Navier--Stokes and shallow-water equations. Unlike the CGENNs of \autoref{prop:equivarianza_grupo_clifford}, this does not enforce equivariance to the group, since the versors are free parameters; the Clifford group construction was developed subsequently precisely to obtain it.
+
 \subsubsection{Metric Learning for Clifford Groups}
 
-The work of \citet{ali2024metric} introduces a fundamental innovation: the adaptive learning of metrics in Clifford group equivariant neural networks (CGENNs).
+The work of \citet{ali2024metriclearning} introduces a fundamental innovation: the adaptive learning of metrics in Clifford group equivariant neural networks (CGENNs). The underlying architecture is the Clifford group equivariant network of \autoref{def:grupo_clifford} and \autoref{prop:equivarianza_grupo_clifford} \citep{ruhe2023cliffordgroup, ali2024metriclearning}; the metric being learned is the quadratic form $Q$ that fixes the geometric product.
 
 \textbf{Motivation and Problem:}
 
@@ -5603,6 +5679,10 @@ CCNNs maintain equivariance under:
     \item \textbf{Topological transformations}: Homeomorphisms that preserve the structure
 \end{enumerate}
 
+The survey of \citet{papillon2023tdlarchitectures} provides the unifying notation in which all of these architectures can be written and compared. A topological neural network is specified by three choices: a domain (graph, simplicial complex, cellular complex, hypergraph or combinatorial complex), a family of neighbourhood structures $\mathcal{N}_1, \dots, \mathcal{N}_K$ on its cells (boundary, co-boundary, lower and upper adjacencies, as in \autoref{def:vecindarios_complejos}), and a message passing scheme in four steps: messages $m^{(k)}_{\tau \to \sigma}$ along each neighbourhood $\mathcal{N}_k$, aggregation within each neighbourhood, aggregation across neighbourhoods, and update,
+\[h_\sigma^{(l+1)} = \text{UPDATE}\Big(h_\sigma^{(l)},\ \bigoplus_{k=1}^{K} \text{AGG}_{\tau \in \mathcal{N}_k(\sigma)}\, m^{(k)}_{\tau \to \sigma}\Big).\]
+Simplicial, cellular and hypergraph networks then differ only in which neighbourhoods carry messages and in whether cells of different dimensions share parameters, choices which the survey records in tensor diagrams that make the architectures directly comparable.
+
 \subsubsection{Simplicial Attention Networks}
 
 The work of \citet{giusti2022simplicial} introduces attention mechanisms specifically designed for simplicial complexes, combining topological expressiveness with the flexibility of attention.
@@ -5759,6 +5839,8 @@ For $V = \mathbb{R}^3$ with basis $\{e_1, e_2, e_3\}$:
 Total: $1 + 3 + 3 + 1 = 8$ dimensions.
 \end{example}
 
+The bridge is also used architecturally: Clifford Group Equivariant Simplicial Message Passing Networks \citep{liu2024cliffordsimplicial} assign to each simplex a multivector feature built from geometric products of the multivectors of its vertices, so that higher simplices carry higher-grade information (oriented areas and volumes), and pass messages between simplices of adjacent dimensions with layers that are equivariant under the Clifford group of \autoref{def:grupo_clifford}, combining $E(n)$-equivariance with the simplicial message passing of \autoref{def:vecindarios_complejos}.
+
 \subsubsection{Persistent Homology}
 
 Persistent homology provides a multiscale tool for the topological analysis of data.
@@ -5815,6 +5897,10 @@ for an edge $e$ with source $s(e)$ and target $t(e)$.
 It generalizes the standard graph Laplacian by allowing heterogeneous feature spaces.
 \end{example}
 
+\textbf{Sheaf Hypergraph Networks.} The construction extends from graphs to hypergraphs \citep{duta2023sheafhypergraph}. A cellular sheaf on a hypergraph $H = (V, E)$ assigns stalks $\mathcal{F}(v)$, $\mathcal{F}(e)$ and, for each incidence $v \in e$, a restriction map $\mathcal{F}_{v \trianglelefteq e}: \mathcal{F}(v) \to \mathcal{F}(e)$ from the node to the hyperedge. The \emph{linear sheaf hypergraph Laplacian} compares each node with every other member of each hyperedge it belongs to,
+\[(L_{\mathcal{F}}\, x)_v = \sum_{e \ni v} \frac{1}{|e|} \sum_{u \in e} \mathcal{F}_{v \trianglelefteq e}^{\top}\big(\mathcal{F}_{v \trianglelefteq e}\, x_v - \mathcal{F}_{u \trianglelefteq e}\, x_u\big),\]
+and reduces to the standard hypergraph Laplacian when all restriction maps are the identity, while the \emph{non-linear sheaf hypergraph Laplacian} keeps, within each hyperedge, only the pair $(u, v)$ with the largest disagreement $\|\mathcal{F}_{u \trianglelefteq e}\, x_u - \mathcal{F}_{v \trianglelefteq e}\, x_v\|$, in the spirit of the non-linear Laplacians of spectral hypergraph theory. Diffusion with either Laplacian, with learned restriction maps, defines the layers, and the sheaf structure provides on hypergraphs the same remedy against oversmoothing and heterophily that Sheaf Neural Networks provide on graphs, since the harmonic space of $L_{\mathcal{F}}$ is no longer forced to be constant. Bundle Neural Networks \citep{bamberger2024bundlenn} are the special case of a \emph{flat vector bundle}: a sheaf whose restriction maps are orthogonal, so that transporting a feature along the graph is an isometry, with messages diffused through the resulting bundle Laplacian (see \autoref{ex:bundle_neural_networks}).
+
 \subsubsection{Learnable Topological Invariants}
 
 Advanced architectures can learn to compute topological invariants such as:
@@ -5837,7 +5923,7 @@ Category theory provides a unifying language that connects Clifford algebras, to
     \item \textbf{Homology functor}: $H_*: \textbf{Chain} \to \textbf{GrVect}$ (chains to graded spaces)
     \item \textbf{Clifford functor}: Associates to each Riemannian manifold its Clifford bundle
 \end{itemize}
-\textbf{Naturality as Equivariance.} The clearest architectural use of this language is Natural Graph Networks \citep{dehaan2020natural}. Let $\mathcal{C}$ be the category whose objects are node neighborhoods and whose morphisms are the local isomorphisms between them, and $\mathcal{D}$ the analogous category of edge neighborhoods, with functors $F_0, F_1: \mathcal{D} \to \mathcal{C}$ selecting the two endpoints of each edge. Feature spaces are functors $\rho, \rho': \mathcal{C} \to \mathbf{Vect}$, and a layer is a natural transformation $k: \rho \circ F_0 \Rightarrow \rho' \circ F_1$. Naturality is exactly the requirement that the kernel commute with every local isomorphism, so equivariance is not imposed on top of the architecture but is the definition of a morphism in it. Since all morphisms of $\mathcal{C}$ are invertible, $\mathcal{C}$ is a groupoid (\autoref{def:grupoide}), and the construction generalizes: category-equivariant networks \citep{maruyama2025categorical} recover group convolutions, groupoid convolutions and sheaf neural networks as instances of the same naturality condition, each with its own universal approximation theorem.
+\textbf{Naturality as Equivariance.} The clearest architectural use of this language is Natural Graph Networks \citep{dehaan2020natural}. Let $\mathcal{C}$ be the category whose objects are node neighborhoods and whose morphisms are the local isomorphisms between them, and $\mathcal{D}$ the analogous category of edge neighborhoods, with functors $F_0, F_1: \mathcal{D} \to \mathcal{C}$ selecting the two endpoints of each edge. Feature spaces are functors $\rho, \rho': \mathcal{C} \to \mathbf{Vect}$, and a layer is a natural transformation $k: \rho \circ F_0 \Rightarrow \rho' \circ F_1$. Naturality is exactly the requirement that the kernel commute with every local isomorphism, so equivariance is not imposed on top of the architecture but is the definition of a morphism in it. Since all morphisms of $\mathcal{C}$ are invertible, $\mathcal{C}$ is a groupoid (\autoref{def:grupoide}), and the construction generalizes: category-equivariant networks \citep{maruyama2025categorical} recover group convolutions, groupoid convolutions and sheaf neural networks as instances of the same naturality condition, each with its own universal approximation theorem. \citet{maruyama2026foundations} carry the unification further, treating graph and sheaf neural networks alike as order-equivariant networks over the face poset of the underlying complex, with a universal approximation theorem for the resulting class.
 
 
 The advanced algebraic extensions (Clifford, topological, categorical) face computational challenges of scalability and numerical stability in high-dimensional algebras, and require further theoretical development in expressive capabilities and convergence guarantees.
@@ -6158,9 +6244,48 @@ In computational chemistry, molecules can have nominal symmetries that are broke
 \end{equation}
 where $\mathbf{c}_{\text{env}}$ encodes environmental conditions that break the symmetry.
 
+\subsection{Canonicalization and Frame Averaging}\label{subsec:canonicalizacion_frames}
+
+Every architecture in this chapter obtains equivariance by constraining the layers: kernels satisfy a steerability condition, features are decomposed into irreducible representations, messages are built from invariants. There is a second, orthogonal strategy in which the backbone $\phi$ is left completely unconstrained (a standard \gls{CNN}, \gls{MLP} or \gls{Transformer}) and equivariance is obtained by transforming the input before $\phi$ and the output after it. The idea of averaging over the group is old, but averaging over all of $G$ is infeasible for large or continuous groups; the decisive step is to average over a small, input-dependent subset. Throughout, $G$ acts on the input space $\mathcal{X}$ and on the output space $\mathcal{Y}$ through representations $\rho_{\mathcal{X}}$ and $\rho_{\mathcal{Y}}$, and we abbreviate $\rho_{\mathcal{X}}(g)\,x$ as $gx$.
+
+\begin{definition}[Frame]\label{def:frame_equivariante}
+A \textbf{frame} is a set-valued map $F: \mathcal{X} \to 2^G$ with $F(x) \neq \emptyset$ and $|F(x)| < \infty$ for every $x$, which is $G$-equivariant:
+\[F(gx) = g\,F(x) := \{ gh : h \in F(x) \} \qquad \text{for all } g \in G,\ x \in \mathcal{X}.\]
+If $|F(x)| = 1$ for all $x$, $F(x) = \{c(x)\}$, the map $c: \mathcal{X} \to G$ is called a \textbf{canonicalization}, and $c(x)^{-1}x$ the \textbf{canonical form} of $x$.
+\end{definition}
+
+\begin{theorem}[Frame Averaging]\label{thm:frame_averaging}
+Let $F$ be a frame and $\phi: \mathcal{X} \to \mathcal{Y}$ an arbitrary map \citep{puny2022frameaveraging}. Then
+\[\Phi_F(x) = \frac{1}{|F(x)|} \sum_{h \in F(x)} \rho_{\mathcal{Y}}(h)\, \phi\big(h^{-1}x\big)\]
+is $G$-equivariant; it is invariant when $\rho_{\mathcal{Y}}$ is trivial. Moreover, if $\phi$ is already equivariant then $\Phi_F = \phi$, so frame averaging does not reduce the class of representable equivariant functions.
+\end{theorem}
+
+\begin{proof}
+By equivariance of $F$, $h \mapsto gh$ is a bijection from $F(x)$ onto $F(gx)$, so $|F(gx)| = |F(x)|$ and
+\begin{align*}
+\Phi_F(gx) &= \frac{1}{|F(x)|} \sum_{h \in F(x)} \rho_{\mathcal{Y}}(gh)\, \phi\big((gh)^{-1} gx\big) \\
+&= \rho_{\mathcal{Y}}(g)\, \frac{1}{|F(x)|}\sum_{h \in F(x)} \rho_{\mathcal{Y}}(h)\, \phi\big(h^{-1}x\big) = \rho_{\mathcal{Y}}(g)\, \Phi_F(x).
+\end{align*}
+If $\phi$ is equivariant, each summand equals $\phi(x)$.
+\end{proof}
+
+When the frame is a canonicalization the sum has a single term, $\Phi(x) = \rho_{\mathcal{Y}}(c(x))\, \phi\big(c(x)^{-1}x\big)$: the input is moved to its canonical pose, processed by the unconstrained network, and the output is moved back.
+
+\begin{example}[PCA Frame for $E(3)$ on Point Clouds]\label{ex:frame_pca}
+Let $\mathbf{X} \in \mathbb{R}^{N \times 3}$ be a point cloud and let $G = E(3)$ act by $\mathbf{X} \mapsto \mathbf{X}\mathbf{R}^{\top} + \mathbf{1}\mathbf{t}^{\top}$. Let $\mathbf{t}(\mathbf{X}) = \frac{1}{N}\mathbf{X}^{\top}\mathbf{1}$ be the centroid and $\mathbf{C}(\mathbf{X}) = (\mathbf{X} - \mathbf{1}\mathbf{t}^{\top})^{\top}(\mathbf{X} - \mathbf{1}\mathbf{t}^{\top})$ the covariance matrix, with eigenvectors $\mathbf{u}_1, \mathbf{u}_2, \mathbf{u}_3$ ordered by decreasing eigenvalue. Since eigenvectors are defined only up to sign, the \gls{PCA} frame is
+\[F(\mathbf{X}) = \Big\{ \big(\mathbf{R}, \mathbf{t}(\mathbf{X})\big) : \mathbf{R} = [\pm\mathbf{u}_1, \pm\mathbf{u}_2, \pm\mathbf{u}_3] \Big\},\]
+which has $2^3 = 8$ elements (four if one keeps only $\det \mathbf{R} = +1$ for $SE(3)$). Under $\mathbf{X} \mapsto \mathbf{X}\mathbf{Q}^{\top} + \mathbf{1}\mathbf{s}^{\top}$ the centroid becomes $\mathbf{Q}\mathbf{t} + \mathbf{s}$ and the covariance $\mathbf{Q}\mathbf{C}\mathbf{Q}^{\top}$, whose eigenvectors are $\pm\mathbf{Q}\mathbf{u}_k$; hence $F(\mathbf{X}\mathbf{Q}^{\top} + \mathbf{1}\mathbf{s}^{\top}) = (\mathbf{Q}, \mathbf{s})\,F(\mathbf{X})$, and the sign ambiguity is exactly why a set of eight elements, rather than a single canonical pose, is needed. The frame is undefined when eigenvalues coincide (e.g., for symmetric clouds), and its cost is eight evaluations of $\phi$ per input.
+\end{example}
+
+\textbf{Learned canonicalization.} Fixing the frame analytically, as with \gls{PCA}, is not always possible and is never adapted to the task. \citet{kaba2023canonicalization} instead \emph{learn} the canonicalization: a small equivariant network $c_\theta$ (an equivariant point-cloud network for $E(n)$, a group-convolutional network for discrete image symmetries) predicts a group element, and the large non-equivariant network $\phi$ operates on the canonical form $c_\theta(x)^{-1}x$. Only $c_\theta$ must be equivariant, and only up to the stabilizer of $x$, since a canonical pose is defined modulo the symmetries of the input itself; exact equivariance of the whole model then follows from \autoref{thm:frame_averaging} with $|F(x)| = 1$, at the cost of a single forward pass of $\phi$. The two networks are trained end to end, so the canonical pose is chosen to make the task easy for $\phi$, and a pretrained non-equivariant backbone can be reused unchanged.
+
+\textbf{Probabilistic symmetrization.} \citet{kim2023probabilisticsymmetrization} replace the finite frame by a distribution over the group, $\Phi(x) = \mathbb{E}_{g \sim p_\theta(g \mid x)}\big[\rho_{\mathcal{Y}}(g)\, \phi(g^{-1}x)\big]$, where $p_\theta$ is parametrized by a small equivariant network with injected noise and satisfies $p_\theta(gh \mid gx) = p_\theta(h \mid x)$. The same substitution as in the proof above shows that $\Phi$ is equivariant; in practice the expectation is estimated with a handful of samples, so the model is equivariant in expectation and only approximately so for a finite sample. The construction is architecture-agnostic and preserves universality: if $\phi$ is a universal approximator, $\Phi$ is universal among equivariant functions, and the authors use it to symmetrize a plain \gls{ViT}, including one pretrained on images, into an $S_n$-equivariant model for graph tasks.
+
+\textbf{Trade-offs.} Frame averaging and canonicalization give \emph{exact} equivariance with an unconstrained backbone that retains its full expressivity (\autoref{thm:frame_averaging}); the price is $|F(x)|$ forward passes, which is why frames must be small (eight for \gls{PCA}, one for canonicalization) rather than the whole group ($|S_n| = n!$, or a continuous $E(3)$). The subtler cost is continuity. At an input $x$ with a non-trivial stabilizer $h \neq e$, $hx = x$, the equivariance condition forces $c(x) = hc(x)$, which is impossible: a strictly equivariant canonicalization cannot even be defined at such an input (a symmetric point cloud, where the eigenvalues of the covariance coincide), and any canonicalization defined on the inputs nearby must jump between equally valid poses in every neighbourhood of it, so no continuous canonicalization exists on a domain containing it; for rotations of point clouds, topological obstructions rule out continuity even on the set of inputs with trivial stabilizer. Since $\phi$ is applied to $c(x)^{-1}x$, these discontinuities pass to $\Phi$ and can hurt generalization; frames with several elements and, more generally, weighted frames with continuous weights mitigate the problem at the cost of more evaluations. These constructions are the natural counterpart of the augmentation-based route to approximate equivariance discussed in the next subsection: both use a non-equivariant backbone, but here the symmetry is enforced exactly by construction, whereas with augmentation it is only learned approximately.
+
 \subsection{Scalability and Efficiency Analysis}
 
-\subsubsection{The Equivariance vs. Scalability Dilemma}
+\subsubsection{The Equivariance vs. Scalability Dilemma}\label{subsubsec:dilema_equivarianza_escalabilidad}
 
 A fundamental theoretical result established by \citet{park2024equivariancescale} examines the saturation of the advantages of equivariance in high-dimensionality regimes. This analysis reveals an intrinsic tension between geometric constraints and expressive capacity in hypothesis spaces of great complexity.
 
@@ -6198,6 +6323,10 @@ A $G$-equivariant function $f: \mathbb{R}^d \to \mathbb{R}^d$ satisfies $f(gx) =
 \end{proof}
 
 This result suggests that in sufficiently high dimensions, equivariant architectures require significantly more parameters to achieve the same expressive capacity.
+
+\paragraph{Evidence at Scale: AlphaFold 3 and Orb}
+
+Two systems from 2024 provide the most concrete evidence to date on this dilemma. AlphaFold 2 predicted structures with an $SE(3)$-equivariant structure module: invariant point attention on per-residue rigid frames, with equivariant frame updates. AlphaFold 3 \citep{abramson2024alphafold3} discards it in favour of a diffusion module that denoises raw atomic coordinates with a standard, non-equivariant \gls{Transformer}, and obtains the symmetry only statistically, by training with random rotations and translations of the target structure as augmentation; the resulting model is simpler than its predecessor, matches or exceeds it on protein structures, and is substantially more accurate on protein--ligand, protein--nucleic acid and antibody--antigen complexes. In interatomic potentials, Orb \citep{neumann2024orb} is a message passing network without built-in rotational equivariance, pretrained with a denoising (diffusion) objective on millions of structures and then fine-tuned on energies and forces; at release it reduced the error on the Matbench Discovery benchmark by 31\% while running three to six times faster than existing universal potentials, most of which are equivariant (MACE among them, \autoref{def:orden_cuerpo}). Both results are consistent with the saturation hypothesis of \citet{park2024equivariancescale}: with enough data and capacity, augmentation recovers the benefits of the symmetry at lower cost. They do not overturn the opposite conclusion in the low-data regime, where equivariant models remain markedly more data-efficient (the order-of-magnitude reductions in training data reported in \autoref{subsec:grupos_no_compactos} are obtained on small molecular datasets), nor do they provide the exact guarantees that a physical simulation may require: an augmented model is only approximately equivariant, and its predictions vary under rotations of the input. Canonicalization and frame averaging (\autoref{subsec:canonicalizacion_frames}) sit between the two positions, keeping a non-equivariant backbone while enforcing the symmetry exactly.
 
 \subsubsection{Computational Complexity: Big-O Analysis}
 
@@ -6252,6 +6381,10 @@ GraphGPS combines local \gls{MPNN} with global attention:
 \item Positional features: $O(n \cdot d_{\text{pos}})$
 \item Attention: $O(n \cdot k)$ (approximate) or $O(n^2)$ (complete)
 \end{itemize}
+
+\paragraph{Equivariant Networks with Steerable Features}
+
+For $SE(3)$-equivariant architectures with steerable features of maximum degree $L$ (TFNs, SE(3)-Transformers, EquiformerV2) the dominant term is the tensor product per edge: $O(L^6)$ for the dense Clebsch--Gordan contraction and $O(L^3)$ with the eSCN reduction of \autoref{prop:escn_reduccion} \citep{passaro2023escn}, which is what makes $L = 6$--$8$ affordable.
 
 \subsubsection{Comparative Table of Architectures}
 
@@ -6414,6 +6547,8 @@ A unified geometric CNN is a triple $(\mathcal{M}, G, \Phi)$ where:
 \textbf{2. Optimization on Manifolds:} Optimization algorithms that respect the geometry of the parameter space, especially for models with equivariance constraints.
 
 \textbf{3. Symmetry Learning:} Methods that can automatically discover the relevant symmetries in the data without prior knowledge.
+
+A concrete instance of this direction is LieGAN \citep{yang2023liegan}, which learns the symmetry group of a dataset as a Lie group (\autoref{subsubsec:grupos_lie_fundamentales}) instead of assuming it. The generator does not produce data but transformations: it holds a learnable basis $\{\mathbf{L}_k\}_{k=1}^{c}$ of a candidate Lie algebra, samples coefficients $\mathbf{z}$, forms $g = \exp\big(\sum_k z_k \mathbf{L}_k\big)$ and applies $g$ to a sample $(x, y)$ from the data, transforming inputs and labels according to the assumed representation. A discriminator tries to tell transformed pairs from original ones, so at equilibrium the transformations leave the joint distribution of the data invariant, which is precisely the statement that $\exp(\operatorname{span}\{\mathbf{L}_k\})$ is a symmetry group of the task; a regularizer keeps the generators from collapsing to the identity or to each other. On synthetic and physical problems the recovered generators span, up to a change of basis, known Lie algebras such as those of the planar rotations and of the Lorentz group; the construction assumes a linear action of a matrix Lie group on the data. The discovered algebra can then be used in either of the two ways developed in this chapter: to build an equivariant architecture for the group it generates, or, through the frames of \autoref{subsec:canonicalizacion_frames}, to symmetrize an existing non-equivariant model.
 
 \textbf{4. Scalability of Equivariant Architectures:} Development of approximate algorithms that preserve equivariance guarantees while reducing the computational cost for large-scale data.
 

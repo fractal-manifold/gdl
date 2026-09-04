@@ -852,6 +852,8 @@ El producto tensorial de representaciones irreducibles se descompone como:
 
 Esta construcción preserva la equivarianza SO(3) mientras permite interacciones más ricas que el simple producto punto.
 
+\textbf{EquiformerV2.} El coste de los productos tensoriales de \eqref{eq:tensor_product_decomposition} crece como $\mathcal{O}(L^6)$ en el grado máximo $L$ de las irreps, lo que en la práctica confinó al Equiformer original a $L \leq 2$ o $3$. EquiformerV2 \citep{liao2024equiformerv2} elimina este cuello de botella sustituyendo las convoluciones $SO(3)$ de los bloques de atención y de mensajes por las convoluciones $SO(2)$ de eSCN: tras rotar cada par $(i,j)$ de modo que el vector relativo $\mathbf{r}_{ij}$ quede alineado con un eje fijo, el producto tensorial con los armónicos esféricos de $\mathbf{r}_{ij}$ se reduce a una aplicación lineal que solo mezcla componentes con el mismo orden $|m|$, con coste $\mathcal{O}(L^3)$ (\autoref{prop:escn_reduccion}). Tres modificaciones adicionales estabilizan el entrenamiento a grado alto: una \emph{re-normalización de la atención}, que aplica normalización de capa a las entradas invariantes del \gls{MLP} de atención antes de calcular los scores $e_{ij}$; \emph{activaciones $S^2$ separables}, que aplican la no linealidad a los canales de grado 0 y, por separado, a la evaluación puntual de las características de grado superior sobre una malla de $S^2$ antes de proyectar de vuelta; y una \emph{normalización de capa separable}, que normaliza las características de grado 0 y de grado $\geq 1$ con estadísticos independientes. En conjunto permiten $L$ entre 6 y 8, con lo que EquiformerV2 mejoró el estado del arte en el benchmark de catálisis OC20 (hasta un 9\% en fuerzas y un 4\% en energías en el momento de su publicación) y, entrenado únicamente con OC22, superó a modelos entrenados con OC20 y OC22 combinados. GotenNet \citep{aykent2025gotennet} muestra que puede alcanzarse una precisión comparable en benchmarks moleculares con características steerable de grado superior pero sin la maquinaria de irreps ni los productos de Clebsch--Gordan, apoyándose en su lugar en interacciones basadas en atención entre tensores steerable y en gating escalar.
+
 \subsubsection{Lie\gls{Transformer}: Framework General}
 
 El Lie\gls{Transformer} de \citet{hutchinson2020lietransformer} proporciona un framework unificado para atención equivariante a grupos de Lie arbitrarios.
@@ -1038,6 +1040,9 @@ Los Graph Attention Networks estándar están acotados en poder expresivo por el
 GAT es una instancia del framework MPNN (message passing neural network) con agregación ponderada por atención sobre el vecindario de 1-salto. \citet{xu2019how} demuestran que toda arquitectura MPNN está acotada por el test 1-WL en su capacidad de distinguir grafos. La equivarianza a permutaciones se sigue de que la operación de atención es invariante al reordenamiento de los nodos vecinos: los coeficientes $\alpha_{ij}$ dependen de $(\mathbf{h}_i, \mathbf{h}_j)$ y la agregación $\sum_{j \in \mathcal{N}(i)} \alpha_{ij} \mathbf{z}_j$ es simétrica respecto al orden de los vecinos.
 \end{proof}
 
+
+\textbf{La atención como agregación adaptativa y su límite.} Los coeficientes $\alpha_{ij}$ de la \autoref{def:gat_mechanism} permiten que un nodo re-pondere a sus vecinos, pero cada nodo sigue recibiendo un mensaje de cada vecino en cada capa, y cada mensaje viaja en ambos sentidos a lo largo de una arista no dirigida. Las \glspl{GNN} cooperativas \citep{finkelshtein2024cognn} llevan la adaptatividad un paso más allá permitiendo que cada nodo elija, en cada capa, una de cuatro acciones: \textsc{escuchar} (recibir mensajes sin enviar ninguno), \textsc{emitir} (enviar sin recibir), \textsc{escuchar-y-emitir} (message passing estándar) o \textsc{aislarse} (ninguna de las dos). Una segunda \gls{GNN}, de pequeño tamaño, predice una distribución sobre las acciones a partir del estado actual de cada nodo, y la elección se muestrea con el estimador Gumbel-softmax de paso directo (straight-through) para que siga siendo diferenciable. El patrón de comunicación resultante es un subgrafo dirigido de la entrada que cambia de capa en capa: el message passing pasa a ser asíncrono (un nodo puede permanecer en silencio varias capas y hablar después) y dirigido (una arista $(i,j)$ puede transportar información de $j$ a $i$ pero no a la inversa), y \gls{GAT} corresponde al caso particular en que todo nodo selecciona siempre \textsc{escuchar-y-emitir}. \citet{finkelshtein2024cognn} demuestran que el grafo de cómputo efectivo es entonces una secuencia aprendida de subgrafos dirigidos, que puede encaminar la información sorteando los cuellos de botella topológicos que causan el \gls{oversquashing} y, dado que las acciones elegidas pueden romper la regularidad de los vecindarios, distinguir algunos pares de grafos que el test 1-WL no distingue; el precio es una política que debe aprenderse conjuntamente con las representaciones. El marco se discute desde la perspectiva del message passing en el \autoref{ch:gdl}.
+
 \subsubsection{Multi-Head Graph Attention}\label{subsubsec:multihead_graph_attention}
 
 Para mejorar la estabilidad y capacidad expresiva, los \glspl{GAT} emplean atención multi-cabeza.
@@ -1152,6 +1157,29 @@ Para mejorar la atención entre nodos distantes, se definen métricas espectrale
 \end{equation}
 \end{definition}
 
+\begin{remark}[Ambigüedad de Signo y de Base de los Eigenvectores]\label{rem:ambiguedad_autovectores}
+La codificación de la \autoref{def:spectral_positional_encoding} no es una función bien definida del grafo. Si $\mathbf{u}_j$ es un eigenvector unitario de $\mathbf{L}$, también lo es $-\mathbf{u}_j$, y nada en la descomposición espectral selecciona uno de los dos signos. Más en general, si un eigenvalor $\lambda$ tiene multiplicidad $k$ y $\mathbf{V}_\lambda \in \mathbb{R}^{n \times k}$ es una base ortonormal de su espacio propio, entonces $\mathbf{V}_\lambda \mathbf{Q}$ es una base igualmente válida para todo $\mathbf{Q} \in O(k)$: los eigenvectores están definidos solo salvo un cambio ortogonal de base dentro de cada espacio propio, y la ambigüedad de signo es el caso $k = 1$, $O(1) = \{\pm 1\}$. Los eigenvalores repetidos no son excepcionales; todo automorfismo no trivial del grafo los produce, y aparecen sistemáticamente en los grafos moleculares y en las retículas regulares que motivan las codificaciones posicionales. Una red que consume $\text{PE}_i$ directamente puede, por tanto, devolver salidas distintas para el mismo grafo, según la rutina numérica que haya calculado la descomposición, y no representa una función invariante bajo estas simetrías.
+\end{remark}
+
+\citet{lim2023signnet} proponen dos arquitecturas que absorben estas ambigüedades por construcción. \textbf{SignNet} impone la invarianza de signo simetrizando cada eigenvector por separado:
+\begin{equation}
+    f(\mathbf{u}_1, \ldots, \mathbf{u}_k) = \rho\big(\phi(\mathbf{u}_1) + \phi(-\mathbf{u}_1), \; \ldots, \; \phi(\mathbf{u}_k) + \phi(-\mathbf{u}_k)\big),
+    \label{eq:signnet}
+\end{equation}
+donde $\phi$ y $\rho$ son redes equivariantes a permutaciones (en la práctica, \glspl{GNN} y \glspl{MLP}). Cada término $\phi(\mathbf{u}_j) + \phi(-\mathbf{u}_j)$ es invariante bajo $\mathbf{u}_j \mapsto -\mathbf{u}_j$, de modo que $f$ es invariante bajo cualquiera de las $2^k$ elecciones de signo; recíprocamente, \citet{lim2023signnet} demuestran que toda función continua de los eigenvectores invariante al signo puede escribirse en la forma \eqref{eq:signnet} para $\phi$ y $\rho$ continuas adecuadas, por lo que la descomposición es universal para la clase de funciones invariantes al signo. \textbf{BasisNet} trata el caso general: como $(\mathbf{V}_\lambda \mathbf{Q})(\mathbf{V}_\lambda \mathbf{Q})^T = \mathbf{V}_\lambda \mathbf{V}_\lambda^T$ para todo $\mathbf{Q} \in O(k)$, el proyector ortogonal $\mathbf{P}_\lambda = \mathbf{V}_\lambda \mathbf{V}_\lambda^T$ sobre cada espacio propio es invariante a la base, y BasisNet aplica una red $\phi_k$ (compartida entre los espacios propios de la misma dimensión $k$) a cada proyector antes de agregar con $\rho$. Ambas construcciones contienen, como casos particulares, las convoluciones espectrales sobre grafos del \autoref{ch:cnn} y las codificaciones posicionales espectrales anteriores, y extienden estrictamente el poder expresivo de la clase de message passing delimitada en la \autoref{prop:gat_expressive_power}.
+
+La invarianza, sin embargo, no resuelve un segundo problema: la \emph{estabilidad}. La partición del espectro en espacios propios es una función discontinua del grafo. Por el teorema de Davis--Kahan \citep{davis1970rotation}, si $\tilde{\mathbf{L}} = \mathbf{L} + \mathbf{E}$ es una perturbación simétrica, el ángulo $\theta_j$ entre el eigenvector $\mathbf{u}_j$ de $\mathbf{L}$ y el eigenvector correspondiente de $\tilde{\mathbf{L}}$ satisface
+\begin{equation}
+    \sin \theta_j \;\leq\; \frac{\|\mathbf{E}\|_2}{\delta_j},
+    \label{eq:davis_kahan}
+\end{equation}
+donde $\delta_j$ es la separación entre $\lambda_j$ y el resto del espectro. La cota no puede mejorarse en general: cuando dos eigenvalores son casi degenerados ($\delta_j \to 0$), una perturbación de tamaño $\|\mathbf{E}\|_2 \sim \delta_j$ rota los eigenvectores individuales un ángulo arbitrario dentro del subespacio bidimensional casi degenerado, y una asignación rígida de eigenvectores a espacios propios (como la de BasisNet, que recibe las multiplicidades como entrada) cambia abruptamente. La codificación posicional estable y expresiva (SPE) de \citet{huang2024spe} sustituye esta partición rígida por una partición suave, ponderada por los eigenvalores:
+\begin{equation}
+    \text{SPE}(\mathbf{V}, \boldsymbol{\lambda}) = \rho\Big( \mathbf{V}\,\text{diag}\big(\phi_1(\boldsymbol{\lambda})\big)\mathbf{V}^T, \; \ldots, \; \mathbf{V}\,\text{diag}\big(\phi_m(\boldsymbol{\lambda})\big)\mathbf{V}^T \Big),
+    \label{eq:spe}
+\end{equation}
+donde $\mathbf{V} \in \mathbb{R}^{n \times d}$ reúne los primeros $d$ eigenvectores, $\phi_\ell: \mathbb{R}^d \to \mathbb{R}^d$ son funciones Lipschitz de los eigenvalores equivariantes a permutaciones, y $\rho$ es una red Lipschitz equivariante a permutaciones que actúa sobre matrices $n \times n$. Cada matriz $\mathbf{V}\,\text{diag}(\phi_\ell(\boldsymbol{\lambda}))\mathbf{V}^T$ es un filtro espectral de $\mathbf{L}$ en el sentido del \autoref{ch:cnn}, y por tanto invariante bajo cambios de signo y bajo todo $\mathbf{Q} \in O(k)$ que actúe sobre un espacio propio de dimensión $k$, sin identificar nunca los espacios propios explícitamente. \citet{huang2024spe} demuestran que, bajo estas hipótesis de Lipschitz, la codificación satisface una cota de tipo Hölder $\|\text{SPE}(\mathbf{L}) - \text{SPE}(\tilde{\mathbf{L}})\|_F \leq C_1 \|\mathbf{L} - \tilde{\mathbf{L}}\|_F^{1/2} + C_2 \|\mathbf{L} - \tilde{\mathbf{L}}\|_F$ (salvo el alineamiento óptimo de los nodos), cuyas constantes dependen de $d$ y del gap $\lambda_{d+1} - \lambda_d$ usado para truncar el espectro, pero no de los gaps entre los eigenvalores retenidos; y que, para $\phi_\ell$ y $\rho$ continuas de capacidad suficiente, SPE aproxima toda función continua de los eigenvectores invariante a la base, de modo que la estabilidad no se obtiene a costa de la expresividad.
+
 Estas codificaciones posicionales espectrales son el ingrediente esencial de las arquitecturas de atención global sobre grafos —en particular los Spectral Attention Networks (SAN) y GraphGPS—, que combinan atención local y global para superar el over-squashing y la miopía estructural de los \glspl{GAT} clásicos. Dichas arquitecturas se desarrollan en detalle en la \autoref{subsec:arquitecturas_avanzadas_grafos}. Antes de abordarlas, conviene delimitar las limitaciones fundamentales que motivan su diseño.
 
 \subsubsection{Limitaciones y Direcciones Futuras}\label{subsubsec:limitaciones_gat}
@@ -1167,7 +1195,7 @@ Estas codificaciones posicionales espectrales son el ingrediente esencial de las
         \label{eq:over_smoothing_limit}
     \end{equation}
 
-    \item \textbf{Ambigüedad de signo}: Los eigenvectores están definidos salvo multiplicación por $\pm 1$, requiriendo técnicas como SignNet
+    \item \textbf{Ambigüedad de signo}: Los eigenvectores están definidos salvo multiplicación por $\pm 1$, requiriendo técnicas como SignNet (véase el \autoref{rem:ambiguedad_autovectores})
 
     \item \textbf{Grafos isoespectrales}: Grafos con espectros idénticos pero estructuras diferentes no pueden distinguirse espectralmente
 \end{enumerate}
@@ -1368,6 +1396,17 @@ Una configuración estándar utiliza:
 \end{itemize}
 Esta configuración procesa grafos con $n \sim 10^4$ nodos en tiempo razonable.
 \end{example}
+
+
+\paragraph{Atención global dispersa mediante expansores}
+
+Incluso con Performer, el camino global de GraphGPS aproxima la atención densa. Exphormer \citep{shirzad2023exphormer} sigue una vía distinta: conserva la atención softmax exacta pero la restringe a un \emph{grafo de atención} disperso con tres tipos de aristas, (i) las aristas de entrada $E$, (ii) las aristas de un grafo expansor aleatorio $d$-regular sobre $V$ y (iii) aristas que unen cada nodo con un pequeño número de nodos virtuales globales. Como el expansor tiene $\mathcal{O}(nd)$ aristas con $d$ constante y los nodos virtuales añaden $\mathcal{O}(n)$, una capa de atención cuesta $\mathcal{O}(|E| + n)$, lineal en el tamaño del grafo, y puede usarse directamente como módulo global de la \autoref{def:graphgps_layer}.
+
+\begin{definition}[Grafo expansor]\label{def:grafo_expansor}
+Sea $\{G_n\}$ una familia de grafos $d$-regulares con $|V(G_n)| \to \infty$ y sean $\mu_1(G_n) = 1 \geq \mu_2(G_n) \geq \cdots$ los eigenvalores de la matriz de adyacencia normalizada $\mathbf{D}^{-1/2}\mathbf{A}\mathbf{D}^{-1/2} = \mathbf{A}/d$. La familia es una familia de \emph{expansores} si existe $\epsilon > 0$ tal que $|\mu_i(G_n)| \leq 1 - \epsilon$ para todo $i \geq 2$ y todo $n$, es decir, si el gap espectral $1 - \mu_2$ de la adyacencia normalizada (equivalentemente, el segundo eigenvalor más pequeño $\lambda_2 = 1 - \mu_2$ del Laplaciano normalizado) está acotado lejos de cero. Por la desigualdad de Cheeger discreta, $\tfrac{\lambda_2}{2} \leq h(G) \leq \sqrt{2\lambda_2}$, esto equivale a que la constante de Cheeger (expansión de aristas) $h(G) = \min_{0 < |S| \leq n/2} |\partial S| / (d\,|S|)$ esté acotada inferiormente por una constante positiva \citep{hoory2006expander}.
+\end{definition}
+
+Los grafos $d$-regulares aleatorios son expansores con alta probabilidad, con $\mu_2 \approx 2\sqrt{d-1}/d$, razón por la cual Exphormer puede muestrear uno para cada entrada con coste despreciable. Dos consecuencias de la \autoref{def:grafo_expansor} explican su papel. Primero, un expansor es espectralmente cercano al grafo completo: la adyacencia normalizada $\mathbf{A}/d$ tiene el mismo eigenvector principal que $\mathbf{J}/n$ y todos los demás eigenvalores de módulo a lo sumo $1 - \epsilon$, de modo que un número constante de capas de atención sobre el expansor mezcla la información como lo haría una capa densa, salvo un error que decae geométricamente en $1 - \epsilon$. Segundo, un expansor $d$-regular con $n$ nodos tiene diámetro $\mathcal{O}(\log n)$ \citep{hoory2006expander}, por lo que dos nodos cualesquiera están unidos por caminos cortos a través de aristas que no dependen de los cuellos de botella del grafo de entrada; en el lenguaje del \autoref{ch:gdl}, la cota jacobiana que gobierna el \gls{oversquashing} (\autoref{prop:oversquashing_exponencial}) se evalúa sobre un grafo con gap espectral grande y sin cortes estrechos, en lugar de sobre el grafo de entrada. Exphormer, integrado en el marco GraphGPS, igualó o mejoró la atención global densa en los benchmarks de \citet{rampasek2022graphgps} a la vez que escalaba a grafos con cientos de miles de nodos.
 
 \subsubsection{Graph \gls{Transformer} Networks}\label{subsubsec:graph_transformers}
 
@@ -1866,6 +1905,43 @@ Las codificaciones HyPE se integran en la arquitectura \gls{Transformer} mediant
 \begin{remark}[Ventaja dimensional de embeddings hiperbólicos]\label{rem:hypegt_expressiveness}
 Las codificaciones posicionales hiperbólicas de HyPE-GT \citep{hypegt2023} se benefician de la propiedad general de que los embeddings hiperbólicos requieren dimensiones menores que los euclidianos para representar estructuras jerárquicas. Por el \autoref{thm:embedding_arboles_hiperbolico}, un árbol con $n$ vértices se puede embeber en $\mathbb{H}^2$ con distorsión $(1+\varepsilon)$, mientras que embeddings euclidianos con distorsión acotada requieren dimensión $d = \Omega(\log n)$ (\autoref{prop:cota_inferior_euclidiano}). Esta ventaja teórica motiva el uso de codificaciones hiperbólicas en HyPE-GT, aunque \citet{hypegt2023} no establecen formalmente cotas de expresividad para su arquitectura, siendo su contribución principalmente empírica.
 \end{remark}
+
+
+\subsubsection{Hypformer: Atención en el Modelo de Lorentz}\label{subsubsec:hypformer_lorentz}
+
+Las arquitecturas de las subsecciones precedentes operan en la bola de Poincaré y se apoyan en las operaciones de Möbius de la \autoref{def:operaciones_hiperbolicas}; las capas lineales, la normalización y las no linealidades se implementan típicamente como $\exp_{\mathbf{0}}^{\mathbb{H}} \circ f \circ \log_{\mathbf{0}}^{\mathbb{H}}$, un viaje de ida y vuelta por el espacio tangente en el origen que es numéricamente frágil cerca de la frontera de la bola (el factor conformacional $\lambda_{\mathbf{x}}$ diverge cuando $\|\mathbf{x}\| \to 1$). Hypformer \citep{yang2024hypformer} define en cambio cada bloque del \gls{Transformer} de forma intrínseca en el modelo del hiperboloide del \autoref{rem:modelos_hiperbolico}, generalizado a curvatura negativa arbitraria.
+
+\begin{definition}[Modelo de Lorentz de Curvatura $-c$]\label{def:modelo_lorentz}
+Para $c > 0$, el modelo de Lorentz (o del hiperboloide) de $\mathbb{H}^n$ con curvatura $-c$ es
+\begin{equation}
+    \mathbb{L}^n_c = \{\mathbf{x} = (x_0, \mathbf{x}_s) \in \mathbb{R}^{n+1} : \langle \mathbf{x}, \mathbf{x} \rangle_{\mathcal{L}} = -1/c, \; x_0 > 0\},
+    \qquad
+    \langle \mathbf{x}, \mathbf{y} \rangle_{\mathcal{L}} = -x_0 y_0 + \mathbf{x}_s^T \mathbf{y}_s,
+    \label{eq:modelo_lorentz}
+\end{equation}
+con la métrica riemanniana inducida por el producto interior de Lorentz $\langle \cdot, \cdot \rangle_{\mathcal{L}}$. La coordenada $x_0 = \sqrt{1/c + \|\mathbf{x}_s\|^2}$ (la componente \emph{temporal}) queda determinada por las componentes \emph{espaciales} $\mathbf{x}_s \in \mathbb{R}^n$, y la distancia geodésica es
+\begin{equation}
+    d_c(\mathbf{x}, \mathbf{y}) = \frac{1}{\sqrt{c}}\,\text{arccosh}\big(-c\,\langle \mathbf{x}, \mathbf{y} \rangle_{\mathcal{L}}\big).
+    \label{eq:distancia_lorentz_curvatura}
+\end{equation}
+Para $c = 1$ se recuperan el hiperboloide $x_0^2 - \|\mathbf{x}_s\|^2 = 1$ y la distancia de la \autoref{def:distancia_hiperbolica}.
+\end{definition}
+
+Que $x_0$ sea función de $\mathbf{x}_s$ es lo que Hypformer explota: una aplicación $\mathbb{L}^n_c \to \mathbb{L}^m_{c'}$ queda completamente especificada por una aplicación sobre las componentes espaciales, seguida del recálculo de la componente temporal. Sobre este principio se construyen dos bloques. La \emph{capa lineal de Lorentz} (\emph{hyperbolic transformation with curvatures}, HTC) es
+\begin{equation}
+    \text{HTC}(\mathbf{x}) = \Big( \sqrt{1/c' + \tfrac{c}{c'}\|\mathbf{W}\mathbf{x}_s + \mathbf{b}\|^2}, \; \sqrt{\tfrac{c}{c'}}\,(\mathbf{W}\mathbf{x}_s + \mathbf{b}) \Big) \in \mathbb{L}^m_{c'},
+    \label{eq:hypformer_htc}
+\end{equation}
+con $\mathbf{W} \in \mathbb{R}^{m \times n}$, $\mathbf{b} \in \mathbb{R}^m$ y curvaturas de entrada y salida $c, c'$ posiblemente distintas (el factor $\sqrt{c/c'}$ reescala las componentes espaciales a la nueva curvatura y vale $1$ cuando $c' = c$); el bloque de \emph{reajuste hiperbólico} (HRC) aplica la misma receta a cualquier operación euclidiana puntual $g$ (normalización de capa, activación, dropout): $\text{HRC}_g(\mathbf{x}) = \big(\sqrt{1/c' + \tfrac{c}{c'}\|g(\mathbf{x}_s)\|^2}, \, \sqrt{\tfrac{c}{c'}}\, g(\mathbf{x}_s)\big)$. Ninguno de los dos bloques usa mapas $\exp$ o $\log$, de modo que la salida está sobre la variedad por construcción y la única no linealidad introducida por la geometría es la raíz cuadrada que fija la coordenada temporal.
+
+La atención sigue el mismo patrón. Las consultas, claves y valores $\mathbf{q}_i, \mathbf{k}_j, \mathbf{v}_j \in \mathbb{L}^d_c$ se producen con capas HTC y los scores se calculan a partir del producto interior de Lorentz (equivalentemente, de $d_c$ mediante \eqref{eq:distancia_lorentz_curvatura}), con lo que se recupera la \autoref{def:atencion_hiperbolica} con el coste cuadrático $\mathcal{O}(n^2 d)$ de comparar todos los pares. Para alcanzar complejidad lineal, Hypformer kerneliza los scores sobre las componentes espaciales, como hace Performer en el caso euclidiano (\autoref{prop:graphgps_efficient_complexity}): con un mapa de características positivo $\varphi: \mathbb{R}^d \to \mathbb{R}^{r}$,
+\begin{equation}
+    \mathbf{o}_{i,s} = \frac{\varphi(\mathbf{q}_{i,s})^T \sum_{j} \varphi(\mathbf{k}_{j,s})\, \mathbf{v}_{j,s}^T}{\varphi(\mathbf{q}_{i,s})^T \sum_{j} \varphi(\mathbf{k}_{j,s})},
+    \qquad
+    \mathbf{o}_i = \Big(\sqrt{1/c + \|\mathbf{o}_{i,s}\|^2}, \; \mathbf{o}_{i,s}\Big),
+    \label{eq:hypformer_atencion_lineal}
+\end{equation}
+donde las sumas sobre $j$ se calculan una sola vez, en $\mathcal{O}(n r d)$, y se comparten entre todas las consultas; el punto agregado se eleva después de nuevo a $\mathbb{L}^d_c$ recalculando la coordenada temporal, lo que sustituye el promedio de Fréchet de la \autoref{def:agregacion_hiperbolica} por una proyección en forma cerrada. La atención resultante es lineal en el número de tokens o nodos, lo que permitió a \citet{yang2024hypformer} entrenar \glspl{Transformer} hiperbólicos sobre grafos con millones de nodos y sobre secuencias largas, regímenes inaccesibles para los modelos cuadráticos en la bola de Poincaré. La construcción sacrifica la exactitud de la agregación geodésica (el punto elevado no es el baricentro hiperbólico de los valores), pero conserva las dos propiedades que motivan la atención hiperbólica, el crecimiento exponencial del volumen del \autoref{thm:propiedades_espacio_hiperbolico} y la invarianza de las distancias bajo $SO^+(1,n)$ (\autoref{thm:propiedades_distancia_hiperbolica}), puesto que toda cantidad intermedia es un punto de $\mathbb{L}^d_c$ o un escalar invariante de Lorentz.
 
 \subsection{Atención y Embeddings en la Esfera}\label{subsec:atencion_esfera}
 

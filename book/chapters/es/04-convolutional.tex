@@ -2480,6 +2480,12 @@ En ciencias de la Tierra, las Spherical CNNs proporcionan herramientas naturales
     \item \textbf{Monitoreo satelital}: Análisis de datos de observación terrestre
 \end{itemize}
 
+\paragraph{Spherical Fourier Neural Operators}
+
+La más trascendente de estas aplicaciones es la predicción meteorológica a medio plazo, donde el objeto a aprender es un operador y no una función: la aplicación que lleva el estado de la atmósfera en el instante $t$ al estado en $t + \Delta t$. Los operadores neuronales \citep{kovachki2023neural} aprenden aplicaciones entre espacios de funciones con parámetros independientes de la discretización, de modo que el mismo modelo puede evaluarse sobre cualquier malla; el Fourier Neural Operator realiza cada capa como $v \mapsto \sigma\big(\mathbf{W} v + \mathcal{F}^{-1}(\mathbf{R}_\theta \cdot \mathcal{F} v)\big)$, una convolución global implementada, por el teorema de convolución, como un multiplicador aprendible $\mathbf{R}_\theta$ sobre los modos de Fourier retenidos. Sobre la esfera, la \gls{FFT} trata latitud y longitud como un toro plano, y los despliegues autorregresivos de tales modelos desarrollan artefactos en los polos y se degradan. Los Spherical Fourier Neural Operators \citep{bonev2023sfno} sustituyen la \gls{FFT} por la transformada de armónicos esféricos de la \autoref{subsec:spherical_cnns_so3},
+\[v \mapsto \sigma\Big(\mathbf{W} v + \text{SHT}^{-1}\big(\hat{\kappa}_l \cdot \text{SHT}(v)\big)\Big),\]
+con coeficientes aprendibles $\hat{\kappa}_l$ que dependen del grado $l$ (y mezclan canales) pero no del orden $m$. Por el caso zonal del teorema de convolución esférica de esa subsección, esto es exactamente una convolución sobre $S^2$ con un kernel zonal, y por tanto una capa equivariante a rotaciones, y la parametrización sigue siendo invariante a la discretización. Entrenado con datos de reanálisis ERA5, el modelo produce despliegues autorregresivos estables a lo largo de un año simulado completo (1.460 pasos de seis horas) con un coste computacional muy inferior al de la predicción numérica del tiempo, allí donde la variante plana pierde la estabilidad.
+
 \paragraph{Astrofísica Computacional}
 
 La estructura esférica natural de datos astronómicos hace a las Spherical CNNs particularmente apropiadas:
@@ -3128,6 +3134,18 @@ donde $n_{\text{avg}}$ es la multiplicidad promedio por tipo irreducible.
     \item \textbf{Compromiso práctico}: Usar EGNNs para pre-procesamiento y TFNs para refinamiento en regiones críticas.
 \end{itemize}
 
+\paragraph{Reducción de Convoluciones SO(3) a SO(2): la Reducción eSCN}
+
+La dependencia de $L_{\max}$ anterior procede del producto tensorial de Clebsch--Gordan entre las features del nodo y el desarrollo en armónicos esféricos de la dirección de la arista. Si las features se almacenan como coeficientes densos $x^{(l,m)}$ con $l \le L$, el tensor de Clebsch--Gordan $C^{l_3 m_3}_{l_1 m_1, l_2 m_2}$ tiene $O(L^6)$ entradas, y ese es el coste por arista de la contracción directa (el $O(L^3)$ citado más arriba se refiere a una única terna $(l_1, l_2, l_3)$; sumando sobre las $O(L^3)$ ternas se obtiene $O(L^6)$). \citet{passaro2023escn} observaron que casi todas esas entradas se vuelven irrelevantes una vez que el sistema de coordenadas se elige arista a arista.
+
+\begin{proposition}[Reducción eSCN]\label{prop:escn_reduccion}
+Sean $\mathbf{x}_j = (x_j^{(l,m)})_{l \le L,\, |m| \le l}$ features steerable de grado máximo $L$ y, para cada arista $(i,j)$, sea $\mathbf{R}_{ij} \in SO(3)$ una rotación con $\mathbf{R}_{ij}\hat{\mathbf{r}}_{ij} = \hat{\mathbf{z}}$, aplicada a las features mediante las matrices de Wigner, $\tilde{\mathbf{x}}_j = \mathbf{D}(\mathbf{R}_{ij})\,\mathbf{x}_j$. En el sistema rotado $Y_l^m(\hat{\mathbf{z}}) = 0$ para todo $m \neq 0$, de modo que el producto tensorial con la dirección de la arista se reduce a
+\[\Big(\tilde{\mathbf{x}}_j \otimes_{\text{CG}} Y(\hat{\mathbf{z}})\Big)^{(l_3, m)} = \sum_{l_1, l_2} w_{l_1 l_2 l_3}(r_{ij})\, C^{l_3 m}_{l_1 m,\, l_2 0}\, Y_{l_2}^{0}(\hat{\mathbf{z}})\, \tilde{x}_j^{(l_1, m)},\]
+que solo acopla componentes con el mismo orden $m$. Absorbiendo la suma sobre $l_2$ en un coeficiente aprendible $w_{l_1 l_3 m}(r_{ij})$, el mensaje es una aplicación lineal que actúa por separado sobre cada modo $m$, es decir, una convolución $SO(2)$-equivariante alrededor del eje de la arista (con armónicos reales, el par $(m, -m)$ se mezcla mediante un bloque $2 \times 2$). Su coste es $\sum_{m} O\big((L - |m|)^2\big) = O(L^3)$ por arista, y las rotaciones $\mathbf{D}(\mathbf{R}_{ij})$ y $\mathbf{D}(\mathbf{R}_{ij})^{-1}$ cuestan también $\sum_{l \le L} (2l+1)^2 = O(L^3)$, de modo que la capa se ejecuta en $O(L^3)$ en lugar de $O(L^6)$ por arista.
+\end{proposition}
+
+La reducción es exacta, no una aproximación: $\mathbf{R}_{ij}$ queda determinada solo salvo rotaciones alrededor de $\hat{\mathbf{z}}$, y la operación reducida es precisamente $SO(2)$-equivariante respecto de esa libertad residual, de modo que la equivarianza global bajo $SO(3)$ se conserva una vez que los mensajes se rotan de vuelta con $\mathbf{D}(\mathbf{R}_{ij})^{-1}$ y se agregan. En la práctica esto desplaza el techo de $L_{\max} \le 4$ mencionado arriba hasta $L_{\max} = 6$--$8$ a una fracción del coste. Los productos tensoriales de Gaunt \citep{luo2024gaunt} siguen otra ruta hacia el mismo escalado $O(L^3)$: restringen el producto de Clebsch--Gordan a los acoplamientos cuyos coeficientes son coeficientes de Gaunt, las integrales de tres armónicos esféricos, para los cuales el producto tensorial de dos features de grado $\le L$ es el producto puntual de las correspondientes funciones de banda limitada sobre $S^2$, computable sobre una malla esférica con transformadas esféricas rápidas. EquiformerV2 \citep{liao2024equiformerv2}, el \gls{Transformer} equivariante que utiliza convoluciones eSCN dentro de sus bloques de atención y escala hasta $L_{\max} = 6$ en el benchmark de catálisis OC20, se discute en el \autoref{ch:attention}.
+
 \subsubsection{Mejoras con Cantidades Geométricas y Físicas}
 
 El trabajo de Tholke y De Fabritiis~\citep{tholke2022geometric} demuestra que incorporar cantidades geométricas y físicas específicas del dominio mejora significativamente el rendimiento de las redes equivariantes $E(3)$ sin romper la simetría.
@@ -3197,6 +3215,32 @@ Para una molécula de agua (H$_2$O), los invariantes geométricos adicionales in
 
 Estos features complementan las distancias básicas, mejorando la predicción de propiedades como energías de enlace y frecuencias vibracionales.
 \end{example}
+
+\paragraph{Mensajes de Muchos Cuerpos: MACE y la Expansión en Clústeres Atómicos}
+
+Las features geométricas anteriores inyectan a mano información de tres y cuatro cuerpos (ángulos, diedros), mientras que los mensajes de las EGNNs, las TFNs y NequIP son sumas sobre vecinos de términos de dos cuerpos: cada sumando depende del átomo central y de un único vecino. MACE \citep{batatia2022mace} construye sistemáticamente mensajes de orden de cuerpo arbitrario, importando la Expansión en Clústeres Atómicos (ACE, \textit{Atomic Cluster Expansion}) de \citet{drautz2019atomic} desde la teoría de potenciales interatómicos.
+
+\begin{definition}[Orden de Cuerpo]\label{def:orden_cuerpo}
+Una función $f$ de un entorno atómico $\{\mathbf{r}_{ij}\}_{j \in \mathcal{N}(i)}$ tiene \textbf{orden de cuerpo} $\nu + 1$ (equivalentemente, \textbf{orden de correlación} $\nu$) si puede escribirse como una suma de términos cada uno de los cuales depende del átomo central $i$ y de a lo sumo $\nu$ vecinos simultáneamente:
+\[f\big(\{\mathbf{r}_{ij}\}_j\big) = f_0 + \sum_{j_1} f_1(\mathbf{r}_{ij_1}) + \sum_{j_1, j_2} f_2(\mathbf{r}_{ij_1}, \mathbf{r}_{ij_2}) + \dots + \sum_{j_1, \dots, j_\nu} f_\nu(\mathbf{r}_{ij_1}, \dots, \mathbf{r}_{ij_\nu}).\]
+Los potenciales de pares y los mensajes basados en distancias son de dos cuerpos ($\nu = 1$); los términos angulares son de tres cuerpos ($\nu = 2$).
+\end{definition}
+
+La construcción ACE produce todos esos términos con un coste lineal en el número de vecinos. La base de una partícula es el producto de una función radial y una angular,
+\[\phi_v(\mathbf{r}_{ij}) = R_{nl}(r_{ij})\, Y_l^m(\hat{\mathbf{r}}_{ij}), \qquad v = (n, l, m)\]
+(en MACE multiplica además una transformación lineal de las features del vecino $\mathbf{h}_j$). Sumando sobre vecinos se obtiene la \emph{base atómica}
+\[A_{i,v} = \sum_{j \in \mathcal{N}(i)} \phi_v(\mathbf{r}_{ij}),\]
+y los productos de $\nu$ funciones de la base atómica dan la \emph{base producto}
+\[\mathbf{A}_{i,\mathbf{v}} = \prod_{t=1}^{\nu} A_{i,v_t}, \qquad \mathbf{v} = (v_1, \dots, v_\nu).\]
+Desarrollar el producto muestra que $\mathbf{A}_{i,\mathbf{v}}$ es una suma sobre $\nu$-tuplas de vecinos, es decir, una función de orden de cuerpo $\nu + 1$, y sin embargo se calcula como un producto de $\nu$ números en lugar de enumerar las $O(k^\nu)$ tuplas (el ``truco de la densidad''). La base producto se transforma como el producto tensorial de representaciones irreducibles $l_1 \otimes \dots \otimes l_\nu$; contrayéndola con \emph{coeficientes de Clebsch--Gordan generalizados} $\mathcal{C}^{LM}_{\eta, \mathbf{l}\mathbf{m}}$ (productos de coeficientes de Clebsch--Gordan ordinarios a lo largo de un árbol de acoplamiento, indexados por el camino de acoplamiento $\eta$) se obtiene la base simetrizada
+\[B_{i,\, \eta \mathbf{n} \mathbf{l} L M} = \sum_{\mathbf{m}} \mathcal{C}^{LM}_{\eta, \mathbf{l}\mathbf{m}} \prod_{t=1}^{\nu} A_{i,\, n_t l_t m_t},\]
+cuyos elementos se transforman según la representación irreducible de grado $L$ bajo $O(3)$. Un mensaje de MACE es una combinación lineal aprendible de estos, $\mathbf{m}_i = \sum_{\nu} \sum_{\eta \mathbf{n} \mathbf{l}} W^{L}_{\nu \eta \mathbf{n} \mathbf{l}}\, B_{i,\, \eta \mathbf{n} \mathbf{l} L}$, seguida de la actualización habitual; con $\nu = 3$ los mensajes son de cuatro cuerpos. Puesto que el orden de cuerpo de las features se compone al apilar capas, dos capas de MACE capturan ya las correlaciones de muchos cuerpos para las que arquitecturas puramente de dos cuerpos como NequIP necesitan cinco o seis rondas de paso de mensajes, y las curvas de aprendizaje son correspondientemente más pronunciadas en los benchmarks rMD17, 3BPA y acetilacetona.
+
+\begin{remark}[Orden de Cuerpo y Expresividad]\label{rem:orden_cuerpo_expresividad}
+El orden de cuerpo es uno de los dos ejes, junto con el grado máximo $L$ de las features steerable, a lo largo de los cuales la jerarquía de Weisfeiler--Leman geométrica de la \autoref{subsubsec:wl_geometrico} ordena el poder expresivo de las \glspl{GNN} geométricas. Aumentar el orden de cuerpo amplía el conjunto de entornos distinguibles: las distancias por sí solas ($\nu = 1$) no pueden separar configuraciones con el mismo multiconjunto de distancias entre pares pero ángulos distintos, y contraejemplos conocidos muestran que órdenes de cuerpo bajos fijos (invariantes de tres y cuatro cuerpos) siguen dejando sin separar algunos pares de entornos distintos. Apilar capas de dos cuerpos recupera la información de orden superior solo indirectamente, a través de las features intermedias de los nodos, y por ello la construcción directa de MACE logra con dos capas lo que redes de dos cuerpos más profundas solo aproximan.
+\end{remark}
+
+GotenNet \citep{aykent2025gotennet} sigue la ruta opuesta hacia la información de grado alto: conserva features steerable de grado elevado pero evita por completo las representaciones irreducibles y los productos tensoriales de Clebsch--Gordan, mezclando features escalares y tensoriales mediante un mecanismo de atención tensorial consciente de la geometría a un coste menor.
 
 Las redes $E(n)$- y $\text{SE}(3)$-equivariantes han demostrado mejoras consistentes en eficiencia de datos (reducción típica de un orden de magnitud en requisitos de entrenamiento), generalización fuera de distribución y transferibilidad a configuraciones no vistas, en dominios donde las simetrías euclidianas o rígidas son relevantes: sistemas moleculares, nubes de puntos tridimensionales y análisis de partículas. El principal desafío computacional reside en el cálculo de productos de Clebsch-Gordan, cuyo coste crece con $L_{\max}$, y en la estabilidad numérica de las sumas de armónicas esféricas de orden alto.
 
@@ -5289,6 +5333,36 @@ El kernel $\psi: SO(2) \to \text{Cl}(2,0)$ se parametriza como:
 donde los $w_i$ son parámetros aprendibles.
 \end{example}
 
+\paragraph{Clifford Group Equivariant Neural Networks}
+
+La \autoref{def:conv_clifford} presupone una acción $\rho_g$ del grupo de simetría sobre el álgebra. \citet{ruhe2023cliffordgroup} muestran que la propia álgebra proporciona la elección canónica: un grupo de multivectores invertibles, actuando por conjugación, que extiende el grupo ortogonal $O(V,Q)$ de $V$ a todo $\text{Cl}(V,Q)$.
+
+\begin{definition}[Grupo de Clifford]\label{def:grupo_clifford}
+Sea $\text{Cl}(V,Q)$ el álgebra de Clifford de la \autoref{def:clifford_cnn} y sea $\alpha$ su \textbf{involución de grado} (paridad), el automorfismo del álgebra determinado por $\alpha(v) = -v$ para $v \in V$, de modo que $\alpha(x) = x$ sobre los multivectores pares y $\alpha(x) = -x$ sobre los impares. Para un multivector invertible $w$, la \textbf{conjugación torcida} es
+\[\rho(w)(x) = w \, \alpha(x) \, w^{-1}, \qquad x \in \text{Cl}(V,Q).\]
+El \textbf{grupo de Clifford} $\Gamma(V,Q)$ es el conjunto de multivectores invertibles de paridad homogénea (pares o impares) cuya conjugación torcida preserva el subespacio de vectores:
+\[\Gamma(V,Q) = \big\{ w \in \text{Cl}^\times(V,Q) \cap (\text{Cl}^{[0]} \cup \text{Cl}^{[1]}) : \rho(w)(v) \in V \ \text{para todo } v \in V \big\}.\]
+\end{definition}
+
+Sea $\mathcal{B}$ la forma bilineal simétrica asociada a $Q$, de modo que $vx + xv = 2\mathcal{B}(v,x)$ para $v, x \in V$. Para un vector $v$ con $Q(v) \neq 0$ se obtiene $\rho(v)(x) = -vxv^{-1} = x - 2\frac{\mathcal{B}(v,x)}{Q(v)}\,v$: el giro introducido por $\alpha$ convierte la conjugación en la reflexión respecto del hiperplano ortogonal a $v$. Por el teorema de Cartan--Dieudonn\'e todo elemento de $O(V,Q)$ es un producto de tales reflexiones, de modo que para $Q$ no degenerada el grupo de Clifford está generado por los vectores invertibles y se proyecta sobreyectivamente sobre $O(V,Q)$, con los escalares no nulos como núcleo.
+
+\begin{proposition}[Equivarianza bajo el Grupo de Clifford]\label{prop:equivarianza_grupo_clifford}
+Sea $Q$ no degenerada y $w \in \Gamma(V,Q)$. Entonces:
+\begin{enumerate}
+    \item $\rho(w)$ es un automorfismo del álgebra: es lineal y $\rho(w)(xy) = \rho(w)(x)\,\rho(w)(y)$ para todos los multivectores $x, y$.
+    \item $\rho(w)$ respeta la graduación: $\rho(w)\big(\text{Cl}^{(k)}\big) = \text{Cl}^{(k)}$ para cada grado $k$, y por tanto conmuta con las proyecciones de grado, $\rho(w)(x)^{(k)} = \rho(w)\big(x^{(k)}\big)$.
+    \item $\rho(w)$ es ortogonal para la forma bilineal extendida al álgebra, $\bar{\mathcal{B}}(\rho(w)x, \rho(w)y) = \bar{\mathcal{B}}(x,y)$; en particular su restricción a $V$ pertenece a $O(V,Q)$.
+\end{enumerate}
+En consecuencia, todo polinomio $F$ en multivectores $x_1, \dots, x_m$ construido a partir de sumas, múltiplos escalares, productos geométricos y proyecciones de grado es equivariante: $F(\rho(w)x_1, \dots, \rho(w)x_m) = \rho(w)\,F(x_1,\dots,x_m)$.
+\end{proposition}
+
+\begin{proof}[Esbozo de demostración]
+La multiplicatividad se sigue de que $\alpha$ es un automorfismo: 
+\[\rho(w)(xy) = w\alpha(x)\alpha(y)w^{-1} = w\alpha(x)w^{-1}\,w\alpha(y)w^{-1}.\] Los escalares quedan fijos, $\rho(w)(1) = 1$, de modo que para $v \in V$ obtenemos $\rho(w)(v)^2 = \rho(w)(v^2) = Q(v)$: la restricción de $\rho(w)$ a $V$ preserva $Q$ y pertenece a $O(V,Q)$. Como $\text{Cl}^{(k)}$ está generado por los productos de $k$ vectores mutuamente ortogonales y $\rho(w)|_V$ preserva la ortogonalidad, $\rho(w)$ aplica $\text{Cl}^{(k)}$ en sí mismo. La forma extendida $\bar{\mathcal{B}}(x,y) = \langle \tilde{x}\,y \rangle^{(0)}$ (reversión seguida de proyección escalar) se calcula grado a grado a partir de $Q$, por lo que también se preserva. Finalmente, cada operación en la construcción de $F$ conmuta con $\rho(w)$ por los puntos 1 y 2, y la equivarianza de $F$ se sigue por inducción sobre dicha construcción.
+\end{proof}
+
+La proposición es todo el principio de diseño de las Clifford Group Equivariant Neural Networks (CGENNs). Como todo polinomio en multivectores es equivariante, una capa puede ser cualquier composición de (i) aplicaciones lineales grado a grado $x \mapsto \sum_{k=0}^{n} \phi_k\, x^{(k)}$ con escalares aprendibles $\phi_k$, que por el lema de Schur (\autoref{lem:schur}) agotan las aplicaciones lineales equivariantes cuando $Q$ es definida, ya que las componentes de grado $\mathrm{Cl}^{(k)} \cong \Lambda^k V$ son $O(n)$-módulos irreducibles no isomorfos dos a dos; (ii) \emph{capas de producto geométrico} bilineales $(x, y) \mapsto \sum_{k}\sum_{i,j} \phi_{kij}\, \big(x^{(i)} y^{(j)}\big)^{(k)}$, que mezclan grados mediante el producto geométrico; y (iii) no linealidades que modulan (\textit{gating}) cada grado mediante una función de su invariante $\bar{\mathcal{B}}(x^{(k)}, x^{(k)})$. Las traslaciones se tratan como en las EGNNs, incrustando las posiciones relativas $\mathbf{x}_i - \mathbf{x}_j$ como vectores, lo que da equivarianza bajo $E(n)$. Dos rasgos distinguen esta construcción de las redes steerable de la \autoref{subsec:grupos_no_compactos}: las reflexiones quedan incluidas automáticamente ($O(n)$ en lugar de $SO(n)$), y no se necesita ninguna descomposición en representaciones irreducibles, puesto que la graduación del álgebra sustituye a la descomposición armónica y el producto geométrico sustituye al producto tensorial de Clebsch--Gordan. El mismo código funciona por tanto en cualquier dimensión y signatura: los autores muestran modelos $O(3)$- y $E(3)$-equivariantes para problemas de $n$ cuerpos y nubes de puntos, un modelo $O(1,3)$-equivariante para el etiquetado de jets invariante bajo Lorentz en $\text{Cl}(1,3)$, y un ejemplo de regresión en cinco dimensiones. El precio es el espacio de features de dimensión $2^n$, manejable para $n \le 5$ pero no mucho más allá. La extensión de metric learning discutida más abajo se construye directamente sobre esta arquitectura: \citet{ali2024metriclearning} aprenden la propia forma cuadrática $Q$ conservando la equivarianza de la \autoref{prop:equivarianza_grupo_clifford}.
+
 \subsubsection{Conexión con Steerable CNNs}
 
 Las steerable CNNs (véase \autoref{subsubsec:implementacion_steerable_cnns}) pueden entenderse como casos especiales de CNNs Clifford-valuadas.
@@ -5365,9 +5439,11 @@ La elección del álgebra adecuada debe considerar:
     \item \textbf{Características de los datos:} Tipos de simetrías presentes en el dominio
 \end{enumerate}
 
+\textbf{Geometric Clifford Algebra Networks.} Un uso distinto de estas álgebras, anterior a la construcción equivariante de la \autoref{def:grupo_clifford}, es el de las Geometric Clifford Algebra Networks (GCANs) \citep{ruhe2023geometriccliffordnets}. En lugar de restringir las capas a ser aplicaciones equivariantes, las GCANs parametrizan las capas como \emph{acciones de grupo aprendibles}. En el álgebra geométrica proyectiva $\text{Cl}(3,0,1)$, cuyo generador nulo adicional $\mathbf{e}_0$ ($\mathbf{e}_0^2 = 0$) representa planos y puntos en coordenadas homogéneas, todo movimiento rígido es un \emph{versor}, un producto de vectores invertibles $u = v_1 v_2 \cdots v_k$, que actúa sobre un multivector mediante el producto sándwich $\mathbf{x} \mapsto u\,\mathbf{x}\,\tilde{u}$. Una capa GCAN es una combinación lineal aprendible de tales acciones, $T_{\mathbf{w}}(\mathbf{x}) = \sum_i w_i\, u_i\,\mathbf{x}\,\tilde{u}_i$, donde los vectores que componen los versores $u_i$ son parámetros (opcionalmente condicionados por la entrada), de modo que la red transforma los objetos geométricos únicamente mediante operaciones geométricamente significativas: rotaciones, traslaciones y reflexiones. Los autores aplican este sesgo a la dinámica de cuerpos rígidos y a problemas de fluidos gobernados por las ecuaciones de Navier--Stokes y de aguas someras. A diferencia de las CGENNs de la \autoref{prop:equivarianza_grupo_clifford}, esto no impone equivarianza respecto del grupo, ya que los versores son parámetros libres; la construcción del grupo de Clifford se desarrolló posteriormente precisamente para obtenerla.
+
 \subsubsection{Metric Learning para Grupos de Clifford}
 
-El trabajo de \citet{ali2024metric} introduce una innovación fundamental: el aprendizaje adaptativo de métricas en redes neuronales equivariantes de grupos de Clifford (CGENNs).
+El trabajo de \citet{ali2024metriclearning} introduce una innovación fundamental: el aprendizaje adaptativo de métricas en redes neuronales equivariantes de grupos de Clifford (CGENNs). La arquitectura subyacente es la red equivariante bajo el grupo de Clifford de la \autoref{def:grupo_clifford} y la \autoref{prop:equivarianza_grupo_clifford} \citep{ruhe2023cliffordgroup, ali2024metriclearning}; la métrica que se aprende es la forma cuadrática $Q$ que fija el producto geométrico.
 
 \textbf{Motivación y Problema:}
 
@@ -5606,6 +5682,10 @@ Las CCNNs mantienen equivarianza bajo:
     \item \textbf{Transformaciones topológicas}: Homeomorfismos que preservan la estructura
 \end{enumerate}
 
+La revisión de \citet{papillon2023tdlarchitectures} proporciona la notación unificadora en la que todas estas arquitecturas pueden escribirse y compararse. Una red neuronal topológica queda especificada por tres elecciones: un dominio (grafo, complejo simplicial, complejo celular, hipergrafo o complejo combinatorio), una familia de estructuras de vecindad $\mathcal{N}_1, \dots, \mathcal{N}_K$ sobre sus células (frontera, co-frontera, adyacencias inferior y superior, como en la \autoref{def:vecindarios_complejos}), y un esquema de paso de mensajes en cuatro pasos: mensajes $m^{(k)}_{\tau \to \sigma}$ a lo largo de cada vecindad $\mathcal{N}_k$, agregación dentro de cada vecindad, agregación entre vecindades y actualización,
+\[h_\sigma^{(l+1)} = \text{UPDATE}\Big(h_\sigma^{(l)},\ \bigoplus_{k=1}^{K} \text{AGG}_{\tau \in \mathcal{N}_k(\sigma)}\, m^{(k)}_{\tau \to \sigma}\Big).\]
+Las redes simpliciales, celulares y de hipergrafos difieren entonces únicamente en qué vecindades transportan mensajes y en si las células de distintas dimensiones comparten parámetros, elecciones que la revisión recoge en diagramas tensoriales que hacen las arquitecturas directamente comparables.
+
 \subsubsection{Simplicial Attention Networks}
 
 El trabajo de \citet{giusti2022simplicial} introduce mecanismos de atención específicamente diseñados para complejos simpliciales, combinando la expresividad topológica con la flexibilidad de la atención.
@@ -5762,6 +5842,8 @@ Para $V = \mathbb{R}^3$ con base $\{e_1, e_2, e_3\}$:
 Total: $1 + 3 + 3 + 1 = 8$ dimensiones.
 \end{example}
 
+El puente también se usa arquitectónicamente: las Clifford Group Equivariant Simplicial Message Passing Networks \citep{liu2024cliffordsimplicial} asignan a cada símplice una feature multivectorial construida a partir de productos geométricos de los multivectores de sus vértices, de modo que los símplices superiores portan información de grado superior (áreas y volúmenes orientados), y pasan mensajes entre símplices de dimensiones adyacentes con capas equivariantes bajo el grupo de Clifford de la \autoref{def:grupo_clifford}, combinando la equivarianza bajo $E(n)$ con el paso de mensajes simplicial de la \autoref{def:vecindarios_complejos}.
+
 \subsubsection{Homología Persistente}
 
 La homología persistente proporciona una herramienta multiescala para análisis topológico de datos.
@@ -5818,6 +5900,10 @@ para arista $e$ con source $s(e)$ y target $t(e)$.
 Generaliza el Laplaciano de grafo estándar permitiendo espacios de características heterogéneos.
 \end{example}
 
+\textbf{Sheaf Hypergraph Networks.} La construcción se extiende de grafos a hipergrafos \citep{duta2023sheafhypergraph}. Un sheaf celular sobre un hipergrafo $H = (V, E)$ asigna stalks $\mathcal{F}(v)$, $\mathcal{F}(e)$ y, para cada incidencia $v \in e$, un mapa de restricción $\mathcal{F}_{v \trianglelefteq e}: \mathcal{F}(v) \to \mathcal{F}(e)$ del nodo a la hiperarista. El \emph{Laplaciano de sheaf lineal para hipergrafos} compara cada nodo con todos los demás miembros de cada hiperarista a la que pertenece,
+\[(L_{\mathcal{F}}\, x)_v = \sum_{e \ni v} \frac{1}{|e|} \sum_{u \in e} \mathcal{F}_{v \trianglelefteq e}^{\top}\big(\mathcal{F}_{v \trianglelefteq e}\, x_v - \mathcal{F}_{u \trianglelefteq e}\, x_u\big),\]
+y se reduce al Laplaciano de hipergrafo estándar cuando todos los mapas de restricción son la identidad, mientras que el \emph{Laplaciano de sheaf no lineal para hipergrafos} conserva, dentro de cada hiperarista, solo el par $(u, v)$ con mayor desacuerdo $\|\mathcal{F}_{u \trianglelefteq e}\, x_u - \mathcal{F}_{v \trianglelefteq e}\, x_v\|$, en el espíritu de los Laplacianos no lineales de la teoría espectral de hipergrafos. La difusión con cualquiera de los dos Laplacianos, con mapas de restricción aprendidos, define las capas, y la estructura de sheaf proporciona sobre hipergrafos el mismo remedio contra el sobre-suavizado (\textit{oversmoothing}) y la heterofilia que las Sheaf Neural Networks proporcionan sobre grafos, puesto que el espacio armónico de $L_{\mathcal{F}}$ ya no está forzado a ser constante. Las Bundle Neural Networks \citep{bamberger2024bundlenn} son el caso especial de un \emph{fibrado vectorial plano}: un sheaf cuyos mapas de restricción son ortogonales, de modo que transportar una feature a lo largo del grafo es una isometría, con mensajes difundidos mediante el Laplaciano del fibrado resultante (véase el \autoref{ex:bundle_neural_networks}).
+
 \subsubsection{Invariantes Topológicos Aprendibles}
 
 Las arquitecturas avanzadas pueden aprender a computar invariantes topológicos como:
@@ -5840,7 +5926,7 @@ La teoría de categorías proporciona un lenguaje unificador que conecta álgebr
     \item \textbf{Funtor de homología}: $H_*: \textbf{Chain} \to \textbf{GrVect}$ (cadenas a espacios graduados)
     \item \textbf{Funtor de Clifford}: Asocia a cada variedad Riemanniana su Clifford bundle
 \end{itemize}
-\textbf{Naturalidad como Equivarianza.} El uso arquitectónico más claro de este lenguaje son las Natural Graph Networks \citep{dehaan2020natural}. Sea $\mathcal{C}$ la categoría cuyos objetos son las vecindades de nodos y cuyos morfismos son los isomorfismos locales entre ellas, y $\mathcal{D}$ la categoría análoga de vecindades de aristas, con funtores $F_0, F_1: \mathcal{D} \to \mathcal{C}$ que seleccionan los dos extremos de cada arista. Los espacios de características son funtores $\rho, \rho': \mathcal{C} \to \mathbf{Vect}$, y una capa es una transformación natural $k: \rho \circ F_0 \Rightarrow \rho' \circ F_1$. La naturalidad es exactamente la exigencia de que el kernel conmute con todo isomorfismo local, de modo que la equivarianza no se impone sobre la arquitectura sino que es la definición de morfismo en ella. Como todos los morfismos de $\mathcal{C}$ son invertibles, $\mathcal{C}$ es un grupoide (\autoref{def:grupoide}), y la construcción se generaliza: las redes equivariantes por categorías \citep{maruyama2025categorical} recuperan las convoluciones de grupo, las convoluciones de grupoide y las sheaf neural networks como instancias de la misma condición de naturalidad, cada una con su propio teorema de aproximación universal.
+\textbf{Naturalidad como Equivarianza.} El uso arquitectónico más claro de este lenguaje son las Natural Graph Networks \citep{dehaan2020natural}. Sea $\mathcal{C}$ la categoría cuyos objetos son las vecindades de nodos y cuyos morfismos son los isomorfismos locales entre ellas, y $\mathcal{D}$ la categoría análoga de vecindades de aristas, con funtores $F_0, F_1: \mathcal{D} \to \mathcal{C}$ que seleccionan los dos extremos de cada arista. Los espacios de características son funtores $\rho, \rho': \mathcal{C} \to \mathbf{Vect}$, y una capa es una transformación natural $k: \rho \circ F_0 \Rightarrow \rho' \circ F_1$. La naturalidad es exactamente la exigencia de que el kernel conmute con todo isomorfismo local, de modo que la equivarianza no se impone sobre la arquitectura sino que es la definición de morfismo en ella. Como todos los morfismos de $\mathcal{C}$ son invertibles, $\mathcal{C}$ es un grupoide (\autoref{def:grupoide}), y la construcción se generaliza: las redes equivariantes por categorías \citep{maruyama2025categorical} recuperan las convoluciones de grupo, las convoluciones de grupoide y las sheaf neural networks como instancias de la misma condición de naturalidad, cada una con su propio teorema de aproximación universal. \citet{maruyama2026foundations} llevan la unificación más lejos, tratando por igual las redes neuronales de grafos y de sheaves como redes equivariantes al orden sobre el poset de caras del complejo subyacente, con un teorema de aproximación universal para la clase resultante.
 
 
 Las extensiones algebraicas avanzadas (Clifford, topológicas, categóricas) enfrentan desafíos computacionales de escalabilidad y estabilidad numérica en álgebras de alta dimensión, y requieren mayor desarrollo teórico en capacidades expresivas y garantías de convergencia.
@@ -6161,9 +6247,48 @@ En química computacional, las moléculas pueden tener simetrías nominales que 
 \end{equation}
 donde $\mathbf{c}_{\text{env}}$ codifica condiciones ambientales que rompen la simetría.
 
+\subsection{Canonicalización y Frame Averaging}\label{subsec:canonicalizacion_frames}
+
+Todas las arquitecturas de este capítulo obtienen la equivarianza restringiendo las capas: los kernels satisfacen una condición de steerability, las features se descomponen en representaciones irreducibles, los mensajes se construyen a partir de invariantes. Existe una segunda estrategia, ortogonal, en la que la red principal $\phi$ se deja completamente sin restricciones (una \gls{CNN}, un \gls{MLP} o un \gls{Transformer} estándar) y la equivarianza se obtiene transformando la entrada antes de $\phi$ y la salida después. La idea de promediar sobre el grupo es antigua, pero promediar sobre todo $G$ es inviable para grupos grandes o continuos; el paso decisivo consiste en promediar sobre un subconjunto pequeño y dependiente de la entrada. En lo que sigue, $G$ actúa sobre el espacio de entrada $\mathcal{X}$ y sobre el espacio de salida $\mathcal{Y}$ mediante representaciones $\rho_{\mathcal{X}}$ y $\rho_{\mathcal{Y}}$, y abreviamos $\rho_{\mathcal{X}}(g)\,x$ como $gx$.
+
+\begin{definition}[Frame]\label{def:frame_equivariante}
+Un \textbf{frame} es una aplicación a valores en conjuntos $F: \mathcal{X} \to 2^G$ con $F(x) \neq \emptyset$ y $|F(x)| < \infty$ para todo $x$, que es $G$-equivariante:
+\[F(gx) = g\,F(x) := \{ gh : h \in F(x) \} \qquad \text{para todo } g \in G,\ x \in \mathcal{X}.\]
+Si $|F(x)| = 1$ para todo $x$, $F(x) = \{c(x)\}$, la aplicación $c: \mathcal{X} \to G$ se denomina \textbf{canonicalización}, y $c(x)^{-1}x$ la \textbf{forma canónica} de $x$.
+\end{definition}
+
+\begin{theorem}[Frame Averaging]\label{thm:frame_averaging}
+Sea $F$ un frame y $\phi: \mathcal{X} \to \mathcal{Y}$ una aplicación arbitraria \citep{puny2022frameaveraging}. Entonces
+\[\Phi_F(x) = \frac{1}{|F(x)|} \sum_{h \in F(x)} \rho_{\mathcal{Y}}(h)\, \phi\big(h^{-1}x\big)\]
+es $G$-equivariante; es invariante cuando $\rho_{\mathcal{Y}}$ es trivial. Además, si $\phi$ ya es equivariante entonces $\Phi_F = \phi$, de modo que el frame averaging no reduce la clase de funciones equivariantes representables.
+\end{theorem}
+
+\begin{proof}
+Por la equivarianza de $F$, $h \mapsto gh$ es una biyección de $F(x)$ sobre $F(gx)$, de modo que $|F(gx)| = |F(x)|$ y
+\begin{align*}
+\Phi_F(gx) &= \frac{1}{|F(x)|} \sum_{h \in F(x)} \rho_{\mathcal{Y}}(gh)\, \phi\big((gh)^{-1} gx\big) \\
+&= \rho_{\mathcal{Y}}(g)\, \frac{1}{|F(x)|}\sum_{h \in F(x)} \rho_{\mathcal{Y}}(h)\, \phi\big(h^{-1}x\big) = \rho_{\mathcal{Y}}(g)\, \Phi_F(x).
+\end{align*}
+Si $\phi$ es equivariante, cada sumando es igual a $\phi(x)$.
+\end{proof}
+
+Cuando el frame es una canonicalización la suma tiene un único término, $\Phi(x) = \rho_{\mathcal{Y}}(c(x))\, \phi\big(c(x)^{-1}x\big)$: la entrada se lleva a su pose canónica, se procesa con la red sin restricciones y la salida se devuelve a la pose original.
+
+\begin{example}[Frame PCA para $E(3)$ sobre Nubes de Puntos]\label{ex:frame_pca}
+Sea $\mathbf{X} \in \mathbb{R}^{N \times 3}$ una nube de puntos y sea $G = E(3)$ actuando mediante $\mathbf{X} \mapsto \mathbf{X}\mathbf{R}^{\top} + \mathbf{1}\mathbf{t}^{\top}$. Sean $\mathbf{t}(\mathbf{X}) = \frac{1}{N}\mathbf{X}^{\top}\mathbf{1}$ el centroide y $\mathbf{C}(\mathbf{X}) = (\mathbf{X} - \mathbf{1}\mathbf{t}^{\top})^{\top}(\mathbf{X} - \mathbf{1}\mathbf{t}^{\top})$ la matriz de covarianza, con autovectores $\mathbf{u}_1, \mathbf{u}_2, \mathbf{u}_3$ ordenados por autovalor decreciente. Como los autovectores están definidos solo salvo signo, el frame \gls{PCA} es
+\[F(\mathbf{X}) = \Big\{ \big(\mathbf{R}, \mathbf{t}(\mathbf{X})\big) : \mathbf{R} = [\pm\mathbf{u}_1, \pm\mathbf{u}_2, \pm\mathbf{u}_3] \Big\},\]
+que tiene $2^3 = 8$ elementos (cuatro si se conservan solo los de $\det \mathbf{R} = +1$ para $SE(3)$). Bajo $\mathbf{X} \mapsto \mathbf{X}\mathbf{Q}^{\top} + \mathbf{1}\mathbf{s}^{\top}$ el centroide pasa a ser $\mathbf{Q}\mathbf{t} + \mathbf{s}$ y la covarianza $\mathbf{Q}\mathbf{C}\mathbf{Q}^{\top}$, cuyos autovectores son $\pm\mathbf{Q}\mathbf{u}_k$; por tanto $F(\mathbf{X}\mathbf{Q}^{\top} + \mathbf{1}\mathbf{s}^{\top}) = (\mathbf{Q}, \mathbf{s})\,F(\mathbf{X})$, y la ambigüedad de signo es exactamente la razón por la que se necesita un conjunto de ocho elementos, y no una única pose canónica. El frame no está definido cuando los autovalores coinciden (por ejemplo, para nubes simétricas), y su coste es de ocho evaluaciones de $\phi$ por entrada.
+\end{example}
+
+\textbf{Canonicalización aprendida.} Fijar el frame analíticamente, como con \gls{PCA}, no siempre es posible y nunca está adaptado a la tarea. \citet{kaba2023canonicalization} \emph{aprenden} en cambio la canonicalización: una pequeña red equivariante $c_\theta$ (una red equivariante para nubes de puntos en el caso de $E(n)$, una red de convolución de grupo para simetrías discretas de imágenes) predice un elemento del grupo, y la red grande no equivariante $\phi$ opera sobre la forma canónica $c_\theta(x)^{-1}x$. Solo $c_\theta$ debe ser equivariante, y solo salvo el estabilizador de $x$, ya que una pose canónica está definida módulo las simetrías de la propia entrada; la equivarianza exacta del modelo completo se sigue entonces del \autoref{thm:frame_averaging} con $|F(x)| = 1$, al coste de una única pasada hacia delante de $\phi$. Las dos redes se entrenan de extremo a extremo, de modo que la pose canónica se elige para facilitar la tarea a $\phi$, y una red principal no equivariante preentrenada puede reutilizarse sin cambios.
+
+\textbf{Simetrización probabilística.} \citet{kim2023probabilisticsymmetrization} sustituyen el frame finito por una distribución sobre el grupo, $\Phi(x) = \mathbb{E}_{g \sim p_\theta(g \mid x)}\big[\rho_{\mathcal{Y}}(g)\, \phi(g^{-1}x)\big]$, donde $p_\theta$ está parametrizada por una pequeña red equivariante con ruido inyectado y satisface $p_\theta(gh \mid gx) = p_\theta(h \mid x)$. La misma sustitución que en la demostración anterior muestra que $\Phi$ es equivariante; en la práctica la esperanza se estima con unas pocas muestras, de modo que el modelo es equivariante en esperanza y solo aproximadamente para una muestra finita. La construcción es agnóstica respecto de la arquitectura y preserva la universalidad: si $\phi$ es un aproximador universal, $\Phi$ es universal entre las funciones equivariantes, y los autores la usan para simetrizar un \gls{ViT} ordinario, incluido uno preentrenado con imágenes, en un modelo $S_n$-equivariante para tareas sobre grafos.
+
+\textbf{Compromisos.} El frame averaging y la canonicalización dan equivarianza \emph{exacta} con una red principal sin restricciones que conserva toda su expresividad (\autoref{thm:frame_averaging}); el precio son $|F(x)|$ pasadas hacia delante, y por eso los frames deben ser pequeños (ocho para \gls{PCA}, uno para la canonicalización) en lugar del grupo completo ($|S_n| = n!$, o un $E(3)$ continuo). El coste más sutil es la continuidad. En una entrada $x$ con estabilizador no trivial $h \neq e$, $hx = x$, la condición de equivarianza fuerza $c(x) = hc(x)$, lo cual es imposible: una canonicalización estrictamente equivariante ni siquiera puede definirse en tal entrada (una nube de puntos simétrica, donde los autovalores de la covarianza coinciden), y cualquier canonicalización definida en las entradas cercanas debe saltar entre poses igualmente válidas en todo entorno de ella, de modo que no existe ninguna canonicalización continua sobre un dominio que la contenga; para rotaciones de nubes de puntos, obstrucciones topológicas descartan la continuidad incluso sobre el conjunto de entradas con estabilizador trivial. Como $\phi$ se aplica a $c(x)^{-1}x$, estas discontinuidades pasan a $\Phi$ y pueden perjudicar la generalización; los frames con varios elementos y, más en general, los frames ponderados con pesos continuos mitigan el problema al coste de más evaluaciones. Estas construcciones son la contrapartida natural de la ruta hacia la equivarianza aproximada basada en aumento de datos que se discute en la siguiente subsección: ambas usan una red principal no equivariante, pero aquí la simetría se impone exactamente por construcción, mientras que con aumento de datos solo se aprende de forma aproximada.
+
 \subsection{Análisis de Escalabilidad y Eficiencia}
 
-\subsubsection{El Dilema Equivarianza vs. Escalabilidad}
+\subsubsection{El Dilema Equivarianza vs. Escalabilidad}\label{subsubsec:dilema_equivarianza_escalabilidad}
 
 Un resultado teórico fundamental establecido por \citet{park2024equivariancescale} examina la saturación de las ventajas de equivarianza en regímenes de alta dimensionalidad. Este análisis revela una tensión intrinseca entre las restricciones geométricas y la capacidad expresiva en espacios de hipótesis de gran complejidad.
 
@@ -6201,6 +6326,10 @@ Una función $G$-equivariante $f: \mathbb{R}^d \to \mathbb{R}^d$ satisface $f(gx
 \end{proof}
 
 Este resultado sugiere que en dimensiones suficientemente altas, las arquitecturas equivariantes requieren significativamente más parámetros para alcanzar la misma capacidad expresiva.
+
+\paragraph{Evidencia a Escala: AlphaFold 3 y Orb}
+
+Dos sistemas de 2024 aportan la evidencia más concreta hasta la fecha sobre este dilema. AlphaFold 2 predecía estructuras con un módulo de estructura $SE(3)$-equivariante: atención de puntos invariante (\textit{invariant point attention}) sobre sistemas de referencia rígidos por residuo, con actualizaciones equivariantes de dichos sistemas. AlphaFold 3 \citep{abramson2024alphafold3} lo descarta en favor de un módulo de difusión que elimina el ruido de las coordenadas atómicas en bruto con un \gls{Transformer} estándar, no equivariante, y obtiene la simetría solo estadísticamente, entrenando con rotaciones y traslaciones aleatorias de la estructura objetivo como aumento de datos; el modelo resultante es más simple que su predecesor, lo iguala o supera en estructuras de proteínas, y es sustancialmente más preciso en complejos proteína--ligando, proteína--ácido nucleico y anticuerpo--antígeno. En potenciales interatómicos, Orb \citep{neumann2024orb} es una red de paso de mensajes sin equivarianza rotacional incorporada, preentrenada con un objetivo de eliminación de ruido (difusión) sobre millones de estructuras y después ajustada sobre energías y fuerzas; en el momento de su publicación redujo el error en el benchmark Matbench Discovery en un 31\% ejecutándose entre tres y seis veces más rápido que los potenciales universales existentes, la mayoría de ellos equivariantes (MACE entre ellos, \autoref{def:orden_cuerpo}). Ambos resultados son coherentes con la hipótesis de saturación de \citet{park2024equivariancescale}: con datos y capacidad suficientes, el aumento de datos recupera los beneficios de la simetría a menor coste. No refutan la conclusión opuesta en el régimen de pocos datos, donde los modelos equivariantes siguen siendo notablemente más eficientes en datos (las reducciones de un orden de magnitud en datos de entrenamiento recogidas en la \autoref{subsec:grupos_no_compactos} se obtienen sobre conjuntos moleculares pequeños), ni proporcionan las garantías exactas que una simulación física puede requerir: un modelo con aumento de datos es solo aproximadamente equivariante, y sus predicciones varían bajo rotaciones de la entrada. La canonicalización y el frame averaging (\autoref{subsec:canonicalizacion_frames}) se sitúan entre ambas posiciones, conservando una red principal no equivariante e imponiendo la simetría de forma exacta.
 
 \subsubsection{Complejidad Computacional: Análisis Big-O}
 
@@ -6255,6 +6384,10 @@ GraphGPS combina \gls{MPNN} local con atención global:
 \item Features posicionales: $O(n \cdot d_{\text{pos}})$
 \item Atención: $O(n \cdot k)$ (aproximada) o $O(n^2)$ (completa)
 \end{itemize}
+
+\paragraph{Redes Equivariantes con Features Steerable}
+
+Para arquitecturas $SE(3)$-equivariantes con features steerable de grado máximo $L$ (TFNs, SE(3)-Transformers, EquiformerV2) el término dominante es el producto tensorial por arista: $O(L^6)$ para la contracción densa de Clebsch--Gordan y $O(L^3)$ con la reducción eSCN de la \autoref{prop:escn_reduccion} \citep{passaro2023escn}, que es lo que hace asequible $L = 6$--$8$.
 
 \subsubsection{Tabla Comparativa de Arquitecturas}
 
@@ -6417,6 +6550,8 @@ Una CNN geométrica unificada es un triple $(\mathcal{M}, G, \Phi)$ donde:
 \textbf{2. Optimización en Variedades:} Algoritmos de optimización que respetan la geometría del espacio de parámetros, especialmente para modelos con restricciones de equivarianza.
 
 \textbf{3. Aprendizaje de Simetrías:} Métodos que pueden descubrir automáticamente las simetrías relevantes en los datos sin conocimiento a priori.
+
+Una instancia concreta de esta dirección es LieGAN \citep{yang2023liegan}, que aprende el grupo de simetría de un conjunto de datos como un grupo de Lie (\autoref{subsubsec:grupos_lie_fundamentales}) en lugar de suponerlo. El generador no produce datos sino transformaciones: mantiene una base aprendible $\{\mathbf{L}_k\}_{k=1}^{c}$ de un álgebra de Lie candidata, muestrea coeficientes $\mathbf{z}$, forma $g = \exp\big(\sum_k z_k \mathbf{L}_k\big)$ y aplica $g$ a una muestra $(x, y)$ de los datos, transformando entradas y etiquetas según la representación supuesta. Un discriminador intenta distinguir los pares transformados de los originales, de modo que en el equilibrio las transformaciones dejan invariante la distribución conjunta de los datos, que es precisamente la afirmación de que $\exp(\operatorname{span}\{\mathbf{L}_k\})$ es un grupo de simetría de la tarea; un regularizador impide que los generadores colapsen a la identidad o entre sí. En problemas sintéticos y físicos los generadores recuperados generan, salvo un cambio de base, álgebras de Lie conocidas como las de las rotaciones planas y la del grupo de Lorentz; la construcción supone una acción lineal de un grupo de Lie matricial sobre los datos. El álgebra descubierta puede usarse entonces de cualquiera de las dos maneras desarrolladas en este capítulo: para construir una arquitectura equivariante para el grupo que genera o, mediante los frames de la \autoref{subsec:canonicalizacion_frames}, para simetrizar un modelo no equivariante ya existente.
 
 \textbf{4. Escalabilidad de Arquitecturas Equivariantes:} Desarrollo de algoritmos aproximados que preserven las garantías de equivarianza reduciendo el coste computacional para datos de gran escala.
 
