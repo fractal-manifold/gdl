@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { type Lang, defaultLang, localizePath, useTranslations } from '../i18n/ui';
+import { bookUpdated } from '../data/book';
 
 interface Props {
   lang?: Lang;
@@ -12,6 +13,16 @@ const t = useTranslations(lang);
 // `releases/latest/download/<asset>` path is a stable redirect to the newest
 // release, so these links keep working when a new edition is published.
 const RELEASE = 'https://github.com/fractal-manifold/gdl/releases/latest/download';
+
+// The date of that release, spelled out in the reader's language. `bookUpdated`
+// is a plain ISO date, so it is parsed as UTC and formatted as UTC to keep the
+// day from shifting in timezones behind Greenwich.
+const updatedDate = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+}).format(new Date(`${bookUpdated}T00:00:00Z`));
 
 // The table of contents is driven by the chapter collection (filtered by
 // language) so the homepage, the /chapters index and the LaTeX book stay in
@@ -65,6 +76,7 @@ const copy = {
       { title: 'Print PDF', desc: 'Print-ready, sized for 7×10″ paper', cta: 'Download', href: `${RELEASE}/geometric-deep-learning-print.pdf` },
       { title: 'Printed copy', desc: 'Order a bound edition on Amazon', cta: 'Coming soon', href: null },
     ],
+    accessUpdated: 'Last updated',
     accessFine: 'PDFs are published on GitHub Releases and always link to the latest edition. The printed edition will link to Amazon.',
   },
   es: {
@@ -90,6 +102,7 @@ const copy = {
       { title: 'PDF de impresión', desc: 'Listo para imprimir, en papel de 7×10″', cta: 'Descargar', href: `${RELEASE}/geometric-deep-learning-print-es.pdf` },
       { title: 'Copia impresa', desc: 'Pide una edición encuadernada en Amazon', cta: 'Próximamente', href: null },
     ],
+    accessUpdated: 'Última actualización:',
     accessFine: 'Los PDF se publican en GitHub Releases y siempre enlazan a la última edición. La edición impresa enlazará a Amazon.',
   },
 }[lang];
@@ -224,6 +237,7 @@ const formats = formatMeta.map((m, i) => ({ ...m, ...copy.formats[i] }));
         );
       })}
     </div>
+    <p class="updated">{copy.accessUpdated} <time datetime={bookUpdated}>{updatedDate}</time></p>
     <p class="fine">{copy.accessFine}</p>
   </div>
 </section>
@@ -480,6 +494,11 @@ const formats = formatMeta.map((m, i) => ({ ...m, ...copy.formats[i] }));
   .fmt.purple .fmt-cta { color: var(--color-purple-soft); }
   .fmt.disabled { opacity: 0.6; cursor: default; }
   .fine { font-size: 0.85rem; color: var(--color-text-dim); margin-top: 2rem; }
+
+  /* Release date, sitting just above the fine print of the download cards. */
+  .updated { font-size: 0.9rem; color: var(--color-text-secondary); font-weight: 500; margin-top: 2rem; }
+  .updated time { font-variant-numeric: tabular-nums; }
+  .updated + .fine { margin-top: 0.5rem; }
 
   @media (max-width: 720px) {
     .cover-stage { display: none; }
