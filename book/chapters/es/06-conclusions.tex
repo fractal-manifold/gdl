@@ -1,43 +1,37 @@
-\chapter{Discusión y Conclusiones}\label{ch:conclusions}
+\chapter{Conclusiones}\label{ch:conclusions}
 
-\TODO{Esto solo son algunas ideas que necesita mucho trabajo}
-
-Este libro ha desarrollado una formalización matemática rigurosa del \gls{GDL}, estableciendo los fundamentos teóricos que unifican las arquitecturas modernas de aprendizaje profundo bajo un paradigma geométrico común. A lo largo de cuatro capítulos, se ha construido un arco que parte de las redes neuronales tradicionales, establece el marco geométrico de las ``5~Gs'', y muestra cómo las operaciones de convolución y atención se extienden a dominios no euclidianos preservando simetrías fundamentales. Las siguientes secciones sintetizan los resultados obtenidos en relación con los cuatro objetivos planteados en la \autoref{sec:objetivos_trabajo}, identifican las limitaciones que emergen del propio desarrollo teórico, y proponen direcciones futuras fundamentadas en el contenido del libro.
+El aprendizaje profundo geométrico suele presentarse como un catálogo de arquitecturas: redes convolucionales para imágenes, redes de grafos para moléculas, transformers para secuencias, redes equivariantes para nubes de puntos. Este libro ha seguido el camino contrario. Ha partido de las matemáticas (grupos y sus representaciones, variedades y su curvatura, grafos y sus espectros, geodésicas, fibrados y conexiones) y ha derivado de ellas las arquitecturas, demostrando por el camino los resultados que las justifican. Este capítulo de cierre reúne lo que ese camino ha mostrado, dice con honestidad lo que no ha resuelto y mira hacia dónde va el campo.
 
 
-\section{Síntesis de Resultados y Contribuciones}
+\section{La Geometría como Principio Organizador}
 
-\subsection{Fundamentos Teóricos: El Marco de las 5~Gs}
+\subsection{De las Neuronas a las Simetrías}
 
-El primer objetivo (desarrollar el marco matemático de las ``5~Gs'') se ha abordado en los Capítulos~\ref{ch:neural_networks} y~\ref{ch:gdl}. En el \autoref{ch:neural_networks} se ha formalizado la noción de red neuronal artificial partiendo de la definición de neurona (\autoref{def:neurona_artificial}), estableciendo después las bases de teoría de la medida y análisis funcional necesarias para demostrar el teorema de aproximación universal (\autoref{sec:aproximacion_universal}). Este resultado, que garantiza la capacidad expresiva de las redes de una capa oculta, constituye el punto de partida teórico desde el cual se justifican las arquitecturas más complejas. El \autoref{ch:neural_networks} ha mostrado las limitaciones inherentes a las arquitecturas tradicionales: su incapacidad para explotar simetrías de los datos y la ineficiencia paramétrica resultante.
+El punto de partida fue deliberadamente clásico. El \autoref{ch:neural_networks} formalizó la neurona artificial (\autoref{def:neurona_artificial}), construyó el aparato de teoría de la medida y análisis funcional necesario para demostrar el teorema de aproximación universal (\autoref{sec:aproximacion_universal}) y analizó el descenso de gradiente y su convergencia. Ese capítulo también dejó a la vista la debilidad que motiva todo lo que sigue: una red completamente conectada no tiene forma de saber que una imagen trasladada es la misma imagen, ni que un grafo reetiquetado es el mismo grafo. Tiene que aprender cada simetría a partir de los datos, y lo paga en parámetros y en muestras.
 
-El \autoref{ch:gdl} ha desarrollado el marco completo de las 5~Gs (\autoref{subsec:cinco_gs}): variedades diferenciables como dominios geométricos, grupos de Lie como descripción algebraica de las simetrías, grafos como discretizaciones de estos dominios, geodésicas como mecanismo de propagación de información, y teoría gauge para manejar invarianzas locales en sistemas de coordenadas. Los resultados clave de la teoría de representaciones (el teorema de Peter-Weyl (\autoref{thm:peter_weyl}) y el lema de Schur (\autoref{lem:schur})) proporcionan las herramientas para descomponer las representaciones de grupos en componentes irreducibles, lo que resulta esencial para construir operadores equivariantes. Las nociones de equivarianza (\autoref{def:equivariance_gdl}) e invarianza (\autoref{def:invariance_gdl}) se han formalizado como propiedades de compatibilidad entre funciones y acciones de grupo, estableciendo el principio rector del diseño arquitectónico en \gls{GDL}. La teoría gauge, desarrollada mediante fibrados principales (\autoref{def:fibrado_principal_formal}), ha extendido este principio al caso de simetrías locales.
+El \autoref{ch:gdl} aportó la estructura que faltaba a través de las cinco Gs (\autoref{subsec:cinco_gs}). La \emph{geometría} fija el dominio sobre el que viven los datos, desde las rejillas euclidianas hasta las variedades diferenciables y la hipótesis de la variedad que enlaza ambas. Los \emph{grupos} describen las simetrías de ese dominio; el teorema de Peter-Weyl (\autoref{thm:peter_weyl}) y el lema de Schur (\autoref{lem:schur}) descomponen sus representaciones en piezas irreducibles, y la equivarianza (\autoref{def:equivariance_gdl}) y la invarianza (\autoref{def:invariance_gdl}) convierten la simetría en una restricción de diseño sobre la red. Los \emph{grafos} discretizan el dominio, y el laplaciano del grafo traslada la teoría espectral del dominio continuo al discreto. Las \emph{geodésicas} proporcionan la noción de distancia a lo largo de la cual se propaga la información, junto con el mapa exponencial y el transporte paralelo. Los \emph{gauges}, mediante fibrados principales (\autoref{def:fibrado_principal_formal}) y conexiones, extienden la equivarianza de una simetría global a una simetría que puede cambiar de un punto a otro.
 
-\subsection{Unificación Arquitectónica}
+\subsection{Tres Elecciones y un Único Operador}
 
-El segundo objetivo (demostrar que las arquitecturas aparentemente dispares emergen como casos particulares del paradigma geométrico) se ha alcanzado mediante el concepto de \textit{message passing} equivariante como paradigma unificador (\autoref{def:mpnn_unificador}). Se ha demostrado formalmente que:
+Vistas a través de las cinco Gs, las diferencias entre las arquitecturas clásicas se reducen a tres elecciones: el dominio geométrico, el grupo de simetría y la estructura de conectividad. Una vez fijadas, un único operador, el \gls{message_passing} equivariante (\autoref{def:mpnn_unificador}), reproduce cada una de ellas:
 
 \begin{itemize}
-	\item Las redes neuronales tradicionales constituyen \glspl{MPNN} sobre grafos completos (\autoref{prop:ann_mpnn}), donde cada neurona intercambia información con todas las demás.
+	\item Las redes neuronales tradicionales son \glspl{MPNN} sobre grafos completos (\autoref{prop:ann_mpnn}), donde cada neurona intercambia información con todas las demás.
 	\item Las \glspl{CNN} realizan \gls{message_passing} sobre rejillas regulares (\autoref{thm:equivalencia_constructiva_cnn_gnn}), con pesos compartidos determinados por el grupo de traslaciones.
 	\item Los \glspl{Transformer} implementan \gls{message_passing} adaptativo (\autoref{def:self_attention_basica}), donde los pesos de comunicación se calculan dinámicamente a partir de los datos.
 \end{itemize}
 
-Esta unificación no es meramente conceptual. El test de Weisfeiler-Leman (\autoref{thm:wl_mpnn_equivalencia}) establece límites expresivos precisos para las \glspl{MPNN}, mostrando que su poder de distinción de grafos coincide exactamente con el del algoritmo combinatorio 1-WL. La jerarquía de generalización (\autoref{rem:jerarquia_generalizacion}) formaliza las relaciones de inclusión entre las distintas familias arquitectónicas, proporcionando un mapa teórico completo de sus capacidades relativas.
+Esta unificación no es meramente conceptual. El test de Weisfeiler-Leman (\autoref{thm:wl_mpnn_equivalencia}) establece límites expresivos precisos para las \glspl{MPNN}, mostrando que su poder de distinción de grafos coincide exactamente con el del algoritmo combinatorio 1-WL. La jerarquía de generalización (\autoref{rem:jerarquia_generalizacion}) formaliza las relaciones de inclusión entre las distintas familias arquitectónicas, proporcionando un mapa de sus capacidades relativas, y la síntesis de la \autoref{sec:sintesis_marco_unificador} muestra que el mapa es exhaustivo: cada arquitectura tratada en el libro ocupa una posición en él.
 
-\subsection{Extensiones Geométricas}
+\subsection{Convolución y Atención más allá del Espacio Euclidiano}
 
-El tercer objetivo (analizar las extensiones de convoluciones y mecanismos de atención a dominios no euclidianos) se ha desarrollado en los Capítulos~\ref{ch:cnn} y~\ref{ch:attention}.
+Las dos familias que dominan la práctica se reconstruyeron después sobre dominios no euclidianos. El \autoref{ch:cnn} construyó una progresión de generalizaciones convolucionales de complejidad creciente: convoluciones de grupo, redes steerable, convoluciones esféricas, redes $\text{E}(3)$/$SE(3)$-equivariantes, redes gauge equivariantes y convoluciones Clifford-valuadas. Esta cadena culmina en el teorema de universalidad equivariante (\autoref{theorem:equivariant_universality_cnns}), que garantiza que las \glspl{CNN} equivariantes pueden aproximar cualquier función continua equivariante, extendiendo así el resultado clásico de aproximación universal al contexto geométrico. Las extensiones topológicas, desarrolladas mediante los laplacianos de Hodge (\autoref{def:hodge_laplacians_cnn}), proporcionaron herramientas para operar sobre estructuras de orden superior (complejos simpliciales y celulares).
 
-El \autoref{ch:cnn} ha construido una progresión de generalizaciones convolucionales de complejidad creciente: convoluciones de grupo, redes steerable, convoluciones esféricas, redes $\text{E}(3)$/$SE(3)$-equivariantes, redes gauge equivariantes y convoluciones Clifford-valuadas. Esta cadena culmina en el teorema de universalidad equivariante (\autoref{theorem:equivariant_universality_cnns}), que garantiza que las \glspl{CNN} equivariantes pueden aproximar cualquier función continua equivariante, extendiendo así el resultado clásico de aproximación universal al contexto geométrico. Las extensiones topológicas, desarrolladas mediante los laplacianos de Hodge (\autoref{def:hodge_laplacians_cnn}), han proporcionado herramientas para operar sobre estructuras de orden superior (complejos simpliciales y celulares).
+El \autoref{ch:attention} hizo lo mismo con la atención. Su formalización como operador integral la conectó con el análisis funcional del \autoref{ch:neural_networks}; la atención equivariante mediante álgebra de Clifford (\autoref{sec:clifford_attention}) opera directamente sobre multivectores, preservando las simetrías del álgebra geométrica; la atención hiperbólica (\autoref{def:atencion_hiperbolica}) extiende el mecanismo a espacios de curvatura negativa constante, adecuados para datos jerárquicos; y la atención simplicial y de Hodge lo lleva a estructuras de orden superior. El análisis armónico actuó como herramienta unificadora a lo largo de ambos capítulos, conectando las perspectivas espacial y espectral de cada operación geométrica.
 
-El \autoref{ch:attention} ha extendido los mecanismos de atención a dominios geométricos diversos. La atención equivariante mediante álgebra de Clifford (\autoref{sec:clifford_attention}) permite operar directamente sobre multivectores, preservando las simetrías del álgebra geométrica. La atención hiperbólica (\autoref{def:atencion_hiperbolica}) extiende los mecanismos de atención a espacios de curvatura negativa constante, adecuados para datos con estructura jerárquica. El análisis armónico ha actuado como herramienta unificadora a lo largo de ambos capítulos, conectando las perspectivas espacial y espectral de las operaciones geométricas.
+\subsection{La Teoría se Encuentra con las Arquitecturas}
 
-\subsection{Conexión Teoría-Arquitecturas}
-
-El cuarto objetivo (ilustrar cómo los principios geométricos formalizados se manifiestan en los modelos modernos) se ha abordado mediante el análisis de arquitecturas representativas. AlphaFold~\citep{jumper2021alphafold} ejemplifica la equivarianza $SE(3)$ en predicción de estructura de proteínas. DeepSets y PointNet ilustran la invarianza a permutaciones, con el teorema de universalidad correspondiente (\autoref{thm:deepsets_universal}) garantizando su capacidad expresiva sobre funciones de conjuntos. Los \gls{GATr} demuestran la aplicabilidad de las álgebras de Clifford en arquitecturas de atención.
-
-La tabla de equivalencias \gls{CNN}-atención (\autoref{tab:cnn_attention_equivalencias_fundamentales}) sintetiza las correspondencias formales entre ambos paradigmas, mostrando que comparten estructura matemática a pesar de sus diferencias aparentes. El teorema de correspondencia (\autoref{thm:correspondencia_cnn_attention}) y la conjetura de convergencia (\autoref{conj:convergencia_cnn_attention}) formalizan esta relación, sugiriendo que bajo condiciones apropiadas las operaciones convolucionales y de atención convergen al mismo operador.
+Nada de esto se quedó en abstracto. AlphaFold~\citep{jumper2021alphafold} ejemplifica la equivarianza $SE(3)$ en predicción de estructura de proteínas. DeepSets y PointNet ilustran la invarianza a permutaciones, con el teorema de universalidad correspondiente (\autoref{thm:deepsets_universal}) garantizando su capacidad expresiva sobre funciones de conjuntos. Los \gls{GATr} demuestran la aplicabilidad de las álgebras de Clifford en arquitecturas de atención. La tabla de equivalencias \gls{CNN}-atención (\autoref{tab:cnn_attention_equivalencias_fundamentales}) sintetiza las correspondencias formales entre ambos paradigmas, mostrando que comparten estructura matemática a pesar de sus diferencias aparentes, y el teorema de correspondencia (\autoref{thm:correspondencia_cnn_attention}) junto con la conjetura de convergencia (\autoref{conj:convergencia_cnn_attention}) formalizan la relación: bajo condiciones apropiadas, convolución y atención convergen al mismo operador.
 
 
 \section{Limitaciones y Problemas Abiertos}
@@ -52,7 +46,7 @@ La propia barrera se ha refinado en los últimos años. Para grafos discretos, \
 
 El trade-off entre rigidez y adaptabilidad (\autoref{rem:tradeoff_rigidez_adaptabilidad}), formalizado en el \autoref{ch:attention}, identifica una tensión fundamental en el diseño de arquitecturas geométricas. Las \glspl{CNN} equivariantes incorporan simetrías de forma rígida, lo que proporciona eficiencia en datos y garantías teóricas, pero limita su capacidad de adaptación cuando las simetrías son solo aproximadas. Los mecanismos de atención ofrecen flexibilidad para aprender relaciones dependientes del contexto, pero a costa de mayor demanda de datos y menor regularización estructural. La conjetura de convergencia \gls{CNN}-atención (\autoref{conj:convergencia_cnn_attention}) sugiere que ambos paradigmas convergen bajo condiciones apropiadas, pero el punto óptimo en el espectro rigidez-adaptabilidad para cada dominio concreto permanece como un problema abierto.
 
-Entre ambos polos ha surgido una tercera opción, que desacopla la equivarianza de la arquitectura. El \textit{frame averaging} \citep{puny2022frameaveraging} convierte una red arbitraria $f$ en exactamente equivariante promediándola sobre un pequeño conjunto de elementos del grupo dependiente de la entrada $F(\mathbf{x}) \subset G$ (un \textit{frame}, que satisface $F(g\mathbf{x}) = g\,F(\mathbf{x})$), $\Phi(\mathbf{x}) = \frac{1}{|F(\mathbf{x})|}\sum_{g \in F(\mathbf{x})} \rho_{\mathcal{Y}}(g)\, f(g^{-1}\mathbf{x})$, sin restringir las capas de $f$ y sin perder universalidad; la canonicalización aprendida \citep{kaba2023canonicalization} reduce el frame a un único elemento, predicho por una red auxiliar equivariante que lleva la entrada a una pose canónica (véase la \autoref{subsec:canonicalizacion_frames}). Cuando el propio grupo es desconocido, los métodos de descubrimiento de simetrías como LieGAN \citep{yang2023liegan} aprenden los generadores de un álgebra de Lie de simetrías a partir de los datos mediante entrenamiento adversario, aportando el ingrediente que falta al meta-learner geométrico de la \autoref{def:meta_learner_geometrico}.
+Entre ambos polos ha surgido una tercera opción, que desacopla la equivarianza de la arquitectura. El \textit{frame averaging} \citep{puny2022frameaveraging} convierte una red arbitraria $f$ en exactamente equivariante promediándola sobre un pequeño conjunto de elementos del grupo dependiente de la entrada $F(\mathbf{x}) \subset G$ (un \textit{frame}, que satisface $F(g\mathbf{x}) = g\,F(\mathbf{x})$), $\Phi(\mathbf{x}) = \frac{1}{|F(\mathbf{x})|}\sum_{g \in F(\mathbf{x})} \rho_{\mathcal{Y}}(g)\, f(g^{-1}\mathbf{x})$, sin restringir las capas de $f$ y sin perder universalidad; la canonicalización aprendida \citep{kaba2023canonicalization} reduce el frame a un único elemento, predicho por una red auxiliar equivariante que lleva la entrada a una pose canónica (véase la \autoref{subsec:canonicalizacion_frames}). Cuando el propio grupo es desconocido, los métodos de descubrimiento de simetrías como LieGAN \citep{yang2023liegan} aprenden los generadores de un álgebra de Lie de simetrías a partir de los datos mediante entrenamiento adversario, aportando el ingrediente que necesitaría una cadena completamente automática de los datos al grupo de simetría y de este a la arquitectura (\autoref{subsec:hacia_teoria_unificada}).
 
 \subsection{Gauge Equivarianza y Topología Global}
 
@@ -63,34 +57,15 @@ La teoría gauge desarrollada en el \autoref{ch:cnn} mediante fibrados principal
 Las herramientas topológicas desarrolladas en este libro (laplacianos de Hodge (\autoref{def:hodge_laplacians_cnn}), homología persistente, complejos simpliciales) proporcionan un marco matemáticamente riguroso para capturar relaciones de orden superior. No obstante, las arquitecturas que operan sobre estas estructuras se encuentran en un estado de madurez temprano en comparación con las arquitecturas sobre grafos. El diseño de operaciones de convolución y atención eficientes sobre complejos celulares generales, que preserven las propiedades algebraicas de la topología subyacente sin incurrir en costes computacionales prohibitivos, permanece como un problema abierto relevante. El artículo de posición de \citet{papamarkou2024tdlposition}, firmado por buena parte de la comunidad, enumera los problemas abiertos del \gls{TDL} en estos términos: una teoría de la expresividad sobre complejos análoga a la jerarquía WL para grafos, la escalabilidad del paso de mensajes sobre celdas de dimensión alta, la falta de benchmarks en los que la estructura topológica sea demostrablemente necesaria, y la conexión con los sheaves celulares y otras estructuras algebraicas; el survey de \citet{papillon2023tdlarchitectures} organiza las arquitecturas existentes bajo una única plantilla de paso de mensajes sobre hipergrafos y complejos simpliciales, celulares y combinatorios, lo que hace posible una comparación sistemática entre ellas.
 
 
-\section{Direcciones Futuras}
+\section{Hacia Dónde Va el Campo}
 
-Las siguientes líneas de investigación se fundamentan directamente en los resultados y limitaciones identificados en este libro.
+Las direcciones que siguen se fundamentan directamente en los resultados y limitaciones identificados arriba. Se enuncian como perspectivas, no como resultados: el libro no afirma sobre ellas nada más allá de lo que establece la literatura citada.
 
 \subsection{Arquitecturas Híbridas CNN-Atención}
 
 El teorema de correspondencia (\autoref{thm:correspondencia_cnn_attention}) y la conjetura de convergencia (\autoref{conj:convergencia_cnn_attention}) entre convoluciones y atención, junto con el análisis del espectro rigidez-adaptabilidad (\autoref{rem:tradeoff_rigidez_adaptabilidad}), sugieren que una dirección natural es el diseño de arquitecturas que combinen ambos paradigmas de forma controlada. El marco teórico establecido en el \autoref{ch:attention} proporciona las herramientas formales para interpolar entre la rigidez de las convoluciones equivariantes y la adaptabilidad de la atención, potencialmente combinando la eficiencia en el uso de datos de las primeras con la expresividad de la segunda.
 
-Dos patrones arquitectónicos concretos ilustran esta interpolación. El primero combina un núcleo convolucional, que procesa características locales con garantías geométricas, con cabezas de atención que capturan dependencias globales adaptativas, mediando entre ambos mediante un mecanismo de intercambio aprendible.
-
-\begin{definition}[ConvNext-Attention Híbrido]\label{def:convnext_attention}
-Una arquitectura híbrida que combina:
-\begin{itemize}
-    \item \textbf{Núcleo convolucional}: Para procesar características locales con garantías geométricas
-    \item \textbf{Cabezas de atención}: Para capturar dependencias globales adaptativas
-    \item \textbf{Intercambio dinámico}: Mecanismo aprendible que decide cuándo usar cada componente
-\end{itemize}
-\end{definition}
-
-El segundo traslada el mecanismo retentivo a dominios geométricos, sustituyendo el decaimiento posicional propio de las secuencias por un decaimiento sobre la distancia geodésica del dominio:
-
-\begin{definition}[Retentive Networks Geométricas]\label{def:retentive_networks_geometricas}
-Extensión del mecanismo retentivo a dominios geométricos:
-\begin{equation}
-    \text{Retention}(Q, K, V) = Q \odot \sum_{j} \text{decay}(d_\mathcal{M}(i,j)) \cdot K_j \odot V_j
-\end{equation}
-donde $d_\mathcal{M}$ es la distancia geodésica en el dominio geométrico $\mathcal{M}$.
-\end{definition}
+Dos patrones ilustran la interpolación. El primero empareja un núcleo convolucional, que procesa características locales con garantías geométricas, con cabezas de atención que capturan dependencias globales adaptativas, y deja que una compuerta aprendida decida, por capa o por token, cuánto usar de cada uno; las arquitecturas híbridas de visión del \autoref{ch:attention} son instancias tempranas. El segundo sustituye el softmax de la atención por un decaimiento fijo con la distancia en el dominio, como hacen las redes retentivas con la posición en la secuencia, pero con la distancia geodésica $d_\mathcal{M}$ del \autoref{ch:gdl} en lugar del desplazamiento posicional, de modo que el decaimiento respeta la geometría y no un orden arbitrario. Cuál de los dos preserva mejor las garantías del \autoref{ch:cnn} conservando la flexibilidad del \autoref{ch:attention} es una cuestión empírica que la teoría de este libro enmarca pero no resuelve.
 
 \subsection{Dominios Geométricos Complejos}
 
@@ -134,53 +109,15 @@ El papel central del análisis armónico en este libro (desde las convoluciones 
 
 \subsection{Hacia una Teoría Unificada}\label{subsec:hacia_teoria_unificada}
 
-Dos síntesis recientes cartografían el terreno que tal teoría tendría que reconciliar: \citet{saezdeocarizborde2025mathfoundations} organizan el \gls{GDL} desde el lado del modelo, en torno a las estructuras matemáticas (grupos de simetría, variedades, grafos) impuestas a la arquitectura, mientras que \citet{papillon2024beyondeuclid} lo organizan desde el lado de los datos, clasificando los métodos por la estructura geométrica, topológica y algebraica de sus entradas; una teoría unificada debería explicar por qué ambas taxonomías coinciden allí donde lo hacen. Más allá del diseño de arquitecturas concretas, la conjetura de convergencia \gls{CNN}-atención (\autoref{conj:convergencia_cnn_attention}) apunta hacia una teoría unificada cuyos contornos comienzan a vislumbrarse. Una primera línea concierne a los límites de expresividad: si ambos paradigmas convergen al mismo conjunto límite de operadores, cabe esperar que también converja su coste de aproximación.
+Dos síntesis recientes cartografían el terreno que una teoría unificada del \gls{GDL} tendría que reconciliar: \citet{saezdeocarizborde2025mathfoundations} organizan el campo desde el lado del modelo, en torno a las estructuras matemáticas (grupos de simetría, variedades, grafos) impuestas a la arquitectura, mientras que \citet{papillon2024beyondeuclid} lo organizan desde el lado de los datos, clasificando los métodos por la estructura geométrica, topológica y algebraica de sus entradas; una teoría unificada debería explicar por qué ambas taxonomías coinciden allí donde lo hacen. Tres preguntas, abiertas pero no respondidas en este libro, señalan el camino.
 
-\begin{conjecture}[Límites Universales de Aproximación Geométrica]\label{conj:limites_universales}
-Para toda función $f: \mathcal{M} \to \mathbb{R}$ continua sobre variedad compacta $\mathcal{M}$, y todo $\epsilon > 0$, existen arquitecturas CNN y Attention de complejidades $C_{CNN}(\epsilon)$ y $C_{Att}(\epsilon)$ tales que:
-\begin{equation}
-    \frac{C_{Att}(\epsilon)}{C_{CNN}(\epsilon)} \to 1 \quad \text{cuando } \epsilon \to 0
-\end{equation}
-Esta conjetura sugiere que la diferencia en complejidad arquitectónica desaparece en el límite de aproximación perfecta.
-\end{conjecture}
+La primera concierne a los límites de la expresividad. La conjetura de convergencia \gls{CNN}-atención (\autoref{conj:convergencia_cnn_attention}) afirma que ambos paradigmas convergen al mismo conjunto límite de operadores. Si es así, cabría esperar que también converjan sus costes de aproximación: para un objetivo continuo sobre una variedad compacta, el tamaño de la menor red convolucional y el de la menor red de atención que alcanzan una precisión dada deberían hacerse comparables a medida que el requisito de precisión se endurece. El teorema de universalidad equivariante (\autoref{theorem:equivariant_universality_cnns}) garantiza que ambos tamaños son finitos; nada en la teoría actual los relaciona, y falta una comparación cuantitativa de las tasas de aproximación entre paradigmas.
 
-Una segunda línea busca una teoría de la información propiamente geométrica, que pondere la incertidumbre estadística por la geometría del dominio subyacente.
+La segunda es una teoría de la información propiamente geométrica. La cota de complejidad muestral de la \autoref{sec:complejidad_muestral} muestra que lo que importa es la dimensión intrínseca de la variedad de datos, no la ambiente, y la cota de \gls{oversquashing} de \citet{digiovanni2023oversquashing} muestra que lo que limita el flujo de información en una red de grafos es la resistencia efectiva del grafo. Ambos resultados ponderan una cantidad estadística por una geométrica. Una teoría que hiciera esto de forma sistemática, midiendo la información que porta una representación respecto del volumen riemanniano del dominio y no respecto de la medida de Lebesgue, daría una forma principiada de comparar arquitecturas entre dominios y de decidir cuánta estructura geométrica requiere realmente una tarea. Las piezas existen en la geometría de la información; su aplicación al diseño de redes equivariantes, no.
 
-\begin{definition}[Entropía Geométrica de Fisher]\label{def:entropia_geometrica_fisher}
-Para una distribución $p$ sobre variedad riemanniana $(\mathcal{M}, g)$, la entropía geométrica se define:
-\begin{equation}
-    H_g(p) = -\int_\mathcal{M} p(x) \log p(x) \sqrt{\det g(x)} \, dx
-\end{equation}
-Esta cantidad captura tanto la incertidumbre estadística como la complejidad geométrica subyacente.
-\end{definition}
+La tercera es el descubrimiento automático de la simetría. A lo largo del libro el grupo ha venido dado: traslaciones para imágenes, $SE(3)$ para moléculas, permutaciones para conjuntos. El frame averaging y la canonicalización (\autoref{subsec:canonicalizacion_frames}) ya desacoplan la equivarianza de la arquitectura, y los métodos de descubrimiento de simetrías como LieGAN \citep{yang2023liegan} aprenden los generadores de un álgebra de Lie de simetrías a partir de los datos. Juntos, esbozan una cadena que va del conjunto de datos a su grupo de simetría y de este a la arquitectura equivariante correspondiente sin intervención humana. Si el grupo así descubierto es el que habría elegido un matemático, y si la arquitectura resultante hereda las garantías demostradas en este libro para grupos conocidos, son preguntas abiertas.
 
-\begin{conjecture}[Principio de Información Mínima Geométrica]\label{conj:principio_informacion_minima}
-Las arquitecturas óptimas de GDL minimizan la información geométrica necesaria para representar la función objetivo:
-\begin{equation}
-    \mathcal{A}^* = \arg\min_\mathcal{A} \left[ \mathcal{L}(\mathcal{A}) + \lambda H_g(\text{representaciones}_\mathcal{A}) \right]
-\end{equation}
-donde $\mathcal{L}$ es la pérdida empírica y $\lambda$ controla el trade-off información-precisión.
-\end{conjecture}
-
-Una tercera línea, complementaria de las anteriores, es el meta-aprendizaje geométrico: en lugar de fijar a priori el grupo de simetrías, el propio sistema lo descubre a partir de los datos y construye la arquitectura equivariante correspondiente.
-
-\begin{definition}[Meta-Learner Geométrico]\label{def:meta_learner_geometrico}
-Un sistema que aprende automáticamente las simetrías relevantes de un dominio:
-\begin{equation}
-    \text{Meta-GDL}: \mathcal{D} \mapsto G_{\text{óptimo}} \mapsto \mathcal{A}_{G_{\text{óptimo}}}
-\end{equation}
-donde $\mathcal{D}$ son los datos, $G_{\text{óptimo}}$ es el grupo de simetrías descubierto, y $\mathcal{A}_{G_{\text{óptimo}}}$ es la arquitectura resultante.
-\end{definition}
-
-Estas líneas convergen en un principio de síntesis: para cada problema geométrico, con una estructura conocida y un grado de adaptabilidad requerido, existiría una arquitectura híbrida óptima que equilibra ambos extremos del espectro rigidez-adaptabilidad.
-
-\begin{remark}[Principio de Síntesis Arquitectónica]\label{rem:principio_sintesis}
-Para todo problema geométrico con estructura conocida $\mathcal{S}$ y adaptabilidad requerida $\mathcal{A}$, existe una arquitectura híbrida óptima:
-\begin{equation}
-    \mathcal{H}^* = \arg\min_{\mathcal{H}} \left[ \mathcal{L}(\mathcal{H}) + \lambda_1 d(\mathcal{H}, \mathcal{S}) + \lambda_2 (1 - \text{Adaptabilidad}(\mathcal{H})) \right]
-\end{equation}
-donde $d(\mathcal{H}, \mathcal{S})$ mide la distancia a la estructura conocida y los parámetros $\lambda_i$ balancean las restricciones.
-\end{remark}
+Estas preguntas comparten una misma forma: para un problema con una estructura geométrica conocida y un grado de adaptabilidad requerido, piden la arquitectura que respeta la estructura hasta donde esta se cumple y se adapta donde no. El espectro rigidez-adaptabilidad del \autoref{ch:attention} es el eje a lo largo del cual se situaría tal arquitectura; la teoría unificada sería la regla que la sitúa.
 
 
 \section{Reflexión Final}
