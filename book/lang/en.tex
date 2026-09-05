@@ -1,10 +1,21 @@
 % =====================================================================
 %  Language strings: English
 %  Selected by \booklang=en (see main.tex). Defines the babel language,
-%  theorem-environment names, part titles, and the book subtitle so that
+%  theorem-environment names and the book subtitle so that
 %  a single source compiles in either language.
 % =====================================================================
 \newcommand{\babellang}{english}
+
+% hyperref's English \autoref names for sectioning units are lowercase
+% ("chapter 2", "section 3.4") while its "Theorem", "Figure" and "Appendix"
+% are capitalized. Capitalize them so cross-references read uniformly; the
+% Spanish edition already gets "Capítulo" and "Sección" from babel.
+\AtBeginDocument{%
+  \renewcommand{\chapterautorefname}{Chapter}%
+  \renewcommand{\sectionautorefname}{Section}%
+  \renewcommand{\subsectionautorefname}{Section}%
+  \renewcommand{\subsubsectionautorefname}{Section}%
+}
 
 % ----- Theorem environment names ------------------------------------
 \newcommand{\nameDefinition}{Definition}
@@ -21,11 +32,6 @@
 % ----- Glossary / list titles ---------------------------------------
 \newcommand{\glossaryTitle}{Glossary}
 \newcommand{\acronymTitle}{Acronyms}
-
-% ----- Part titles ---------------------------------------------------
-\newcommand{\partFoundations}{Foundations}
-\newcommand{\partFiveGs}{The Five Gs}
-\newcommand{\partPractice}{Practice}
 
 % ----- Title page ----------------------------------------------------
 % Full title (matches the TFG): "Geometric Deep Learning, a Mathematical

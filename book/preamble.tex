@@ -15,11 +15,16 @@
   \newcommand{\coverfont}{\bfseries}
 \else
   \usepackage{fontspec}
-  \setmainfont{Latin Modern Roman}
+  % Latin Modern ships its small caps as a separate face; without this
+  % option fontspec has no \textsc and falls back with a font warning.
+  \setmainfont{Latin Modern Roman}[SmallCapsFont={Latin Modern Roman Caps}]
   \newfontface\coverfont{BrunoAce-Regular.ttf}[Path=fonts/]
 \fi
 \usepackage[\babellang]{babel} % language chosen by \booklang (see lang/)
 \usepackage{microtype}
+% Let TeX stretch a little more before producing an overfull line; the
+% narrow print edition has many long inline formulas.
+\setlength{\emergencystretch}{2.5em}
 
 % ----- Math ----------------------------------------------------------
 \usepackage{amsmath,amssymb,amsthm}
@@ -28,6 +33,7 @@
 
 % ----- Graphics & figures -------------------------------------------
 \usepackage{graphicx}
+\usepackage{adjustbox} % shrink over-wide TikZ figures to the text width
 \graphicspath{{figures/}}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,backgrounds,fit,decorations.pathreplacing}

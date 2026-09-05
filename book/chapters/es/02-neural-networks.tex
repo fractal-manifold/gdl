@@ -355,6 +355,7 @@ La \autoref{fig:dominio_estructura_senal} ilustra visualmente este marco concept
 
 \begin{figure}[h]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[
     scale=0.75,
     transform shape,
@@ -388,6 +389,7 @@ La \autoref{fig:dominio_estructura_senal} ilustra visualmente este marco concept
 \draw[arrow] (sig) -- (dat);
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Marco conceptual dominio-estructura-señal]{Marco conceptual para la representación de datos. El dominio $\Omega$ define las posiciones, la estructura $\mathcal{S}$ define las relaciones entre posiciones, y la señal $f$ asigna valores a cada posición. Juntos forman los datos completos que procesa una red neuronal.}
 \label{fig:dominio_estructura_senal}
 \end{figure}
@@ -1232,6 +1234,7 @@ La \autoref{fig:lstm_arquitectura} ilustra la arquitectura interna de una celda 
 
 \begin{figure}[htbp]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[
     % Estilos mejorados para mejor legibilidad
     gate/.style={
@@ -1342,6 +1345,7 @@ La \autoref{fig:lstm_arquitectura} ilustra la arquitectura interna de una celda 
 \draw[gdlgray!20, dashed, line width=0.3pt] (8.25,-.5) -- (8.25,5.5);
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Arquitectura de celda LSTM]{Arquitectura interna de una celda LSTM. El estado celular $\mathbf{C}_t$ (línea superior azul) fluye horizontalmente, siendo modulado por las tres compuertas: la \textit{forget gate} (roja) decide qué información descartar, la \textit{input gate} (verde) junto con el candidato $\tilde{\mathbf{C}}_t$ determinan qué nueva información almacenar, y la \textit{output gate} (púrpura) controla qué parte del estado celular exponer como salida $\mathbf{h}_t$. Los operadores $\odot$ representan multiplicación elemento a elemento y $\oplus$ la suma.}
 \label{fig:lstm_arquitectura}
 \end{figure}
@@ -3191,6 +3195,7 @@ La \autoref{fig:arquitecturas_modernas} presenta una comparación visual de las 
 
 \begin{figure}[h]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[scale=1.05, every node/.style={scale=1.0}]
 % Estilos comunes
 \tikzset{
@@ -3285,6 +3290,7 @@ La \autoref{fig:arquitecturas_modernas} presenta una comparación visual de las 
 \end{scope}
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Comparación de arquitecturas de deep learning]{Comparación de las cuatro arquitecturas principales de deep learning. \textbf{Feedforward}: capas completamente conectadas con flujo unidireccional. \textbf{CNN}: convoluciones con kernels compartidos que preservan estructura espacial. \textbf{RNN}: conexiones recurrentes que mantienen estado oculto temporal. \textbf{Transformer}: mecanismos de atención que conectan todos los elementos simultáneamente.}
 \label{fig:arquitecturas_modernas}
 \end{figure}

@@ -355,6 +355,7 @@ In summary:
 
 \begin{figure}[h]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[
     scale=0.75,
     transform shape,
@@ -388,6 +389,7 @@ In summary:
 \draw[arrow] (sig) -- (dat);
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Domain-structure-signal conceptual framework]{Conceptual framework for the representation of data. The domain $\Omega$ defines the positions, the structure $\mathcal{S}$ defines the relations between positions, and the signal $f$ assigns values to each position. Together they form the complete data that a neural network processes.}
 \label{fig:dominio_estructura_senal}
 \end{figure}
@@ -1232,6 +1234,7 @@ The key is that the forget gate can learn to stay close to 1 for important infor
 
 \begin{figure}[htbp]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[
     % Estilos mejorados para mejor legibilidad
     gate/.style={
@@ -1342,6 +1345,7 @@ The key is that the forget gate can learn to stay close to 1 for important infor
 \draw[gdlgray!20, dashed, line width=0.3pt] (8.25,-.5) -- (8.25,5.5);
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[LSTM cell architecture]{Internal architecture of an LSTM cell. The cell state $\mathbf{C}_t$ (top blue line) flows horizontally, being modulated by the three gates: the \textit{forget gate} (red) decides what information to discard, the \textit{input gate} (green) together with the candidate $\tilde{\mathbf{C}}_t$ determine what new information to store, and the \textit{output gate} (purple) controls which part of the cell state to expose as output $\mathbf{h}_t$. The operators $\odot$ represent element-wise multiplication and $\oplus$ the sum.}
 \label{fig:lstm_arquitectura}
 \end{figure}
@@ -3189,6 +3193,7 @@ The development of deep learning has produced specialized architectures, each de
 
 \begin{figure}[h]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[scale=1.05, every node/.style={scale=1.0}]
 % Estilos comunes
 \tikzset{
@@ -3283,6 +3288,7 @@ The development of deep learning has produced specialized architectures, each de
 \end{scope}
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Comparison of deep learning architectures]{Comparison of the four main deep learning architectures. \textbf{Feedforward}: fully connected layers with unidirectional flow. \textbf{CNN}: convolutions with shared kernels that preserve spatial structure. \textbf{RNN}: recurrent connections that maintain a temporal hidden state. \textbf{Transformer}: attention mechanisms that connect all elements simultaneously.}
 \label{fig:arquitecturas_modernas}
 \end{figure}

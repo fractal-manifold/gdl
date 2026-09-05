@@ -198,7 +198,7 @@ Estas limitaciones sistemáticas han motivado el desarrollo de extensiones geom�
 
 Esta progresión sistemática desde la equivarianza restringida hacia la generalidad completa constituye la narrativa central del capítulo y ejemplifica los principios del \gls{GDL} en acción.
 
-\section{Análisis Armónico y Convoluciones Espectrales: de Fourier a Grafos}\label{sec:analisis_armonico}
+\section[Análisis Armónico y Convoluciones Espectrales]{Análisis Armónico y Convoluciones Espectrales: de Fourier a Grafos}\label{sec:analisis_armonico}
 
 Mientras que las extensiones geométricas de \glspl{CNN} abordan las limitaciones de simetría, topología y localidad mediante la generalización directa de las operaciones convolucionales, el análisis armónico proporciona una perspectiva dual y complementaria que revela la estructura matemática profunda subyacente a todas estas arquitecturas. Esta sección desarrolla el marco teórico que conecta las convoluciones clásicas con sus generalizaciones espectrales, desde los fundamentos del análisis de Fourier hasta las aplicaciones modernas en dominios irregulares y, finalmente, la equivalencia formal entre convoluciones en grillas y operaciones de paso de mensajes en grafos.
 
@@ -681,7 +681,8 @@ con eigenvectores $\phi_{k_1,k_2}(i,j) = \frac{1}{\sqrt{n_1 n_2}} e^{2\pi \imath
 \begin{proof}
 Para condiciones de frontera periódicas, las funciones $\phi_{k_1,k_2}$ satisfacen $\phi_{k_1,k_2}(i + n_1, j) = \phi_{k_1,k_2}(i,j)$. Aplicando el Laplaciano:
 \begin{align}
-(\mathcal{L}\phi_{k_1,k_2})(i,j) &= 4\phi_{k_1,k_2}(i,j) - \phi_{k_1,k_2}(i+1,j) - \phi_{k_1,k_2}(i-1,j) - \phi_{k_1,k_2}(i,j+1) - \phi_{k_1,k_2}(i,j-1) \\
+(\mathcal{L}\phi_{k_1,k_2})(i,j) &= 4\phi_{k_1,k_2}(i,j) - \phi_{k_1,k_2}(i+1,j) - \phi_{k_1,k_2}(i-1,j) \nonumber \\
+&\quad - \phi_{k_1,k_2}(i,j+1) - \phi_{k_1,k_2}(i,j-1) \\
 &= \left(4 - e^{2\pi \imath k_1/n_1} - e^{-2\pi \imath k_1/n_1} - e^{2\pi \imath k_2/n_2} - e^{-2\pi \imath k_2/n_2}\right)\phi_{k_1,k_2}(i,j) \\
 &= \left(4 - 2\cos\!\left(\frac{2\pi k_1}{n_1}\right) - 2\cos\!\left(\frac{2\pi k_2}{n_2}\right)\right)\phi_{k_1,k_2}(i,j)
 \end{align}
@@ -766,7 +767,11 @@ para algún $\epsilon > 0$ y constantes $C_k$, donde $g^{(k)}$ denota la $k$-és
 \end{theorem}
 
 \begin{proof}[Esbozo de demostración]
-El kernel del filtro en el dominio del grafo es $K(i,j) = \sum_k g(\lambda_k) \phi_k(i) \phi_k(j)$, donde $\{\lambda_k, \phi_k\}$ son los pares propios del Laplaciano. La condición de decaimiento sobre $g^{(k)}$ implica, mediante integración por partes generalizada, que el kernel $K(i,j)$ decae exponencialmente con la distancia geodésica $d(i,j)$ en el grafo. Formalmente, para nodos $i,j$ a distancia $d(i,j) > K$ se tiene $|K(i,j)| \leq C \cdot \alpha^{d(i,j)}$ para algún $\alpha < 1$, lo que garantiza que la operación de filtrado es esencialmente local. Véase \citep[Theorem~5.5]{hammond2011wavelets} para la demostración completa en el contexto de wavelets en grafos.
+El kernel del filtro en el dominio del grafo es
+\[
+K(i,j) = \sum_k g(\lambda_k) \phi_k(i) \phi_k(j),
+\]
+donde $\{\lambda_k, \phi_k\}$ son los pares propios del Laplaciano. La condición de decaimiento sobre $g^{(k)}$ implica, mediante integración por partes generalizada, que el kernel $K(i,j)$ decae exponencialmente con la distancia geodésica $d(i,j)$ en el grafo. Formalmente, para nodos $i,j$ a distancia $d(i,j) > K$ se tiene $|K(i,j)| \leq C \cdot \alpha^{d(i,j)}$ para algún $\alpha < 1$, lo que garantiza que la operación de filtrado es esencialmente local. Véase \citep[Theorem~5.5]{hammond2011wavelets} para la demostración completa en el contexto de wavelets en grafos.
 \end{proof}
 
 \subsubsection{Aproximación Polinomial de Filtros}
@@ -1099,7 +1104,7 @@ Las \glspl{CNN} clásicas son un caso especial de convoluciones de grupo donde $
     \item Los filtros son invariantes por traslación
 \end{itemize}
 
-Las extensiones geométricas incorporan grupos más ricos como $\gls{SO2}$ para rotaciones, $SE(2)$ para movimientos rígidos planares, o $\gls{SO}$ para rotaciones tridimensionales.
+Las extensiones geométricas incorporan grupos más ricos como \gls{SO2} para rotaciones, $SE(2)$ para movimientos rígidos planares, o \gls{SO} para rotaciones tridimensionales.
 
 \subsubsection{Marco Teórico Unificado}
 
@@ -1254,7 +1259,11 @@ La rotación $r$ por $90°$ actúa sobre $(x,y)$ mediante la matriz $R_{90} = \b
 La estructura de grupo de $D_4$ se verifica mediante la comprobación rigurosa de los axiomas fundamentales:
 
 \begin{theorem}[Axiomas de $D_4$]
-El conjunto $D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}$ con la operación de composición satisface:
+El conjunto 
+\[
+D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}
+\]
+ con la operación de composición satisface:
 
 \begin{enumerate}
     \item \textbf{Clausura}: Para cualesquiera $g_1, g_2 \in D_4$, se tiene $g_1 \circ g_2 \in D_4$
@@ -1458,7 +1467,11 @@ El grupo cíclico $C_4 = \{e, r, r^2, r^3\}$ representa las rotaciones por múlt
 \end{definition}
 
 \begin{definition}[Grupo Diédrico del Cuadrado]
-El grupo diédrico $D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}$ incluye las cuatro rotaciones de $C_4$ más cuatro reflexiones $s, sr, sr^2, sr^3$, donde $s$ representa una reflexión respecto a un eje.
+El grupo diédrico
+\[
+D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}
+\]
+incluye las cuatro rotaciones de $C_4$ más cuatro reflexiones $s, sr, sr^2, sr^3$, donde $s$ representa una reflexión respecto a un eje.
 \end{definition}
 
 Estos grupos son particularmente importantes porque:
@@ -3043,7 +3056,7 @@ Es instructivo contrastar las diferencias fundamentales entre arquitecturas para
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\begin{tabular}{|p{0.24\textwidth}|p{0.31\textwidth}|p{0.31\textwidth}|}
 \hline
 \textbf{Propiedad} & \textbf{SO(3) (Compacto)} & \textbf{SE(3) (No Compacto)} \\
 \hline

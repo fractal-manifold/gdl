@@ -35,6 +35,7 @@ La \autoref{fig:jerarquia_5gs} complementa esta visión mostrando la estructura 
 
 \begin{figure}[htbp]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[scale=0.75]
 % Definir estilos
 \tikzset{
@@ -71,6 +72,7 @@ La \autoref{fig:jerarquia_5gs} complementa esta visión mostrando la estructura 
 \node[font=\scriptsize, anchor=east] at (gauges.west) {frames\quad};
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Jerarquía de las cinco Gs del GDL]{Estructura jerárquica de las cinco Gs del Geometric Deep Learning. Desde la base, la \textbf{Geometría} define el dominio donde residen los datos; los \textbf{Grupos} capturan las simetrías del problema; los \textbf{Grafos} discretizan el dominio; las \textbf{Geodésicas} determinan cómo se propaga la información; y los \textbf{Gauges} manejan las invarianzas locales en sistemas de coordenadas.}
 \label{fig:jerarquia_5gs}
 \end{figure}
@@ -536,8 +538,8 @@ Sustituyendo en $\operatorname{Alt}$ y haciendo el cambio $\rho = \tau \circ \si
 \begin{align*}
 \operatorname{Alt}(\beta \otimes \alpha)(v_1, \ldots, v_{k+l})
   &= \frac{1}{(k{+}l)!}\sum_{\sigma \in S_{k+l}} \operatorname{sgn}(\sigma)\,(\alpha \otimes \beta)(v_{\tau\sigma(1)}, \ldots, v_{\tau\sigma(k+l)}) \\
-  &= \frac{(-1)^{kl}}{(k{+}l)!}\sum_{\rho \in S_{k+l}} \operatorname{sgn}(\rho)\,(\alpha \otimes \beta)(v_{\rho(1)}, \ldots, v_{\rho(k+l)})
-  = (-1)^{kl}\,\operatorname{Alt}(\alpha \otimes \beta),
+  &= \frac{(-1)^{kl}}{(k{+}l)!}\sum_{\rho \in S_{k+l}} \operatorname{sgn}(\rho)\,(\alpha \otimes \beta)(v_{\rho(1)}, \ldots, v_{\rho(k+l)}) \\
+  &= (-1)^{kl}\,\operatorname{Alt}(\alpha \otimes \beta),
 \end{align*}
 donde hemos usado $\operatorname{sgn}(\tau\sigma) = (-1)^{kl}\operatorname{sgn}(\sigma)$. Multiplicando por $\frac{(k+l)!}{k!\,l!}$ se obtiene $\beta \wedge \alpha = (-1)^{kl}\,\alpha \wedge \beta$.
 
@@ -815,7 +817,7 @@ El \textit{espacio hiperbólico} $\mathbb{H}^n$ es el único espacio de curvatur
 \textbf{Modelos del espacio hiperbólico.}\label{rem:modelos_hiperbolico} Existen varios modelos isométricos de $\mathbb{H}^n$:
 \begin{itemize}
     \item \textbf{Modelo del disco de Poincaré}: $\mathbb{D}^n = \{x \in \mathbb{R}^n : \|x\| < 1\}$
-          con métrica $ds^2 = \frac{4}{(1 - \|\mathbf{x}\|^2)^2} \sum_{i=1}^n (dx^i)^2$
+          con métrica $ds^2 = 4\,(1 - \|\mathbf{x}\|^2)^{-2} \sum_{i=1}^n (dx^i)^2$
     \item \textbf{Modelo del semiplano superior}: $\mathbb{H}^2 = \{z \in \mathbb{C} : \Im(z) > 0\}$
           con métrica $ds^2 = \frac{dx^2 + dy^2}{y^2}$
     \item \textbf{Modelo del hiperboloide}: Superficie $x_0^2 - x_1^2 - \cdots - x_n^2 = 1$ en $\mathbb{R}^{n+1}$
@@ -1057,9 +1059,10 @@ El isomorfismo está dado por $\bar{\phi}: G/\ker(\phi) \rightarrow \mathrm{Im}(
 \textbf{Paso 1: $\bar{\phi}$ está bien definida.} Si $g_1\ker(\phi) = g_2\ker(\phi)$, entonces $g_1^{-1}g_2 \in \ker(\phi)$, por lo que $\phi(g_1^{-1}g_2) = e_H$. Esto implica $\phi(g_1)^{-1}\phi(g_2) = e_H$, es decir, $\phi(g_1) = \phi(g_2)$.
 
 \textbf{Paso 2: $\bar{\phi}$ es homomorfismo.}
-\[
-\bar{\phi}(g_1\ker(\phi) \cdot g_2\ker(\phi)) = \bar{\phi}((g_1g_2)\ker(\phi)) = \phi(g_1g_2) = \phi(g_1)\phi(g_2) = \bar{\phi}(g_1\ker(\phi)) \cdot \bar{\phi}(g_2\ker(\phi))
-\]
+\begin{align*}
+\bar{\phi}(g_1\ker(\phi) \cdot g_2\ker(\phi)) &= \bar{\phi}((g_1g_2)\ker(\phi)) = \phi(g_1g_2) \\
+&= \phi(g_1)\phi(g_2) = \bar{\phi}(g_1\ker(\phi)) \cdot \bar{\phi}(g_2\ker(\phi))
+\end{align*}
 
 \textbf{Paso 3: $\bar{\phi}$ es inyectiva.} Si $\bar{\phi}(g\ker(\phi)) = e_H$, entonces $\phi(g) = e_H$, por lo que $g \in \ker(\phi)$, y $g\ker(\phi) = \ker(\phi)$ es la identidad en $G/\ker(\phi)$.
 
@@ -2166,7 +2169,7 @@ Este resultado justifica matemáticamente por qué las convoluciones son la oper
 
 \paragraph{Representaciones fundamentales como cocientes}
 
-El Teorema Órbita-Estabilizador~\ref{thm:orbita_estabilizador} y el \autoref{ex:aplicacion_teorema_gdl} mostraron cómo $S^2 \cong SO(3)/SO(2)$. Aplicamos ahora la misma técnica sistemáticamente a los espacios no euclidianos introducidos en la \autoref{subsec:espacios_no_euclidianos}, justificando rigurosamente cada representación $G/H$.
+El Teorema Órbita-Estabilizador (\ref{thm:orbita_estabilizador}) y el \autoref{ex:aplicacion_teorema_gdl} mostraron cómo $S^2 \cong SO(3)/SO(2)$. Aplicamos ahora la misma técnica sistemáticamente a los espacios no euclidianos introducidos en la \autoref{subsec:espacios_no_euclidianos}, justificando rigurosamente cada representación $G/H$.
 
 \begin{proposition}[Esfera como Espacio Homogéneo]\label{prop:esfera_cociente}
 La esfera $S^{n-1}$ (\autoref{def:esfera_n}) es un espacio homogéneo:
@@ -3710,7 +3713,10 @@ Esta convergencia justifica teóricamente el uso de grafos como aproximaciones c
 	\]
 	El número de aristas es $\lceil L_\gamma / h \rceil \leq L_\gamma/h + 1$, por lo que:
 	\begin{equation}\label{eq:cota_superior_dGn}
-	d_{G_n}(x_i, x_j) \leq (L_\gamma/h + 1)(h + 2r_n) = L_\gamma + 2L_\gamma \frac{r_n}{h} + h + 2r_n = d_g(x_i,x_j) + O\!\left(d_g(x_i,x_j) \cdot \frac{r_n}{\epsilon_n}\right) + O(\epsilon_n).
+	\begin{split}
+	d_{G_n}(x_i, x_j) &\leq (L_\gamma/h + 1)(h + 2r_n) = L_\gamma + 2L_\gamma \frac{r_n}{h} + h + 2r_n \\
+	&= d_g(x_i,x_j) + O\!\left(d_g(x_i,x_j) \cdot \frac{r_n}{\epsilon_n}\right) + O(\epsilon_n).
+	\end{split}
 	\end{equation}
 
 	\textbf{Paso 5: Convergencia uniforme.}

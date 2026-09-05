@@ -35,6 +35,7 @@ The \gls{GDL} framework is structured around five fundamental concepts, known as
 
 \begin{figure}[htbp]
 \centering
+\begin{adjustbox}{max width=\textwidth}
 \begin{tikzpicture}[scale=0.75]
 % Definir estilos
 \tikzset{
@@ -71,6 +72,7 @@ The \gls{GDL} framework is structured around five fundamental concepts, known as
 \node[font=\scriptsize, anchor=east] at (gauges.west) {frames\quad};
 
 \end{tikzpicture}
+\end{adjustbox}
 \caption[Hierarchy of the five G's of GDL]{Hierarchical structure of the five G's of Geometric Deep Learning. From the base, \textbf{Geometry} defines the domain where data reside; \textbf{Groups} capture the symmetries of the problem; \textbf{Graphs} discretize the domain; \textbf{Geodesics} determine how information propagates; and \textbf{Gauges} handle local invariances in coordinate systems.}
 \label{fig:jerarquia_5gs}
 \end{figure}
@@ -536,8 +538,8 @@ Substituting into $\operatorname{Alt}$ and making the change $\rho = \tau \circ 
 \begin{align*}
 \operatorname{Alt}(\beta \otimes \alpha)(v_1, \ldots, v_{k+l})
   &= \frac{1}{(k{+}l)!}\sum_{\sigma \in S_{k+l}} \operatorname{sgn}(\sigma)\,(\alpha \otimes \beta)(v_{\tau\sigma(1)}, \ldots, v_{\tau\sigma(k+l)}) \\
-  &= \frac{(-1)^{kl}}{(k{+}l)!}\sum_{\rho \in S_{k+l}} \operatorname{sgn}(\rho)\,(\alpha \otimes \beta)(v_{\rho(1)}, \ldots, v_{\rho(k+l)})
-  = (-1)^{kl}\,\operatorname{Alt}(\alpha \otimes \beta),
+  &= \frac{(-1)^{kl}}{(k{+}l)!}\sum_{\rho \in S_{k+l}} \operatorname{sgn}(\rho)\,(\alpha \otimes \beta)(v_{\rho(1)}, \ldots, v_{\rho(k+l)}) \\
+  &= (-1)^{kl}\,\operatorname{Alt}(\alpha \otimes \beta),
 \end{align*}
 where we have used $\operatorname{sgn}(\tau\sigma) = (-1)^{kl}\operatorname{sgn}(\sigma)$. Multiplying by $\frac{(k+l)!}{k!\,l!}$ we obtain $\beta \wedge \alpha = (-1)^{kl}\,\alpha \wedge \beta$.
 
@@ -815,7 +817,7 @@ The \textit{hyperbolic space} $\mathbb{H}^n$ is the unique simply connected spac
 \textbf{Models of hyperbolic space.}\label{rem:modelos_hiperbolico} There exist several isometric models of $\mathbb{H}^n$:
 \begin{itemize}
     \item \textbf{Poincaré disk model}: $\mathbb{D}^n = \{x \in \mathbb{R}^n : \|x\| < 1\}$
-          with metric $ds^2 = \frac{4}{(1 - \|\mathbf{x}\|^2)^2} \sum_{i=1}^n (dx^i)^2$
+          with metric $ds^2 = 4\,(1 - \|\mathbf{x}\|^2)^{-2} \sum_{i=1}^n (dx^i)^2$
     \item \textbf{Upper half-plane model}: $\mathbb{H}^2 = \{z \in \mathbb{C} : \Im(z) > 0\}$
           with metric $ds^2 = \frac{dx^2 + dy^2}{y^2}$
     \item \textbf{Hyperboloid model}: Surface $x_0^2 - x_1^2 - \cdots - x_n^2 = 1$ in $\mathbb{R}^{n+1}$
@@ -1056,9 +1058,10 @@ The isomorphism is given by $\bar{\phi}: G/\ker(\phi) \rightarrow \mathrm{Im}(\p
 \textbf{Step 1: $\bar{\phi}$ is well defined.} If $g_1\ker(\phi) = g_2\ker(\phi)$, then $g_1^{-1}g_2 \in \ker(\phi)$, so $\phi(g_1^{-1}g_2) = e_H$. This implies $\phi(g_1)^{-1}\phi(g_2) = e_H$, that is, $\phi(g_1) = \phi(g_2)$.
 
 \textbf{Step 2: $\bar{\phi}$ is a homomorphism.}
-\[
-\bar{\phi}(g_1\ker(\phi) \cdot g_2\ker(\phi)) = \bar{\phi}((g_1g_2)\ker(\phi)) = \phi(g_1g_2) = \phi(g_1)\phi(g_2) = \bar{\phi}(g_1\ker(\phi)) \cdot \bar{\phi}(g_2\ker(\phi))
-\]
+\begin{align*}
+\bar{\phi}(g_1\ker(\phi) \cdot g_2\ker(\phi)) &= \bar{\phi}((g_1g_2)\ker(\phi)) = \phi(g_1g_2) \\
+&= \phi(g_1)\phi(g_2) = \bar{\phi}(g_1\ker(\phi)) \cdot \bar{\phi}(g_2\ker(\phi))
+\end{align*}
 
 \textbf{Step 3: $\bar{\phi}$ is injective.} If $\bar{\phi}(g\ker(\phi)) = e_H$, then $\phi(g) = e_H$, so $g \in \ker(\phi)$, and $g\ker(\phi) = \ker(\phi)$ is the identity in $G/\ker(\phi)$.
 
@@ -3708,7 +3711,10 @@ This convergence theoretically justifies the use of graphs as computationally tr
 	\]
 	The number of edges is $\lceil L_\gamma / h \rceil \leq L_\gamma/h + 1$, so that:
 	\begin{equation}\label{eq:cota_superior_dGn}
-	d_{G_n}(x_i, x_j) \leq (L_\gamma/h + 1)(h + 2r_n) = L_\gamma + 2L_\gamma \frac{r_n}{h} + h + 2r_n = d_g(x_i,x_j) + O\!\left(d_g(x_i,x_j) \cdot \frac{r_n}{\epsilon_n}\right) + O(\epsilon_n).
+	\begin{split}
+	d_{G_n}(x_i, x_j) &\leq (L_\gamma/h + 1)(h + 2r_n) = L_\gamma + 2L_\gamma \frac{r_n}{h} + h + 2r_n \\
+	&= d_g(x_i,x_j) + O\!\left(d_g(x_i,x_j) \cdot \frac{r_n}{\epsilon_n}\right) + O(\epsilon_n).
+	\end{split}
 	\end{equation}
 
 	\textbf{Step 5: Uniform convergence.}

@@ -198,7 +198,7 @@ These systematic limitations have motivated the development of geometric extensi
 
 This systematic progression from restricted equivariance toward full generality constitutes the central narrative of the chapter and exemplifies the principles of \gls{GDL} in action.
 
-\section{Harmonic Analysis and Spectral Convolutions: from Fourier to Graphs}\label{sec:analisis_armonico}
+\section[Harmonic Analysis and Spectral Convolutions]{Harmonic Analysis and Spectral Convolutions: from Fourier to Graphs}\label{sec:analisis_armonico}
 
 While the geometric extensions of \glspl{CNN} address the limitations of symmetry, topology, and locality through the direct generalization of convolutional operations, harmonic analysis provides a dual and complementary perspective that reveals the deep mathematical structure underlying all these architectures. This section develops the theoretical framework that connects classical convolutions with their spectral generalizations, from the foundations of Fourier analysis to modern applications in irregular domains and, finally, the formal equivalence between convolutions on grids and message-passing operations on graphs.
 
@@ -681,7 +681,8 @@ with eigenvectors $\phi_{k_1,k_2}(i,j) = \frac{1}{\sqrt{n_1 n_2}} e^{2\pi \imath
 \begin{proof}
 For periodic boundary conditions, the functions $\phi_{k_1,k_2}$ satisfy $\phi_{k_1,k_2}(i + n_1, j) = \phi_{k_1,k_2}(i,j)$. Applying the Laplacian:
 \begin{align}
-(\mathcal{L}\phi_{k_1,k_2})(i,j) &= 4\phi_{k_1,k_2}(i,j) - \phi_{k_1,k_2}(i+1,j) - \phi_{k_1,k_2}(i-1,j) - \phi_{k_1,k_2}(i,j+1) - \phi_{k_1,k_2}(i,j-1) \\
+(\mathcal{L}\phi_{k_1,k_2})(i,j) &= 4\phi_{k_1,k_2}(i,j) - \phi_{k_1,k_2}(i+1,j) - \phi_{k_1,k_2}(i-1,j) \nonumber \\
+&\quad - \phi_{k_1,k_2}(i,j+1) - \phi_{k_1,k_2}(i,j-1) \\
 &= \left(4 - e^{2\pi \imath k_1/n_1} - e^{-2\pi \imath k_1/n_1} - e^{2\pi \imath k_2/n_2} - e^{-2\pi \imath k_2/n_2}\right)\phi_{k_1,k_2}(i,j) \\
 &= \left(4 - 2\cos\!\left(\frac{2\pi k_1}{n_1}\right) - 2\cos\!\left(\frac{2\pi k_2}{n_2}\right)\right)\phi_{k_1,k_2}(i,j)
 \end{align}
@@ -1099,7 +1100,7 @@ Classical \glspl{CNN} are a special case of group convolutions where $G = (\math
     \item The filters are translation-invariant
 \end{itemize}
 
-The geometric extensions incorporate richer groups such as $\gls{SO2}$ for rotations, $SE(2)$ for planar rigid motions, or $\gls{SO}$ for three-dimensional rotations.
+The geometric extensions incorporate richer groups such as \gls{SO2} for rotations, $SE(2)$ for planar rigid motions, or \gls{SO} for three-dimensional rotations.
 
 \subsubsection{Unified Theoretical Framework}
 
@@ -1254,7 +1255,11 @@ The rotation $r$ by $90°$ acts on $(x,y)$ via the matrix $R_{90} = \begin{psmal
 The group structure of $D_4$ is verified through rigorous checking of the fundamental axioms:
 
 \begin{theorem}[Axioms of $D_4$]
-The set $D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}$ with the composition operation satisfies:
+The set 
+\[
+D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}
+\]
+ with the composition operation satisfies:
 
 \begin{enumerate}
     \item \textbf{Closure}: For any $g_1, g_2 \in D_4$, we have $g_1 \circ g_2 \in D_4$
@@ -1458,7 +1463,11 @@ The cyclic group $C_4 = \{e, r, r^2, r^3\}$ represents the rotations by multiple
 \end{definition}
 
 \begin{definition}[Dihedral Group of the Square]
-The dihedral group $D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}$ includes the four rotations of $C_4$ plus four reflections $s, sr, sr^2, sr^3$, where $s$ represents a reflection about an axis.
+The dihedral group
+\[
+D_4 = \{e, r, r^2, r^3, s, sr, sr^2, sr^3\}
+\]
+includes the four rotations of $C_4$ plus four reflections $s, sr, sr^2, sr^3$, where $s$ represents a reflection about an axis.
 \end{definition}
 
 These groups are particularly important because:
@@ -3042,7 +3051,7 @@ It is instructive to contrast the fundamental differences between architectures 
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\begin{tabular}{|p{0.24\textwidth}|p{0.31\textwidth}|p{0.31\textwidth}|}
 \hline
 \textbf{Property} & \textbf{SO(3) (Compact)} & \textbf{SE(3) (Non-Compact)} \\
 \hline
