@@ -10,11 +10,14 @@
 % ("chapter 2", "section 3.4") while its "Theorem", "Figure" and "Appendix"
 % are capitalized. Capitalize them so cross-references read uniformly; the
 % Spanish edition already gets "Capítulo" and "Sección" from babel.
+% Guarded, because cover.tex also inputs this file without hyperref.
 \AtBeginDocument{%
-  \renewcommand{\chapterautorefname}{Chapter}%
-  \renewcommand{\sectionautorefname}{Section}%
-  \renewcommand{\subsectionautorefname}{Section}%
-  \renewcommand{\subsubsectionautorefname}{Section}%
+  \ifdefined\chapterautorefname
+    \renewcommand{\chapterautorefname}{Chapter}%
+    \renewcommand{\sectionautorefname}{Section}%
+    \renewcommand{\subsectionautorefname}{Section}%
+    \renewcommand{\subsubsectionautorefname}{Section}%
+  \fi
 }
 
 % ----- Theorem environment names ------------------------------------
