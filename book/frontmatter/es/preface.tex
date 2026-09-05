@@ -1,8 +1,29 @@
 \chapter*{Prefacio}
 \addcontentsline{toc}{chapter}{Prefacio}
 
-\emph{Por qué este libro.} A\~nadir aqu\'i la motivaci\'on, el p\'ublico
-al que se dirige, los prerrequisitos y c\'omo leer el libro.
+\section*{Por qué este libro}
+
+La mayoría de las introducciones al aprendizaje profundo geométrico parten de las arquitecturas. Presentan una red convolucional, después una red de grafos, después un transformer, y explican a continuación que cada una respeta alguna simetría de sus datos. Este libro parte del otro extremo. Toma primero las matemáticas (grupos y sus representaciones, variedades y su curvatura, grafos y sus espectros, geodésicas, fibrados y conexiones) y deriva de ellas las arquitecturas, demostrando los resultados que las justifican en lugar de citarlos.
+
+Lo escribí porque era el libro que quería leer y no encontraba. El survey que dio nombre al campo \citep{DBLP:journals/corr/abs-2104-13478} expone el programa con gran claridad, pero un programa no es una demostración, y las demostraciones están dispersas en artículos escritos para especialistas de una docena de subcampos. Reunirlas, enunciarlas en una única notación y rellenar los huecos entre ellas es el trabajo que hace este libro. Nació de mi trabajo de fin de grado en Matemáticas en la Universidad Nacional de Educación a Distancia; la columna vertebral matemática es ese trabajo, y el resto es lo que aprendí intentando que se sostuviera por sí solo.
+
+\section*{A quién va dirigido}
+
+A tres tipos de lectores. Los matemáticos que conocen las herramientas y quieren ver qué hace con ellas el aprendizaje profundo encontrarán las arquitecturas explicadas en su propio lenguaje, con el dominio y el grupo de simetría enunciados antes que la capa. Los profesionales del aprendizaje automático que usan estas arquitecturas y quieren entender por qué funcionan encontrarán las demostraciones que hay detrás de las reglas de diseño que ya siguen. Los estudiantes de posgrado que entran en el campo encontrarán, espero, un único lugar desde el que la literatura de investigación se vuelve legible.
+
+\section*{Prerrequisitos}
+
+Se asumen álgebra lineal y cálculo en varias variables a lo largo de todo el libro, así como cierta soltura leyendo demostraciones. La topología elemental de conjuntos y el vocabulario de la teoría de la medida ayudan en el \autoref{ch:neural_networks}, donde el teorema de aproximación universal se demuestra por completo, pero ambos se recuerdan allí donde se usan. Todo lo demás se desarrolla dentro del libro: la teoría de grupos y de representaciones, la geometría diferencial, el análisis armónico y los rudimentos de topología algebraica se construyen a partir de sus definiciones en el \autoref{ch:gdl}, y las demostraciones largas que interrumpirían el texto principal se recogen en el \autoref{ch:teoremas_complementarios}. No se requiere contacto previo con el aprendizaje profundo; el \autoref{ch:neural_networks} empieza por la neurona.
+
+\section*{Cómo leerlo}
+
+Los capítulos se apoyan unos en otros en el orden que muestra la \autoref{fig:estructura_documento}. El \autoref{ch:intro} plantea el problema. El \autoref{ch:neural_networks} cubre las redes clásicas y sus limitaciones. El \autoref{ch:gdl} es el núcleo: las cinco Gs (geometría, grupos, grafos, geodésicas y gauges) y el marco de paso de mensajes que unifica todo lo que sigue. El \autoref{ch:cnn} y el \autoref{ch:attention} aplican ese marco a las dos familias de modelos que dominan la práctica, convoluciones y atención, y pueden leerse con independencia el uno del otro. El \autoref{ch:conclusions} cierra con lo que se ha mostrado, lo que sigue abierto y hacia dónde va el campo.
+
+Un lector con formación matemática puede saltarse la mayor parte del \autoref{ch:neural_networks} en una primera lectura y volver al teorema de aproximación universal (\autoref{sec:aproximacion_universal}) cuando se invoque. Un lector interesado sobre todo en grafos y moléculas puede pasar del \autoref{ch:gdl} a las secciones de convoluciones de grupo y de permutaciones del \autoref{ch:cnn} y a la sección de atención sobre grafos del \autoref{ch:attention}. Un lector interesado en los transformers puede ir del \autoref{ch:gdl} directamente al \autoref{ch:attention}.
+
+\section*{Convenciones}
+
+Definiciones, teoremas, lemas, proposiciones, corolarios, ejemplos y observaciones comparten un único contador dentro de cada capítulo, de modo que una referencia como el Teorema~3.12 se encuentra entre la Definición~3.11 y el Ejemplo~3.13. Una tabla de notación precede al primer capítulo; un glosario y una lista de acrónimos siguen al apéndice. Los breves listados de código del \autoref{ch:cnn} y el \autoref{ch:attention} están para leerse, no para ejecutarse: muestran cómo una fórmula se convierte en una capa. Las referencias se citan por autor y año y se listan alfabéticamente al final.
 
 \section*{Agradecimientos}
 

@@ -1,8 +1,29 @@
 \chapter*{Preface}
 \addcontentsline{toc}{chapter}{Preface}
 
-\emph{Why this book.} Add motivation, intended audience, prerequisites, and
-how to read the book here.
+\section*{Why this book}
+
+Most introductions to geometric deep learning start from the architectures. They present a convolutional network, then a graph network, then a transformer, and explain afterwards that each of them respects some symmetry of its data. This book starts from the other end. It takes the mathematics first (groups and their representations, manifolds and their curvature, graphs and their spectra, geodesics, bundles and connections) and derives the architectures from it, proving the results that justify them rather than quoting them.
+
+I wrote it because it was the book I wanted to read and could not find. The survey that named the field \citep{DBLP:journals/corr/abs-2104-13478} sets out the programme with great clarity, but a programme is not a proof, and the proofs are scattered across papers written for specialists in a dozen subfields. Gathering them, stating them in a single notation and filling the gaps between them is the work this book does. It grew out of my final-year project in mathematics at the Universidad Nacional de Educación a Distancia; the mathematical spine is that project, and the rest is what I learned while trying to make it stand on its own.
+
+\section*{Who it is for}
+
+Three kinds of readers. Mathematicians who know the tools and want to see what deep learning does with them will find the architectures explained in their own language, with the domain and the symmetry group stated before the layer. Machine learning practitioners who use these architectures and want to understand why they work will find the proofs behind the design rules they already follow. Graduate students entering the field will find, I hope, a single place from which the research literature becomes readable.
+
+\section*{Prerequisites}
+
+Linear algebra and multivariable calculus are assumed throughout, as is some comfort with reading proofs. Elementary point-set topology and the vocabulary of measure theory help in \autoref{ch:neural_networks}, where the universal approximation theorem is proved in full, but both are recalled where they are used. Everything else is developed inside the book: group and representation theory, differential geometry, harmonic analysis and the rudiments of algebraic topology are built from their definitions in \autoref{ch:gdl}, and the longer proofs that would interrupt the main text are collected in \autoref{ch:teoremas_complementarios}. No prior exposure to deep learning is required; \autoref{ch:neural_networks} starts from the single neuron.
+
+\section*{How to read it}
+
+The chapters build on one another in the order shown in \autoref{fig:estructura_documento}. \autoref{ch:intro} sets out the problem. \autoref{ch:neural_networks} covers classical networks and their limitations. \autoref{ch:gdl} is the core: the five Gs (geometry, groups, graphs, geodesics and gauges) and the message passing framework that unifies everything that follows. \autoref{ch:cnn} and \autoref{ch:attention} apply that framework to the two families of models that dominate practice, convolutions and attention, and can be read independently of each other. \autoref{ch:conclusions} closes with what has been shown, what remains open and where the field is heading.
+
+A reader with a mathematics background can skip most of \autoref{ch:neural_networks} on a first pass and return to the universal approximation theorem (\autoref{sec:aproximacion_universal}) when it is invoked. A reader interested mainly in graphs and molecules can go from \autoref{ch:gdl} to the group convolution and permutation sections of \autoref{ch:cnn} and to the graph attention section of \autoref{ch:attention}. A reader interested in transformers can go from \autoref{ch:gdl} straight to \autoref{ch:attention}.
+
+\section*{Conventions}
+
+Definitions, theorems, lemmas, propositions, corollaries, examples and remarks share a single counter within each chapter, so that a reference such as Theorem~3.12 is found between Definition~3.11 and Example~3.13. A table of notation precedes the first chapter; a glossary and a list of acronyms follow the appendix. The short code listings in \autoref{ch:cnn} and \autoref{ch:attention} are there to be read rather than run: they show how a formula becomes a layer. References are cited by author and year and listed alphabetically at the end.
 
 \section*{Acknowledgements}
 
